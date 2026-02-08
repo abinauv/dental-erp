@@ -51,6 +51,10 @@ import {
   Banknote,
   Smartphone,
   Building2,
+  Share2,
+  Copy,
+  Check,
+  Loader2,
 } from "lucide-react"
 import {
   invoiceStatusConfig,
@@ -63,6 +67,7 @@ import {
   numberToWords,
   gstConfig,
 } from "@/lib/billing-utils"
+import { PaymentCheckout } from "@/components/billing/payment-checkout"
 
 interface Invoice {
   id: string
@@ -165,6 +170,11 @@ export default function InvoiceDetailPage({
   const [transactionId, setTransactionId] = useState("")
   const [paymentNotes, setPaymentNotes] = useState("")
 
+  // Payment link state
+  const [linkLoading, setLinkLoading] = useState(false)
+  const [paymentLink, setPaymentLink] = useState("")
+  const [linkCopied, setLinkCopied] = useState(false)
+
   const fetchInvoice = async () => {
     try {
       setLoading(true)
@@ -229,6 +239,30 @@ export default function InvoiceDetailPage({
       setError(error.message)
     } finally {
       setPaymentSubmitting(false)
+    }
+  }
+
+  const handleSharePaymentLink = async () => {
+    try {
+      setLinkLoading(true)
+      const res = await fetch("/api/payments/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceId: id }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Failed to generate link")
+      }
+      const data = await res.json()
+      setPaymentLink(data.link.url)
+      await navigator.clipboard.writeText(data.link.url)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 3000)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLinkLoading(false)
     }
   }
 
@@ -332,10 +366,19 @@ export default function InvoiceDetailPage({
             Print
           </Button>
           {["PENDING", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
-            <Button onClick={() => setPaymentDialogOpen(true)}>
-              <CreditCard className="h-4 w-4 mr-2" />
-              Record Payment
-            </Button>
+            <>
+              <PaymentCheckout
+                invoiceId={invoice.id}
+                amount={Number(invoice.balanceAmount)}
+                invoiceNo={invoice.invoiceNo}
+                patientName={`${invoice.patient.firstName} ${invoice.patient.lastName}`}
+                onSuccess={fetchInvoice}
+              />
+              <Button onClick={() => setPaymentDialogOpen(true)}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Record Payment
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -657,6 +700,23 @@ export default function InvoiceDetailPage({
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              {["PENDING", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleSharePaymentLink}
+                  disabled={linkLoading}
+                >
+                  {linkLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : linkCopied ? (
+                    <Check className="h-4 w-4 mr-2 text-green-500" />
+                  ) : (
+                    <Share2 className="h-4 w-4 mr-2" />
+                  )}
+                  {linkCopied ? "Link Copied!" : "Share Payment Link"}
+                </Button>
+              )}
               <Button variant="outline" className="w-full justify-start" onClick={() => window.print()}>
                 <Printer className="h-4 w-4 mr-2" />
                 Print Invoice

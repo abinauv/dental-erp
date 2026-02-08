@@ -40,6 +40,8 @@ vi.mock('next/headers', () => ({
 process.env.DATABASE_URL = 'mysql://test:test@localhost:3306/dental_erp_test'
 process.env.NEXTAUTH_SECRET = 'test-secret-key-for-testing'
 process.env.NEXTAUTH_URL = 'http://localhost:3000'
+process.env.OPENROUTER_API_KEY = 'test-openrouter-api-key'
+process.env.CRON_SECRET = 'test-cron-secret'
 
 // Global fetch mock
 global.fetch = vi.fn()

@@ -92,6 +92,16 @@ model Hospital {
   aiSkillExecutions   AISkillExecution[]
   aiInsights          AIInsight[]
   patientRiskScores   PatientRiskScore[]
+  patientPortalEnabled Boolean   @default(false)
+
+  paymentGatewayConfig PaymentGatewayConfig?
+  paymentLinks        PaymentLink[]
+  patientOTPs         PatientOTP[]
+  formTemplates       FormTemplate[]
+  formSubmissions     FormSubmission[]
+  insuranceProviders  InsuranceProviderMaster[]
+  patientInsurances   PatientInsurance[]
+  preAuthorizations   PreAuthorization[]
 
   @@index([slug])
   @@index([plan])
@@ -415,6 +425,9 @@ model Patient {
   emergencyContactPhone    String?
   emergencyContactRelation String?
 
+  aiSummary       Json?
+  aiSummaryAt     DateTime?
+
   isActive        Boolean    @default(true)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -430,6 +443,9 @@ model Patient {
   documents       Document[]
   labOrders       LabOrder[]
   riskScores      PatientRiskScore[]
+  insurancePolicies PatientInsurance[]
+  insuranceClaims InsuranceClaim[]
+  preAuthorizations PreAuthorization[]
 
   @@unique([hospitalId, patientId])
   @@index([hospitalId])
@@ -948,6 +964,7 @@ model Invoice {
   patient         Patient       @relation(fields: [patientId], references: [id])
   items           InvoiceItem[]
   payments        Payment[]
+  paymentLinks    PaymentLink[]
   insuranceClaim  InsuranceClaim? @relation(fields: [insuranceClaimId], references: [id])
 
   @@unique([hospitalId, invoiceNo])
@@ -997,6 +1014,11 @@ model Payment {
   refundDate      DateTime?
   refundReason    String?
 
+  gateway           String?    // razorpay / phonepe / paytm
+  gatewayOrderId    String?    // Provider's order/transaction ID
+  gatewayPaymentId  String?    // Provider's payment ID
+  gatewayStatus     String?    // Provider-reported status
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -1007,6 +1029,7 @@ model Payment {
   @@index([hospitalId])
   @@index([invoiceId])
   @@index([paymentDate])
+  @@index([gatewayOrderId])
 }
 
 model InsuranceClaim {
@@ -1027,6 +1050,12 @@ model InsuranceClaim {
   settledDate     DateTime?
   rejectionReason String?
 
+  denialCode      String?
+  appealDeadline  DateTime?
+  appealStatus    String?
+  appealDate      DateTime?
+  appealNotes     String?              @db.Text
+
   documents       String?              @db.Text
   notes           String?              @db.Text
 
@@ -1034,6 +1063,7 @@ model InsuranceClaim {
   updatedAt       DateTime             @updatedAt
 
   hospital        Hospital             @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient         Patient              @relation(fields: [patientId], references: [id])
   invoices        Invoice[]
 
   @@unique([hospitalId, claimNumber])
@@ -1065,6 +1095,13 @@ enum PaymentMethod {
   CHEQUE
   INSURANCE
   WALLET
+  ONLINE
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  PHONEPE
+  PAYTM
 }
 
 enum PaymentStatus {
@@ -1083,6 +1120,152 @@ enum InsuranceClaimStatus {
   PARTIALLY_APPROVED
   REJECTED
   SETTLED
+}
+
+// ==================== INSURANCE MANAGEMENT ====================
+
+model InsuranceProviderMaster {
+  id              String   @id @default(cuid())
+  hospitalId      String
+  name            String
+  code            String?
+  contactPhone    String?
+  contactEmail    String?
+  website         String?
+  claimSubmissionUrl String?
+  portalUsername   String?
+  portalPassword  String?  @db.Text
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hospital        Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  policies        PatientInsurance[]
+
+  @@unique([hospitalId, name])
+  @@index([hospitalId])
+}
+
+model PatientInsurance {
+  id                  String    @id @default(cuid())
+  hospitalId          String
+  patientId           String
+  providerId          String
+  policyNumber        String
+  groupNumber         String?
+  memberId            String
+  subscriberName      String
+  subscriberRelation  String    @default("Self")
+  effectiveDate       DateTime
+  expiryDate          DateTime?
+  coverageType        String?
+  annualMaximum       Decimal?  @db.Decimal(10, 2)
+  usedAmount          Decimal?  @db.Decimal(10, 2)
+  remainingAmount     Decimal?  @db.Decimal(10, 2)
+  deductible          Decimal?  @db.Decimal(10, 2)
+  deductibleMet       Boolean   @default(false)
+  copayPercentage     Decimal?  @db.Decimal(5, 2)
+  isActive            Boolean   @default(true)
+  lastVerifiedAt      DateTime?
+  verificationStatus  String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  hospital            Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient             Patient   @relation(fields: [patientId], references: [id])
+  provider            InsuranceProviderMaster @relation(fields: [providerId], references: [id])
+  preAuthorizations   PreAuthorization[]
+
+  @@index([hospitalId])
+  @@index([patientId])
+  @@index([providerId])
+}
+
+model PreAuthorization {
+  id              String   @id @default(cuid())
+  hospitalId      String
+  patientId       String
+  insurancePolicyId String
+  treatmentPlanId String?
+
+  authNumber      String?
+  requestDate     DateTime @default(now())
+  procedures      Json
+  estimatedCost   Decimal  @db.Decimal(10, 2)
+  status          PreAuthStatus @default(PENDING)
+  approvedAmount  Decimal? @db.Decimal(10, 2)
+  approvedDate    DateTime?
+  expiryDate      DateTime?
+  denialReason    String?
+  notes           String?  @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hospital        Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient         Patient  @relation(fields: [patientId], references: [id])
+  policy          PatientInsurance @relation(fields: [insurancePolicyId], references: [id])
+
+  @@index([hospitalId])
+  @@index([patientId])
+  @@index([status])
+}
+
+enum PreAuthStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  DENIED
+  EXPIRED
+}
+
+// ==================== PAYMENT GATEWAY ====================
+
+model PaymentGatewayConfig {
+  id              String          @id @default(cuid())
+  hospitalId      String          @unique
+  provider        PaymentProvider
+  isEnabled       Boolean         @default(false)
+  isLiveMode      Boolean         @default(false)
+
+  // Razorpay
+  razorpayKeyId       String?
+  razorpayKeySecret   String?     // Encrypted at rest
+
+  // PhonePe
+  phonepeMerchantId   String?
+  phonepeSaltKey      String?     // Encrypted at rest
+  phonepeSaltIndex    String?
+
+  // Paytm
+  paytmMid            String?
+  paytmMerchantKey    String?     // Encrypted at rest
+  paytmWebsite        String?     // WEBSTAGING or DEFAULT
+
+  webhookSecret       String?     // For verifying incoming webhooks
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  hospital            Hospital    @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+}
+
+model PaymentLink {
+  id            String    @id @default(cuid())
+  hospitalId    String
+  invoiceId     String
+  token         String    @unique
+  amount        Decimal   @db.Decimal(10, 2)
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  hospital      Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  invoice       Invoice   @relation(fields: [invoiceId], references: [id])
+
+  @@index([hospitalId])
+  @@index([token])
+  @@index([invoiceId])
 }
 
 // ==================== INVENTORY MANAGEMENT ====================
@@ -1941,4 +2124,86 @@ model PatientRiskScore {
   @@index([patientId])
   @@index([hospitalId])
   @@index([calculatedAt])
+}
+
+// ==================== INTAKE FORMS & CONSENT ====================
+
+model FormTemplate {
+  id          String         @id @default(cuid())
+  hospitalId  String
+  name        String
+  description String?        @db.Text
+  type        FormType
+  fields      Json           // Array of field definitions
+  isActive    Boolean        @default(true)
+  isDefault   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  hospital    Hospital       @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+
+  @@index([hospitalId])
+  @@index([type])
+}
+
+model FormSubmission {
+  id            String               @id @default(cuid())
+  hospitalId    String
+  templateId    String
+  patientId     String?
+  appointmentId String?
+
+  data          Json                 // Submitted form data
+  signature     String?              @db.LongText
+  signedAt      DateTime?
+  ipAddress     String?
+
+  status        FormSubmissionStatus @default(SUBMITTED)
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  reviewNotes   String?              @db.Text
+
+  createdAt     DateTime             @default(now())
+
+  hospital      Hospital             @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  template      FormTemplate         @relation(fields: [templateId], references: [id])
+
+  @@index([hospitalId])
+  @@index([patientId])
+  @@index([appointmentId])
+  @@index([status])
+}
+
+enum FormType {
+  MEDICAL_HISTORY
+  CONSENT
+  INTAKE
+  FEEDBACK
+  CUSTOM
+}
+
+enum FormSubmissionStatus {
+  SUBMITTED
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
+// ==================== PATIENT PORTAL ====================
+
+model PatientOTP {
+  id          String   @id @default(cuid())
+  hospitalId  String
+  phone       String
+  otp         String
+  expiresAt   DateTime
+  verified    Boolean  @default(false)
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([phone, hospitalId])
+  @@index([expiresAt])
 }

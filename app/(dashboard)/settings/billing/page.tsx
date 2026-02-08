@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Receipt, Save } from 'lucide-react';
+import { GatewaySettings } from '@/components/billing/gateway-settings';
 
 export default function BillingSettingsPage() {
   const { toast } = useToast();
@@ -98,6 +99,9 @@ export default function BillingSettingsPage() {
       </div>
 
       <div className="space-y-6">
+        {/* Payment Gateway */}
+        <GatewaySettings />
+
         {/* Tax Configuration */}
         <Card>
           <CardHeader>

@@ -27,8 +27,8 @@ const QUERY_BUILDERS: Record<
     const where: any = { hospitalId }
     if (filters.name) {
       where.OR = [
-        { firstName: { contains: filters.name, mode: "insensitive" } },
-        { lastName: { contains: filters.name, mode: "insensitive" } },
+        { firstName: { contains: filters.name } },
+        { lastName: { contains: filters.name } },
       ]
     }
     if (filters.minAge) where.age = { gte: Number(filters.minAge) }
@@ -42,7 +42,10 @@ const QUERY_BUILDERS: Record<
   appointment: async (hospitalId, filters, limit) => {
     const where: any = { hospitalId }
     if (filters.status) where.status = filters.status
-    if (filters.date) where.scheduledDate = new Date(filters.date + "T00:00:00")
+    if (filters.date) {
+      const d = new Date(filters.date + "T00:00:00")
+      if (!isNaN(d.getTime())) where.scheduledDate = d
+    }
     return prisma.appointment.findMany({
       where,
       include: {
@@ -124,7 +127,11 @@ export async function POST(req: Request) {
       getModelByTier("query")
     )
     spec = JSON.parse(extractJSON(content))
-  } catch {
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : ""
+    if (msg.includes("OpenRouter")) {
+      return NextResponse.json({ error: `AI service error: ${msg}` }, { status: 502 })
+    }
     return NextResponse.json({ error: "Could not parse your query. Try rephrasing." }, { status: 400 })
   }
 
@@ -144,7 +151,7 @@ export async function POST(req: Request) {
   }
 
   // Log
-  await prisma.aiSkillExecution.create({
+  await prisma.aISkillExecution.create({
     data: {
       hospitalId,
       userId: user.id,

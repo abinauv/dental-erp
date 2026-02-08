@@ -124,7 +124,7 @@ Keep it under 300 words. Use clear formatting.`
     )
 
     // Save as an insight
-    await prisma.aiInsight.create({
+    await prisma.aIInsight.create({
       data: {
         hospitalId,
         category: "OPERATIONAL",

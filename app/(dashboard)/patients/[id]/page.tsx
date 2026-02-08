@@ -72,9 +72,12 @@ import {
   Pill,
   TestTube,
   Smile,
+  Shield,
 } from "lucide-react"
 import { DentalChart } from "@/components/dental-chart"
 import { Patient360 } from "@/components/ai/patient-360"
+import { PatientFormSubmissions } from "@/components/forms/patient-form-submissions"
+import { PatientInsurance } from "@/components/insurance/patient-insurance"
 
 interface Patient {
   id: string
@@ -406,7 +409,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="overview" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -435,6 +438,14 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           <TabsTrigger value="billing" className="gap-2">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">Billing</span>
+          </TabsTrigger>
+          <TabsTrigger value="forms" className="gap-2">
+            <FileCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Forms</span>
+          </TabsTrigger>
+          <TabsTrigger value="insurance" className="gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Insurance</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1131,6 +1142,16 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Forms Tab */}
+        <TabsContent value="forms" className="space-y-6">
+          <PatientFormSubmissions patientId={patient.id} />
+        </TabsContent>
+
+        {/* Insurance Tab */}
+        <TabsContent value="insurance" className="space-y-6">
+          <PatientInsurance patientId={patient.id} />
         </TabsContent>
       </Tabs>
     </div>

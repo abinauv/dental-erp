@@ -78,7 +78,7 @@ export async function GET(req: Request) {
         .filter(Boolean)
         .join("; ")
 
-      await prisma.aiInsight.create({
+      await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
           category: "PATIENT",

@@ -3,26 +3,38 @@ import { requireAuthAndRole } from '@/lib/api-helpers';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
+const optionalString = z.preprocess(
+  (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+  z.string().optional()
+);
+
 const clinicInfoSchema = z.object({
   name: z.string().min(1),
-  tagline: z.string().optional(),
-  logo: z.string().optional(),
+  tagline: optionalString,
+  logo: optionalString,
   phone: z.string().min(10),
-  alternatePhone: z.string().optional(),
-  email: z.string().email().optional(),
-  website: z.string().url().optional().or(z.literal('')),
+  alternatePhone: optionalString,
+  email: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().email().optional()
+  ),
+  website: z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().url().optional()
+  ),
   address: z.string().min(1),
   city: z.string().min(1),
   state: z.string().min(1),
   pincode: z.string().min(6),
-  registrationNo: z.string().optional(),
-  gstNumber: z.string().optional(),
-  panNumber: z.string().optional(),
-  workingHours: z.string().optional(),
-  bankName: z.string().optional(),
-  bankAccountNo: z.string().optional(),
-  bankIfsc: z.string().optional(),
-  upiId: z.string().optional(),
+  registrationNo: optionalString,
+  gstNumber: optionalString,
+  panNumber: optionalString,
+  workingHours: optionalString,
+  bankName: optionalString,
+  bankAccountNo: optionalString,
+  bankIfsc: optionalString,
+  upiId: optionalString,
+  patientPortalEnabled: z.boolean().optional(),
 });
 
 // GET /api/settings/clinic - Get clinic information
@@ -56,6 +68,8 @@ export async function GET(req: NextRequest) {
         bankAccountNo: true,
         bankIfsc: true,
         upiId: true,
+        slug: true,
+        patientPortalEnabled: true,
       },
     });
 

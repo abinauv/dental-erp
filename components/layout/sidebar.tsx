@@ -18,10 +18,11 @@ import { useSidebar } from "./sidebar-context"
 interface SidebarProps {
   role: string
   hospitalName?: string
+  hospitalLogo?: string | null
   plan?: string
 }
 
-export function Sidebar({ role, hospitalName, plan }: SidebarProps) {
+export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps) {
   const pathname = usePathname()
   const navigation = getNavigationForRole(role)
   const { isCollapsed, toggleSidebar } = useSidebar()
@@ -47,9 +48,17 @@ export function Sidebar({ role, hospitalName, plan }: SidebarProps) {
               isCollapsed && "justify-center"
             )}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-              {hospitalName?.charAt(0) || "D"}
-            </div>
+            {hospitalLogo ? (
+              <img
+                src={hospitalLogo}
+                alt={hospitalName || "Logo"}
+                className="h-8 w-8 shrink-0 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+                {hospitalName?.charAt(0) || "D"}
+              </div>
+            )}
             {!isCollapsed && (
               <div className="flex flex-col">
                 <span className="text-sm font-semibold leading-tight truncate max-w-[140px]">

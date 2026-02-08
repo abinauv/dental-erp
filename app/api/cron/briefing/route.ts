@@ -92,7 +92,7 @@ export async function GET(req: Request) {
       )
 
       // Save as insight
-      await prisma.aiInsight.create({
+      await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
           category: "OPERATIONAL",

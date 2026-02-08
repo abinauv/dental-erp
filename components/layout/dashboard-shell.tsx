@@ -17,6 +17,7 @@ interface DashboardShellProps {
   hospital?: {
     name: string
     plan: string
+    logo?: string | null
   }
 }
 
@@ -30,6 +31,7 @@ export function DashboardShell({ children, user, hospital }: DashboardShellProps
           <Sidebar
             role={user.role}
             hospitalName={hospital?.name}
+            hospitalLogo={hospital?.logo}
             plan={hospital?.plan}
           />
         </aside>

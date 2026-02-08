@@ -99,10 +99,10 @@ export default function InvoicesPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("all")
+  const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [dateFrom, setDateFrom] = useState("all")
-  const [dateTo, setDateTo] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
   const [overdueOnly, setOverdueOnly] = useState(false)
 
   const fetchInvoices = async () => {

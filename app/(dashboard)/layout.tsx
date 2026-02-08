@@ -23,6 +23,7 @@ export default async function DashboardLayout({
         select: {
           name: true,
           plan: true,
+          logo: true,
           onboardingCompleted: true,
         },
       })
@@ -43,6 +44,7 @@ export default async function DashboardLayout({
     ? {
         name: hospital.name,
         plan: hospital.plan,
+        logo: hospital.logo,
       }
     : undefined
 

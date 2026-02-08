@@ -3,6 +3,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { requireAuthAndRole, checkStaffLimit, generateToken } from "@/lib/api-helpers"
 import { Role, StaffInviteStatus } from "@prisma/client"
+import { sendInviteEmail } from "@/lib/email-helpers"
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -99,12 +100,21 @@ export async function POST(request: Request) {
       select: { name: true },
     })
 
-    // TODO: Send invite email
-    // In production, send email with link: /invite/accept?token={token}
+    // Send invite email (non-blocking — logs error if SMTP not configured)
+    const emailSent = await sendInviteEmail({
+      to: email,
+      inviteeName: name,
+      hospitalName: hospital?.name || "Your Dental Clinic",
+      role,
+      inviterName: user!.name || "Admin",
+      token,
+    })
 
     return NextResponse.json({
       success: true,
-      message: `Invitation sent to ${email}`,
+      message: emailSent
+        ? `Invitation sent to ${email}`
+        : `Invite created for ${email} (email delivery pending — check SMTP settings)`,
       invite: {
         id: invite.id,
         email: invite.email,
@@ -112,10 +122,10 @@ export async function POST(request: Request) {
         role: invite.role,
         expiresAt: invite.expiresAt,
       },
-      // Remove this in production - only for development testing
+      emailSent,
+      // Development-only: show direct link for testing
       ...(process.env.NODE_ENV === "development" && {
         inviteLink: `/invite/accept?token=${token}`,
-        hospitalName: hospital?.name,
       }),
     })
   } catch (error) {

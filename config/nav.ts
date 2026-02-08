@@ -14,7 +14,13 @@ import {
   Shield,
   TrendingUp,
   MessageSquare,
+  BotMessageSquare,
   Sparkles,
+  Pill,
+  ClipboardList,
+  ClipboardCheck,
+  Building2,
+  FileCheck,
   type LucideIcon,
 } from "lucide-react"
 
@@ -36,6 +42,11 @@ export const navigation: NavSection[] = [
   {
     title: "Overview",
     items: [
+      {
+        title: "AI Chat",
+        href: "/chat",
+        icon: BotMessageSquare,
+      },
       {
         title: "Dashboard",
         href: "/dashboard",
@@ -60,6 +71,18 @@ export const navigation: NavSection[] = [
         title: "Treatments",
         href: "/treatments",
         icon: Stethoscope,
+        roles: ["ADMIN", "DOCTOR"],
+      },
+      {
+        title: "Prescriptions",
+        href: "/prescriptions",
+        icon: ClipboardList,
+        roles: ["ADMIN", "DOCTOR"],
+      },
+      {
+        title: "Drug Catalog",
+        href: "/medications",
+        icon: Pill,
         roles: ["ADMIN", "DOCTOR"],
       },
     ],
@@ -93,6 +116,18 @@ export const navigation: NavSection[] = [
             href: "/billing/insurance",
             icon: Shield,
             roles: ["ADMIN", "ACCOUNTANT"],
+          },
+          {
+            title: "Pre-Authorizations",
+            href: "/billing/insurance/pre-auth",
+            icon: FileCheck,
+            roles: ["ADMIN", "ACCOUNTANT"],
+          },
+          {
+            title: "Insurance Providers",
+            href: "/billing/insurance/providers",
+            icon: Building2,
+            roles: ["ADMIN"],
           },
           {
             title: "Financial Reports",
@@ -179,6 +214,11 @@ export const navigation: NavSection[] = [
             title: "AI Features",
             href: "/settings/ai",
             icon: Sparkles,
+          },
+          {
+            title: "Forms",
+            href: "/settings/forms",
+            icon: ClipboardCheck,
           },
         ],
       },

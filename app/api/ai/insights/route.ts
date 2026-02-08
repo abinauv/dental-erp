@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { requireAuthAndRole } from "@/lib/api-helpers"
 import { prisma } from "@/lib/prisma"
 import { complete } from "@/lib/ai/openrouter"
@@ -12,7 +12,7 @@ import { extractJSON } from "@/lib/ai/openrouter"
  */
 
 // GET – list insights
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId) return error
 
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   // Exclude expired insights
   where.OR = [{ expiresAt: null }, { expiresAt: { gte: new Date() } }]
 
-  const insights = await prisma.aiInsight.findMany({
+  const insights = await prisma.aIInsight.findMany({
     where,
     orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
     take: 20,
@@ -110,7 +110,7 @@ Respond ONLY with a JSON array of insight objects:
   // Persist
   const created = await Promise.all(
     insights.map((ins) =>
-      prisma.aiInsight.create({
+      prisma.aIInsight.create({
         data: {
           hospitalId,
           category: (ins.category as any) || "OPERATIONAL",
@@ -142,7 +142,7 @@ export async function PUT(req: Request) {
   const { id, dismissed, actionTaken } = body
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 })
 
-  const updated = await prisma.aiInsight.updateMany({
+  const updated = await prisma.aIInsight.updateMany({
     where: { id, hospitalId },
     data: {
       ...(dismissed !== undefined && { dismissed }),

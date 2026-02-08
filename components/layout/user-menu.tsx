@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { LogOut, User, Settings } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -31,6 +32,7 @@ const roleColors: Record<string, string> = {
 }
 
 export function UserMenu({ user }: UserMenuProps) {
+  const router = useRouter()
   const initials = user.name
     .split(" ")
     .map((n) => n[0])
@@ -65,11 +67,11 @@ export function UserMenu({ user }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/settings")}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/settings")}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>

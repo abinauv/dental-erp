@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { generateUniqueSlug, generateToken, PLAN_LIMITS } from "@/lib/api-helpers"
 import { Plan, Role } from "@prisma/client"
+import { sendVerificationEmail } from "@/lib/email-helpers"
 
 const signupSchema = z.object({
   hospitalName: z.string().min(2, "Hospital name must be at least 2 characters"),
@@ -96,15 +97,22 @@ export async function POST(request: Request) {
       return { hospital, user }
     })
 
-    // TODO: Send verification email
-    // For now, we'll just return success with the token for testing
-    // In production, send email with link: /verify-email?token={verificationToken}
+    // Send verification email (non-blocking — logs error if SMTP not configured)
+    const emailSent = await sendVerificationEmail({
+      to: email,
+      userName: adminName,
+      hospitalName,
+      token: verificationToken,
+    })
 
     return NextResponse.json({
       success: true,
-      message: "Account created successfully. Please check your email to verify your account.",
+      message: emailSent
+        ? "Account created successfully. Please check your email to verify your account."
+        : "Account created successfully. Email verification pending — please configure SMTP settings.",
       hospitalId: result.hospital.id,
-      // Remove this in production - only for development testing
+      emailSent,
+      // Development-only: show token for testing
       ...(process.env.NODE_ENV === "development" && { verificationToken }),
     })
   } catch (error) {

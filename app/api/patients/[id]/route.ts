@@ -159,6 +159,9 @@ export async function PUT(
         emergencyContactName,
         emergencyContactPhone,
         emergencyContactRelation,
+        // Clear cached AI summary so it regenerates on next view
+        aiSummary: null,
+        aiSummaryAt: null,
       },
     });
 

@@ -16,11 +16,15 @@ const EXAMPLE_QUERIES = [
 ]
 
 interface QueryResult {
+  /** Set by our fetch handler */
   success: boolean
-  results?: Record<string, unknown>[]
+  /** Rows returned from /api/ai/query */
+  rows?: Record<string, unknown>[]
   columns?: string[]
+  summary?: string
+  rowCount?: number
+  model?: string
   error?: string
-  message?: string
 }
 
 /**
@@ -46,7 +50,11 @@ export function ReportBuilder() {
         body: JSON.stringify({ query: query.trim() }),
       })
       const data = await res.json()
-      setResult(data)
+      if (res.ok) {
+        setResult({ success: true, ...data })
+      } else {
+        setResult({ success: false, error: data.error || "Query failed" })
+      }
       setHistory((prev) => [query.trim(), ...prev.filter((h) => h !== query.trim())].slice(0, 10))
     } catch {
       setResult({ success: false, error: "Failed to execute query" })
@@ -57,8 +65,8 @@ export function ReportBuilder() {
 
   // ---------------------------------------------------------------
   const exportJSON = () => {
-    if (!result?.results) return
-    const blob = new Blob([JSON.stringify(result.results, null, 2)], { type: "application/json" })
+    if (!result?.rows) return
+    const blob = new Blob([JSON.stringify(result.rows, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -68,7 +76,7 @@ export function ReportBuilder() {
   }
 
   // Derive column headers from first row if /api/ai/query doesn't return them
-  const columns = result?.columns || (result?.results?.[0] ? Object.keys(result.results[0]) : [])
+  const columns = result?.columns || (result?.rows?.[0] ? Object.keys(result.rows[0]) : [])
 
   // ---------------------------------------------------------------
   return (
@@ -145,9 +153,9 @@ export function ReportBuilder() {
       {result && !loading && (
         <div className="rounded-lg border overflow-hidden">
           {/* AI narrative summary */}
-          {result.message && (
+          {result.summary && (
             <div className="p-3 bg-primary/5 border-b">
-              <p className="text-sm leading-relaxed">{result.message}</p>
+              <p className="text-sm leading-relaxed">{result.summary}</p>
             </div>
           )}
 
@@ -157,7 +165,7 @@ export function ReportBuilder() {
           )}
 
           {/* data table */}
-          {result.success && result.results && result.results.length > 0 && (
+          {result.success && result.rows && result.rows.length > 0 && (
             <div className="overflow-auto max-h-64">
               <table className="w-full text-sm">
                 <thead>
@@ -170,7 +178,7 @@ export function ReportBuilder() {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.results.map((row, i) => (
+                  {result.rows.map((row, i) => (
                     <tr key={i} className={cn("border-t", i % 2 === 0 ? "bg-background" : "bg-muted/30")}>
                       {columns.map((col) => (
                         <td key={col} className="px-3 py-1.5 whitespace-nowrap">
@@ -185,12 +193,12 @@ export function ReportBuilder() {
           )}
 
           {/* empty state */}
-          {result.success && (!result.results || result.results.length === 0) && (
+          {result.success && (!result.rows || result.rows.length === 0) && (
             <div className="p-3 text-sm text-muted-foreground">No results found for this query.</div>
           )}
 
           {/* export button */}
-          {result.success && result.results && result.results.length > 0 && (
+          {result.success && result.rows && result.rows.length > 0 && (
             <div className="p-2 border-t flex justify-end">
               <button onClick={exportJSON} className="text-xs text-muted-foreground hover:text-primary transition-colors">
                 ⬇ Export JSON

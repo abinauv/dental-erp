@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireAuthAndRole } from "@/lib/api-helpers"
 import { StaffInviteStatus } from "@prisma/client"
+import { sendInviteEmail } from "@/lib/email-helpers"
 
 // Cancel/revoke an invite
 export async function DELETE(
@@ -87,12 +88,31 @@ export async function POST(
       data: { expiresAt: newExpiresAt },
     })
 
-    // TODO: Resend invite email
+    // Fetch hospital name and inviter for the email
+    const [hospital, inviter] = await Promise.all([
+      prisma.hospital.findUnique({ where: { id: hospitalId }, select: { name: true } }),
+      invite.invitedById
+        ? prisma.user.findUnique({ where: { id: invite.invitedById }, select: { name: true } })
+        : null,
+    ])
+
+    // Resend invite email (non-blocking)
+    const emailSent = await sendInviteEmail({
+      to: invite.email,
+      inviteeName: invite.name,
+      hospitalName: hospital?.name || "Your Dental Clinic",
+      role: invite.role,
+      inviterName: inviter?.name || "Admin",
+      token: invite.token,
+    })
 
     return NextResponse.json({
       success: true,
-      message: `Invite resent to ${invite.email}`,
+      message: emailSent
+        ? `Invite resent to ${invite.email}`
+        : `Invite renewed for ${invite.email} (email delivery pending)`,
       expiresAt: newExpiresAt,
+      emailSent,
     })
   } catch (error) {
     console.error("Resend invite error:", error)

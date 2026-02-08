@@ -70,14 +70,17 @@ const conditions = [
 
 const surfaces = ["M", "D", "O", "B", "L", "I", "F", "P"]
 
+const EMPTY_ENTRIES: DentalChartEntry[] = []
+const EMPTY_TEETH: number[] = []
+
 export function DentalChart({
   patientId,
-  entries = [],
+  entries = EMPTY_ENTRIES,
   onToothClick,
   onEntryCreate,
   onEntryUpdate,
   editable = false,
-  selectedTeeth = [],
+  selectedTeeth = EMPTY_TEETH,
   onTeethSelect,
 }: DentalChartProps) {
   const [chartData, setChartData] = useState<Record<number, DentalChartEntry[]>>({})

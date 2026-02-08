@@ -66,6 +66,15 @@ export async function GET(request: NextRequest) {
       prisma.insuranceClaim.findMany({
         where,
         include: {
+          patient: {
+            select: {
+              id: true,
+              patientId: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+            }
+          },
           invoices: {
             select: {
               id: true,
@@ -84,28 +93,6 @@ export async function GET(request: NextRequest) {
       prisma.insuranceClaim.count({ where })
     ])
 
-    // Fetch patients for all claims
-    const patientIds = [...new Set(claims.map(c => c.patientId))]
-    const patients = await prisma.patient.findMany({
-      where: { id: { in: patientIds }, hospitalId },
-      select: {
-        id: true,
-        patientId: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-      }
-    })
-
-    // Create a patient lookup map
-    const patientMap = new Map(patients.map(p => [p.id, p]))
-
-    // Attach patient data to claims
-    const claimsWithPatients = claims.map(claim => ({
-      ...claim,
-      patient: patientMap.get(claim.patientId)
-    }))
-
     // Calculate summary stats
     const [totalClaimed, totalApproved, totalSettled] = await Promise.all([
       prisma.insuranceClaim.aggregate({
@@ -123,7 +110,7 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      claims: claimsWithPatients,
+      claims,
       summary: {
         totalClaimed: totalClaimed._sum.claimAmount || 0,
         totalApproved: totalApproved._sum.approvedAmount || 0,
@@ -256,22 +243,23 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Fetch patient details for response
-    const patientDetails = await prisma.patient.findUnique({
-      where: { id: claim.patientId },
-      select: {
-        id: true,
-        patientId: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
+    // Fetch the claim with patient relation for response
+    const fullClaim = await prisma.insuranceClaim.findUnique({
+      where: { id: claim.id },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            patientId: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          }
+        },
       }
     })
 
-    return NextResponse.json({
-      ...claim,
-      patient: patientDetails
-    }, { status: 201 })
+    return NextResponse.json(fullClaim, { status: 201 })
   } catch (error) {
     console.error("Error creating insurance claim:", error)
     return NextResponse.json(

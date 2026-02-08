@@ -103,7 +103,7 @@ Respond ONLY with JSON:
       })
 
       // Log execution
-      await prisma.aiSkillExecution.create({
+      await prisma.aISkillExecution.create({
         data: {
           hospitalId,
           userId: user.id,

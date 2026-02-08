@@ -279,6 +279,18 @@ export default function BillingPage() {
                 Insurance Claims
               </Button>
             </Link>
+            <Link href="/billing/insurance/providers" className="block">
+              <Button variant="outline" className="w-full justify-start">
+                <Shield className="h-4 w-4 mr-2" />
+                Insurance Providers
+              </Button>
+            </Link>
+            <Link href="/billing/insurance/pre-auth" className="block">
+              <Button variant="outline" className="w-full justify-start">
+                <FileText className="h-4 w-4 mr-2" />
+                Pre-Authorizations
+              </Button>
+            </Link>
             <Link href="/billing/reports" className="block">
               <Button variant="outline" className="w-full justify-start">
                 <BarChart3 className="h-4 w-4 mr-2" />

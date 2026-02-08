@@ -53,7 +53,7 @@ export async function GET(req: Request) {
 
     // Alert: critical stock
     if (criticalItems.length > 0) {
-      await prisma.aiInsight.create({
+      await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
           category: "INVENTORY",
@@ -70,7 +70,7 @@ export async function GET(req: Request) {
     // Alert: items approaching reorder (but not critical)
     const approachingItems = lowItems.filter((i) => i.currentStock > i.minimumStock)
     if (approachingItems.length > 0) {
-      await prisma.aiInsight.create({
+      await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
           category: "INVENTORY",
@@ -86,7 +86,7 @@ export async function GET(req: Request) {
 
     // Alert: expiring batches
     if (expiringBatches.length > 0) {
-      await prisma.aiInsight.create({
+      await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
           category: "INVENTORY",

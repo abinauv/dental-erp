@@ -11,7 +11,7 @@ export interface ModelConfig {
 
 export const AI_MODELS: Record<string, ModelConfig> = {
   default: { model: "google/gemini-2.5-pro", maxTokens: 4096, temperature: 0.7 },
-  clinical: { model: "anthropic/claude-opus-4-5-20251101", maxTokens: 8192, temperature: 0.2 },
+  clinical: { model: "anthropic/claude-opus-4.5", maxTokens: 8192, temperature: 0.2 },
   reports: { model: "google/gemini-2.5-pro", maxTokens: 8192, temperature: 0.3 },
   query: { model: "google/gemini-2.5-pro", maxTokens: 4096, temperature: 0.1 },
   scheduling: { model: "google/gemini-2.5-pro", maxTokens: 2048, temperature: 0.3 },

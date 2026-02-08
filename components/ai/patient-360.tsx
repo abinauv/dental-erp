@@ -12,26 +12,28 @@ interface Summary {
 
 /**
  * Patient360 — AI-generated 360° patient summary card.
- * Fetches via POST /api/ai/clinical { type: "patient_summary" }.
- * Rendered in the Overview tab of the patient detail page.
+ * Loads cached summary from DB on first render. Calls AI only when
+ * no cache exists or user clicks Regenerate.
  */
 export function Patient360({ patientId }: { patientId: string }) {
   const [data, setData] = useState<Summary | null>(null)
+  const [cached, setCached] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (refresh = false) => {
     setLoading(true)
     setError(false)
     try {
       const res = await fetch("/api/ai/clinical", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "patient_summary", patientId }),
+        body: JSON.stringify({ type: "patient_summary", patientId, refresh }),
       })
       const json = await res.json()
       if (json.success && json.data) {
         setData(json.data)
+        setCached(!!json.cached)
       } else {
         setError(true)
       }
@@ -43,7 +45,7 @@ export function Patient360({ patientId }: { patientId: string }) {
   }, [patientId])
 
   useEffect(() => {
-    load()
+    load(false)
   }, [load])
 
   /* ---- loading skeleton ---- */
@@ -72,12 +74,17 @@ export function Patient360({ patientId }: { patientId: string }) {
         <div className="flex items-center gap-2">
           <span className="text-lg">🤖</span>
           <h3 className="text-sm font-semibold">AI Patient Summary</h3>
+          {cached && (
+            <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+              cached
+            </span>
+          )}
         </div>
         <button
-          onClick={load}
+          onClick={() => load(true)}
           className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          ↻ Refresh
+          ↻ Regenerate
         </button>
       </div>
 

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { requireAuthAndRole } from "@/lib/api-helpers"
 import { prisma } from "@/lib/prisma"
 import { buildContext, serializeContext } from "@/lib/ai/context-builder"
@@ -38,7 +38,7 @@ SUGGESTION GUIDELINES by page:
 Keep it concise and relevant.`
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId) return error
 

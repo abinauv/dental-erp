@@ -47,14 +47,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (dateFrom || dateTo) {
-      where.invoiceDate = {}
+      where.createdAt = {}
       if (dateFrom) {
-        where.invoiceDate.gte = new Date(dateFrom)
+        where.createdAt.gte = new Date(dateFrom)
       }
       if (dateTo) {
         const endDate = new Date(dateTo)
         endDate.setHours(23, 59, 59, 999)
-        where.invoiceDate.lte = endDate
+        where.createdAt.lte = endDate
       }
     }
 

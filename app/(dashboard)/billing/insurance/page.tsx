@@ -39,7 +39,19 @@ import {
   IndianRupee,
   FileText,
   Clock,
+  Building2,
+  FileCheck,
+  AlertTriangle,
+  Gavel,
 } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +77,12 @@ interface InsuranceClaim {
   submissionDate: string | null
   approvalDate: string | null
   settlementDate: string | null
+  rejectionReason: string | null
+  denialCode: string | null
+  appealDeadline: string | null
+  appealStatus: string | null
+  appealDate: string | null
+  appealNotes: string | null
   createdAt: string
   patient: {
     id: string
@@ -111,10 +129,10 @@ export default function InsuranceClaimsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("all")
+  const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [dateFrom, setDateFrom] = useState("all")
-  const [dateTo, setDateTo] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
 
   const fetchClaims = async () => {
     try {
@@ -160,6 +178,14 @@ export default function InsuranceClaimsPage() {
     )
   }
 
+  const [denialClaim, setDenialClaim] = useState<InsuranceClaim | null>(null)
+  const [denialForm, setDenialForm] = useState({
+    denialCode: "",
+    appealDeadline: "",
+    appealStatus: "",
+    appealNotes: "",
+  })
+
   const handleSubmitClaim = async (id: string) => {
     try {
       const response = await fetch(`/api/insurance-claims/${id}`, {
@@ -174,6 +200,38 @@ export default function InsuranceClaimsPage() {
     }
   }
 
+  const openDenialManagement = (claim: InsuranceClaim) => {
+    setDenialClaim(claim)
+    setDenialForm({
+      denialCode: claim.denialCode || "",
+      appealDeadline: claim.appealDeadline ? claim.appealDeadline.split("T")[0] : "",
+      appealStatus: claim.appealStatus || "",
+      appealNotes: claim.appealNotes || "",
+    })
+  }
+
+  const handleSaveDenialInfo = async () => {
+    if (!denialClaim) return
+    try {
+      const response = await fetch(`/api/insurance-claims/${denialClaim.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          denialCode: denialForm.denialCode || null,
+          appealDeadline: denialForm.appealDeadline || null,
+          appealStatus: denialForm.appealStatus || null,
+          appealNotes: denialForm.appealNotes || null,
+          appealDate: denialForm.appealStatus === "SUBMITTED" ? new Date().toISOString() : undefined,
+        }),
+      })
+      if (!response.ok) throw new Error("Failed to update")
+      setDenialClaim(null)
+      fetchClaims()
+    } catch (error) {
+      console.error("Error updating denial info:", error)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -184,12 +242,26 @@ export default function InsuranceClaimsPage() {
             Manage insurance claims and track settlements
           </p>
         </div>
-        <Link href="/billing/insurance/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Claim
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/billing/insurance/providers">
+            <Button variant="outline">
+              <Building2 className="h-4 w-4 mr-2" />
+              Providers
+            </Button>
+          </Link>
+          <Link href="/billing/insurance/pre-auth">
+            <Button variant="outline">
+              <FileCheck className="h-4 w-4 mr-2" />
+              Pre-Auth
+            </Button>
+          </Link>
+          <Link href="/billing/insurance/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Claim
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -410,6 +482,15 @@ export default function InsuranceClaimsPage() {
                               </DropdownMenuItem>
                             </>
                           )}
+                          {(claim.status === "REJECTED" || claim.status === "PARTIALLY_APPROVED") && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => openDenialManagement(claim)}>
+                                <Gavel className="h-4 w-4 mr-2" />
+                                Denial / Appeal
+                              </DropdownMenuItem>
+                            </>
+                          )}
                           {claim.invoices.length > 0 && (
                             <>
                               <DropdownMenuSeparator />
@@ -468,6 +549,85 @@ export default function InsuranceClaimsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Denial / Appeal Management Dialog */}
+      <Dialog open={!!denialClaim} onOpenChange={() => setDenialClaim(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gavel className="h-5 w-5" />
+              Denial &amp; Appeal Management
+            </DialogTitle>
+          </DialogHeader>
+          {denialClaim && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                <p className="font-medium">{denialClaim.claimNumber}</p>
+                <p className="text-muted-foreground">
+                  {denialClaim.patient.firstName} {denialClaim.patient.lastName} — {denialClaim.insuranceProvider}
+                </p>
+                {denialClaim.rejectionReason && (
+                  <p className="text-destructive mt-1">Rejection: {denialClaim.rejectionReason}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Denial Code</Label>
+                  <Input
+                    value={denialForm.denialCode}
+                    onChange={(e) => setDenialForm({ ...denialForm, denialCode: e.target.value })}
+                    placeholder="e.g., CO-4, PR-96"
+                  />
+                </div>
+                <div>
+                  <Label>Appeal Deadline</Label>
+                  <Input
+                    type="date"
+                    value={denialForm.appealDeadline}
+                    onChange={(e) => setDenialForm({ ...denialForm, appealDeadline: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Appeal Status</Label>
+                <Select
+                  value={denialForm.appealStatus}
+                  onValueChange={(v) => setDenialForm({ ...denialForm, appealStatus: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PREPARING">Preparing Appeal</SelectItem>
+                    <SelectItem value="SUBMITTED">Appeal Submitted</SelectItem>
+                    <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
+                    <SelectItem value="WON">Appeal Won</SelectItem>
+                    <SelectItem value="LOST">Appeal Lost</SelectItem>
+                    <SelectItem value="ABANDONED">Abandoned</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Appeal Notes</Label>
+                <Textarea
+                  value={denialForm.appealNotes}
+                  onChange={(e) => setDenialForm({ ...denialForm, appealNotes: e.target.value })}
+                  placeholder="Notes about the denial reason, appeal strategy..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setDenialClaim(null)}>Cancel</Button>
+                <Button onClick={handleSaveDenialInfo}>Save</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

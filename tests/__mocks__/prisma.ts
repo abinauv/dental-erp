@@ -209,7 +209,105 @@ const mockPrismaClient = {
     create: vi.fn(),
     count: vi.fn(),
   },
-}
+
+  // AIConversation
+  aIConversation: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // AISkillExecution
+  aISkillExecution: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+    aggregate: vi.fn(),
+  },
+
+  // AIInsight
+  aIInsight: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // PatientRiskScore
+  patientRiskScore: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // Notification
+  notification: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // AppointmentReminder
+  appointmentReminder: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // TreatmentPlan
+  treatmentPlan: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // InventoryBatch
+  inventoryBatch: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+} as any
+
+// Add lowercase aliases for AI models (cron routes use aiInsight, API routes use aIInsight)
+mockPrismaClient.aiConversation = mockPrismaClient.aIConversation
+mockPrismaClient.aiSkillExecution = mockPrismaClient.aISkillExecution
+mockPrismaClient.aiInsight = mockPrismaClient.aIInsight
 
 export const prisma = mockPrismaClient
 

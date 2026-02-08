@@ -75,7 +75,7 @@ export function ChatWidget() {
                 <p className="font-medium mb-1">How can I help?</p>
                 <p className="text-xs">Ask about patients, appointments, billing, inventory, or anything else.</p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  {["Patient summary", "Today's schedule", "Revenue this month"].map((hint) => (
+                  {["Daily summary", "Register patient", "Book appointment", "Today's schedule"].map((hint) => (
                     <button
                       key={hint}
                       onClick={() => { setInput(hint); inputRef.current?.focus() }}

@@ -63,14 +63,20 @@ export async function POST(req: NextRequest) {
 // ---------------------------------------------------------------------------
 async function patientSummary(hospitalId: string, body: Record<string, unknown>) {
   const patientId = body.patientId as string
+  const refresh = body.refresh === true
   if (!patientId) return NextResponse.json({ error: "patientId required" }, { status: 400 })
 
   const patient = await prisma.patient.findFirst({ where: { id: patientId, hospitalId } })
   if (!patient) return NextResponse.json({ error: "Patient not found" }, { status: 404 })
 
+  // Return cached summary if available and not force-refreshing
+  if (!refresh && patient.aiSummary && patient.aiSummaryAt) {
+    return NextResponse.json({ success: true, data: patient.aiSummary, cached: true })
+  }
+
   // Parallel fetch of related data
   const [appointments, treatments, invoices, riskScores] = await Promise.all([
-    prisma.appointment.findMany({ where: { patientId, hospitalId }, orderBy: { date: "desc" }, take: 5 }),
+    prisma.appointment.findMany({ where: { patientId, hospitalId }, orderBy: { scheduledDate: "desc" }, take: 5 }),
     prisma.treatment.findMany({ where: { patientId, hospitalId }, orderBy: { createdAt: "desc" }, take: 5 }),
     prisma.invoice.findMany({ where: { patientId, hospitalId }, take: 10 }),
     prisma.patientRiskScore.findMany({ where: { patientId, hospitalId }, orderBy: { calculatedAt: "desc" }, take: 1 }),
@@ -84,8 +90,8 @@ async function patientSummary(hospitalId: string, body: Record<string, unknown>)
     name: `${patient.firstName} ${patient.lastName}`,
     age: patient.age,
     phone: patient.phone,
-    lastVisit: appointments[0]?.date ?? null,
-    recentAppointments: appointments.slice(0, 3).map((a) => ({ date: a.date, type: a.type, status: a.status })),
+    lastVisit: appointments[0]?.scheduledDate ?? null,
+    recentAppointments: appointments.slice(0, 3).map((a) => ({ date: a.scheduledDate, type: a.appointmentType, status: a.status })),
     recentTreatments: treatments.slice(0, 3).map((t) => ({ status: t.status, createdAt: t.createdAt })),
     outstandingBalance,
     riskScore: riskScores[0]?.overallScore ?? null,
@@ -106,7 +112,14 @@ async function patientSummary(hospitalId: string, body: Record<string, unknown>)
     )
 
     const data = safeParseJSON(response.content) ?? { summary: response.content }
-    return NextResponse.json({ success: true, data })
+
+    // Cache the generated summary in the patient record
+    await prisma.patient.update({
+      where: { id: patientId },
+      data: { aiSummary: data as any, aiSummaryAt: new Date() },
+    })
+
+    return NextResponse.json({ success: true, data, cached: false })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
@@ -272,8 +285,8 @@ async function duplicateCheck(hospitalId: string, body: Record<string, unknown>)
   if (email)                orClauses.push({ email })
   if (firstName && lastName)
     orClauses.push({
-      firstName: { contains: firstName.slice(0, 3), mode: "insensitive" },
-      lastName:  { contains: lastName.slice(0, 3), mode: "insensitive" },
+      firstName: { contains: firstName.slice(0, 3) },
+      lastName:  { contains: lastName.slice(0, 3) },
     })
 
   if (orClauses.length === 0) return NextResponse.json({ success: true, duplicates: [] })

@@ -19,6 +19,20 @@ export async function GET(
     const claim = await prisma.insuranceClaim.findUnique({
       where: { id, hospitalId },
       include: {
+        patient: {
+          select: {
+            id: true,
+            patientId: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            email: true,
+            address: true,
+            city: true,
+            state: true,
+            pincode: true,
+          }
+        },
         invoices: {
           select: {
             id: true,
@@ -48,27 +62,7 @@ export async function GET(
       )
     }
 
-    // Fetch patient separately since there's no direct relation in schema
-    const patient = await prisma.patient.findUnique({
-      where: { id: claim.patientId },
-      select: {
-        id: true,
-        patientId: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        email: true,
-        address: true,
-        city: true,
-        state: true,
-        pincode: true,
-      }
-    })
-
-    return NextResponse.json({
-      ...claim,
-      patient
-    })
+    return NextResponse.json(claim)
   } catch (error) {
     console.error("Error fetching insurance claim:", error)
     return NextResponse.json(
@@ -122,6 +116,11 @@ export async function PUT(
       notes,
       documents,
       rejectionReason,
+      denialCode,
+      appealDeadline,
+      appealStatus,
+      appealDate,
+      appealNotes,
     } = body
 
     let updateData: any = {}
@@ -136,6 +135,13 @@ export async function PUT(
     // Always allow updating notes and documents
     if (notes !== undefined) updateData.notes = notes
     if (documents !== undefined) updateData.documents = documents
+
+    // Denial / Appeal management fields — always updatable
+    if (denialCode !== undefined) updateData.denialCode = denialCode
+    if (appealDeadline !== undefined) updateData.appealDeadline = appealDeadline ? new Date(appealDeadline) : null
+    if (appealStatus !== undefined) updateData.appealStatus = appealStatus
+    if (appealDate !== undefined) updateData.appealDate = appealDate ? new Date(appealDate) : null
+    if (appealNotes !== undefined) updateData.appealNotes = appealNotes
 
     // Handle status transitions
     if (status && status !== existingClaim.status) {
@@ -208,6 +214,15 @@ export async function PUT(
       where: { id, hospitalId },
       data: updateData,
       include: {
+        patient: {
+          select: {
+            id: true,
+            patientId: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          }
+        },
         invoices: {
           select: {
             id: true,
@@ -219,22 +234,7 @@ export async function PUT(
       }
     })
 
-    // Fetch patient separately
-    const patient = await prisma.patient.findUnique({
-      where: { id: claim.patientId },
-      select: {
-        id: true,
-        patientId: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-      }
-    })
-
-    return NextResponse.json({
-      ...claim,
-      patient
-    })
+    return NextResponse.json(claim)
   } catch (error) {
     console.error("Error updating insurance claim:", error)
     return NextResponse.json(

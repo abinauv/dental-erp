@@ -1,9 +1,19 @@
 "use client"
 
-import { Bell, Search, Menu } from "lucide-react"
+import dynamic from "next/dynamic"
+import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { UserMenu } from "./user-menu"
+import { GlobalSearch } from "./global-search"
+
+const UserMenu = dynamic(() => import("./user-menu").then(m => m.UserMenu), {
+  ssr: false,
+  loading: () => <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />,
+})
+
+const NotificationTray = dynamic(() => import("./notification-tray").then(m => m.NotificationTray), {
+  ssr: false,
+  loading: () => <div className="h-10 w-10 rounded bg-muted animate-pulse" />,
+})
 
 interface HeaderProps {
   user: {
@@ -28,30 +38,13 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         <span className="sr-only">Toggle menu</span>
       </Button>
 
-      {/* Search */}
-      <div className="flex-1">
-        <form className="hidden md:block">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search patients, appointments..."
-              className="w-full max-w-sm pl-8 bg-muted/50"
-            />
-          </div>
-        </form>
-      </div>
+      {/* Global Search */}
+      <GlobalSearch />
 
       {/* Right side */}
       <div className="flex items-center gap-4">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">
-            3
-          </span>
-          <span className="sr-only">Notifications</span>
-        </Button>
+        <NotificationTray />
 
         {/* User menu */}
         <UserMenu user={user} />
