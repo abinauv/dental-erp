@@ -73,11 +73,15 @@ import {
   TestTube,
   Smile,
   Shield,
+  Pen,
 } from "lucide-react"
 import { DentalChart } from "@/components/dental-chart"
 import { Patient360 } from "@/components/ai/patient-360"
 import { PatientFormSubmissions } from "@/components/forms/patient-form-submissions"
 import { PatientInsurance } from "@/components/insurance/patient-insurance"
+import { ImageViewer } from "@/components/imaging/image-viewer"
+import { ImageAnnotator, type Annotation } from "@/components/imaging/image-annotator"
+import { ImageCompare } from "@/components/imaging/image-compare"
 
 interface Patient {
   id: string
@@ -125,6 +129,9 @@ interface Document {
   filePath: string
   documentType: string
   description?: string
+  annotations?: Annotation[]
+  annotatedBy?: string
+  annotatedAt?: string
   createdAt: string
   treatment?: {
     procedure: {
@@ -188,6 +195,15 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
   // Document view state
   const [viewDocument, setViewDocument] = useState<Document | null>(null)
+  const [viewerIndex, setViewerIndex] = useState(0)
+
+  // Annotation state
+  const [annotateDocument, setAnnotateDocument] = useState<Document | null>(null)
+
+  // Compare state
+  const [compareMode, setCompareMode] = useState(false)
+  const [compareSelection, setCompareSelection] = useState<Document[]>([])
+  const [compareOpen, setCompareOpen] = useState(false)
 
   // Timeline state
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([])
@@ -340,6 +356,44 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
         description: "Failed to delete document",
       })
     }
+  }
+
+  // Save annotations for a document
+  const handleSaveAnnotations = async (docId: string, annotations: Annotation[]) => {
+    const response = await fetch(
+      `/api/patients/${resolvedParams.id}/documents/${docId}/annotations`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ annotations }),
+      }
+    )
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.error || "Failed to save annotations")
+    }
+    toast({ title: "Annotations saved" })
+    fetchPatient()
+  }
+
+  // Get image documents only
+  const imageDocuments = patient?.documents.filter((d) => d.fileType.startsWith("image/")) || []
+
+  // Get image list for viewer navigation
+  const viewerImages = imageDocuments.map((d) => ({
+    src: `/api${d.filePath}`,
+    title: d.originalName,
+    subtitle: getDocumentTypeLabel(d.documentType),
+  }))
+
+  // Handle compare selection
+  const handleToggleCompare = (doc: Document) => {
+    setCompareSelection((prev) => {
+      const exists = prev.find((d) => d.id === doc.id)
+      if (exists) return prev.filter((d) => d.id !== doc.id)
+      if (prev.length >= 2) return [prev[1], doc]
+      return [...prev, doc]
+    })
   }
 
   if (loading) {
@@ -766,13 +820,31 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                   X-rays, photos, consent forms, and other patient documents
                 </CardDescription>
               </div>
-              <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Document
+              <div className="flex items-center gap-2">
+                {imageDocuments.length >= 2 && (
+                  <Button
+                    variant={compareMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setCompareMode((m) => !m)
+                      setCompareSelection([])
+                    }}
+                  >
+                    {compareMode ? "Cancel Compare" : "Compare"}
                   </Button>
-                </DialogTrigger>
+                )}
+                {compareMode && compareSelection.length === 2 && (
+                  <Button size="sm" onClick={() => setCompareOpen(true)}>
+                    Compare Selected
+                  </Button>
+                )}
+                <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Document
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Upload Document</DialogTitle>
@@ -828,7 +900,8 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                     </Button>
                   </DialogFooter>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               {patient.documents.length === 0 ? (
@@ -843,6 +916,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      {compareMode && <TableHead className="w-10" />}
                       <TableHead>Document</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Size</TableHead>
@@ -853,17 +927,53 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                   <TableBody>
                     {patient.documents.map((doc) => {
                       const IconComponent = getDocumentTypeIcon(doc.documentType)
+                      const isImage = doc.fileType.startsWith("image/")
+                      const isSelected = compareSelection.some((d) => d.id === doc.id)
                       return (
-                        <TableRow key={doc.id}>
+                        <TableRow key={doc.id} className={isSelected ? "bg-blue-50" : ""}>
+                          {compareMode && (
+                            <TableCell>
+                              {isImage && (
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleToggleCompare(doc)}
+                                  className="h-4 w-4"
+                                />
+                              )}
+                            </TableCell>
+                          )}
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
-                                <IconComponent className="h-5 w-5 text-muted-foreground" />
-                              </div>
+                              {isImage ? (
+                                <div
+                                  className="flex h-10 w-10 items-center justify-center rounded bg-muted overflow-hidden cursor-pointer"
+                                  onClick={() => {
+                                    const idx = imageDocuments.findIndex((d) => d.id === doc.id)
+                                    setViewerIndex(idx >= 0 ? idx : 0)
+                                    setViewDocument(doc)
+                                  }}
+                                >
+                                  <img
+                                    src={`/api${doc.filePath}`}
+                                    alt=""
+                                    className="h-10 w-10 object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                                  <IconComponent className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                              )}
                               <div>
                                 <p className="font-medium">{doc.originalName}</p>
                                 {doc.description && (
                                   <p className="text-sm text-muted-foreground">{doc.description}</p>
+                                )}
+                                {doc.annotations && (doc.annotations as Annotation[]).length > 0 && (
+                                  <Badge variant="secondary" className="text-xs mt-0.5">
+                                    {(doc.annotations as Annotation[]).length} annotation{(doc.annotations as Annotation[]).length !== 1 ? "s" : ""}
+                                  </Badge>
                                 )}
                               </div>
                             </div>
@@ -883,11 +993,21 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {doc.fileType.startsWith('image/') && (
-                                  <DropdownMenuItem onClick={() => setViewDocument(doc)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View
-                                  </DropdownMenuItem>
+                                {isImage && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => {
+                                      const idx = imageDocuments.findIndex((d) => d.id === doc.id)
+                                      setViewerIndex(idx >= 0 ? idx : 0)
+                                      setViewDocument(doc)
+                                    }}>
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setAnnotateDocument(doc)}>
+                                      <Pen className="h-4 w-4 mr-2" />
+                                      Annotate
+                                    </DropdownMenuItem>
+                                  </>
                                 )}
                                 <DropdownMenuItem onClick={() => handleDownloadDocument(doc)}>
                                   <Download className="h-4 w-4 mr-2" />
@@ -913,37 +1033,61 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
             </CardContent>
           </Card>
 
-          {/* Image Viewer Dialog */}
-          <Dialog open={!!viewDocument} onOpenChange={() => setViewDocument(null)}>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>{viewDocument?.originalName}</DialogTitle>
-                <DialogDescription>
-                  {viewDocument?.description || getDocumentTypeLabel(viewDocument?.documentType || '')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex justify-center p-4">
-                {viewDocument && (
-                  <img
-                    src={`/api${viewDocument.filePath}`}
-                    alt={viewDocument.originalName}
-                    className="max-h-[60vh] object-contain"
-                  />
-                )}
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setViewDocument(null)}>
-                  Close
-                </Button>
-                {viewDocument && (
-                  <Button onClick={() => handleDownloadDocument(viewDocument)}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                )}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {/* Image Viewer */}
+          {viewDocument && (
+            <ImageViewer
+              open={!!viewDocument}
+              onOpenChange={(open) => { if (!open) setViewDocument(null) }}
+              src={`/api${viewDocument.filePath}`}
+              title={viewDocument.originalName}
+              subtitle={viewDocument.description || getDocumentTypeLabel(viewDocument.documentType)}
+              images={viewerImages}
+              currentIndex={viewerIndex}
+              onIndexChange={(idx) => {
+                setViewerIndex(idx)
+                setViewDocument(imageDocuments[idx])
+              }}
+              onDownload={() => handleDownloadDocument(viewDocument)}
+              onAnnotate={() => {
+                setViewDocument(null)
+                setAnnotateDocument(viewDocument)
+              }}
+              onCompare={imageDocuments.length >= 2 ? () => {
+                setViewDocument(null)
+                setCompareMode(true)
+              } : undefined}
+            />
+          )}
+
+          {/* Image Annotator */}
+          {annotateDocument && (
+            <ImageAnnotator
+              open={!!annotateDocument}
+              onOpenChange={(open) => { if (!open) setAnnotateDocument(null) }}
+              src={`/api${annotateDocument.filePath}`}
+              title={annotateDocument.originalName}
+              annotations={(annotateDocument.annotations as Annotation[]) || []}
+              onSave={(anns) => handleSaveAnnotations(annotateDocument.id, anns)}
+            />
+          )}
+
+          {/* Image Compare */}
+          {compareSelection.length === 2 && (
+            <ImageCompare
+              open={compareOpen}
+              onOpenChange={setCompareOpen}
+              before={{
+                src: `/api${compareSelection[0].filePath}`,
+                title: compareSelection[0].originalName,
+                date: format(new Date(compareSelection[0].createdAt), "PP"),
+              }}
+              after={{
+                src: `/api${compareSelection[1].filePath}`,
+                title: compareSelection[1].originalName,
+                date: format(new Date(compareSelection[1].createdAt), "PP"),
+              }}
+            />
+          )}
         </TabsContent>
 
         {/* Appointments Tab */}

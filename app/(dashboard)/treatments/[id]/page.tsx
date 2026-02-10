@@ -38,6 +38,7 @@ import {
   Pill,
   Receipt,
 } from "lucide-react"
+import { VoiceInput } from "@/components/clinical/voice-input"
 import {
   treatmentStatusConfig,
   procedureCategoryConfig,
@@ -684,7 +685,15 @@ export default function TreatmentDetailPage({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="procedureNotes">Procedure Notes</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="procedureNotes">Procedure Notes</Label>
+                <VoiceInput
+                  onTranscript={(text) => setCompleteFormData((prev) => ({
+                    ...prev,
+                    procedureNotes: prev.procedureNotes ? prev.procedureNotes + " " + text : text,
+                  }))}
+                />
+              </div>
               <Textarea
                 id="procedureNotes"
                 value={completeFormData.procedureNotes}
@@ -694,7 +703,7 @@ export default function TreatmentDetailPage({
                     procedureNotes: e.target.value,
                   })
                 }
-                placeholder="Final procedure notes..."
+                placeholder="Final procedure notes... (use mic for voice dictation)"
                 rows={3}
               />
             </div>

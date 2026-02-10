@@ -83,6 +83,7 @@ model Hospital {
   emailLogs           EmailLog[]
   surveys             Survey[]
   bulkCommunications  BulkCommunication[]
+  marketingAutomations MarketingAutomation[]
   staffInvites        StaffInvite[]
   subscription        Subscription?
   attendance          Attendance[]
@@ -102,6 +103,14 @@ model Hospital {
   insuranceProviders  InsuranceProviderMaster[]
   patientInsurances   PatientInsurance[]
   preAuthorizations   PreAuthorization[]
+  membershipPlans     MembershipPlan[]
+  patientMemberships  PatientMembership[]
+  referrals           Referral[]
+  loyaltyTransactions LoyaltyTransaction[]
+  calendarIntegrations CalendarIntegration[]
+  waitlistEntries     Waitlist[]
+  paymentPlans        PaymentPlan[]
+  videoConsultations  VideoConsultation[]
 
   @@index([slug])
   @@index([plan])
@@ -191,6 +200,7 @@ model User {
   sessions        Session[]
   accounts        Account[]
   aiConversations AIConversation[]
+  calendarIntegrations CalendarIntegration[]
 
   @@index([email])
   @@index([role])
@@ -312,6 +322,7 @@ model Staff {
   attendance      Attendance[]
   shifts          StaffShift[]
   leaves          Leave[]
+  videoConsultations VideoConsultation[] @relation("DoctorVideoConsultations")
 
   @@unique([hospitalId, employeeId])
   @@index([hospitalId])
@@ -446,6 +457,9 @@ model Patient {
   insurancePolicies PatientInsurance[]
   insuranceClaims InsuranceClaim[]
   preAuthorizations PreAuthorization[]
+  memberships     PatientMembership[]
+  paymentPlans    PaymentPlan[]
+  videoConsultations VideoConsultation[]
 
   @@unique([hospitalId, patientId])
   @@index([hospitalId])
@@ -558,6 +572,9 @@ model Appointment {
   cancelledAt     DateTime?
   cancellationReason String?
 
+  isVirtual       Boolean           @default(false)
+  videoConsultationId String?
+
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
@@ -566,6 +583,7 @@ model Appointment {
   doctor          Staff             @relation("DoctorAppointments", fields: [doctorId], references: [id])
   treatments      Treatment[]
   reminders       AppointmentReminder[]
+  videoConsultation VideoConsultation?
 
   @@unique([hospitalId, appointmentNo])
   @@index([hospitalId])
@@ -965,6 +983,7 @@ model Invoice {
   items           InvoiceItem[]
   payments        Payment[]
   paymentLinks    PaymentLink[]
+  paymentPlans    PaymentPlan[]
   insuranceClaim  InsuranceClaim? @relation(fields: [insuranceClaimId], references: [id])
 
   @@unique([hospitalId, invoiceNo])
@@ -1622,6 +1641,11 @@ model Document {
   isArchived      Boolean      @default(false)
   uploadedBy      String?
 
+  // Annotation data (Phase 6)
+  annotations     Json?        // Array of annotation objects [{type, points, color, text, ...}]
+  annotatedBy     String?      // userId who annotated
+  annotatedAt     DateTime?
+
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -1832,7 +1856,10 @@ model EmailLog {
   scheduledFor    DateTime?
   sentAt          DateTime?
   openedAt        DateTime?
+  clickedAt       DateTime?
   failedAt        DateTime?
+
+  trackingId      String?       @unique  // UUID for open tracking pixel
 
   errorMessage    String?
   messageId       String?
@@ -2206,4 +2233,280 @@ model PatientOTP {
 
   @@index([phone, hospitalId])
   @@index([expiresAt])
+}
+
+// ==================== CRM, LOYALTY & REFERRALS ====================
+
+model MembershipPlan {
+  id            String   @id @default(cuid())
+  hospitalId    String
+  name          String
+  description   String?  @db.Text
+  price         Decimal  @db.Decimal(10, 2)
+  duration      Int      // months
+  benefits      Json     // Array of { procedureId?, category?, discountPercent, description }
+  maxMembers    Int?     // family plan limit
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  hospital      Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  memberships   PatientMembership[]
+
+  @@index([hospitalId])
+}
+
+model PatientMembership {
+  id            String   @id @default(cuid())
+  hospitalId    String
+  patientId     String
+  planId        String
+  startDate     DateTime
+  endDate       DateTime
+  status        MembershipStatus @default(ACTIVE)
+  paymentId     String?
+  autoRenew     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  hospital      Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  patient       Patient  @relation(fields: [patientId], references: [id])
+  plan          MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([hospitalId])
+  @@index([patientId])
+  @@index([status])
+}
+
+model Referral {
+  id                String   @id @default(cuid())
+  hospitalId        String
+  referrerPatientId String
+  referredPatientId String?
+  referredName      String
+  referredPhone     String
+  referralCode      String   @unique
+  status            ReferralStatus @default(PENDING)
+  rewardType        String?  // DISCOUNT / CREDIT / POINTS
+  rewardValue       Decimal? @db.Decimal(10, 2)
+  rewardGiven       Boolean  @default(false)
+  rewardGivenAt     DateTime?
+  convertedAt       DateTime?
+  createdAt         DateTime @default(now())
+
+  hospital          Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId])
+  @@index([referrerPatientId])
+  @@index([referralCode])
+}
+
+model LoyaltyTransaction {
+  id            String   @id @default(cuid())
+  hospitalId    String
+  patientId     String
+  points        Int      // positive = earned, negative = redeemed
+  type          String   // VISIT, REFERRAL, TREATMENT, REDEMPTION, BIRTHDAY, SIGNUP
+  description   String
+  referenceId   String?  // appointmentId, referralId, etc.
+  createdAt     DateTime @default(now())
+
+  hospital      Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId])
+  @@index([patientId])
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+}
+
+enum ReferralStatus {
+  PENDING
+  CONVERTED
+  EXPIRED
+  REWARDED
+}
+
+// ==================== CALENDAR SYNC & SMART SCHEDULING (Phase 7) ====================
+
+model CalendarIntegration {
+  id             String   @id @default(cuid())
+  hospitalId     String
+  userId         String
+  provider       String   // GOOGLE / OUTLOOK
+  accessToken    String   @db.Text
+  refreshToken   String   @db.Text
+  calendarId     String?
+  syncEnabled    Boolean  @default(true)
+  lastSyncAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  hospital       Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, provider])
+  @@index([hospitalId])
+}
+
+model Waitlist {
+  id             String         @id @default(cuid())
+  hospitalId     String
+  patientId      String
+  doctorId       String?
+  preferredDays  Json?          // ["MONDAY", "WEDNESDAY"]
+  preferredTime  String?        // "MORNING" | "AFTERNOON" | "EVENING"
+  procedureId    String?
+  notes          String?
+  status         WaitlistStatus @default(ACTIVE)
+  notifiedAt     DateTime?
+  bookedAt       DateTime?
+  createdAt      DateTime       @default(now())
+
+  hospital       Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId])
+  @@index([status])
+}
+
+enum WaitlistStatus {
+  ACTIVE
+  NOTIFIED
+  BOOKED
+  CANCELLED
+  EXPIRED
+}
+
+// ==================== PAYMENT PLANS & REVENUE CYCLE (Phase 8) ====================
+
+model PaymentPlan {
+  id              String            @id @default(cuid())
+  hospitalId      String
+  invoiceId       String
+  patientId       String
+  totalAmount     Decimal           @db.Decimal(10, 2)
+  downPayment     Decimal           @default(0) @db.Decimal(10, 2)
+  installments    Int
+  frequency       PlanFrequency     @default(MONTHLY)
+  interestRate    Decimal           @default(0) @db.Decimal(5, 2)
+  status          PaymentPlanStatus @default(ACTIVE)
+  startDate       DateTime
+  nextDueDate     DateTime?
+  notes           String?           @db.Text
+  createdBy       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  hospital        Hospital          @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  invoice         Invoice           @relation(fields: [invoiceId], references: [id])
+  patient         Patient           @relation(fields: [patientId], references: [id])
+  schedules       PaymentPlanSchedule[]
+
+  @@index([hospitalId])
+  @@index([patientId])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([nextDueDate])
+}
+
+model PaymentPlanSchedule {
+  id              String            @id @default(cuid())
+  planId          String
+  installmentNo   Int
+  amount          Decimal           @db.Decimal(10, 2)
+  dueDate         DateTime
+  paidDate        DateTime?
+  paidAmount      Decimal?          @db.Decimal(10, 2)
+  paymentId       String?
+  status          InstallmentStatus @default(PENDING)
+
+  plan            PaymentPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+enum PlanFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum PaymentPlanStatus {
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+// ==================== VIDEO CONSULTATION ====================
+
+model VideoConsultation {
+  id              String             @id @default(cuid())
+  hospitalId      String
+  appointmentId   String?            @unique
+  patientId       String
+  doctorId        String
+  roomUrl         String
+  roomName        String
+  status          ConsultationStatus @default(SCHEDULED)
+  scheduledAt     DateTime
+  startedAt       DateTime?
+  endedAt         DateTime?
+  duration        Int?
+  notes           String?            @db.Text
+  recordingUrl    String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  hospital        Hospital           @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  appointment     Appointment?       @relation(fields: [appointmentId], references: [id])
+  patient         Patient            @relation(fields: [patientId], references: [id])
+  doctor          Staff              @relation("DoctorVideoConsultations", fields: [doctorId], references: [id])
+
+  @@index([hospitalId])
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// ─── Phase 11: Marketing Automation ───────────────────────────────
+
+model MarketingAutomation {
+  id          String   @id @default(cuid())
+  hospitalId  String
+  name        String
+  trigger     Json     // { type, params } — e.g. { type: "NO_VISIT", params: { days: 180 } }
+  action      Json     // { type, params } — e.g. { type: "SEND_SMS", params: { templateId: "..." } }
+  isActive    Boolean  @default(true)
+  lastRunAt   DateTime?
+  runCount    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId])
+  @@index([isActive])
 }

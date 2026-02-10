@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireAuthAndRole } from "@/lib/api-helpers"
+import { handleCancellationWaitlist } from "@/lib/services/smart-scheduler"
 
 // GET - Get single appointment
 export async function GET(
@@ -172,6 +173,37 @@ export async function PUT(
         }
       }
     })
+
+    // Smart Scheduler: When appointment is cancelled, notify matching waitlist patients
+    if (status === "CANCELLED" && existingAppointment.status !== "CANCELLED") {
+      try {
+        const waitlistResult = await handleCancellationWaitlist({
+          hospitalId,
+          doctorId: existingAppointment.doctorId,
+          scheduledDate: existingAppointment.scheduledDate,
+          scheduledTime: existingAppointment.scheduledTime,
+          duration: existingAppointment.duration,
+        })
+
+        if (waitlistResult.matchedPatients.length > 0) {
+          // Return the waitlist notification info alongside the appointment
+          return NextResponse.json({
+            ...appointment,
+            _waitlistNotifications: {
+              patientsNotified: waitlistResult.matchedPatients.length,
+              patients: waitlistResult.matchedPatients.map((p) => ({
+                name: p.patientName,
+                phone: p.patientPhone,
+              })),
+              slotDetails: waitlistResult.slotDetails,
+            },
+          })
+        }
+      } catch (err) {
+        // Don't fail the cancellation if waitlist notification fails
+        console.error("Smart scheduler error:", err)
+      }
+    }
 
     return NextResponse.json(appointment)
   } catch (error) {

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       where: {
         hospitalId,
         category: {
-          in: ['sms', 'email']
+          in: ['sms', 'email', 'reviews']
         }
       }
     })
@@ -43,9 +43,14 @@ export async function GET(request: NextRequest) {
       where: { key_hospitalId: { key: 'email_settings', hospitalId } }
     })
 
+    const reviewSettingsJson = await prisma.setting.findUnique({
+      where: { key_hospitalId: { key: 'reviews_settings', hospitalId } }
+    })
+
     return NextResponse.json({
       sms: smsSettingsJson ? JSON.parse(smsSettingsJson.value) : smsSettings,
-      email: emailSettingsJson ? JSON.parse(emailSettingsJson.value) : emailSettings
+      email: emailSettingsJson ? JSON.parse(emailSettingsJson.value) : emailSettings,
+      reviews: reviewSettingsJson ? JSON.parse(reviewSettingsJson.value) : {}
     })
   } catch (error) {
     console.error("Error fetching communication settings:", error)
@@ -74,9 +79,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (type !== 'sms' && type !== 'email') {
+    if (type !== 'sms' && type !== 'email' && type !== 'reviews') {
       return NextResponse.json(
-        { error: "Type must be 'sms' or 'email'" },
+        { error: "Type must be 'sms', 'email', or 'reviews'" },
         { status: 400 }
       )
     }
@@ -112,6 +117,12 @@ export async function POST(request: NextRequest) {
         { key: 'sms.senderId', value: settings.senderId || '', category: 'sms' },
         { key: 'sms.route', value: settings.route || '4', category: 'sms' },
         { key: 'sms.enabled', value: String(settings.enabled ?? true), category: 'sms' }
+      )
+    } else if (type === 'reviews') {
+      settingsArray.push(
+        { key: 'google_review_url', value: settings.google_review_url || '', category: 'reviews' },
+        { key: 'auto_review_requests', value: String(settings.auto_review_requests ?? false), category: 'reviews' },
+        { key: 'review_request_delay_hours', value: String(settings.review_request_delay_hours || '2'), category: 'reviews' }
       )
     } else {
       settingsArray.push(

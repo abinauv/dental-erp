@@ -43,6 +43,8 @@ import {
   FileCheck,
   AlertTriangle,
   Gavel,
+  Brain,
+  Loader2,
 } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -176,6 +178,30 @@ export default function InsuranceClaimsPage() {
         {config.label}
       </Badge>
     )
+  }
+
+  // AI Analysis
+  const [aiAnalysisClaim, setAiAnalysisClaim] = useState<InsuranceClaim | null>(null)
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
+  const [aiAnalyzing, setAiAnalyzing] = useState(false)
+
+  const handleAiAnalyze = async (claim: InsuranceClaim) => {
+    setAiAnalysisClaim(claim)
+    setAiAnalysis(null)
+    setAiAnalyzing(true)
+    try {
+      const res = await fetch("/api/ai/claim-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claimId: claim.id }),
+      })
+      if (!res.ok) throw new Error("Failed")
+      setAiAnalysis(await res.json())
+    } catch {
+      setAiAnalysis({ error: "Failed to analyze claim" })
+    } finally {
+      setAiAnalyzing(false)
+    }
   }
 
   const [denialClaim, setDenialClaim] = useState<InsuranceClaim | null>(null)
@@ -489,6 +515,10 @@ export default function InsuranceClaimsPage() {
                                 <Gavel className="h-4 w-4 mr-2" />
                                 Denial / Appeal
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleAiAnalyze(claim)}>
+                                <Brain className="h-4 w-4 mr-2" />
+                                AI Analyze
+                              </DropdownMenuItem>
                             </>
                           )}
                           {claim.invoices.length > 0 && (
@@ -623,6 +653,110 @@ export default function InsuranceClaimsPage() {
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setDenialClaim(null)}>Cancel</Button>
                 <Button onClick={handleSaveDenialInfo}>Save</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Analysis Dialog */}
+      <Dialog open={!!aiAnalysisClaim} onOpenChange={() => { setAiAnalysisClaim(null); setAiAnalysis(null) }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-purple-600" />
+              AI Claim Analysis
+            </DialogTitle>
+          </DialogHeader>
+          {aiAnalysisClaim && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                <p className="font-medium">{aiAnalysisClaim.claimNumber}</p>
+                <p className="text-muted-foreground">
+                  {aiAnalysisClaim.patient.firstName} {aiAnalysisClaim.patient.lastName} — {aiAnalysisClaim.insuranceProvider}
+                </p>
+                <p className="text-muted-foreground">Amount: {formatCurrency(aiAnalysisClaim.claimAmount)}</p>
+                {aiAnalysisClaim.rejectionReason && (
+                  <p className="text-destructive mt-1">Rejection: {aiAnalysisClaim.rejectionReason}</p>
+                )}
+              </div>
+
+              {aiAnalyzing ? (
+                <div className="flex items-center justify-center py-8 gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
+                  <span className="text-sm text-muted-foreground">Analyzing claim...</span>
+                </div>
+              ) : aiAnalysis?.error ? (
+                <p className="text-destructive text-sm">{aiAnalysis.error}</p>
+              ) : aiAnalysis ? (
+                <>
+                  {/* Analysis */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Analysis</h4>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+                      <p><span className="font-medium">Likely Cause:</span> {aiAnalysis.analysis?.likelyCause}</p>
+                      <p><span className="font-medium">Category:</span> {aiAnalysis.analysis?.denialCategory}</p>
+                      <p><span className="font-medium">Recovery Likelihood:</span> {aiAnalysis.analysis?.severityOfDenial}</p>
+                    </div>
+                  </div>
+
+                  {/* Suggestions */}
+                  {aiAnalysis.suggestions?.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Suggestions</h4>
+                      <div className="space-y-1">
+                        {aiAnalysis.suggestions.map((s: any, i: number) => (
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <Badge className={
+                              s.priority === "HIGH" ? "bg-red-100 text-red-700 border-0 text-xs" :
+                              s.priority === "MEDIUM" ? "bg-amber-100 text-amber-700 border-0 text-xs" :
+                              "bg-gray-100 text-gray-700 border-0 text-xs"
+                            }>
+                              {s.priority}
+                            </Badge>
+                            <span>{s.action}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Appeal Letter */}
+                  {aiAnalysis.appealLetter && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Draft Appeal Letter</h4>
+                      <Textarea
+                        value={aiAnalysis.appealLetter}
+                        readOnly
+                        rows={8}
+                        className="text-sm font-mono"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigator.clipboard.writeText(aiAnalysis.appealLetter)}
+                      >
+                        Copy to Clipboard
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Prevention Tips */}
+                  {aiAnalysis.preventionTips?.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Prevention Tips</h4>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        {aiAnalysis.preventionTips.map((tip: string, i: number) => (
+                          <p key={i} className="text-xs text-blue-600">• {tip}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : null}
+
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => { setAiAnalysisClaim(null); setAiAnalysis(null) }}>Close</Button>
               </div>
             </div>
           )}

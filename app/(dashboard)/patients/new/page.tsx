@@ -52,6 +52,7 @@ export default function NewPatientPage() {
     aadharNumber: "",
     occupation: "",
     referredBy: "",
+    referralCode: "",
     emergencyContactName: "",
     emergencyContactPhone: "",
     emergencyContactRelation: "",
@@ -94,6 +95,7 @@ export default function NewPatientPage() {
       if (form.aadharNumber) payload.aadharNumber = form.aadharNumber
       if (form.occupation) payload.occupation = form.occupation
       if (form.referredBy) payload.referredBy = form.referredBy
+      if (form.referralCode) payload.referralCode = form.referralCode
       if (form.emergencyContactName) payload.emergencyContactName = form.emergencyContactName
       if (form.emergencyContactPhone) payload.emergencyContactPhone = form.emergencyContactPhone
       if (form.emergencyContactRelation) payload.emergencyContactRelation = form.emergencyContactRelation
@@ -330,6 +332,15 @@ export default function NewPatientPage() {
                 value={form.referredBy}
                 onChange={(e) => updateField("referredBy", e.target.value)}
                 placeholder="Referral source"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="referralCode">Referral Code</Label>
+              <Input
+                id="referralCode"
+                value={form.referralCode}
+                onChange={(e) => updateField("referralCode", e.target.value)}
+                placeholder="e.g. REF-A3B2K9"
               />
             </div>
           </CardContent>

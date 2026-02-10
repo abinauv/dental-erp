@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   Users,
   Shield,
+  Link2,
 } from 'lucide-react';
 
 const settingsCategories = [
@@ -69,6 +70,13 @@ const settingsCategories = [
     icon: Shield,
     href: '/settings/security',
     color: 'text-teal-600 bg-teal-50',
+  },
+  {
+    title: 'Integrations',
+    description: 'Connect Google Calendar and other external services',
+    icon: Link2,
+    href: '/settings/integrations',
+    color: 'text-cyan-600 bg-cyan-50',
   },
 ];
 

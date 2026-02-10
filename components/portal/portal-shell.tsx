@@ -13,6 +13,7 @@ import {
   Pill,
   CalendarPlus,
   ClipboardCheck,
+  Camera,
   LogOut,
   Menu,
   X,
@@ -42,6 +43,7 @@ const navItems = [
   { href: "/portal/prescriptions", label: "Prescriptions", icon: Pill },
   { href: "/portal/forms", label: "Forms", icon: ClipboardCheck },
   { href: "/portal/book", label: "Book Appointment", icon: CalendarPlus },
+  { href: "/portal/upload-photo", label: "Upload Photo", icon: Camera },
 ]
 
 export function PortalShell({ patient, hospital, children }: PortalShellProps) {

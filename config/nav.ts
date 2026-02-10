@@ -21,6 +21,16 @@ import {
   ClipboardCheck,
   Building2,
   FileCheck,
+  Heart,
+  Crown,
+  Gift,
+  Share2,
+  Clock,
+  Link2,
+  CalendarClock,
+  Video,
+  Zap,
+  Star,
   type LucideIcon,
 } from "lucide-react"
 
@@ -66,6 +76,25 @@ export const navigation: NavSection[] = [
         title: "Appointments",
         href: "/appointments",
         icon: Calendar,
+        subItems: [
+          {
+            title: "All Appointments",
+            href: "/appointments",
+            icon: Calendar,
+          },
+          {
+            title: "Waitlist",
+            href: "/appointments/waitlist",
+            icon: Clock,
+            roles: ["ADMIN", "RECEPTIONIST"],
+          },
+        ],
+      },
+      {
+        title: "Video Consults",
+        href: "/video",
+        icon: Video,
+        roles: ["ADMIN", "DOCTOR", "RECEPTIONIST"],
       },
       {
         title: "Treatments",
@@ -112,6 +141,12 @@ export const navigation: NavSection[] = [
             icon: CreditCard,
           },
           {
+            title: "Payment Plans",
+            href: "/billing/payment-plans",
+            icon: CalendarClock,
+            roles: ["ADMIN", "ACCOUNTANT", "RECEPTIONIST"],
+          },
+          {
             title: "Insurance Claims",
             href: "/billing/insurance",
             icon: Shield,
@@ -140,6 +175,45 @@ export const navigation: NavSection[] = [
     ],
   },
   {
+    title: "Engagement",
+    items: [
+      {
+        title: "CRM",
+        href: "/crm",
+        icon: Heart,
+        roles: ["ADMIN", "RECEPTIONIST"],
+        subItems: [
+          {
+            title: "Dashboard",
+            href: "/crm",
+            icon: Heart,
+          },
+          {
+            title: "Memberships",
+            href: "/crm/memberships",
+            icon: Crown,
+          },
+          {
+            title: "Loyalty",
+            href: "/crm/loyalty",
+            icon: Gift,
+          },
+          {
+            title: "Referrals",
+            href: "/crm/referrals",
+            icon: Share2,
+          },
+          {
+            title: "Segments",
+            href: "/crm/segments",
+            icon: Users,
+            roles: ["ADMIN"],
+          },
+        ],
+      },
+    ],
+  },
+  {
     title: "Operations",
     items: [
       {
@@ -159,6 +233,31 @@ export const navigation: NavSection[] = [
         href: "/communications",
         icon: MessageSquare,
         roles: ["ADMIN", "RECEPTIONIST"],
+        subItems: [
+          {
+            title: "Send Messages",
+            href: "/communications",
+            icon: MessageSquare,
+          },
+          {
+            title: "Analytics",
+            href: "/communications/analytics",
+            icon: BarChart3,
+            roles: ["ADMIN"],
+          },
+          {
+            title: "Automations",
+            href: "/communications/automations",
+            icon: Zap,
+            roles: ["ADMIN"],
+          },
+          {
+            title: "Feedback",
+            href: "/communications/feedback",
+            icon: Star,
+            roles: ["ADMIN"],
+          },
+        ],
       },
     ],
   },
@@ -219,6 +318,11 @@ export const navigation: NavSection[] = [
             title: "Forms",
             href: "/settings/forms",
             icon: ClipboardCheck,
+          },
+          {
+            title: "Integrations",
+            href: "/settings/integrations",
+            icon: Link2,
           },
         ],
       },

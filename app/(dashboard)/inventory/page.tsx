@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -40,6 +40,12 @@ import {
   FileText,
   TrendingUp,
   Users,
+  Brain,
+  Loader2,
+  ArrowDown,
+  ArrowUp,
+  Minus,
+  ShoppingCart,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -98,6 +104,26 @@ export default function InventoryPage() {
   const [typeFilter, setTypeFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [lowStockOnly, setLowStockOnly] = useState(false)
+
+  // AI Forecast
+  const [forecastData, setForecastData] = useState<any>(null)
+  const [forecastLoading, setForecastLoading] = useState(false)
+  const [showForecast, setShowForecast] = useState(false)
+
+  const fetchForecast = async () => {
+    try {
+      setForecastLoading(true)
+      const res = await fetch("/api/ai/inventory-forecast")
+      if (!res.ok) return
+      const data = await res.json()
+      setForecastData(data)
+      setShowForecast(true)
+    } catch {
+      // non-critical
+    } finally {
+      setForecastLoading(false)
+    }
+  }
 
   const fetchCategories = async () => {
     try {
@@ -221,6 +247,18 @@ export default function InventoryPage() {
               Reports
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            onClick={fetchForecast}
+            disabled={forecastLoading}
+          >
+            {forecastLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Brain className="h-4 w-4 mr-2" />
+            )}
+            AI Forecast
+          </Button>
           <Link href="/inventory/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -229,6 +267,121 @@ export default function InventoryPage() {
           </Link>
         </div>
       </div>
+
+      {/* AI Forecast Section */}
+      {showForecast && forecastData && (
+        <>
+          {/* Forecast Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-4 pb-3">
+                <div className="text-2xl font-bold text-red-700">{forecastData.summary?.criticalItems || 0}</div>
+                <div className="text-xs text-red-600">Critical (stockout &le;7d)</div>
+              </CardContent>
+            </Card>
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="pt-4 pb-3">
+                <div className="text-2xl font-bold text-amber-700">{forecastData.summary?.reorderItems || 0}</div>
+                <div className="text-xs text-amber-600">Need Reorder</div>
+              </CardContent>
+            </Card>
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="pt-4 pb-3">
+                <div className="text-2xl font-bold text-green-700">{forecastData.summary?.excessItems || 0}</div>
+                <div className="text-xs text-green-600">Excess Stock</div>
+              </CardContent>
+            </Card>
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-4 pb-3">
+                <div className="text-2xl font-bold text-blue-700">
+                  {formatCurrency(forecastData.summary?.totalReorderValue || 0)}
+                </div>
+                <div className="text-xs text-blue-600">Reorder Value</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Forecast Table */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-purple-600" />
+                    AI Demand Forecast
+                  </CardTitle>
+                  <CardDescription>Projected usage and reorder suggestions for next 30/60/90 days</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowForecast(false)}>
+                  Hide
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead>Current Stock</TableHead>
+                    <TableHead>Daily Usage</TableHead>
+                    <TableHead>Trend</TableHead>
+                    <TableHead>30d / 60d / 90d</TableHead>
+                    <TableHead>Stockout In</TableHead>
+                    <TableHead>Suggested Order</TableHead>
+                    <TableHead>Urgency</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(forecastData.forecasts || [])
+                    .filter((f: any) => f.reorderRecommended || f.urgency === "CRITICAL" || f.urgency === "SOON")
+                    .sort((a: any, b: any) => a.daysUntilStockout - b.daysUntilStockout)
+                    .map((forecast: any) => (
+                    <TableRow key={forecast.itemId}>
+                      <TableCell className="font-medium">{forecast.itemName}</TableCell>
+                      <TableCell>{forecast.currentStock}</TableCell>
+                      <TableCell>{forecast.avgDailyUsage}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {forecast.trend === "INCREASING" && <ArrowUp className="h-3 w-3 text-red-500" />}
+                          {forecast.trend === "DECREASING" && <ArrowDown className="h-3 w-3 text-green-500" />}
+                          {forecast.trend === "STABLE" && <Minus className="h-3 w-3 text-gray-500" />}
+                          <span className="text-xs">{forecast.trend}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {forecast.projected30Days} / {forecast.projected60Days} / {forecast.projected90Days}
+                      </TableCell>
+                      <TableCell>
+                        <span className={forecast.daysUntilStockout <= 7 ? "text-red-600 font-bold" : forecast.daysUntilStockout <= 14 ? "text-amber-600 font-medium" : ""}>
+                          {forecast.daysUntilStockout > 365 ? "365+" : forecast.daysUntilStockout} days
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {forecast.suggestedOrderQty > 0 && (
+                          <div className="flex items-center gap-1">
+                            <ShoppingCart className="h-3 w-3" />
+                            <span className="font-medium">{forecast.suggestedOrderQty}</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={
+                          forecast.urgency === "CRITICAL" ? "bg-red-100 text-red-700 border-0" :
+                          forecast.urgency === "SOON" ? "bg-amber-100 text-amber-700 border-0" :
+                          forecast.urgency === "NORMAL" ? "bg-blue-100 text-blue-700 border-0" :
+                          "bg-green-100 text-green-700 border-0"
+                        }>
+                          {forecast.urgency}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Filters */}
       <Card>

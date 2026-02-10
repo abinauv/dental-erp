@@ -104,6 +104,54 @@ export async function GET(req: Request) {
       alertsCreated++
     }
 
+    // Weekly AI forecast insight (run on Mondays or when alerts exist)
+    const dayOfWeek = now.getDay()
+    if (dayOfWeek === 1 || alertsCreated > 0) {
+      const thirtyDaysAgo = new Date(now)
+      thirtyDaysAgo.setDate(now.getDate() - 30)
+      const consumptionStats = await prisma.stockTransaction.groupBy({
+        by: ["itemId"],
+        where: {
+          hospitalId: hospital.id,
+          transactionType: { in: ["USAGE", "DISPENSED"] },
+          createdAt: { gte: thirtyDaysAgo },
+        },
+        _sum: { quantity: true },
+      })
+
+      const highUsageItems = consumptionStats
+        .map((s) => ({ itemId: s.itemId, consumed: Math.abs(Number(s._sum.quantity || 0)) }))
+        .sort((a, b) => b.consumed - a.consumed)
+        .slice(0, 5)
+
+      if (highUsageItems.length > 0) {
+        const itemNames = await prisma.inventoryItem.findMany({
+          where: { id: { in: highUsageItems.map((i) => i.itemId) } },
+          select: { id: true, name: true, currentStock: true },
+        })
+        const nameMap = Object.fromEntries(itemNames.map((i) => [i.id, i]))
+
+        const topItems = highUsageItems.map((h) => {
+          const item = nameMap[h.itemId]
+          const daysLeft = item && h.consumed > 0 ? Math.round(Number(item.currentStock) / (h.consumed / 30)) : 999
+          return `${item?.name || "Unknown"}: ${h.consumed} used/month, ~${daysLeft} days left`
+        })
+
+        await prisma.aIInsight.create({
+          data: {
+            hospitalId: hospital.id,
+            category: "INVENTORY",
+            severity: "INFO",
+            title: "Weekly Inventory Forecast",
+            description: `Top consumed items this month:\n${topItems.join("\n")}`,
+            data: highUsageItems as any,
+            expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+          },
+        })
+        alertsCreated++
+      }
+    }
+
     results.push({ hospitalId: hospital.id, alertsCreated })
   }
 

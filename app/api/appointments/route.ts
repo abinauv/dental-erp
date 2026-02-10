@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireAuthAndRole } from "@/lib/api-helpers"
+import { createRoom } from "@/lib/services/video.service"
 
 // Generate unique appointment number for the hospital
 async function generateAppointmentNo(hospitalId: string): Promise<string> {
@@ -189,6 +190,7 @@ export async function POST(request: NextRequest) {
       priority = "NORMAL",
       chiefComplaint,
       notes,
+      isVirtual = false,
     } = body
 
     // Validate required fields
@@ -288,6 +290,7 @@ export async function POST(request: NextRequest) {
         priority,
         chiefComplaint,
         notes,
+        isVirtual: !!isVirtual,
         status: "SCHEDULED"
       },
       include: {
@@ -309,6 +312,39 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Auto-create video consultation for virtual appointments
+    if (isVirtual) {
+      try {
+        const tempId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        const room = await createRoom(tempId)
+
+        // Combine date + time into a scheduledAt DateTime
+        const [hours, minutes] = scheduledTime.split(":").map(Number)
+        const scheduledAt = new Date(scheduledDate)
+        scheduledAt.setHours(hours, minutes, 0, 0)
+
+        const consultation = await prisma.videoConsultation.create({
+          data: {
+            hospitalId,
+            appointmentId: appointment.id,
+            patientId,
+            doctorId,
+            roomUrl: room.roomUrl,
+            roomName: room.roomName,
+            scheduledAt,
+          },
+        })
+
+        await prisma.appointment.update({
+          where: { id: appointment.id },
+          data: { videoConsultationId: consultation.id },
+        })
+      } catch (videoErr) {
+        console.error("Failed to create video consultation:", videoErr)
+        // Appointment is still created — video setup can be retried
+      }
+    }
 
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {

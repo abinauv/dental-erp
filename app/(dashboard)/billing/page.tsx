@@ -27,7 +27,11 @@ import {
   CheckCircle,
   XCircle,
   BarChart3,
+  CalendarClock,
+  Brain,
+  Loader2,
 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { formatCurrency, dateRangePresets, getDateRangeFromPreset } from "@/lib/billing-utils"
 
 interface SummaryData {
@@ -57,11 +61,48 @@ interface SummaryData {
   }
 }
 
+interface AgingData {
+  aging: {
+    current: { amount: number; count: number }
+    days1_30: { amount: number; count: number }
+    days31_60: { amount: number; count: number }
+    days61_90: { amount: number; count: number }
+    over90: { amount: number; count: number }
+  }
+  totals: { totalOutstanding: number; invoiceCount: number }
+}
+
+interface PlanSummary {
+  active: number
+  completed: number
+  defaulted: number
+  totalOutstanding: number
+}
+
 export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SummaryData | null>(null)
   const [datePreset, setDatePreset] = useState("this_month")
   const [error, setError] = useState<string | null>(null)
+  const [agingData, setAgingData] = useState<AgingData | null>(null)
+  const [planSummary, setPlanSummary] = useState<PlanSummary | null>(null)
+
+  // AI Cash Flow Forecast
+  const [cashFlowData, setCashFlowData] = useState<any>(null)
+  const [cashFlowLoading, setCashFlowLoading] = useState(false)
+
+  const fetchCashFlowForecast = async () => {
+    try {
+      setCashFlowLoading(true)
+      const res = await fetch("/api/ai/cashflow-forecast")
+      if (!res.ok) return
+      setCashFlowData(await res.json())
+    } catch {
+      // non-critical
+    } finally {
+      setCashFlowLoading(false)
+    }
+  }
 
   const fetchSummary = async () => {
     try {
@@ -85,8 +126,28 @@ export default function BillingPage() {
     }
   }
 
+  const fetchRevenueCycle = async () => {
+    try {
+      const [agingRes, plansRes] = await Promise.all([
+        fetch("/api/billing/reports?type=outstanding"),
+        fetch("/api/payment-plans?limit=1"),
+      ])
+      if (agingRes.ok) {
+        const d = await agingRes.json()
+        setAgingData(d)
+      }
+      if (plansRes.ok) {
+        const d = await plansRes.json()
+        setPlanSummary(d.summary)
+      }
+    } catch {
+      // non-critical
+    }
+  }
+
   useEffect(() => {
     fetchSummary()
+    fetchRevenueCycle()
   }, [datePreset])
 
   const paymentMethodLabels: Record<string, string> = {
@@ -271,6 +332,12 @@ export default function BillingPage() {
               <Button variant="outline" className="w-full justify-start">
                 <CreditCard className="h-4 w-4 mr-2" />
                 View All Payments
+              </Button>
+            </Link>
+            <Link href="/billing/payment-plans" className="block">
+              <Button variant="outline" className="w-full justify-start">
+                <CalendarClock className="h-4 w-4 mr-2" />
+                Payment Plans
               </Button>
             </Link>
             <Link href="/billing/insurance" className="block">
@@ -458,6 +525,216 @@ export default function BillingPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* AI Cash Flow Forecast */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-purple-600" />
+                Cash Flow Forecast
+              </CardTitle>
+              <CardDescription>AI-projected income for the next 30 days</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchCashFlowForecast}
+              disabled={cashFlowLoading}
+            >
+              {cashFlowLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Brain className="h-4 w-4 mr-2" />
+              )}
+              {cashFlowData ? "Refresh" : "Generate Forecast"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!cashFlowData ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              Click &quot;Generate Forecast&quot; to project cash flow using AI analysis
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {/* Summary row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-3 rounded-lg bg-green-50">
+                  <div className="text-lg font-bold text-green-700">
+                    {formatCurrency(cashFlowData.summary?.total30Day || 0)}
+                  </div>
+                  <div className="text-xs text-green-600">30-Day Projected</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-blue-50">
+                  <div className="text-lg font-bold text-blue-700">
+                    {formatCurrency(cashFlowData.summary?.avgDaily || 0)}
+                  </div>
+                  <div className="text-xs text-blue-600">Avg Daily</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-purple-50">
+                  <div className="text-lg font-bold text-purple-700">
+                    {cashFlowData.summary?.bestDay || "N/A"}
+                  </div>
+                  <div className="text-xs text-purple-600">Best Day</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-amber-50">
+                  <Badge className={
+                    cashFlowData.summary?.trend === "GROWING" ? "bg-green-100 text-green-700 border-0" :
+                    cashFlowData.summary?.trend === "DECLINING" ? "bg-red-100 text-red-700 border-0" :
+                    "bg-gray-100 text-gray-700 border-0"
+                  }>
+                    {cashFlowData.summary?.trend || "STABLE"}
+                  </Badge>
+                  <div className="text-xs text-amber-600 mt-1">Trend</div>
+                </div>
+              </div>
+
+              {/* Weekly totals */}
+              {cashFlowData.weeklyTotals?.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Weekly Breakdown</h4>
+                  {cashFlowData.weeklyTotals.map((week: any) => (
+                    <div key={week.week} className="flex items-center justify-between text-sm">
+                      <span>Week {week.week}: {week.startDate} — {week.endDate}</span>
+                      <span className="font-medium">{formatCurrency(week.projected)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Shortfall warnings */}
+              {cashFlowData.summary?.potentialShortfalls?.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-amber-700 mb-1">
+                    <AlertCircle className="h-4 w-4" />
+                    Potential Shortfalls
+                  </div>
+                  {cashFlowData.summary.potentialShortfalls.map((s: string, i: number) => (
+                    <p key={i} className="text-xs text-amber-600">• {s}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Revenue Cycle Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Claims Aging */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Claims Aging</CardTitle>
+            <CardDescription>Outstanding invoices by overdue period</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!agingData ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {[
+                  { label: "Current", data: agingData.aging.current, color: "bg-green-500" },
+                  { label: "1–30 days", data: agingData.aging.days1_30, color: "bg-yellow-500" },
+                  { label: "31–60 days", data: agingData.aging.days31_60, color: "bg-orange-500" },
+                  { label: "61–90 days", data: agingData.aging.days61_90, color: "bg-red-400" },
+                  { label: "90+ days", data: agingData.aging.over90, color: "bg-red-600" },
+                ].map((bucket) => {
+                  const total = agingData.totals.totalOutstanding || 1
+                  const pct = Math.round((bucket.data.amount / total) * 100)
+                  return (
+                    <div key={bucket.label} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>{bucket.label}</span>
+                        <div className="text-right">
+                          <span className="font-medium">{formatCurrency(bucket.data.amount)}</span>
+                          <span className="text-muted-foreground ml-2">
+                            ({bucket.data.count})
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${bucket.color}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="pt-2 border-t flex justify-between text-sm font-medium">
+                  <span>Total Outstanding</span>
+                  <span className="text-red-600">
+                    {formatCurrency(agingData.totals.totalOutstanding)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Payment Plans Summary */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Payment Plans</CardTitle>
+                <CardDescription>Installment plan overview</CardDescription>
+              </div>
+              <Link href="/billing/payment-plans">
+                <Button variant="outline" size="sm">
+                  View All
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!planSummary ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 rounded-lg bg-blue-50">
+                    <div className="text-2xl font-bold text-blue-700">{planSummary.active}</div>
+                    <div className="text-xs text-blue-600">Active Plans</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-green-50">
+                    <div className="text-2xl font-bold text-green-700">{planSummary.completed}</div>
+                    <div className="text-xs text-green-600">Completed</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-red-50">
+                    <div className="text-2xl font-bold text-red-700">{planSummary.defaulted}</div>
+                    <div className="text-xs text-red-600">Defaulted</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-orange-50">
+                    <div className="text-2xl font-bold text-orange-700">
+                      {formatCurrency(planSummary.totalOutstanding)}
+                    </div>
+                    <div className="text-xs text-orange-600">Outstanding EMI</div>
+                  </div>
+                </div>
+                <div className="pt-2">
+                  <Link href="/billing/payment-plans/new">
+                    <Button className="w-full" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Payment Plan
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

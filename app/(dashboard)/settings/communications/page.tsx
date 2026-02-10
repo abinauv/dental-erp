@@ -35,6 +35,11 @@ export default function CommunicationSettingsPage() {
   const [emailReplyTo, setEmailReplyTo] = useState('');
   const [emailEnabled, setEmailEnabled] = useState(true);
 
+  // Google Review Settings
+  const [googleReviewUrl, setGoogleReviewUrl] = useState('');
+  const [autoReviewRequests, setAutoReviewRequests] = useState(false);
+  const [reviewRequestDelay, setReviewRequestDelay] = useState('2');
+
   // Test fields
   const [testPhone, setTestPhone] = useState('');
   const [testEmail, setTestEmail] = useState('');
@@ -62,6 +67,13 @@ export default function CommunicationSettingsPage() {
         setSmsSenderId(data.sms.senderId || '');
         setSmsRoute(data.sms.route || '4');
         setSmsEnabled(data.sms.enabled !== 'false' && data.sms.enabled !== false);
+      }
+
+      // Load Google Review settings
+      if (data.reviews) {
+        setGoogleReviewUrl(data.reviews.google_review_url || '');
+        setAutoReviewRequests(data.reviews.auto_review_requests === 'true' || data.reviews.auto_review_requests === true);
+        setReviewRequestDelay(data.reviews.review_request_delay_hours || '2');
       }
 
       // Load Email settings
@@ -270,6 +282,32 @@ export default function CommunicationSettingsPage() {
     }
   };
 
+  const handleSaveReviewSettings = async () => {
+    setLoading(true);
+    try {
+      const settings = {
+        google_review_url: googleReviewUrl,
+        auto_review_requests: autoReviewRequests,
+        review_request_delay_hours: reviewRequestDelay,
+      };
+
+      const response = await fetch('/api/settings/communications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'reviews', settings }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to save settings');
+
+      toast({ title: 'Success', description: 'Review settings saved successfully' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loadingSettings) {
     return (
       <div className="container mx-auto p-6">
@@ -295,6 +333,7 @@ export default function CommunicationSettingsPage() {
         <TabsList>
           <TabsTrigger value="sms">SMS Configuration</TabsTrigger>
           <TabsTrigger value="email">Email Configuration</TabsTrigger>
+          <TabsTrigger value="reviews">Google Reviews</TabsTrigger>
         </TabsList>
 
         {/* SMS Configuration */}
@@ -572,6 +611,78 @@ export default function CommunicationSettingsPage() {
 
               <Button onClick={handleSaveEmailSettings} disabled={loading}>
                 {loading ? 'Saving...' : 'Save Email Settings'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        {/* Google Reviews Configuration */}
+        <TabsContent value="reviews">
+          <Card>
+            <CardHeader>
+              <CardTitle>Google Reviews Settings</CardTitle>
+              <CardDescription>
+                Automatically request Google reviews from satisfied patients
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="google-review-url">Google Review URL</Label>
+                <Input
+                  id="google-review-url"
+                  placeholder="https://g.page/r/YOUR_PLACE_ID/review"
+                  value={googleReviewUrl}
+                  onChange={(e) => setGoogleReviewUrl(e.target.value)}
+                />
+                <p className="text-xs text-gray-500">
+                  Your Google Business review link. Find it in Google Business Profile &gt; Get more reviews.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Auto-Request Reviews</Label>
+                  <p className="text-sm text-gray-500">
+                    Automatically send review requests after appointments
+                  </p>
+                </div>
+                <Switch
+                  checked={autoReviewRequests}
+                  onCheckedChange={setAutoReviewRequests}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="review-delay">Review Request Delay (hours)</Label>
+                <Input
+                  id="review-delay"
+                  type="number"
+                  min="1"
+                  max="48"
+                  placeholder="2"
+                  value={reviewRequestDelay}
+                  onChange={(e) => setReviewRequestDelay(e.target.value)}
+                />
+                <p className="text-xs text-gray-500">
+                  Hours after appointment completion before sending the review request SMS
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-900 mb-2">Review Gating</h4>
+                <ul className="text-sm text-amber-800 space-y-1">
+                  <li>• Review requests are only sent to patients who rated their satisfaction 4/5 or higher</li>
+                  <li>• Patients must have submitted a survey response within the last 30 days</li>
+                  <li>• Only one review request per patient per 30 days</li>
+                  <li>• Patients who opted out of promotional messages will not receive requests</li>
+                </ul>
+              </div>
+
+              <Button onClick={handleSaveReviewSettings} disabled={loading}>
+                {loading ? 'Saving...' : 'Save Review Settings'}
               </Button>
             </CardContent>
           </Card>

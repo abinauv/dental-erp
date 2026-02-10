@@ -42,7 +42,16 @@ import {
   Edit,
   CalendarDays,
   List,
+  Brain,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -113,6 +122,65 @@ export default function AppointmentsPage() {
   const [typeFilter, setTypeFilter] = useState("all")
   const [dateFilter, setDateFilter] = useState("")
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list")
+
+  // AI no-show risk
+  const [riskMap, setRiskMap] = useState<Record<string, { riskScore: number; riskLevel: string; factors: string[]; recommendation: string }>>({})
+  const [riskLoading, setRiskLoading] = useState(false)
+  const [showRisk, setShowRisk] = useState(false)
+
+  const fetchNoShowRisk = async () => {
+    try {
+      setRiskLoading(true)
+      const res = await fetch("/api/ai/no-show-risk?days=14")
+      if (!res.ok) return
+      const data = await res.json()
+      const map: typeof riskMap = {}
+      for (const pred of data.predictions || []) {
+        map[pred.appointmentId] = {
+          riskScore: pred.riskScore,
+          riskLevel: pred.riskLevel,
+          factors: pred.factors || [],
+          recommendation: pred.recommendation || "",
+        }
+      }
+      setRiskMap(map)
+      setShowRisk(true)
+    } catch {
+      // non-critical
+    } finally {
+      setRiskLoading(false)
+    }
+  }
+
+  const getRiskBadge = (appointmentId: string) => {
+    const risk = riskMap[appointmentId]
+    if (!risk) return null
+    const config = {
+      LOW: { color: "text-green-700", bgColor: "bg-green-100", icon: CheckCircle },
+      MEDIUM: { color: "text-amber-700", bgColor: "bg-amber-100", icon: AlertTriangle },
+      HIGH: { color: "text-red-700", bgColor: "bg-red-100", icon: AlertTriangle },
+    }[risk.riskLevel] || { color: "text-gray-700", bgColor: "bg-gray-100", icon: AlertTriangle }
+    const Icon = config.icon
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge className={`${config.bgColor} ${config.color} border-0 text-xs cursor-help`}>
+            <Icon className="h-3 w-3 mr-1" />
+            {risk.riskScore}%
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="left" className="max-w-[250px]">
+          <p className="font-medium mb-1">No-Show Risk: {risk.riskLevel}</p>
+          {risk.factors.map((f, i) => (
+            <p key={i} className="text-xs">• {f}</p>
+          ))}
+          {risk.recommendation && (
+            <p className="text-xs mt-1 font-medium">{risk.recommendation}</p>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
 
   const fetchAppointments = async () => {
     try {
@@ -210,6 +278,7 @@ export default function AppointmentsPage() {
   }
 
   return (
+    <TooltipProvider>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -235,6 +304,19 @@ export default function AppointmentsPage() {
           >
             <CalendarDays className="h-4 w-4 mr-2" />
             Calendar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchNoShowRisk}
+            disabled={riskLoading}
+          >
+            {riskLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Brain className="h-4 w-4 mr-2" />
+            )}
+            {showRisk ? "Refresh Risk" : "AI Risk"}
           </Button>
           <Link href="/appointments/new">
             <Button>
@@ -310,6 +392,7 @@ export default function AppointmentsPage() {
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
+                {showRisk && <TableHead>Risk</TableHead>}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -395,6 +478,13 @@ export default function AppointmentsPage() {
                     </TableCell>
                     <TableCell>{getTypeBadge(appointment.appointmentType)}</TableCell>
                     <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                    {showRisk && (
+                      <TableCell>
+                        {["SCHEDULED", "CONFIRMED"].includes(appointment.status)
+                          ? getRiskBadge(appointment.id)
+                          : <span className="text-xs text-muted-foreground">N/A</span>}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -500,5 +590,6 @@ export default function AppointmentsPage() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   )
 }

@@ -23,6 +23,7 @@ import {
   formatCurrency,
 } from "@/lib/treatment-utils"
 import { TreatmentAssist } from "@/components/ai/treatment-assist"
+import { VoiceInput } from "@/components/clinical/voice-input"
 
 interface Patient {
   id: string
@@ -451,12 +452,20 @@ export default function NewTreatmentPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="procedureNotes">Procedure Notes</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="procedureNotes">Procedure Notes</Label>
+                <VoiceInput
+                  onTranscript={(text) => setFormData((prev) => ({
+                    ...prev,
+                    procedureNotes: prev.procedureNotes ? prev.procedureNotes + " " + text : text,
+                  }))}
+                />
+              </div>
               <Textarea
                 id="procedureNotes"
                 value={formData.procedureNotes}
                 onChange={(e) => setFormData({ ...formData, procedureNotes: e.target.value })}
-                placeholder="Details of the procedure performed..."
+                placeholder="Details of the procedure performed... (use mic for voice dictation)"
                 rows={3}
               />
             </div>

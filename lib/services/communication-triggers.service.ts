@@ -311,6 +311,103 @@ class CommunicationTriggersService {
     }
   }
 
+  // Send Google Review request SMS after appointment completion
+  // Only sends to patients who rated satisfaction >= 4/5 ("review gating")
+  async sendReviewRequests() {
+    // Check if review automation is enabled for each hospital
+    const hospitals = await prisma.hospital.findMany({
+      select: { id: true },
+    });
+
+    for (const hospital of hospitals) {
+      try {
+        // Check if Google Review automation is enabled
+        const reviewSettings = await prisma.setting.findMany({
+          where: {
+            hospitalId: hospital.id,
+            key: { in: ['google_review_url', 'auto_review_requests', 'review_request_delay_hours'] },
+          },
+        });
+
+        const settingsMap: Record<string, string> = {};
+        for (const s of reviewSettings) settingsMap[s.key] = s.value;
+
+        const reviewUrl = settingsMap['google_review_url'];
+        const autoEnabled = settingsMap['auto_review_requests'] === 'true';
+        const delayHours = parseInt(settingsMap['review_request_delay_hours'] || '2', 10);
+
+        if (!reviewUrl || !autoEnabled) continue;
+
+        // Find appointments completed recently (within the delay window)
+        const windowStart = new Date(Date.now() - (delayHours + 1) * 3600000);
+        const windowEnd = new Date(Date.now() - delayHours * 3600000);
+
+        const completedAppointments = await prisma.appointment.findMany({
+          where: {
+            hospitalId: hospital.id,
+            status: 'COMPLETED',
+            updatedAt: { gte: windowStart, lte: windowEnd },
+          },
+          include: {
+            patient: true,
+          },
+        });
+
+        for (const appt of completedAppointments) {
+          try {
+            // Review gating: check if patient has a recent positive survey response (rating >= 4)
+            const recentPositiveResponse = await prisma.surveyResponse.findFirst({
+              where: {
+                patientId: appt.patientId,
+                rating: { gte: 4 },
+                createdAt: { gte: subDays(new Date(), 30) },
+              },
+            });
+
+            // Only send review request if patient gave positive feedback
+            if (!recentPositiveResponse) continue;
+
+            // Check preferences
+            const preferences = await prisma.patientCommunicationPreference.findUnique({
+              where: { patientId: appt.patientId },
+            });
+            if (preferences && !preferences.promotionalMessages) continue;
+
+            // Check if we already sent a review request recently (avoid duplicates)
+            const recentReviewSms = await prisma.sMSLog.findFirst({
+              where: {
+                hospitalId: hospital.id,
+                patientId: appt.patientId,
+                message: { contains: 'review' },
+                createdAt: { gte: subDays(new Date(), 30) },
+              },
+            });
+            if (recentReviewSms) continue;
+
+            const clinicInfo = await prisma.clinicInfo.findFirst();
+            const clinicName = clinicInfo?.name || "Our Dental Clinic";
+
+            if (appt.patient.phone) {
+              const message = `Hi ${appt.patient.firstName}, thank you for visiting ${clinicName}! We'd love to hear about your experience. Please leave us a review: ${reviewUrl}`;
+
+              await smsService.sendSMS({
+                phone: appt.patient.phone,
+                message,
+                patientId: appt.patientId,
+              });
+
+              console.log(`Review request sent to ${appt.patient.phone}`);
+            }
+          } catch (err) {
+            console.error(`Error sending review request for appointment ${appt.id}:`, err);
+          }
+        }
+      } catch (err) {
+        console.error(`Error processing review requests for hospital ${hospital.id}:`, err);
+      }
+    }
+  }
+
   // Main cron job runner - should be called periodically (e.g., every hour)
   async runAllTriggers() {
     console.log('Starting communication triggers...');
@@ -320,6 +417,7 @@ class CommunicationTriggersService {
       await this.sendBirthdayWishes();
       await this.sendPaymentReminders();
       await this.sendLabWorkReadyNotifications();
+      await this.sendReviewRequests();
 
       console.log('Communication triggers completed successfully');
     } catch (error) {
