@@ -11,7 +11,8 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function POST(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+    const { error, session, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+    if (error || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { claimId } = await req.json()
     if (!claimId) {
@@ -134,7 +135,7 @@ Return ONLY valid JSON, no markdown.`,
     await prisma.aISkillExecution.create({
       data: {
         hospitalId,
-        userId: session.user.id,
+        userId: session!.user.id,
         skillName: "claim-analyzer",
         input: { claimId },
         output: result,
