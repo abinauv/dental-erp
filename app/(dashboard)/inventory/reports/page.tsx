@@ -20,7 +20,7 @@ export default function InventoryReportsPage() {
     try {
       const params = new URLSearchParams({
         type: activeReport,
-        ...reportParams
+        days: String(reportParams.days),
       });
 
       const response = await fetch(`/api/inventory/reports?${params}`);
