@@ -15,7 +15,7 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR", "RECEPTIONIST"])
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   let body: { type: string; patientId?: string; data?: string }
   try {

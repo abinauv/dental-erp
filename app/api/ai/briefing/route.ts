@@ -10,7 +10,7 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function GET() {
   const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const today = new Date()
   const todayStr = today.toISOString().split("T")[0]

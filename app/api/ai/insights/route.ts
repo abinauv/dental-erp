@@ -14,7 +14,7 @@ import { extractJSON } from "@/lib/ai/openrouter"
 // GET – list insights
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const category = req.nextUrl.searchParams.get("category")
   const where: any = { hospitalId, dismissed: false }
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 // POST – generate fresh insights via AI
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   // Gather clinic data for the analysis window (last 30 days)
   const thirtyDaysAgo = new Date()
@@ -130,7 +130,7 @@ Respond ONLY with a JSON array of insight objects:
 // PUT – dismiss or mark action-taken
 export async function PUT(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   let body: { id: string; dismissed?: boolean; actionTaken?: boolean }
   try {

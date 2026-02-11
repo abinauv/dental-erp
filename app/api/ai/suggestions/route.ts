@@ -40,7 +40,7 @@ Keep it concise and relevant.`
 
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const searchParams = req.nextUrl.searchParams
   const page = searchParams.get("page") || "/dashboard"

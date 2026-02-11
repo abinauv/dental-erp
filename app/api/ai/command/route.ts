@@ -112,7 +112,7 @@ async function execGeneral(command: string, contextStr: string, hospitalName: st
 // ---------------------------------------------------------------------------
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole()
-  if (error || !user || !hospitalId) return error
+  if (error || !user || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   let body: { command: string; patientId?: string; page?: string }
   try {
