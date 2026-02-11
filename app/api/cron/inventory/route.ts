@@ -113,7 +113,7 @@ export async function GET(req: Request) {
         by: ["itemId"],
         where: {
           hospitalId: hospital.id,
-          type: { in: ["USAGE", "DISPENSED"] },
+          type: { in: ["CONSUMPTION", "SALE"] },
           createdAt: { gte: thirtyDaysAgo },
         },
         _sum: { quantity: true },

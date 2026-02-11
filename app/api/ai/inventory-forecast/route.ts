@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     const transactions = await prisma.stockTransaction.findMany({
       where: {
         hospitalId,
-        type: { in: ["USAGE", "DISPENSED", "ADJUSTMENT"] },
+        type: { in: ["CONSUMPTION", "SALE", "ADJUSTMENT_OUT"] },
         createdAt: { gte: sixMonthsAgo },
       },
       select: {
