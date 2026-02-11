@@ -36,15 +36,15 @@ export async function GET(request: NextRequest) {
 
     // Also check for consolidated JSON settings
     const smsSettingsJson = await prisma.setting.findUnique({
-      where: { key_hospitalId: { key: 'sms_settings', hospitalId } }
+      where: { hospitalId_key: { key: 'sms_settings', hospitalId } }
     })
 
     const emailSettingsJson = await prisma.setting.findUnique({
-      where: { key_hospitalId: { key: 'email_settings', hospitalId } }
+      where: { hospitalId_key: { key: 'email_settings', hospitalId } }
     })
 
     const reviewSettingsJson = await prisma.setting.findUnique({
-      where: { key_hospitalId: { key: 'reviews_settings', hospitalId } }
+      where: { hospitalId_key: { key: 'reviews_settings', hospitalId } }
     })
 
     return NextResponse.json({
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const settingKey = `${type}_settings`
 
     await prisma.setting.upsert({
-      where: { key_hospitalId: { key: settingKey, hospitalId } },
+      where: { hospitalId_key: { key: settingKey, hospitalId } },
       update: {
         value: JSON.stringify(settings),
         type: 'json',
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     // Upsert all individual settings
     for (const setting of settingsArray) {
       await prisma.setting.upsert({
-        where: { key_hospitalId: { key: setting.key, hospitalId } },
+        where: { hospitalId_key: { key: setting.key, hospitalId } },
         update: {
           value: setting.value,
           updatedAt: new Date()

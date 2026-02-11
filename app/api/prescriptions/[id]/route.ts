@@ -21,10 +21,10 @@ export async function GET(
           select: {
             id: true, patientId: true, firstName: true, lastName: true,
             phone: true, email: true, dateOfBirth: true, gender: true,
-            address: true, city: true, allergies: true,
+            address: true, city: true,
           },
         },
-        doctor: { select: { id: true, name: true, specialization: true, registrationNo: true } },
+        doctor: { select: { id: true, firstName: true, lastName: true, specialization: true, licenseNumber: true } },
         medications: {
           include: { medication: { select: { id: true, name: true, genericName: true } } },
         },

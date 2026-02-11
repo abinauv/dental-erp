@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
 
     const leave = await prisma.leave.create({
       data: {
+        hospitalId,
         staffId,
         leaveType,
         startDate: start,

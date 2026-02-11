@@ -24,6 +24,7 @@ export interface EmailPayload {
   to: string;
   subject: string;
   body: string;
+  hospitalId?: string;
   patientId?: string;
   templateId?: string;
   attachments?: EmailAttachment[];
@@ -111,6 +112,7 @@ class EmailService {
     // Create email log entry
     const emailLog = await prisma.emailLog.create({
       data: {
+        hospitalId: payload.hospitalId!,
         patientId: payload.patientId,
         email: payload.to,
         subject: payload.subject,
@@ -267,7 +269,7 @@ class EmailService {
 
   async generateEmailHTML(content: string): Promise<string> {
     // Load email signature from settings
-    const signatureSetting = await prisma.setting.findUnique({
+    const signatureSetting = await prisma.setting.findFirst({
       where: { key: 'email.signature' },
     });
 

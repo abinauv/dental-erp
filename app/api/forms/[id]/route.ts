@@ -38,7 +38,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { error, hospitalId, userId } = await requireAuthAndRole(["ADMIN", "DOCTOR"])
+  const { error, hospitalId, session } = await requireAuthAndRole(["ADMIN", "DOCTOR"])
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -62,7 +62,7 @@ export async function PUT(
       where: { id },
       data: {
         status,
-        reviewedBy: userId,
+        reviewedBy: session?.user?.id,
         reviewedAt: new Date(),
         reviewNotes: reviewNotes || null,
       },

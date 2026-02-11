@@ -113,14 +113,14 @@ export async function GET(req: Request) {
         by: ["itemId"],
         where: {
           hospitalId: hospital.id,
-          transactionType: { in: ["USAGE", "DISPENSED"] },
+          type: { in: ["USAGE", "DISPENSED"] },
           createdAt: { gte: thirtyDaysAgo },
         },
         _sum: { quantity: true },
       })
 
       const highUsageItems = consumptionStats
-        .map((s) => ({ itemId: s.itemId, consumed: Math.abs(Number(s._sum.quantity || 0)) }))
+        .map((s) => ({ itemId: s.itemId, consumed: Math.abs(Number(s._sum?.quantity || 0)) }))
         .sort((a, b) => b.consumed - a.consumed)
         .slice(0, 5)
 

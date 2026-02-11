@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const limitCheck = await checkStaffLimit(hospitalId)
     if (!limitCheck.allowed) {
       return NextResponse.json(
-        { error: `Staff limit reached. Your plan allows ${limitCheck.limit} staff members. Current: ${limitCheck.current}.` },
+        { error: `Staff limit reached. Your plan allows ${limitCheck.max} staff members. Current: ${limitCheck.current}.` },
         { status: 403 }
       )
     }

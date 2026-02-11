@@ -96,6 +96,7 @@ export async function PUT(
       if (shifts.length > 0) {
         await tx.staffShift.createMany({
           data: shifts.map((shift: any) => ({
+            hospitalId,
             staffId: id,
             dayOfWeek: shift.dayOfWeek,
             startTime: shift.startTime,

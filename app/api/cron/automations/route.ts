@@ -43,7 +43,7 @@ export async function POST(req: Request) {
           const patients = await prisma.patient.findMany({
             where: {
               hospitalId: auto.hospitalId,
-              status: "ACTIVE",
+              isActive: true,
               appointments: {
                 every: { scheduledDate: { lt: cutoff } },
               },
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
           const invoices = await prisma.invoice.findMany({
             where: {
               hospitalId: auto.hospitalId,
-              status: { in: ["SENT", "OVERDUE"] },
+              status: { in: ["PENDING", "OVERDUE"] },
               dueDate: { lt: cutoff },
             },
             select: { patientId: true },
@@ -221,8 +221,8 @@ export async function POST(req: Request) {
                   title: action.params.title || auto.name,
                   message: action.params.message || `Automation "${auto.name}" triggered for patient`,
                   type: "SYSTEM",
-                  relatedEntity: "Patient",
-                  relatedId: patientId,
+                  entityType: "Patient",
+                  entityId: patientId,
                 },
               })
             }

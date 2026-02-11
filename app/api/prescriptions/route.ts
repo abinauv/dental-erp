@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           patient: { select: { id: true, patientId: true, firstName: true, lastName: true, phone: true, dateOfBirth: true } },
-          doctor: { select: { id: true, name: true } },
+          doctor: { select: { id: true, firstName: true, lastName: true } },
           medications: { include: { medication: { select: { id: true, name: true, genericName: true } } } },
         },
         orderBy: { createdAt: 'desc' },
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         patient: { select: { patientId: true, firstName: true, lastName: true } },
-        doctor: { select: { name: true } },
+        doctor: { select: { firstName: true, lastName: true } },
         medications: true,
       },
     })

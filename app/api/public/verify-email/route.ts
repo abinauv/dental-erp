@@ -41,7 +41,6 @@ export async function POST(request: Request) {
     await prisma.hospital.update({
       where: { id: hospital.id },
       data: {
-        emailVerified: true,
         emailVerificationToken: null,
         emailVerificationExpiry: null,
       },

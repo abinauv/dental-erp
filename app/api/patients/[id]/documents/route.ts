@@ -87,11 +87,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, hospitalId, userId } = await requireAuthAndRole();
+  const { error, hospitalId, session } = await requireAuthAndRole();
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  const userId = session?.user?.id;
 
   try {
     const { id } = await params;

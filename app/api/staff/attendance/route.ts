@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
     // Create new attendance record
     const attendance = await prisma.attendance.create({
       data: {
+        hospitalId,
         staffId,
         date: attendanceDate,
         status,

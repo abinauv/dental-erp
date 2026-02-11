@@ -10,7 +10,8 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function GET(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR"])
+    const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR"])
+    if (error || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const now = new Date()
     const twelveMonthsAgo = new Date(now)
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
 
     // Active patients
     const patients = await prisma.patient.findMany({
-      where: { hospitalId, status: "ACTIVE" },
+      where: { hospitalId, isActive: true },
       select: {
         id: true,
         patientId: true,
@@ -58,13 +59,13 @@ export async function GET(req: Request) {
         status: "COMPLETED",
         scheduledDate: { gte: twelveMonthsAgo },
       },
-      _count: true,
+      _count: { _all: true },
     })
-    const freqMap = Object.fromEntries(frequency.map((f) => [f.patientId, f._count]))
+    const freqMap = Object.fromEntries(frequency.map((f) => [f.patientId, f._count._all]))
 
     // Total spend (last 12 months)
     const payments = await prisma.payment.groupBy({
-      by: ["patientId"],
+      by: ["patientId"] as any,
       where: {
         hospitalId,
         patientId: { in: patientIds },
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
       },
       _sum: { amount: true },
     })
-    const spendMap = Object.fromEntries(payments.map((p) => [p.patientId, Number(p._sum.amount || 0)]))
+    const spendMap = Object.fromEntries(payments.map((p: any) => [p.patientId, Number(p._sum?.amount || 0)]))
 
     // Build context
     const contextData = patients.map((p) => {
@@ -141,9 +142,9 @@ Return ONLY valid JSON, no markdown.`,
       })
       const counts = { vip: 0, loyal: 0, regular: 0, atRisk: 0, churning: 0, new: 0 }
       for (const s of segmented) {
-        const key = s.segment.toLowerCase().replace("_", "") as keyof typeof counts
+        const key = s.segment.toLowerCase().replace("_", "")
         if (key === "atrisk") counts.atRisk++
-        else if (counts[key] !== undefined) counts[key]++
+        else if (key in counts) counts[key as keyof typeof counts]++
       }
       result = {
         patients: segmented,

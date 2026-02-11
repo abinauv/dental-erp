@@ -10,7 +10,8 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function GET(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "RECEPTIONIST"])
+    const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "RECEPTIONIST"])
+    if (error || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     // Current stock levels
     const items = await prisma.inventoryItem.findMany({
@@ -18,12 +19,12 @@ export async function GET(req: Request) {
       select: {
         id: true,
         name: true,
-        itemCode: true,
+        sku: true,
         currentStock: true,
         minimumStock: true,
         reorderLevel: true,
         unit: true,
-        unitPrice: true,
+        purchasePrice: true,
       },
       orderBy: { name: "asc" },
     })
@@ -39,13 +40,13 @@ export async function GET(req: Request) {
     const transactions = await prisma.stockTransaction.findMany({
       where: {
         hospitalId,
-        transactionType: { in: ["USAGE", "DISPENSED", "ADJUSTMENT"] },
+        type: { in: ["USAGE", "DISPENSED", "ADJUSTMENT"] },
         createdAt: { gte: sixMonthsAgo },
       },
       select: {
         itemId: true,
         quantity: true,
-        transactionType: true,
+        type: true,
         createdAt: true,
       },
       orderBy: { createdAt: "asc" },
@@ -75,12 +76,12 @@ export async function GET(req: Request) {
       return {
         itemId: item.id,
         itemName: item.name,
-        itemCode: item.itemCode,
+        itemCode: item.sku,
         currentStock: Number(item.currentStock),
         minimumStock: Number(item.minimumStock),
         reorderLevel: Number(item.reorderLevel),
         unit: item.unit,
-        unitPrice: Number(item.unitPrice),
+        unitPrice: Number(item.purchasePrice),
         totalConsumed6Months: totalConsumed,
         avgMonthlyUsage: avgMonthly,
         avgDailyUsage: avgDaily,

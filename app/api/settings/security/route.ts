@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const updatePromises = Object.entries(data).map(([key, value]) => {
       return prisma.setting.upsert({
         where: {
-          key_hospitalId: { key, hospitalId },
+          hospitalId_key: { key, hospitalId },
         },
         create: {
           key: key,

@@ -90,7 +90,7 @@ export async function POST(request: Request) {
         token,
         expiresAt,
         hospitalId,
-        invitedById: user!.id,
+        invitedBy: user!.id,
       },
     })
 
@@ -149,10 +149,10 @@ export async function GET() {
     const invites = await prisma.staffInvite.findMany({
       where: { hospitalId },
       orderBy: { createdAt: "desc" },
-      include: {
-        invitedBy: {
-          select: { name: true, email: true },
-        },
+      select: {
+        id: true, email: true, name: true, phone: true, role: true,
+        token: true, expiresAt: true, acceptedAt: true, status: true,
+        createdAt: true, hospitalId: true, invitedBy: true,
       },
     })
 

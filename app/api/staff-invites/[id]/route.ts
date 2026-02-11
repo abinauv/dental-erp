@@ -91,15 +91,15 @@ export async function POST(
     // Fetch hospital name and inviter for the email
     const [hospital, inviter] = await Promise.all([
       prisma.hospital.findUnique({ where: { id: hospitalId }, select: { name: true } }),
-      invite.invitedById
-        ? prisma.user.findUnique({ where: { id: invite.invitedById }, select: { name: true } })
+      invite.invitedBy
+        ? prisma.user.findUnique({ where: { id: invite.invitedBy }, select: { name: true } })
         : null,
     ])
 
     // Resend invite email (non-blocking)
     const emailSent = await sendInviteEmail({
       to: invite.email,
-      inviteeName: invite.name,
+      inviteeName: invite.name || "",
       hospitalName: hospital?.name || "Your Dental Clinic",
       role: invite.role,
       inviterName: inviter?.name || "Admin",

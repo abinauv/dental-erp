@@ -160,8 +160,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if SKU already exists
-    const existing = await prisma.inventoryItem.findUnique({
-      where: { sku },
+    const existing = await prisma.inventoryItem.findFirst({
+      where: { hospitalId, sku },
     })
 
     if (existing) {

@@ -50,8 +50,7 @@ export async function POST(req: NextRequest) {
         data.templateId,
         data.variables,
         data.attachments,
-        data.patientId,
-        hospitalId
+        data.patientId
       );
 
       return NextResponse.json({

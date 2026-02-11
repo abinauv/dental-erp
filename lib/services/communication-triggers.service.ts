@@ -50,7 +50,7 @@ class CommunicationTriggersService {
         }
 
         // Get clinic info for variables
-        const clinicInfo = await prisma.clinicInfo.findFirst();
+        const clinicInfo = await prisma.hospital.findUnique({ where: { id: appointment.hospitalId }, select: { name: true, phone: true } });
 
         const variables = {
           patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
@@ -66,7 +66,7 @@ class CommunicationTriggersService {
 
         // Send SMS if enabled
         if (preferences?.smsEnabled !== false && appointment.patient.phone) {
-          const smsTemplate = await templateService.getDefaultTemplate('APPOINTMENT', 'SMS');
+          const smsTemplate = await templateService.getDefaultTemplate(appointment.hospitalId, 'APPOINTMENT', 'SMS');
 
           if (smsTemplate) {
             const message = templateService.replaceVariables(smsTemplate.content, variables);
@@ -84,7 +84,7 @@ class CommunicationTriggersService {
 
         // Send Email if enabled
         if (preferences?.emailEnabled !== false && appointment.patient.email) {
-          const emailTemplate = await templateService.getDefaultTemplate('APPOINTMENT', 'EMAIL');
+          const emailTemplate = await templateService.getDefaultTemplate(appointment.hospitalId, 'APPOINTMENT', 'EMAIL');
 
           if (emailTemplate) {
             const body = await emailService.generateEmailHTML(
@@ -155,7 +155,7 @@ class CommunicationTriggersService {
           continue;
         }
 
-        const clinicInfo = await prisma.clinicInfo.findFirst();
+        const clinicInfo = await prisma.hospital.findUnique({ where: { id: patient.hospitalId }, select: { name: true, phone: true } });
 
         const variables = {
           patientName: `${patient.firstName} ${patient.lastName}`,
@@ -165,7 +165,7 @@ class CommunicationTriggersService {
 
         // Send SMS
         if (preferences?.smsEnabled !== false && patient.phone) {
-          const smsTemplate = await templateService.getDefaultTemplate('BIRTHDAY', 'SMS');
+          const smsTemplate = await templateService.getDefaultTemplate(patient.hospitalId, 'BIRTHDAY', 'SMS');
 
           if (smsTemplate) {
             const message = templateService.replaceVariables(smsTemplate.content, variables);
@@ -219,7 +219,7 @@ class CommunicationTriggersService {
           continue;
         }
 
-        const clinicInfo = await prisma.clinicInfo.findFirst();
+        const clinicInfo = await prisma.hospital.findUnique({ where: { id: invoice.hospitalId }, select: { name: true, phone: true } });
 
         const variables = {
           patientName: `${invoice.patient.firstName} ${invoice.patient.lastName}`,
@@ -234,7 +234,7 @@ class CommunicationTriggersService {
 
         // Send SMS
         if (preferences?.smsEnabled !== false && invoice.patient.phone) {
-          const smsTemplate = await templateService.getDefaultTemplate('PAYMENT', 'SMS');
+          const smsTemplate = await templateService.getDefaultTemplate(invoice.hospitalId, 'PAYMENT', 'SMS');
 
           if (smsTemplate) {
             const message = templateService.replaceVariables(smsTemplate.content, variables);
@@ -270,7 +270,7 @@ class CommunicationTriggersService {
 
     for (const order of labOrders) {
       try {
-        const clinicInfo = await prisma.clinicInfo.findFirst();
+        const clinicInfo = await prisma.hospital.findUnique({ where: { id: order.hospitalId }, select: { name: true, phone: true } });
 
         const variables = {
           patientName: `${order.patient.firstName} ${order.patient.lastName}`,
@@ -283,7 +283,7 @@ class CommunicationTriggersService {
 
         // Send SMS
         if (order.patient.phone) {
-          const smsTemplate = await templateService.getDefaultTemplate('LAB_WORK', 'SMS');
+          const smsTemplate = await templateService.getDefaultTemplate(order.hospitalId, 'LAB_WORK', 'SMS');
 
           if (smsTemplate) {
             const message = templateService.replaceVariables(smsTemplate.content, variables);
@@ -384,7 +384,7 @@ class CommunicationTriggersService {
             });
             if (recentReviewSms) continue;
 
-            const clinicInfo = await prisma.clinicInfo.findFirst();
+            const clinicInfo = await prisma.hospital.findUnique({ where: { id: appt.hospitalId }, select: { name: true, phone: true } });
             const clinicName = clinicInfo?.name || "Our Dental Clinic";
 
             if (appt.patient.phone) {

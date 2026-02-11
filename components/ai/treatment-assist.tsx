@@ -46,7 +46,7 @@ export function TreatmentAssist({
 }: TreatmentAssistProps) {
   const [activeTab, setActiveTab] = useState<Tab>("drug_check")
   const [loading, setLoading] = useState<Tab | null>(null)
-  const [results, setResults] = useState<Record<string, Record<string, unknown>>>({})
+  const [results, setResults] = useState<Record<string, Record<string, any>>>({})
 
   // Drug-check input lives here so it persists across tab switches
   const [drugInput, setDrugInput] = useState("")

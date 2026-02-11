@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthAndRole } from '@/lib/api-helpers';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 // GET /api/patients/[id] - Get a specific patient with all details
 export async function GET(
@@ -160,7 +161,7 @@ export async function PUT(
         emergencyContactPhone,
         emergencyContactRelation,
         // Clear cached AI summary so it regenerates on next view
-        aiSummary: null,
+        aiSummary: Prisma.DbNull,
         aiSummaryAt: null,
       },
     });

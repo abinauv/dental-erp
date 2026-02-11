@@ -99,6 +99,11 @@ export const paymentMethodConfig: Record<PaymentMethod, {
     label: "Wallet",
     icon: "Wallet",
     description: "Digital wallet"
+  },
+  ONLINE: {
+    label: "Online",
+    icon: "Globe",
+    description: "Online payment"
   }
 }
 

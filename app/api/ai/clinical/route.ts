@@ -336,7 +336,7 @@ async function auditAnalysis(hospitalId: string, body: Record<string, unknown>) 
     where: { hospitalId, createdAt: { gte: since } },
     orderBy: { createdAt: "desc" },
     take: 200,
-    select: { action: true, userId: true, createdAt: true, details: true },
+    select: { action: true, userId: true, createdAt: true, entityType: true, entityId: true },
   })
 
   try {

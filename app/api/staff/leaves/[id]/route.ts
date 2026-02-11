@@ -131,6 +131,7 @@ export async function PATCH(
             notes: `Leave: ${existingLeave.leaveType}`
           },
           create: {
+            hospitalId,
             staffId: existingLeave.staffId,
             date: dateOnly,
             status: 'ON_LEAVE',

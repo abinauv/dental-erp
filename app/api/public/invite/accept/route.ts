@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       const user = await tx.user.create({
         data: {
           email: invite.email,
-          name: invite.name,
+          name: invite.name || "",
           password: hashedPassword,
           phone,
           role: invite.role as Role,
@@ -104,8 +104,8 @@ export async function POST(request: Request) {
           staff: {
             create: {
               employeeId,
-              firstName: invite.name.split(" ")[0],
-              lastName: invite.name.split(" ").slice(1).join(" ") || "",
+              firstName: (invite.name || "").split(" ")[0],
+              lastName: (invite.name || "").split(" ").slice(1).join(" ") || "",
               email: invite.email,
               phone,
               hospitalId: invite.hospitalId,

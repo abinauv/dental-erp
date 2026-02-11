@@ -136,11 +136,10 @@ Return ONLY valid JSON, no markdown.`,
       data: {
         hospitalId,
         userId: session!.user.id,
-        skillName: "claim-analyzer",
+        skill: "claim-analyzer",
         input: { claimId },
         output: result,
         tokensUsed: response.usage.totalTokens,
-        model: response.model,
       },
     })
 

@@ -15,9 +15,9 @@ export async function GET() {
       select: {
         name: true,
         plan: true,
-        maxPatients: true,
-        maxStaff: true,
-        maxStorageMB: true,
+        patientLimit: true,
+        staffLimit: true,
+        storageLimitMb: true,
       },
     })
 
@@ -37,9 +37,9 @@ export async function GET() {
     return NextResponse.json({
       name: hospital.name,
       plan: hospital.plan,
-      maxPatients: hospital.maxPatients,
-      maxStaff: hospital.maxStaff,
-      maxStorageMB: hospital.maxStorageMB,
+      patientLimit: hospital.patientLimit,
+      staffLimit: hospital.staffLimit,
+      storageLimitMb: hospital.storageLimitMb,
       currentPatients: patientCount,
       currentStaff: staffCount,
       currentStorageMB: storageUsageMB,

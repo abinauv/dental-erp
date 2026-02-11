@@ -11,7 +11,8 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function GET(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR", "RECEPTIONIST"])
+    const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR", "RECEPTIONIST"])
+    if (error || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
     const days = Math.min(parseInt(searchParams.get("days") || "7"), 30)
@@ -56,7 +57,7 @@ export async function GET(req: Request) {
         patientId: { in: patientIds },
         scheduledDate: { lt: now },
       },
-      _count: true,
+      _count: { _all: true },
     })
 
     // Build history map
@@ -65,9 +66,10 @@ export async function GET(req: Request) {
       if (!historyMap[h.patientId]) {
         historyMap[h.patientId] = { total: 0, noShows: 0, cancelled: 0 }
       }
-      historyMap[h.patientId].total += h._count
-      if (h.status === "NO_SHOW") historyMap[h.patientId].noShows += h._count
-      if (h.status === "CANCELLED") historyMap[h.patientId].cancelled += h._count
+      const count = h._count._all
+      historyMap[h.patientId].total += count
+      if (h.status === "NO_SHOW") historyMap[h.patientId].noShows += count
+      if (h.status === "CANCELLED") historyMap[h.patientId].cancelled += count
     }
 
     // Get last visit date for each patient

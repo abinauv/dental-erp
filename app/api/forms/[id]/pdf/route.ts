@@ -48,7 +48,7 @@ export async function GET(
   }
 
   // Get clinic info
-  const clinicInfo = await prisma.clinicInfo.findFirst()
+  const clinicInfo = await prisma.hospital.findUnique({ where: { id: hospitalId! }, select: { name: true, address: true, phone: true, email: true } })
 
   // Parse form fields and submission data
   let templateFields: Array<{ label: string; type: string }> = []

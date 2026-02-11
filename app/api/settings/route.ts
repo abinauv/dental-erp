@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     // Upsert setting
     const setting = await prisma.setting.upsert({
-      where: { key_hospitalId: { key: data.key, hospitalId } },
+      where: { hospitalId_key: { key: data.key, hospitalId } },
       create: {
         key: data.key,
         value: data.value,
@@ -118,7 +118,7 @@ export async function PUT(req: NextRequest) {
     const results = await Promise.all(
       settings.map((setting: any) =>
         prisma.setting.upsert({
-          where: { key_hospitalId: { key: setting.key, hospitalId } },
+          where: { hospitalId_key: { key: setting.key, hospitalId } },
           create: {
             key: setting.key,
             value: setting.value,

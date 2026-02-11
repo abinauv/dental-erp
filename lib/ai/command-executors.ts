@@ -915,7 +915,7 @@ export async function execAddMedication(params: Record<string, string>, hospital
   if (!params.name) return { success: false, message: "Medication name is required." }
 
   const existing = await prisma.medication.findFirst({
-    where: { hospitalId, name: { contains: params.name, mode: "insensitive" } },
+    where: { hospitalId, name: { contains: params.name } },
   })
   if (existing) {
     return { success: false, message: `Medication "${existing.name}" already exists in your catalog.` }
