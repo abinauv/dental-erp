@@ -51,14 +51,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (dateFrom || dateTo) {
-      where.submissionDate = {}
+      where.submittedDate = {}
       if (dateFrom) {
-        where.submissionDate.gte = new Date(dateFrom)
+        where.submittedDate.gte = new Date(dateFrom)
       }
       if (dateTo) {
         const endDate = new Date(dateTo)
         endDate.setHours(23, 59, 59, 999)
-        where.submissionDate.lte = endDate
+        where.submittedDate.lte = endDate
       }
     }
 

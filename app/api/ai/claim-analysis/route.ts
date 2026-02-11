@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         claimAmount: Number(claim.claimAmount),
         approvedAmount: claim.approvedAmount ? Number(claim.approvedAmount) : null,
         status: claim.status,
-        submissionDate: claim.submissionDate?.toISOString().split("T")[0],
+        submissionDate: claim.submittedDate?.toISOString().split("T")[0],
         rejectionReason: claim.rejectionReason,
         denialCode: claim.denialCode,
         appealStatus: claim.appealStatus,

@@ -58,7 +58,7 @@ export async function GET(req: Request) {
         hospitalId,
         status: { in: ["SUBMITTED", "UNDER_REVIEW", "APPROVED"] },
       },
-      select: { claimAmount: true, approvedAmount: true, status: true, submissionDate: true },
+      select: { claimAmount: true, approvedAmount: true, status: true, submittedDate: true },
     })
     const totalPendingInsurance = pendingClaims.reduce(
       (sum, c) => sum + Number(c.approvedAmount || c.claimAmount || 0), 0

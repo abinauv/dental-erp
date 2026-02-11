@@ -168,23 +168,22 @@ export async function PUT(
       // Set date fields based on status
       switch (status) {
         case "SUBMITTED":
-          updateData.submissionDate = new Date()
+          updateData.submittedDate = new Date()
           break
         case "APPROVED":
         case "PARTIALLY_APPROVED":
-          updateData.approvalDate = new Date()
+          updateData.approvedDate = new Date()
           if (approvedAmount !== undefined) {
             updateData.approvedAmount = approvedAmount
           }
           break
         case "REJECTED":
-          updateData.rejectionDate = new Date()
           if (rejectionReason) {
             updateData.rejectionReason = rejectionReason
           }
           break
         case "SETTLED":
-          updateData.settlementDate = new Date()
+          updateData.settledDate = new Date()
           if (settledAmount !== undefined) {
             updateData.settledAmount = settledAmount
           }
