@@ -151,7 +151,7 @@ export async function POST(req: Request) {
             if (!template) break
 
             const patients = await prisma.patient.findMany({
-              where: { id: { in: matchedPatientIds }, phone: { not: null } },
+              where: { id: { in: matchedPatientIds } },
               select: { id: true, firstName: true, lastName: true, phone: true },
             })
 

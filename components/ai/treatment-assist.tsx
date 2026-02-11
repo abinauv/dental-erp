@@ -191,7 +191,7 @@ function DrugCheck({
   onCheck,
 }: {
   loading: boolean
-  result: Record<string, unknown>
+  result: Record<string, any>
   drugInput: string
   setDrugInput: (v: string) => void
   onCheck: () => void
@@ -273,7 +273,7 @@ function CostEstimate({
   onRetry,
 }: {
   loading: boolean
-  result: Record<string, unknown>
+  result: Record<string, any>
   onRetry: () => void
 }) {
   return (
@@ -328,7 +328,7 @@ function ConsentForm({
   onGenerate,
 }: {
   loading: boolean
-  result: Record<string, unknown>
+  result: Record<string, any>
   language: string
   setLanguage: (l: string) => void
   onGenerate: () => void
@@ -435,7 +435,7 @@ function ClinicalNotes({
   onExpand,
 }: {
   loading: boolean
-  result: Record<string, unknown>
+  result: Record<string, any>
   onExpand: () => void
 }) {
   return (

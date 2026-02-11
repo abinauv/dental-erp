@@ -63,17 +63,17 @@ export async function GET(req: Request) {
     })
     const freqMap = Object.fromEntries(frequency.map((f) => [f.patientId, f._count._all]))
 
-    // Total spend (last 12 months)
-    const payments = await prisma.payment.groupBy({
-      by: ["patientId"] as any,
+    // Total spend (last 12 months) — aggregate via Invoice (Payment has no patientId)
+    const invoiceSpend = await prisma.invoice.groupBy({
+      by: ["patientId"],
       where: {
         hospitalId,
         patientId: { in: patientIds },
-        paymentDate: { gte: twelveMonthsAgo },
+        createdAt: { gte: twelveMonthsAgo },
       },
-      _sum: { amount: true },
+      _sum: { paidAmount: true },
     })
-    const spendMap = Object.fromEntries(payments.map((p: any) => [p.patientId, Number(p._sum?.amount || 0)]))
+    const spendMap = Object.fromEntries(invoiceSpend.map((inv) => [inv.patientId, Number(inv._sum?.paidAmount || 0)]))
 
     // Build context
     const contextData = patients.map((p) => {
