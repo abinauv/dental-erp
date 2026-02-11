@@ -11,6 +11,7 @@ import { inventoryForecaster } from "./inventory-forecaster"
 import { cashflowForecaster } from "./cashflow-forecaster"
 import { patientSegmentation } from "./patient-segmentation"
 import { claimAnalyzer } from "./claim-analyzer"
+import { consentGenerator } from "./consent-generator"
 import type { Skill } from "./types"
 
 export const SKILLS: Record<string, Skill> = {
@@ -27,6 +28,7 @@ export const SKILLS: Record<string, Skill> = {
   [cashflowForecaster.name]: cashflowForecaster,
   [patientSegmentation.name]: patientSegmentation,
   [claimAnalyzer.name]: claimAnalyzer,
+  [consentGenerator.name]: consentGenerator,
 }
 
 export function getSkill(name: string): Skill | undefined {

@@ -223,6 +223,35 @@ export const navigation: NavSection[] = [
         roles: ["ADMIN"],
       },
       {
+        title: "Sterilization",
+        href: "/sterilization",
+        icon: Shield,
+        roles: ["ADMIN", "DOCTOR"],
+        subItems: [
+          {
+            title: "Dashboard",
+            href: "/sterilization",
+            icon: Shield,
+          },
+          {
+            title: "Instruments",
+            href: "/sterilization/instruments",
+            icon: Package,
+          },
+          {
+            title: "Cycle Logs",
+            href: "/sterilization/logs",
+            icon: ClipboardList,
+          },
+          {
+            title: "Compliance",
+            href: "/sterilization/reports",
+            icon: BarChart3,
+            roles: ["ADMIN"],
+          },
+        ],
+      },
+      {
         title: "Lab Orders",
         href: "/lab",
         icon: FlaskConical,

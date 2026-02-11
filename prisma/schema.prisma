@@ -111,6 +111,8 @@ model Hospital {
   waitlistEntries     Waitlist[]
   paymentPlans        PaymentPlan[]
   videoConsultations  VideoConsultation[]
+  instruments         Instrument[]
+  sterilizationLogs   SterilizationLog[]
 
   @@index([slug])
   @@index([plan])
@@ -2509,4 +2511,74 @@ model MarketingAutomation {
 
   @@index([hospitalId])
   @@index([isActive])
+}
+
+// ─── Phase 13: Sterilization & Instrument Tracking ────────────────
+
+model Instrument {
+  id                    String           @id @default(cuid())
+  hospitalId            String
+  name                  String
+  category              String
+  serialNumber          String?
+  rfidTag               String?
+  status                InstrumentStatus @default(AVAILABLE)
+  location              String?
+  lastSterilizedAt      DateTime?
+  sterilizationCycleCount Int            @default(0)
+  maxCycles             Int?
+  purchaseDate          DateTime?
+  warrantyDate          DateTime?
+  notes                 String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  hospital              Hospital         @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  sterilizationLogs     SterilizationLog[]
+
+  @@index([hospitalId])
+  @@index([status])
+  @@index([rfidTag])
+}
+
+model SterilizationLog {
+  id                  String              @id @default(cuid())
+  hospitalId          String
+  instrumentId        String
+  cycleNumber         Int
+  method              String              // AUTOCLAVE, CHEMICAL, DRY_HEAT, UV
+  machineId           String?
+  temperature         Decimal?            @db.Decimal(5, 1)
+  pressure            Decimal?            @db.Decimal(5, 2)
+  duration            Int?                // minutes
+  operatorId          String
+  result              SterilizationResult @default(PASS)
+  biologicalIndicator Boolean             @default(false)
+  chemicalIndicator   Boolean             @default(false)
+  notes               String?
+  startedAt           DateTime
+  completedAt         DateTime?
+  createdAt           DateTime            @default(now())
+
+  hospital            Hospital            @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  instrument          Instrument          @relation(fields: [instrumentId], references: [id])
+
+  @@index([hospitalId])
+  @@index([instrumentId])
+  @@index([startedAt])
+}
+
+enum InstrumentStatus {
+  AVAILABLE
+  IN_USE
+  STERILIZING
+  CONTAMINATED
+  MAINTENANCE
+  RETIRED
+}
+
+enum SterilizationResult {
+  PASS
+  FAIL
+  PENDING
 }

@@ -35,6 +35,7 @@ export const SKILL_MODEL_MAP: Record<string, string> = {
   "cashflow-forecaster": "billing",
   "patient-segmentation": "insights",
   "claim-analyzer": "billing",
+  "consent-generator": "clinical",
 }
 
 export function getModelForSkill(skillName: string): ModelConfig {
