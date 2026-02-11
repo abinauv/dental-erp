@@ -10,7 +10,8 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function GET(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+    const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+    if (error || !hospitalId) return error ?? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const now = new Date()
     const thirtyDaysAgo = new Date(now)
