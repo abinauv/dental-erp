@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 199 89% 48%;
+    --radius: 0.5rem;
+    /* Chart colors */
+    --chart-1: 199 89% 48%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 262 52% 55%;
+    --chart-4: 35 92% 55%;
+    --chart-5: 346 77% 50%;
+    --chart-6: 210 60% 50%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 199 89% 48%;
+    /* Chart colors dark */
+    --chart-1: 199 89% 55%;
+    --chart-2: 160 60% 50%;
+    --chart-3: 262 52% 60%;
+    --chart-4: 35 92% 60%;
+    --chart-5: 346 77% 55%;
+    --chart-6: 210 60% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}
+
+.print-only {
+  display: none;
+}
+
+/* Recharts dark mode */
+.recharts-default-tooltip {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.recharts-tooltip-label {
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.recharts-cartesian-grid line {
+  stroke: hsl(var(--border));
+}
+
+.recharts-text {
+  fill: hsl(var(--muted-foreground));
+}
+
+.recharts-legend-item-text {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Card hover consistency */
+@layer components {
+  .card-interactive {
+    @apply transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer;
+  }
+}
+
+/* Responsive table wrapper */
+@layer components {
+  .table-responsive {
+    @apply w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0;
+  }
+  .table-responsive table {
+    @apply min-w-[640px];
+  }
+}
+
+/* Mobile-friendly form layout */
+@layer components {
+  .form-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+  .form-grid-3 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+}
+
+/* Stacked layout for mobile stat cards */
+@layer components {
+  .stat-grid {
+    @apply grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4;
+  }
+}
+
+/* Mobile header actions */
+@layer components {
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4;
+  }
+  .page-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+}
+
+/* Required field marker */
+@layer components {
+  .label-required::after {
+    content: " *";
+    @apply text-destructive;
+  }
+}
+
+/* Focus ring improvement */
+@layer base {
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}

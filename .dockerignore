@@ -1,0 +1,23 @@
+node_modules
+.next
+.env
+.env.*
+!.env.example
+.env copy
+.git
+.gitignore
+.github
+.claude
+.vscode
+.idea
+__tests__
+coverage
+*.log
+*.md
+!README.md
+!LICENSE
+Dockerfile
+.dockerignore
+vitest.config.*
+playwright.config.*
+tsconfig.tsbuildinfo

@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make DentalERP better? We'd love to hear it!
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What problem does this feature solve? Why is it needed for dental clinics?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How do you envision this working?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - Patients
+        - Appointments
+        - Billing
+        - Inventory
+        - Lab
+        - Staff
+        - AI Skills
+        - Patient Portal
+        - Insurance
+        - Reports
+        - Settings
+        - New Module
+    validations:
+      required: true
