@@ -1,0 +1,43 @@
+{
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "search": "Search",
+      "export": "Export",
+      "back": "Back"
+    },
+    "states": {
+      "loading": "Loading…",
+      "empty": "Nothing to show yet",
+      "error": "Something went wrong. Please try again."
+    }
+  },
+  "auth": {
+    "login": {
+      "heading": "Welcome back",
+      "subheading": "Sign in to your DentalERP account",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up for free"
+    }
+  },
+  "billing": {
+    "invoice": {
+      "title": "Invoice",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "taxableAmount": "Taxable amount",
+      "total": "Total",
+      "amountInWords": "Amount in words",
+      "cgst": "CGST",
+      "sgst": "SGST",
+      "igst": "IGST"
+    }
+  }
+}

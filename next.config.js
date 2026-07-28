@@ -1,3 +1,9 @@
+const createNextIntlPlugin = require('next-intl/plugin')
+
+// Locale comes from the clinic record, not the URL, so there is no routing
+// config here — just the pointer to the request config. See docs/LOCALIZATION.md.
+const withNextIntl = createNextIntlPlugin('./lib/i18n/request.ts')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
@@ -51,4 +57,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

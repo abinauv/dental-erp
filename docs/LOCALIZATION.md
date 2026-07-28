@@ -1,7 +1,7 @@
 # Localization & Internationalization
 
-**Status:** proposal / not yet implemented. This document exists so the design can
-be argued about before anyone writes the code.
+**Status:** step 1 (locale plumbing) is implemented; steps 2–5 are still proposals.
+See §3 for the running order.
 
 DentalERP was built for Indian dental clinics, and that assumption is not confined
 to display strings — it reaches into the invoice schema, the tax maths and the seed
@@ -10,10 +10,12 @@ architecture, and suggests an order of work.
 
 ## 1. Where we are
 
-There is currently no i18n library in the project and no locale plumbing of any
-kind. Every user-facing string is a literal in a `.tsx` file.
+`next-intl` is wired up and `lib/i18n/` holds the locale config, the request
+config and the one formatting module. What remains is the volume: every
+user-facing string is still a literal in a `.tsx` file, and the tax model is
+still India-shaped.
 
-Concretely, in the current tree:
+The counts below are what step 2 onwards has to work through:
 
 | Coupling                      | Count | Where                                 |
 | ----------------------------- | ----- | ------------------------------------- |
@@ -21,13 +23,12 @@ Concretely, in the current tree:
 | `₹` glyph hardcoded in markup | 91    | mostly `app/(dashboard)/**`           |
 | `'INR'` currency literals     | 28    | formatting helpers and chart tooltips |
 
-Three separate, near-duplicate currency formatters exist:
-
-- [`lib/utils.ts:8`](../lib/utils.ts#L8) — `formatCurrency`, `Intl.NumberFormat('en-IN', …)`
-- [`lib/billing-utils.ts:330`](../lib/billing-utils.ts#L330) — `formatCurrency`
-- [`lib/treatment-utils.ts:294`](../lib/treatment-utils.ts#L294) — `formatCurrency`
-
-Plus date formatters hardcoded to `en-IN` in the same three files.
+`lib/utils.ts`, `lib/billing-utils.ts` and `lib/treatment-utils.ts` used to
+carry three near-duplicate `formatCurrency`/`formatDate` pairs, each hardcoding
+`en-IN` with slightly different fraction-digit rules. They now delegate to
+[`lib/i18n/format.ts`](../lib/i18n/format.ts) and keep their own defaults, so
+their output is byte-identical to before. Each also takes an optional `locale`
+argument, which is the seam the rest of the work hangs off.
 
 ### The parts that are not strings
 
@@ -82,7 +83,7 @@ This is a logged-in B2B application, not a public marketing site. The locale
 should hang off the **`Hospital` record**, not a `/[locale]/` URL segment — that
 avoids restructuring every route in `app/(dashboard)/`.
 
-Add to the `Hospital` model:
+On the `Hospital` model (already added):
 
 ```prisma
 locale    String @default("en-IN")  // BCP 47
@@ -162,9 +163,10 @@ tax breakdown that was in force when it was issued**, never with today's rates.
 
 Sequenced so that contributors are not editing the same files simultaneously.
 
-1. **Locale plumbing.** `next-intl` wiring, the four `Hospital` columns, and
-   collapsing the three `formatCurrency`/`formatDate` implementations into
-   `lib/i18n/format.ts`. Small, invisible to users, unblocks everything else.
+1. ~~**Locale plumbing.**~~ **Done.** `next-intl` wiring, the four `Hospital`
+   columns, and `lib/i18n/format.ts` — the single formatting module the three
+   former `formatCurrency`/`formatDate` copies now delegate to. Defaults are
+   unchanged (`en-IN`/INR), so this step is invisible to existing clinics.
 2. **String extraction.** Move literals into `messages/en-IN.json`, one module at
    a time (billing, then patients, then appointments…). Mechanical and highly
    parallelizable once step 1 sets the conventions.
