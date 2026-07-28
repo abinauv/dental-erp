@@ -47,14 +47,18 @@ next-env.d.ts
 *.swo
 
 # Prisma
-/prisma/migrations/**/migration_lock.toml
+# migration_lock.toml records the datasource provider and MUST be committed —
+# `prisma migrate` errors without it. Do not add it back here.
 
 # Uploads
 /uploads/*
 !/uploads/.gitkeep
 
 # Logs
-logs/
+# Anchored to the repo root on purpose. A bare `logs/` matches at ANY depth and
+# silently excluded app/api/sterilization/logs/ and the matching dashboard page
+# from the repository.
+/logs/
 *.log
 
 # Windows reserved names (can't be deleted normally)
