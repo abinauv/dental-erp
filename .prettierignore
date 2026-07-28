@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+uploads
+package-lock.json
+prisma/migrations
+*.tsbuildinfo

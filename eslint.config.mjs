@@ -22,6 +22,11 @@ const eslintConfig = [
       "node_modules/**",
       ".next/**",
       "coverage/**",
+      // Generated test artifacts — the Playwright HTML report bundles minified
+      // vendor JS that produces ~77 lint errors if it is left in scope.
+      "playwright-report/**",
+      "test-results/**",
+      "blob-report/**",
       "prisma/**",
       "**/*.test.ts",
       "**/*.test.tsx",

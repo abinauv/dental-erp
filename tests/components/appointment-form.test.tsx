@@ -36,7 +36,9 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, disabled, ...props }: any) => (
-    <button disabled={disabled} {...props}>{children}</button>
+    <button disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
@@ -103,7 +105,11 @@ vi.mock('@/components/ui/switch', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 import NewAppointmentPage from '@/app/(dashboard)/appointments/new/page'
@@ -113,14 +119,38 @@ import NewAppointmentPage from '@/app/(dashboard)/appointments/new/page'
 // ---------------------------------------------------------------------------
 
 const mockPatients = [
-  { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', email: 'john@test.com' },
-  { id: 'p2', patientId: 'PAT002', firstName: 'Jane', lastName: 'Smith', phone: '9876543211', email: null },
+  {
+    id: 'p1',
+    patientId: 'PAT001',
+    firstName: 'John',
+    lastName: 'Doe',
+    phone: '9876543210',
+    email: 'john@test.com',
+  },
+  {
+    id: 'p2',
+    patientId: 'PAT002',
+    firstName: 'Jane',
+    lastName: 'Smith',
+    phone: '9876543211',
+    email: null,
+  },
 ]
 
 const mockDoctors = [
-  { id: 'd1', employeeId: 'EMP001', firstName: 'Sarah', lastName: 'Wilson', specialization: 'Orthodontics' },
+  {
+    id: 'd1',
+    employeeId: 'EMP001',
+    firstName: 'Sarah',
+    lastName: 'Wilson',
+    specialization: 'Orthodontics',
+  },
   { id: 'd2', employeeId: 'EMP002', firstName: 'Mike', lastName: 'Brown', specialization: null },
 ]
+
+// The date input renders with `min={today}`, so jsdom's constraint validation
+// blocks form submission for any past date. Always pick a future one.
+const futureDateValue = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
 const mockSlots = [
   { time: '09:00', available: true },
@@ -210,7 +240,9 @@ describe('NewAppointmentPage', () => {
         expect(screen.getByPlaceholderText(/Search patient/i)).toBeInTheDocument()
       })
 
-      fireEvent.change(screen.getByPlaceholderText(/Search patient/i), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText(/Search patient/i), {
+        target: { value: 'John' },
+      })
 
       await waitFor(() => {
         expect(screen.getByText('John Doe')).toBeInTheDocument()
@@ -246,7 +278,9 @@ describe('NewAppointmentPage', () => {
         expect(screen.getByPlaceholderText(/Search patient/i)).toBeInTheDocument()
       })
 
-      fireEvent.change(screen.getByPlaceholderText(/Search patient/i), { target: { value: 'zzzzz' } })
+      fireEvent.change(screen.getByPlaceholderText(/Search patient/i), {
+        target: { value: 'zzzzz' },
+      })
 
       await waitFor(() => {
         expect(screen.getByText('No patients found')).toBeInTheDocument()
@@ -329,12 +363,12 @@ describe('NewAppointmentPage', () => {
       fireEvent.click(screen.getByTestId('select-item-d1'))
 
       // Select date via the date type input
-      const dateInputs = screen.getAllByRole('textbox').concat(
-        Array.from(document.querySelectorAll('input[type="date"]'))
-      ) as HTMLInputElement[]
+      const dateInputs = screen
+        .getAllByRole('textbox')
+        .concat(Array.from(document.querySelectorAll('input[type="date"]'))) as HTMLInputElement[]
       const dateInput = dateInputs.find((el) => el.getAttribute('type') === 'date')
       if (dateInput) {
-        fireEvent.change(dateInput, { target: { value: '2026-03-15' } })
+        fireEvent.change(dateInput, { target: { value: futureDateValue } })
       }
 
       fireEvent.click(screen.getByText('Book Appointment'))
@@ -431,7 +465,9 @@ describe('NewAppointmentPage', () => {
       fireEvent.click(screen.getByTestId('select-item-d1'))
 
       // Fill chief complaint
-      fireEvent.change(screen.getByPlaceholderText(/Patient's main concern/), { target: { value: 'Toothache' } })
+      fireEvent.change(screen.getByPlaceholderText(/Patient's main concern/), {
+        target: { value: 'Toothache' },
+      })
 
       // Wait for form to be ready and submit
       // Note: Date and time would need to be set for successful submission
@@ -494,9 +530,9 @@ describe('NewAppointmentPage', () => {
         expect(screen.getByText('New Appointment')).toBeInTheDocument()
       })
 
-      const backLink = screen.getAllByRole('link').find(
-        (link) => link.getAttribute('href') === '/appointments'
-      )
+      const backLink = screen
+        .getAllByRole('link')
+        .find((link) => link.getAttribute('href') === '/appointments')
       expect(backLink).toBeDefined()
     })
   })
