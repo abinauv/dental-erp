@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   BarChart3,
   Download,
@@ -27,8 +27,8 @@ import {
   FileText,
   Stethoscope,
   Package,
-} from "lucide-react"
-import { format } from "date-fns"
+} from 'lucide-react'
+import { format } from 'date-fns'
 import {
   LineChart,
   Line,
@@ -45,26 +45,35 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Area,
-} from "recharts"
+} from 'recharts'
 
-import { ReportBuilder } from "@/components/ai/report-builder"
+import { ReportBuilder } from '@/components/ai/report-builder'
 
 // Chart colors
-const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B6B']
+const CHART_COLORS = [
+  '#0088FE',
+  '#00C49F',
+  '#FFBB28',
+  '#FF8042',
+  '#8884D8',
+  '#82CA9D',
+  '#FFC658',
+  '#FF6B6B',
+]
 
 // Date range presets
 const dateRangePresets = [
-  { label: "Today", value: "today" },
-  { label: "Yesterday", value: "yesterday" },
-  { label: "This Week", value: "this_week" },
-  { label: "Last Week", value: "last_week" },
-  { label: "This Month", value: "this_month" },
-  { label: "Last Month", value: "last_month" },
-  { label: "This Quarter", value: "this_quarter" },
-  { label: "Last Quarter", value: "last_quarter" },
-  { label: "This Year", value: "this_year" },
-  { label: "Last Year", value: "last_year" },
-  { label: "Custom Range", value: "custom" },
+  { label: 'Today', value: 'today' },
+  { label: 'Yesterday', value: 'yesterday' },
+  { label: 'This Week', value: 'this_week' },
+  { label: 'Last Week', value: 'last_week' },
+  { label: 'This Month', value: 'this_month' },
+  { label: 'Last Month', value: 'last_month' },
+  { label: 'This Quarter', value: 'this_quarter' },
+  { label: 'Last Quarter', value: 'last_quarter' },
+  { label: 'This Year', value: 'this_year' },
+  { label: 'Last Year', value: 'last_year' },
+  { label: 'Custom Range', value: 'custom' },
 ]
 
 interface PatientAnalytics {
@@ -149,16 +158,18 @@ interface OperationalAnalytics {
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true)
-  const [datePreset, setDatePreset] = useState("this_month")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
-  const [activeTab, setActiveTab] = useState("patient")
+  const [datePreset, setDatePreset] = useState('this_month')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [activeTab, setActiveTab] = useState('patient')
 
   // Analytics data state
   const [patientAnalytics, setPatientAnalytics] = useState<PatientAnalytics | null>(null)
   const [clinicalAnalytics, setClinicalAnalytics] = useState<ClinicalAnalytics | null>(null)
   const [financialAnalytics, setFinancialAnalytics] = useState<FinancialAnalytics | null>(null)
-  const [operationalAnalytics, setOperationalAnalytics] = useState<OperationalAnalytics | null>(null)
+  const [operationalAnalytics, setOperationalAnalytics] = useState<OperationalAnalytics | null>(
+    null
+  )
 
   const fetchAnalytics = async (type: string) => {
     try {
@@ -166,27 +177,27 @@ export default function ReportsPage() {
       const params = new URLSearchParams({ type })
 
       if (dateFrom && dateTo) {
-        params.append("dateFrom", dateFrom)
-        params.append("dateTo", dateTo)
+        params.append('dateFrom', dateFrom)
+        params.append('dateTo', dateTo)
       } else {
-        params.append("preset", datePreset)
+        params.append('preset', datePreset)
       }
 
       const response = await fetch(`/api/reports/analytics?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch analytics")
+      if (!response.ok) throw new Error('Failed to fetch analytics')
       const data = await response.json()
 
       switch (type) {
-        case "patient":
+        case 'patient':
           setPatientAnalytics(data)
           break
-        case "clinical":
+        case 'clinical':
           setClinicalAnalytics(data)
           break
-        case "financial":
+        case 'financial':
           setFinancialAnalytics(data)
           break
-        case "operational":
+        case 'operational':
           setOperationalAnalytics(data)
           break
       }
@@ -209,14 +220,14 @@ export default function ReportsPage() {
       })
 
       if (dateFrom && dateTo) {
-        params.append("dateFrom", dateFrom)
-        params.append("dateTo", dateTo)
+        params.append('dateFrom', dateFrom)
+        params.append('dateTo', dateTo)
       } else {
-        params.append("preset", datePreset)
+        params.append('preset', datePreset)
       }
 
       const response = await fetch(`/api/reports/export?${params}`)
-      if (!response.ok) throw new Error("Failed to export report")
+      if (!response.ok) throw new Error('Failed to export report')
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
@@ -260,9 +271,9 @@ export default function ReportsPage() {
             value={datePreset}
             onValueChange={(v) => {
               setDatePreset(v)
-              if (v !== "custom") {
-                setDateFrom("")
-                setDateTo("")
+              if (v !== 'custom') {
+                setDateFrom('')
+                setDateTo('')
               }
             }}
           >
@@ -277,7 +288,7 @@ export default function ReportsPage() {
               ))}
             </SelectContent>
           </Select>
-          {datePreset === "custom" && (
+          {datePreset === 'custom' && (
             <>
               <Input
                 type="date"
@@ -351,7 +362,12 @@ export default function ReportsPage() {
                   <>
                     <div className="text-2xl font-bold">{patientAnalytics?.newPatients || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      {patientAnalytics ? formatPercentage((patientAnalytics.newPatients / patientAnalytics.totalPatients) * 100) : '0%'} of total
+                      {patientAnalytics
+                        ? formatPercentage(
+                            (patientAnalytics.newPatients / patientAnalytics.totalPatients) * 100
+                          )
+                        : '0%'}{' '}
+                      of total
                     </p>
                   </>
                 )}
@@ -368,9 +384,17 @@ export default function ReportsPage() {
                   <Skeleton className="h-8 w-24" />
                 ) : (
                   <>
-                    <div className="text-2xl font-bold">{patientAnalytics?.returningPatients || 0}</div>
+                    <div className="text-2xl font-bold">
+                      {patientAnalytics?.returningPatients || 0}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {patientAnalytics ? formatPercentage((patientAnalytics.returningPatients / patientAnalytics.totalPatients) * 100) : '0%'} of total
+                      {patientAnalytics
+                        ? formatPercentage(
+                            (patientAnalytics.returningPatients / patientAnalytics.totalPatients) *
+                              100
+                          )
+                        : '0%'}{' '}
+                      of total
                     </p>
                   </>
                 )}
@@ -404,9 +428,7 @@ export default function ReportsPage() {
                     <div className="text-2xl font-bold text-green-600">
                       {formatPercentage(patientAnalytics?.retentionRate || 0)}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Patients with repeat visits
-                    </p>
+                    <p className="text-xs text-muted-foreground">Patients with repeat visits</p>
                   </>
                 )}
               </CardContent>
@@ -435,10 +457,14 @@ export default function ReportsPage() {
                         <div className="h-2 w-32 bg-blue-100 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-600"
-                            style={{ width: `${((patientAnalytics?.demographics.male || 0) / (patientAnalytics?.totalPatients || 1)) * 100}%` }}
+                            style={{
+                              width: `${((patientAnalytics?.demographics.male || 0) / (patientAnalytics?.totalPatients || 1)) * 100}%`,
+                            }}
                           />
                         </div>
-                        <span className="text-sm font-bold w-12 text-right">{patientAnalytics?.demographics.male || 0}</span>
+                        <span className="text-sm font-bold w-12 text-right">
+                          {patientAnalytics?.demographics.male || 0}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -447,10 +473,14 @@ export default function ReportsPage() {
                         <div className="h-2 w-32 bg-pink-100 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-pink-600"
-                            style={{ width: `${((patientAnalytics?.demographics.female || 0) / (patientAnalytics?.totalPatients || 1)) * 100}%` }}
+                            style={{
+                              width: `${((patientAnalytics?.demographics.female || 0) / (patientAnalytics?.totalPatients || 1)) * 100}%`,
+                            }}
                           />
                         </div>
-                        <span className="text-sm font-bold w-12 text-right">{patientAnalytics?.demographics.female || 0}</span>
+                        <span className="text-sm font-bold w-12 text-right">
+                          {patientAnalytics?.demographics.female || 0}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -459,10 +489,14 @@ export default function ReportsPage() {
                         <div className="h-2 w-32 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-muted-foreground"
-                            style={{ width: `${((patientAnalytics?.demographics.other || 0) / (patientAnalytics?.totalPatients || 1)) * 100}%` }}
+                            style={{
+                              width: `${((patientAnalytics?.demographics.other || 0) / (patientAnalytics?.totalPatients || 1)) * 100}%`,
+                            }}
                           />
                         </div>
-                        <span className="text-sm font-bold w-12 text-right">{patientAnalytics?.demographics.other || 0}</span>
+                        <span className="text-sm font-bold w-12 text-right">
+                          {patientAnalytics?.demographics.other || 0}
+                        </span>
                       </div>
                     </div>
                   </>
@@ -528,7 +562,10 @@ export default function ReportsPage() {
                     <Legend />
                     <Bar dataKey="count" fill="#8884D8" name="Patients" radius={[4, 4, 0, 0]}>
                       {patientAnalytics.ageGroups.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -552,7 +589,9 @@ export default function ReportsPage() {
                 {loading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
-                  <div className="text-2xl font-bold">{clinicalAnalytics?.totalTreatments || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {clinicalAnalytics?.totalTreatments || 0}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -665,23 +704,29 @@ export default function ReportsPage() {
               <CardContent>
                 {loading ? (
                   <Skeleton className="h-64 w-full" />
-                ) : clinicalAnalytics?.proceduresByCategory && clinicalAnalytics.proceduresByCategory.length > 0 ? (
+                ) : clinicalAnalytics?.proceduresByCategory &&
+                  clinicalAnalytics.proceduresByCategory.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={clinicalAnalytics.proceduresByCategory.map(cat => ({
+                        data={clinicalAnalytics.proceduresByCategory.map((cat) => ({
                           name: cat.category,
                           value: cat.count,
                         }))}
                         cx="50%"
                         cy="50%"
                         labelLine={true}
-                        label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                        label={({ name, percent }) =>
+                          `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`
+                        }
                         outerRadius={100}
                         dataKey="value"
                       >
                         {clinicalAnalytics.proceduresByCategory.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -802,33 +847,46 @@ export default function ReportsPage() {
                   <Skeleton className="h-64 w-full" />
                   <Skeleton className="h-64 w-full" />
                 </div>
-              ) : financialAnalytics?.paymentMethodBreakdown && financialAnalytics.paymentMethodBreakdown.length > 0 ? (
+              ) : financialAnalytics?.paymentMethodBreakdown &&
+                financialAnalytics.paymentMethodBreakdown.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2">
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
-                        data={financialAnalytics.paymentMethodBreakdown.map(m => ({
+                        data={financialAnalytics.paymentMethodBreakdown.map((m) => ({
                           name: m.method,
                           value: m.amount,
                         }))}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                        label={({ name, percent }) =>
+                          `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`
+                        }
                         outerRadius={80}
                         dataKey="value"
                       >
                         {financialAnalytics.paymentMethodBreakdown.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number | undefined) => value !== undefined ? formatCurrency(value) : ''} />
+                      <Tooltip
+                        formatter={(value) =>
+                          typeof value === 'number' ? formatCurrency(value) : ''
+                        }
+                      />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="space-y-4">
                     {financialAnalytics.paymentMethodBreakdown.map((method, index) => (
-                      <div key={method.method} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={method.method}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
                           <div
                             className="w-4 h-4 rounded-full"
@@ -838,7 +896,9 @@ export default function ReportsPage() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">{formatCurrency(method.amount)}</div>
-                          <div className="text-xs text-muted-foreground">{formatPercentage(method.percentage)}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatPercentage(method.percentage)}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -859,19 +919,28 @@ export default function ReportsPage() {
             <CardContent>
               {loading ? (
                 <Skeleton className="h-64 w-full" />
-              ) : financialAnalytics?.revenueByMonth && financialAnalytics.revenueByMonth.length > 0 ? (
+              ) : financialAnalytics?.revenueByMonth &&
+                financialAnalytics.revenueByMonth.length > 0 ? (
                 <ResponsiveContainer width="100%" height={350}>
                   <ComposedChart data={financialAnalytics.revenueByMonth}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip
-                      formatter={(value: number | undefined) => value !== undefined ? formatCurrency(value) : ''}
+                      formatter={(value) =>
+                        typeof value === 'number' ? formatCurrency(value) : ''
+                      }
                     />
                     <Legend />
                     <Bar dataKey="revenue" fill="#00C49F" name="Revenue" />
                     <Bar dataKey="expenses" fill="#FF6B6B" name="Expenses" />
-                    <Line type="monotone" dataKey="profit" stroke="#8884D8" strokeWidth={3} name="Profit" />
+                    <Line
+                      type="monotone"
+                      dataKey="profit"
+                      stroke="#8884D8"
+                      strokeWidth={3}
+                      name="Profit"
+                    />
                   </ComposedChart>
                 </ResponsiveContainer>
               ) : (
@@ -893,7 +962,9 @@ export default function ReportsPage() {
                 {loading ? (
                   <Skeleton className="h-8 w-24" />
                 ) : (
-                  <div className="text-2xl font-bold">{operationalAnalytics?.totalAppointments || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {operationalAnalytics?.totalAppointments || 0}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -912,7 +983,8 @@ export default function ReportsPage() {
                       {operationalAnalytics?.completedAppointments || 0}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {formatPercentage(operationalAnalytics?.appointmentUtilization || 0)} utilization
+                      {formatPercentage(operationalAnalytics?.appointmentUtilization || 0)}{' '}
+                      utilization
                     </p>
                   </>
                 )}
@@ -976,7 +1048,10 @@ export default function ReportsPage() {
               ) : (
                 <div className="space-y-4">
                   {operationalAnalytics?.staffProductivity.map((staff) => (
-                    <div key={staff.staffId} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={staff.staffId}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div>
                         <div className="font-medium">{staff.name}</div>
                         <div className="text-sm text-muted-foreground">{staff.role}</div>
@@ -992,7 +1067,9 @@ export default function ReportsPage() {
                         </div>
                         <div>
                           <div className="text-sm text-muted-foreground">Revenue</div>
-                          <div className="text-xl font-bold text-green-600">{formatCurrency(staff.revenue)}</div>
+                          <div className="text-xl font-bold text-green-600">
+                            {formatCurrency(staff.revenue)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1038,9 +1115,7 @@ export default function ReportsPage() {
                     <div className="text-3xl font-bold text-orange-600">
                       {operationalAnalytics?.lowStockItems || 0}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Items below reorder level
-                    </p>
+                    <p className="text-sm text-muted-foreground">Items below reorder level</p>
                   </div>
                 )}
               </CardContent>
