@@ -1,42 +1,25 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import {
+  formatCurrency as baseFormatCurrency,
+  formatDate as baseFormatDate,
+  formatDateTime as baseFormatDateTime,
+} from "@/lib/i18n/format"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount)
+export function formatCurrency(amount: number, locale?: string): string {
+  return baseFormatCurrency(amount, { locale })
 }
 
-export function formatDate(date: Date | string): string {
-  try {
-    const d = new Date(date)
-    if (isNaN(d.getTime())) return '-'
-    return new Intl.DateTimeFormat('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(d)
-  } catch {
-    return '-'
-  }
+export function formatDate(date: Date | string, locale?: string): string {
+  return baseFormatDate(date, { locale })
 }
 
-export function formatDateTime(date: Date | string): string {
-  const d = new Date(date)
-  return new Intl.DateTimeFormat('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
+export function formatDateTime(date: Date | string, locale?: string): string {
+  return baseFormatDateTime(date, { locale })
 }
 
 export function formatPhone(phone: string): string {

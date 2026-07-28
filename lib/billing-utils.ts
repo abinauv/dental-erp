@@ -7,6 +7,11 @@ import {
   InsuranceClaimStatus,
   DiscountType
 } from "@prisma/client"
+import {
+  formatCurrency as baseFormatCurrency,
+  formatDate as baseFormatDate,
+  formatDateTime as baseFormatDateTime,
+} from "@/lib/i18n/format"
 
 // Invoice Status Configuration
 export const invoiceStatusConfig: Record<InvoiceStatus, {
@@ -326,49 +331,27 @@ export function calculateInvoiceTotals(
   }
 }
 
-// Format currency in INR
-export function formatCurrency(amount: number | string | null | undefined): string {
-  if (amount === null || amount === undefined) return "₹0.00"
-
-  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount
-
-  if (isNaN(numAmount)) return "₹0.00"
-
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
+// Invoices always show both decimal places, unlike the summary figures
+// elsewhere in the app.
+export function formatCurrency(
+  amount: number | string | null | undefined,
+  locale?: string
+): string {
+  return baseFormatCurrency(amount, {
+    locale,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(numAmount)
+    maximumFractionDigits: 2,
+  })
 }
 
 // Format date for display
-export function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return "-"
-
-  const dateObj = typeof date === "string" ? new Date(date) : date
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  }).format(dateObj)
+export function formatDate(date: Date | string | null | undefined, locale?: string): string {
+  return baseFormatDate(date, { locale })
 }
 
 // Format date-time for display
-export function formatDateTime(date: Date | string | null | undefined): string {
-  if (!date) return "-"
-
-  const dateObj = typeof date === "string" ? new Date(date) : date
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true
-  }).format(dateObj)
+export function formatDateTime(date: Date | string | null | undefined, locale?: string): string {
+  return baseFormatDateTime(date, { locale, hour12: true })
 }
 
 // Generate Invoice Number

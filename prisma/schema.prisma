@@ -31,6 +31,13 @@ model Hospital {
   website             String?
   tagline             String?
 
+  // Localization. Defaults keep existing clinics on Indian formatting.
+  // `country` will select the tax provider — see docs/LOCALIZATION.md.
+  locale              String    @default("en-IN")
+  country             String    @default("IN")
+  currency            String    @default("INR")
+  timezone            String    @default("Asia/Kolkata")
+
   plan                Plan      @default(FREE)
   planExpiresAt       DateTime?
   patientLimit        Int       @default(100)

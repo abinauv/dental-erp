@@ -1,3 +1,9 @@
+import {
+  formatCurrency as baseFormatCurrency,
+  formatDate as baseFormatDate,
+  formatDateTime as baseFormatDateTime,
+} from "@/lib/i18n/format"
+
 // Treatment status colors and labels
 export const treatmentStatusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   PLANNED: {
@@ -290,15 +296,8 @@ export function formatDuration(minutes: number): string {
   return `${hours} hr ${mins} min`
 }
 
-// Format currency for Indian Rupees
-export function formatCurrency(amount: number | string): string {
-  const num = typeof amount === 'string' ? parseFloat(amount) : amount
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
-  }).format(num)
+export function formatCurrency(amount: number | string, locale?: string): string {
+  return baseFormatCurrency(amount, { locale })
 }
 
 // Parse tooth numbers from string (e.g., "11,12,13" or "11-13")
@@ -370,26 +369,13 @@ export function getToothType(toothNumber: number): 'molar' | 'premolar' | 'canin
 }
 
 // Format date for display
-export function formatDate(date: Date | string): string {
-  const d = new Date(date)
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
+export function formatDate(date: Date | string, locale?: string): string {
+  return baseFormatDate(date, { locale })
 }
 
 // Format date and time
-export function formatDateTime(date: Date | string): string {
-  const d = new Date(date)
-  return d.toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  })
+export function formatDateTime(date: Date | string, locale?: string): string {
+  return baseFormatDateTime(date, { locale, hour12: true })
 }
 
 // Calculate treatment plan progress percentage
