@@ -1,19 +1,21 @@
 import { test as base, expect, Page } from '@playwright/test'
 
-// Test credentials — should match seed data
+// Test credentials — these MUST stay in sync with prisma/seed.ts.
+// Every authenticated spec logs in through these fixtures, so a mismatch fails
+// the entire suite at fixture setup rather than in any one test.
 const TEST_ADMIN = {
-  email: 'admin@dental.com',
-  password: 'password123',
+  email: 'admin@demo-dental.com',
+  password: 'Admin@123',
 }
 
 const TEST_DOCTOR = {
-  email: 'doctor@dental.com',
-  password: 'password123',
+  email: 'doctor@demo-dental.com',
+  password: 'Doctor@123',
 }
 
 const TEST_RECEPTIONIST = {
-  email: 'receptionist@dental.com',
-  password: 'password123',
+  email: 'reception@demo-dental.com',
+  password: 'Reception@123',
 }
 
 /**

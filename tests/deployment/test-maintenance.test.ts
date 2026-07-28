@@ -30,8 +30,21 @@ describe('12.4 Test Maintenance — Flaky Test Detection', () => {
   it('Playwright retries are configured in CI', () => {
     const config = readFile('playwright.config.ts')
     expect(config).toContain('retries')
-    // CI should retry at least once
-    expect(config).toMatch(/retries:\s*process\.env\.CI\s*\?\s*2/)
+    // CI should retry at least once. The config derives `isCI` once at the top
+    // rather than repeating `process.env.CI` on every option.
+    expect(config).toMatch(/retries:\s*isCI\s*\?\s*[1-9]/)
+  })
+
+  it('Playwright bounds the whole CI run', () => {
+    // Without this the suite once ran for six hours and was killed by the
+    // GitHub Actions job ceiling instead of reporting a failure.
+    const config = readFile('playwright.config.ts')
+    expect(config).toMatch(/globalTimeout:\s*isCI\s*\?/)
+  })
+
+  it('Playwright HTML reporter never opens a blocking server in CI', () => {
+    const config = readFile('playwright.config.ts')
+    expect(config).toMatch(/open:\s*['"]never['"]/)
   })
 
   it('Playwright captures screenshots on failure', () => {
@@ -216,10 +229,13 @@ describe('12.2 Git Hooks — Pre-commit & Pre-push', () => {
     expect(pkg.scripts.prepare).toBe('husky')
   })
 
-  it('lint-staged config exists in package.json', () => {
-    const pkg = JSON.parse(readFile('package.json'))
-    expect(pkg['lint-staged']).toBeDefined()
-    expect(pkg['lint-staged']['*.{ts,tsx}']).toBeDefined()
+  // The config lives in lint-staged.config.mjs rather than package.json: the
+  // type-check task has to be a function so lint-staged does NOT append the
+  // staged filenames (`tsc file.ts` ignores tsconfig.json, which loses the
+  // `@/*` path alias), and package.json cannot hold a function.
+  it('lint-staged config exists', () => {
+    expect(fileExists('lint-staged.config.mjs')).toBe(true)
+    expect(readFile('lint-staged.config.mjs')).toContain('*.{ts,tsx}')
   })
 
   it('pre-commit hook file exists', () => {
@@ -234,17 +250,17 @@ describe('12.2 Git Hooks — Pre-commit & Pre-push', () => {
     expect(hook).toContain('npm run test')
   })
 
-  it('lint-staged runs type check on TS files', () => {
-    const pkg = JSON.parse(readFile('package.json'))
-    const tsConfig = pkg['lint-staged']['*.{ts,tsx}']
-    expect(tsConfig).toBeDefined()
-    expect(tsConfig.some((cmd: string) => cmd.includes('tsc'))).toBe(true)
+  it('lint-staged type checks the whole project, not individual files', () => {
+    const config = readFile('lint-staged.config.mjs')
+    // `-p tsconfig.json` is what keeps the `@/*` path alias resolvable.
+    expect(config).toMatch(/tsc --noEmit -p tsconfig\.json/)
   })
 
-  it('lint-staged runs lint on TS files', () => {
-    const pkg = JSON.parse(readFile('package.json'))
-    const tsConfig = pkg['lint-staged']['*.{ts,tsx}']
-    expect(tsConfig.some((cmd: string) => cmd.includes('lint'))).toBe(true)
+  it('lint-staged runs eslint directly', () => {
+    // `next lint` was removed in Next.js 16.
+    const config = readFile('lint-staged.config.mjs')
+    expect(config).toContain('eslint --fix')
+    expect(config).not.toContain('next lint')
   })
 })
 
