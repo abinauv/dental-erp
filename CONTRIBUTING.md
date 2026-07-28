@@ -50,7 +50,7 @@ cp .env.example .env
 # Edit .env with your local MySQL credentials
 
 # Set up the database
-npx prisma db push
+npx prisma migrate deploy
 npx prisma db seed
 
 # Start development server
@@ -83,6 +83,20 @@ npm run dev
 - Place component tests in `__tests__/components/`
 - Name test files to match source: `foo.test.ts` for `foo.ts`
 - Mock Prisma client — don't hit a real database in unit/integration tests
+
+### Database schema changes
+
+Changing `prisma/schema.prisma` means committing a migration alongside it, so
+that every deployment can reach the new schema with `prisma migrate deploy`:
+
+```bash
+npx prisma migrate dev --name short_description_of_change
+```
+
+Commit the generated folder under `prisma/migrations/`. Please don't use
+`prisma db push` for a change you intend to submit — it updates your local
+database without leaving a migration behind, and the history silently drifts
+out of step with the models.
 
 ## Commit Message Convention
 
