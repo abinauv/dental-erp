@@ -1,1 +1,46 @@
+#!/usr/bin/env sh
+# Guardrail: never push straight to a protected branch.
+#
+# GitHub rulesets are the real enforcement (they cannot be bypassed by a local
+# --no-verify). This hook just fails fast and locally, before the network round
+# trip, and before CI burns a runner on a push that will be rejected anyway.
+#
+# Deliberate override, for the rare case you need it:
+#   ALLOW_PROTECTED_PUSH=1 git push origin main
+
+PROTECTED_BRANCHES="main develop"
+
+remote_ref_is_protected() {
+  for branch in $PROTECTED_BRANCHES; do
+    if [ "$1" = "refs/heads/$branch" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# git feeds pre-push one line per ref being pushed:
+#   <local ref> <local sha> <remote ref> <remote sha>
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  [ -z "$remote_ref" ] && continue
+
+  if remote_ref_is_protected "$remote_ref"; then
+    if [ "$ALLOW_PROTECTED_PUSH" = "1" ]; then
+      echo "pre-push: ALLOW_PROTECTED_PUSH=1 set — allowing push to $remote_ref."
+    else
+      echo ""
+      echo "  BLOCKED: refusing to push directly to $remote_ref."
+      echo ""
+      echo "  Open a pull request instead:"
+      echo "    git switch -c my-change"
+      echo "    git push -u origin my-change"
+      echo "    gh pr create"
+      echo ""
+      echo "  If you really mean it: ALLOW_PROTECTED_PUSH=1 git push ..."
+      echo ""
+      exit 1
+    fi
+  fi
+done
+
 npm run test
