@@ -1,103 +1,127 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, Calendar, Receipt, TrendingUp, TrendingDown, AlertCircle, ArrowUpRight, ArrowDownRight, Package } from 'lucide-react';
-import Link from 'next/link';
-import { format } from 'date-fns';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { InsightsPanel } from "@/components/ai/insights-panel";
-import { CHART_COLORS } from "@/lib/chart-theme";
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Users,
+  Calendar,
+  Receipt,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Package,
+} from 'lucide-react'
+import Link from 'next/link'
+import { format } from 'date-fns'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
+import { InsightsPanel } from '@/components/ai/insights-panel'
+import { CHART_COLORS } from '@/lib/chart-theme'
 
 interface DashboardStats {
   overview: {
-    totalPatients: number;
-    newPatientsThisMonth: number;
-    patientGrowth: number;
-    todayAppointments: number;
-    thisMonthAppointments: number;
-    appointmentGrowth: number;
-    pendingAppointments: number;
-    completedAppointmentsToday: number;
-    thisMonthRevenue: number;
-    todayRevenue: number;
-    revenueGrowth: number;
-    pendingPayments: number;
-    totalRevenue: number;
-  };
+    totalPatients: number
+    newPatientsThisMonth: number
+    patientGrowth: number
+    todayAppointments: number
+    thisMonthAppointments: number
+    appointmentGrowth: number
+    pendingAppointments: number
+    completedAppointmentsToday: number
+    thisMonthRevenue: number
+    todayRevenue: number
+    revenueGrowth: number
+    pendingPayments: number
+    totalRevenue: number
+  }
   charts: {
-    last7DaysRevenue: Array<{ date: string; revenue: number }>;
-    last6MonthsRevenue: Array<{ month: string; revenue: number }>;
-    appointmentsByStatus: Array<{ status: string; count: number }>;
-    topProcedures: Array<{ name: string; count: number; revenue: number }>;
-  };
+    last7DaysRevenue: Array<{ date: string; revenue: number }>
+    last6MonthsRevenue: Array<{ month: string; revenue: number }>
+    appointmentsByStatus: Array<{ status: string; count: number }>
+    topProcedures: Array<{ name: string; count: number; revenue: number }>
+  }
   recentActivity: {
     upcomingAppointments: Array<{
-      id: string;
-      patientName: string;
-      doctorName: string;
-      date: string;
-      type: string;
-      status: string;
-    }>;
+      id: string
+      patientName: string
+      doctorName: string
+      date: string
+      type: string
+      status: string
+    }>
     lowStockItems: Array<{
-      id: string;
-      name: string;
-      currentStock: number;
-      minimumStock: number;
-      unit: string;
-    }>;
-  };
+      id: string
+      name: string
+      currentStock: number
+      minimumStock: number
+      unit: string
+    }>
+  }
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchDashboardStats();
-  }, []);
+    fetchDashboardStats()
+  }, [])
 
   const fetchDashboardStats = async () => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/dashboard/stats');
+      setLoading(true)
+      const response = await fetch('/api/dashboard/stats')
 
       if (!response.ok) {
-        throw new Error('Failed to fetch dashboard statistics');
+        throw new Error('Failed to fetch dashboard statistics')
       }
 
-      const data = await response.json();
-      setStats(data.data);
+      const data = await response.json()
+      setStats(data.data)
     } catch (err: any) {
-      console.error('Error fetching dashboard stats:', err);
-      setError(err.message);
+      console.error('Error fetching dashboard stats:', err)
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
-    }).format(amount);
-  };
+    }).format(amount)
+  }
 
   const getGrowthIcon = (growth: number) => {
-    if (growth > 0) return <ArrowUpRight className="h-4 w-4 text-green-600" />;
-    if (growth < 0) return <ArrowDownRight className="h-4 w-4 text-red-600" />;
-    return null;
-  };
+    if (growth > 0) return <ArrowUpRight className="h-4 w-4 text-green-600" />
+    if (growth < 0) return <ArrowDownRight className="h-4 w-4 text-red-600" />
+    return null
+  }
 
   const getGrowthColor = (growth: number) => {
-    if (growth > 0) return 'text-green-600';
-    if (growth < 0) return 'text-red-600';
-    return 'text-muted-foreground';
-  };
+    if (growth > 0) return 'text-green-600'
+    if (growth < 0) return 'text-red-600'
+    return 'text-muted-foreground'
+  }
 
   if (loading) {
     return (
@@ -120,7 +144,7 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   if (error || !stats) {
@@ -142,7 +166,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
@@ -167,7 +191,9 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.overview.totalPatients.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {stats.overview.totalPatients.toLocaleString()}
+            </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {getGrowthIcon(stats.overview.patientGrowth)}
               <span className={getGrowthColor(stats.overview.patientGrowth)}>
@@ -188,7 +214,8 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.overview.todayAppointments}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.overview.completedAppointmentsToday} completed, {stats.overview.pendingAppointments} pending
+              {stats.overview.completedAppointmentsToday} completed,{' '}
+              {stats.overview.pendingAppointments} pending
             </p>
           </CardContent>
         </Card>
@@ -200,7 +227,9 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.overview.thisMonthRevenue)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(stats.overview.thisMonthRevenue)}
+            </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {getGrowthIcon(stats.overview.revenueGrowth)}
               <span className={getGrowthColor(stats.overview.revenueGrowth)}>
@@ -219,10 +248,10 @@ export default function DashboardPage() {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.overview.pendingPayments)}</div>
-            <p className="text-xs text-muted-foreground">
-              Outstanding receivables
-            </p>
+            <div className="text-2xl font-bold">
+              {formatCurrency(stats.overview.pendingPayments)}
+            </div>
+            <p className="text-xs text-muted-foreground">Outstanding receivables</p>
           </CardContent>
         </Card>
       </div>
@@ -249,7 +278,7 @@ export default function DashboardPage() {
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip
-                    formatter={(value: number | undefined) => value !== undefined ? formatCurrency(value) : ''}
+                    formatter={(value) => (typeof value === 'number' ? formatCurrency(value) : '')}
                     labelStyle={{ color: 'inherit' }}
                   />
                   <Legend />
@@ -277,7 +306,8 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.recentActivity.upcomingAppointments && stats.recentActivity.upcomingAppointments.length > 0 ? (
+              {stats.recentActivity.upcomingAppointments &&
+              stats.recentActivity.upcomingAppointments.length > 0 ? (
                 stats.recentActivity.upcomingAppointments.map((apt) => (
                   <div key={apt.id} className="flex items-start gap-3 text-sm">
                     <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
@@ -321,13 +351,18 @@ export default function DashboardPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                    label={({ name, percent }) =>
+                      `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                   >
                     {stats.charts.appointmentsByStatus.map((_: unknown, index: number) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -335,7 +370,9 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No appointment data available</p>
+              <p className="text-muted-foreground text-center py-8">
+                No appointment data available
+              </p>
             )}
           </CardContent>
         </Card>
@@ -360,7 +397,7 @@ export default function DashboardPage() {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip
-                    formatter={(value: number | undefined) => value !== undefined ? formatCurrency(value) : ''}
+                    formatter={(value) => (typeof value === 'number' ? formatCurrency(value) : '')}
                   />
                   <Legend />
                   <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Revenue" />
@@ -397,10 +434,10 @@ export default function DashboardPage() {
                   <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
                   <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
                   <Tooltip
-                    formatter={(value: number | undefined, name: string | undefined) => {
-                      if (value === undefined) return '';
-                      if (name === 'revenue') return formatCurrency(value);
-                      return value;
+                    formatter={(value, name) => {
+                      if (typeof value !== 'number') return ''
+                      if (name === 'revenue') return formatCurrency(value)
+                      return value
                     }}
                   />
                   <Legend />
@@ -425,7 +462,8 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {stats.recentActivity.lowStockItems && stats.recentActivity.lowStockItems.length > 0 ? (
+              {stats.recentActivity.lowStockItems &&
+              stats.recentActivity.lowStockItems.length > 0 ? (
                 stats.recentActivity.lowStockItems.map((item) => (
                   <div key={item.id} className="flex items-center justify-between text-sm">
                     <div className="flex-1">
@@ -510,5 +548,5 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
