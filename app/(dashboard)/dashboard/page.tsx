@@ -434,9 +434,12 @@ export default function DashboardPage() {
                   <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
                   <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
                   <Tooltip
-                    formatter={(value, name) => {
+                    formatter={(value, _name, item) => {
                       if (typeof value !== 'number') return ''
-                      if (name === 'revenue') return formatCurrency(value)
+                      // Match on dataKey, not name: the <Bar> sets a display
+                      // name ("Revenue (₹)"), and that is what recharts passes
+                      // as `name`, so comparing it to 'revenue' never matched.
+                      if (item?.dataKey === 'revenue') return formatCurrency(value)
                       return value
                     }}
                   />
