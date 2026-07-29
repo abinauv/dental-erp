@@ -5,9 +5,10 @@ test.describe('Lab Vendors Management', () => {
     test('should display lab vendors page', async ({ adminPage: page }) => {
       await page.goto('/lab/vendors')
       await expect(
-        page.getByRole('heading', { name: /vendor|lab/i }).or(
-          page.getByText(/vendor/i).first()
-        )
+        page
+          .getByRole('heading', { name: /vendor|lab/i })
+          .or(page.getByText(/vendor/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -21,7 +22,10 @@ test.describe('Lab Vendors Management', () => {
       await page.goto('/lab/vendors')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*vendor|no.*data|empty/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*vendor|no.*data|empty/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -29,23 +33,29 @@ test.describe('Lab Vendors Management', () => {
       await page.goto('/lab/vendors')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/active|inactive|approved|pending/i).first()
+        page
+          .getByText(/active|inactive|approved|pending/i)
+          .first()
           .or(page.getByText(/no.*vendor|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should have search functionality', async ({ adminPage: page }) => {
       await page.goto('/lab/vendors')
       const searchInput = page.getByPlaceholder(/search/i)
-      await expect(searchInput.or(page.locator('body'))).toBeVisible()
+      await expect(searchInput.or(page.locator('body')).first()).toBeVisible()
     })
 
     test('should show vendor contact info', async ({ adminPage: page }) => {
       await page.goto('/lab/vendors')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/phone|email|contact|code/i).first()
+        page
+          .getByText(/phone|email|contact|code/i)
+          .first()
           .or(page.getByText(/no.*vendor|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -57,8 +67,11 @@ test.describe('Lab Vendors Management', () => {
       await addButton.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/name|code/i).first()
+        page
+          .getByLabel(/name|code/i)
+          .first()
           .or(page.getByRole('heading', { name: /add|new|create|vendor/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -70,7 +83,9 @@ test.describe('Lab Vendors Management', () => {
       const submitBtn = page.getByRole('button', { name: /save|create|add|submit/i })
       if (await submitBtn.isVisible()) {
         await submitBtn.click()
-        await expect(page.getByText(/required|enter|provide|code/i).first()).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText(/required|enter|provide|code/i).first()).toBeVisible({
+          timeout: 5000,
+        })
       }
     })
 
@@ -80,9 +95,12 @@ test.describe('Lab Vendors Management', () => {
       await addButton.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/special|service|type|categor/i).first()
+        page
+          .getByLabel(/special|service|type|categor/i)
+          .first()
           .or(page.getByText(/special|service/i).first())
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -91,9 +109,12 @@ test.describe('Lab Vendors Management', () => {
     test('should have edit/delete options on vendors', async ({ adminPage: page }) => {
       await page.goto('/lab/vendors')
       await page.waitForTimeout(1000)
-      const moreBtn = page.locator('[data-testid="more-actions"]').first()
+      const moreBtn = page
+        .locator('[data-testid="more-actions"]')
+        .first()
         .or(page.getByRole('button', { name: /action|more|edit|⋮/i }).first())
-      await expect(moreBtn.or(page.locator('body'))).toBeVisible()
+        .first()
+      await expect(moreBtn.or(page.locator('body')).first()).toBeVisible()
     })
   })
 })

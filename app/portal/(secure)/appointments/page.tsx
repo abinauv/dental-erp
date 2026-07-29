@@ -1,20 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Calendar,
-  CalendarPlus,
-  Clock,
-  User,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Calendar, CalendarPlus, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Appointment {
   id: string
@@ -40,20 +33,25 @@ interface PaginationInfo {
 }
 
 const statusColors: Record<string, string> = {
-  SCHEDULED: "bg-blue-100 text-blue-700",
-  CONFIRMED: "bg-green-100 text-green-700",
-  COMPLETED: "bg-muted text-foreground",
-  CANCELLED: "bg-red-100 text-red-700",
-  NO_SHOW: "bg-yellow-100 text-yellow-700",
-  CHECKED_IN: "bg-purple-100 text-purple-700",
-  IN_PROGRESS: "bg-indigo-100 text-indigo-700",
-  RESCHEDULED: "bg-orange-100 text-orange-700",
+  SCHEDULED: 'bg-blue-100 text-blue-700',
+  CONFIRMED: 'bg-green-100 text-green-700',
+  COMPLETED: 'bg-muted text-foreground',
+  CANCELLED: 'bg-red-100 text-red-700',
+  NO_SHOW: 'bg-yellow-100 text-yellow-700',
+  CHECKED_IN: 'bg-purple-100 text-purple-700',
+  IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
+  RESCHEDULED: 'bg-orange-100 text-orange-700',
 }
 
 export default function PatientAppointments() {
-  const [filter, setFilter] = useState("upcoming")
+  const [filter, setFilter] = useState('upcoming')
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [pagination, setPagination] = useState<PaginationInfo>({ page: 1, limit: 10, total: 0, totalPages: 0 })
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  })
   const [loading, setLoading] = useState(true)
 
   const fetchAppointments = async (page = 1) => {
@@ -77,11 +75,11 @@ export default function PatientAppointments() {
   }, [filter])
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-IN", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    new Date(d).toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     })
 
   return (
@@ -106,7 +104,9 @@ export default function PatientAppointments() {
         <TabsContent value={filter} className="mt-4">
           {loading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
             </div>
           ) : appointments.length === 0 ? (
             <Card>
@@ -141,12 +141,12 @@ export default function PatientAppointments() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {apt.appointmentNo} &middot; {apt.duration} min &middot;{" "}
-                          {apt.appointmentType.replace("_", " ")}
+                          {apt.appointmentNo} &middot; {apt.duration} min &middot;{' '}
+                          {apt.appointmentType.replace('_', ' ')}
                         </p>
                       </div>
-                      <Badge className={statusColors[apt.status] || "bg-muted text-foreground"}>
-                        {apt.status.replace("_", " ")}
+                      <Badge className={statusColors[apt.status] || 'bg-muted text-foreground'}>
+                        {apt.status.replace('_', ' ')}
                       </Badge>
                     </div>
                   </CardContent>

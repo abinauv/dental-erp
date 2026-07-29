@@ -1,17 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Separator } from "@/components/ui/separator"
-import {
-  Pill,
-  User,
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
+import { Pill, User, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface Prescription {
   id: string
@@ -47,7 +41,7 @@ export default function PatientPrescriptions() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch("/api/patient-portal/prescriptions")
+    fetch('/api/patient-portal/prescriptions')
       .then((r) => r.json())
       .then((data) => setPrescriptions(data.prescriptions || []))
       .catch(console.error)
@@ -55,17 +49,19 @@ export default function PatientPrescriptions() {
   }, [])
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    new Date(d).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     })
 
   if (loading) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">Prescriptions</h1>
-        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24" />
+        ))}
       </div>
     )
   }
@@ -103,9 +99,7 @@ export default function PatientPrescriptions() {
                       </span>
                     </div>
                     {rx.diagnosis && (
-                      <p className="text-sm text-muted-foreground">
-                        Diagnosis: {rx.diagnosis}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Diagnosis: {rx.diagnosis}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">

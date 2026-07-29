@@ -103,7 +103,7 @@ test.describe('Role-Based Access Control', () => {
         const accessDenied = page.getByText(/access denied|unauthorized|forbidden|not authorized/i)
         const settingsHeading = page.getByRole('heading', { name: /setting/i })
         // Doctor may see limited settings or be denied
-        await expect(accessDenied.or(settingsHeading)).toBeVisible({ timeout: 5000 })
+        await expect(accessDenied.or(settingsHeading).first()).toBeVisible({ timeout: 5000 })
       }
       // Redirect away from settings is also acceptable behavior
     })
@@ -153,7 +153,7 @@ test.describe('Role-Based Access Control', () => {
       if (isOnSettings) {
         const accessDenied = page.getByText(/access denied|unauthorized|forbidden|not authorized/i)
         const heading = page.getByRole('heading').first()
-        await expect(accessDenied.or(heading)).toBeVisible({ timeout: 5000 })
+        await expect(accessDenied.or(heading).first()).toBeVisible({ timeout: 5000 })
       }
     })
 
@@ -165,7 +165,7 @@ test.describe('Role-Based Access Control', () => {
       if (isOnReports) {
         const accessDenied = page.getByText(/access denied|unauthorized|forbidden|not authorized/i)
         const heading = page.getByRole('heading').first()
-        await expect(accessDenied.or(heading)).toBeVisible({ timeout: 5000 })
+        await expect(accessDenied.or(heading).first()).toBeVisible({ timeout: 5000 })
       }
     })
   })
@@ -178,12 +178,18 @@ test.describe('Role-Based Access Control', () => {
       await expect(sidebar).toBeVisible()
 
       // Check for admin-specific items
-      const settingsLink = page.getByRole('link', { name: /setting/i }).first()
+      const settingsLink = page
+        .getByRole('link', { name: /setting/i })
+        .first()
         .or(page.locator('a[href*="/settings"]').first())
+        .first()
       await expect(settingsLink).toBeVisible()
 
-      const staffLink = page.getByRole('link', { name: /staff/i }).first()
+      const staffLink = page
+        .getByRole('link', { name: /staff/i })
+        .first()
         .or(page.locator('a[href*="/staff"]').first())
+        .first()
       await expect(staffLink).toBeVisible()
     })
 
@@ -193,27 +199,41 @@ test.describe('Role-Based Access Control', () => {
       await expect(sidebar).toBeVisible()
 
       // Doctors should see clinical items
-      const patientsLink = page.getByRole('link', { name: /patient/i }).first()
+      const patientsLink = page
+        .getByRole('link', { name: /patient/i })
+        .first()
         .or(page.locator('a[href*="/patients"]').first())
+        .first()
       await expect(patientsLink).toBeVisible()
 
-      const appointmentsLink = page.getByRole('link', { name: /appointment/i }).first()
+      const appointmentsLink = page
+        .getByRole('link', { name: /appointment/i })
+        .first()
         .or(page.locator('a[href*="/appointments"]').first())
+        .first()
       await expect(appointmentsLink).toBeVisible()
     })
 
-    test('receptionist should see front-desk navigation items', async ({ receptionistPage: page }) => {
+    test('receptionist should see front-desk navigation items', async ({
+      receptionistPage: page,
+    }) => {
       await page.goto('/dashboard')
       const sidebar = page.locator('nav, aside, [data-testid="sidebar"]').first()
       await expect(sidebar).toBeVisible()
 
       // Receptionist should see front-desk items
-      const patientsLink = page.getByRole('link', { name: /patient/i }).first()
+      const patientsLink = page
+        .getByRole('link', { name: /patient/i })
+        .first()
         .or(page.locator('a[href*="/patients"]').first())
+        .first()
       await expect(patientsLink).toBeVisible()
 
-      const appointmentsLink = page.getByRole('link', { name: /appointment/i }).first()
+      const appointmentsLink = page
+        .getByRole('link', { name: /appointment/i })
+        .first()
         .or(page.locator('a[href*="/appointments"]').first())
+        .first()
       await expect(appointmentsLink).toBeVisible()
     })
   })

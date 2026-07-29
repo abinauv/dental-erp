@@ -11,7 +11,10 @@ test.describe('Data Import', () => {
         await importLink.click()
         await page.waitForTimeout(1000)
         await expect(
-          page.getByRole('heading', { name: /import/i }).or(page.getByText(/import.*data|upload/i).first())
+          page
+            .getByRole('heading', { name: /import/i })
+            .or(page.getByText(/import.*data|upload/i).first())
+            .first()
         ).toBeVisible({ timeout: 5000 })
       }
     })
@@ -24,10 +27,11 @@ test.describe('Data Import', () => {
         await importLink.click()
         await page.waitForTimeout(1000)
         // File upload input or drop zone
-        const uploadArea = page.locator('input[type="file"]').or(
-          page.getByText(/upload|drag.*drop|csv|excel/i).first()
-        )
-        await expect(uploadArea.or(page.locator('body'))).toBeVisible()
+        const uploadArea = page
+          .locator('input[type="file"]')
+          .or(page.getByText(/upload|drag.*drop|csv|excel/i).first())
+          .first()
+        await expect(uploadArea.or(page.locator('body')).first()).toBeVisible()
       }
     })
 
@@ -40,7 +44,10 @@ test.describe('Data Import', () => {
         await page.waitForTimeout(1000)
         // Entity type: patients, inventory, staff
         await expect(
-          page.getByText(/patient|inventory|staff|entity|type/i).first().or(page.locator('body'))
+          page
+            .getByText(/patient|inventory|staff|entity|type/i)
+            .or(page.locator('body'))
+            .first()
         ).toBeVisible()
       }
     })
