@@ -11,7 +11,12 @@ test.describe('Signup Flow', () => {
     await expect(page.getByLabel(/admin name|your name|full name/i).first()).toBeVisible()
     await expect(page.getByLabel(/email/i)).toBeVisible()
     await expect(page.getByLabel(/phone/i)).toBeVisible()
-    await expect(page.getByLabel(/^password$/i).or(page.getByLabel(/password/i).first())).toBeVisible()
+    await expect(
+      page
+        .getByLabel(/^password$/i)
+        .or(page.getByLabel(/password/i).first())
+        .first()
+    ).toBeVisible()
   })
 
   test('should have link back to login page', async ({ page }) => {
@@ -25,7 +30,9 @@ test.describe('Signup Flow', () => {
     await submitButton.click()
 
     // Should show validation errors
-    await expect(page.getByText(/required|enter|provide|minimum/i).first()).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/required|enter|provide|minimum/i).first()).toBeVisible({
+      timeout: 5000,
+    })
   })
 
   test('should validate email format', async ({ page }) => {
@@ -45,7 +52,10 @@ test.describe('Signup Flow', () => {
     if (await phoneInput.isVisible()) {
       await phoneInput.fill('9876543210')
     }
-    const passwordInput = page.getByLabel(/^password$/i).or(page.getByLabel(/password/i).first())
+    const passwordInput = page
+      .getByLabel(/^password$/i)
+      .or(page.getByLabel(/password/i).first())
+      .first()
     if (await passwordInput.isVisible()) {
       await passwordInput.fill('password123')
     }
@@ -62,20 +72,26 @@ test.describe('Signup Flow', () => {
   })
 
   test('should validate password minimum length', async ({ page }) => {
-    const passwordInput = page.getByLabel(/^password$/i).or(page.getByLabel(/password/i).first())
+    const passwordInput = page
+      .getByLabel(/^password$/i)
+      .or(page.getByLabel(/password/i).first())
+      .first()
     await passwordInput.fill('short')
 
     const submitButton = page.getByRole('button', { name: /sign up|register|create/i })
     await submitButton.click()
 
     // Should show password length error
-    await expect(
-      page.getByText(/minimum|at least|too short|characters/i).first()
-    ).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText(/minimum|at least|too short|characters/i).first()).toBeVisible({
+      timeout: 5000,
+    })
   })
 
   test('should validate password confirmation match', async ({ page }) => {
-    const passwordInput = page.getByLabel(/^password$/i).or(page.getByLabel(/password/i).first())
+    const passwordInput = page
+      .getByLabel(/^password$/i)
+      .or(page.getByLabel(/password/i).first())
+      .first()
     await passwordInput.fill('password123')
 
     const confirmPassword = page.getByLabel(/confirm password/i)
@@ -85,9 +101,9 @@ test.describe('Signup Flow', () => {
       await submitButton.click()
 
       // Should show mismatch error
-      await expect(
-        page.getByText(/match|don't match|do not match|mismatch/i).first()
-      ).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText(/match|don't match|do not match|mismatch/i).first()).toBeVisible({
+        timeout: 5000,
+      })
     }
   })
 
@@ -98,9 +114,9 @@ test.describe('Signup Flow', () => {
       const submitButton = page.getByRole('button', { name: /sign up|register|create/i })
       await submitButton.click()
 
-      await expect(
-        page.getByText(/minimum|at least|too short|characters/i).first()
-      ).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText(/minimum|at least|too short|characters/i).first()).toBeVisible({
+        timeout: 5000,
+      })
     }
   })
 
@@ -122,7 +138,10 @@ test.describe('Signup Flow', () => {
     if (await phoneInput.isVisible()) {
       await phoneInput.fill('9876543210')
     }
-    const passwordInput = page.getByLabel(/^password$/i).or(page.getByLabel(/password/i).first())
+    const passwordInput = page
+      .getByLabel(/^password$/i)
+      .or(page.getByLabel(/password/i).first())
+      .first()
     await passwordInput.fill('TestPassword123!')
 
     const confirmPassword = page.getByLabel(/confirm password/i)
@@ -156,7 +175,10 @@ test.describe('Signup Flow', () => {
     if (await phoneInput.isVisible()) {
       await phoneInput.fill('9876543211')
     }
-    const passwordInput = page.getByLabel(/^password$/i).or(page.getByLabel(/password/i).first())
+    const passwordInput = page
+      .getByLabel(/^password$/i)
+      .or(page.getByLabel(/password/i).first())
+      .first()
     await passwordInput.fill('TestPassword123!')
 
     const confirmPassword = page.getByLabel(/confirm password/i)
@@ -168,8 +190,8 @@ test.describe('Signup Flow', () => {
     await submitButton.click()
 
     // Should show error about existing account
-    await expect(
-      page.getByText(/already|exists|duplicate|taken|registered/i).first()
-    ).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/already|exists|duplicate|taken|registered/i).first()).toBeVisible({
+      timeout: 10000,
+    })
   })
 })

@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Calendar,
   CreditCard,
@@ -15,7 +15,7 @@ import {
   Clock,
   User,
   CalendarPlus,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface DashboardData {
   upcomingAppointments: Array<{
@@ -56,7 +56,7 @@ export default function PatientDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/patient-portal/dashboard")
+    fetch('/api/patient-portal/dashboard')
       .then((r) => r.json())
       .then(setData)
       .catch(console.error)
@@ -64,17 +64,17 @@ export default function PatientDashboard() {
   }, [])
 
   const formatCurrency = (val: number | string) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
       minimumFractionDigits: 0,
     }).format(Number(val))
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    new Date(d).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     })
 
   if (loading) {
@@ -166,7 +166,10 @@ export default function PatientDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">Upcoming Appointments</CardTitle>
-            <Link href="/portal/appointments" className="text-xs text-primary hover:underline flex items-center gap-1">
+            <Link
+              href="/portal/appointments"
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
               View All <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
@@ -178,7 +181,10 @@ export default function PatientDashboard() {
             ) : (
               <div className="space-y-3">
                 {data.upcomingAppointments.map((apt) => (
-                  <div key={apt.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={apt.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Clock className="h-3 w-3 text-muted-foreground" />
@@ -193,7 +199,9 @@ export default function PatientDashboard() {
                         </span>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-xs">{apt.appointmentType.replace("_", " ")}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {apt.appointmentType.replace('_', ' ')}
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -205,32 +213,38 @@ export default function PatientDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">Outstanding Bills</CardTitle>
-            <Link href="/portal/bills" className="text-xs text-primary hover:underline flex items-center gap-1">
+            <Link
+              href="/portal/bills"
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
               View All <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
           <CardContent>
             {data.outstandingInvoices.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                All bills are paid!
-              </p>
+              <p className="text-sm text-muted-foreground py-4 text-center">All bills are paid!</p>
             ) : (
               <div className="space-y-3">
                 {data.outstandingInvoices.map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={inv.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div>
                       <p className="text-sm font-medium">{inv.invoiceNo}</p>
                       {inv.dueDate && (
-                        <p className="text-xs text-muted-foreground">Due: {formatDate(inv.dueDate)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Due: {formatDate(inv.dueDate)}
+                        </p>
                       )}
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold">{formatCurrency(inv.balanceAmount)}</p>
                       <Badge
-                        variant={inv.status === "PARTIALLY_PAID" ? "secondary" : "destructive"}
+                        variant={inv.status === 'PARTIALLY_PAID' ? 'secondary' : 'destructive'}
                         className="text-xs"
                       >
-                        {inv.status.replace("_", " ")}
+                        {inv.status.replace('_', ' ')}
                       </Badge>
                     </div>
                   </div>
@@ -244,7 +258,10 @@ export default function PatientDashboard() {
         <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">Recent Treatments</CardTitle>
-            <Link href="/portal/records" className="text-xs text-primary hover:underline flex items-center gap-1">
+            <Link
+              href="/portal/records"
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
               View All <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
@@ -256,14 +273,20 @@ export default function PatientDashboard() {
             ) : (
               <div className="space-y-3">
                 {data.recentTreatments.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div className="space-y-1">
                       <p className="text-sm font-medium">{t.procedure.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Dr. {t.doctor.firstName} {t.doctor.lastName} &middot; {formatDate(t.createdAt)}
+                        Dr. {t.doctor.firstName} {t.doctor.lastName} &middot;{' '}
+                        {formatDate(t.createdAt)}
                       </p>
                     </div>
-                    <Badge variant="outline" className="text-xs">{t.status}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {t.status}
+                    </Badge>
                   </div>
                 ))}
               </div>

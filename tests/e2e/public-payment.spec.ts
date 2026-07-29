@@ -15,9 +15,9 @@ test.describe('Public Payment Page', () => {
       await page.goto('/pay/invalid-token-12345')
       await page.waitForTimeout(1000)
       // Invalid token should show error message
-      await expect(
-        page.getByText(/invalid|expired|not found|error|payment/i).first()
-      ).toBeVisible({ timeout: 10000 })
+      await expect(page.getByText(/invalid|expired|not found|error|payment/i).first()).toBeVisible({
+        timeout: 10000,
+      })
     })
 
     test('should not require authentication', async ({ page }) => {
@@ -44,7 +44,9 @@ test.describe('Public Payment Page', () => {
       await page.waitForTimeout(1000)
       // Payment methods: Razorpay, PhonePe, Paytm or error
       await expect(
-        page.getByText(/razorpay|phonepe|paytm|card|upi|netbanking|payment|invalid|expired/i).first()
+        page
+          .getByText(/razorpay|phonepe|paytm|card|upi|netbanking|payment|invalid|expired/i)
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -54,7 +56,7 @@ test.describe('Public Payment Page', () => {
       const payBtn = page.getByRole('button', { name: /pay|proceed|continue/i }).first()
       // Pay button should exist on valid payment pages
       await expect(
-        payBtn.or(page.getByText(/invalid|expired|not found/i).first())
+        payBtn.or(page.getByText(/invalid|expired|not found/i).first()).first()
       ).toBeVisible({ timeout: 10000 })
     })
   })

@@ -1,21 +1,17 @@
-import { redirect } from "next/navigation"
-import { getAuthenticatedPatient } from "@/lib/patient-auth"
-import { prisma } from "@/lib/prisma"
-import { PortalShell } from "@/components/portal/portal-shell"
+import { redirect } from 'next/navigation'
+import { getAuthenticatedPatient } from '@/lib/patient-auth'
+import { prisma } from '@/lib/prisma'
+import { PortalShell } from '@/components/portal/portal-shell'
 
 export const metadata = {
-  title: "Patient Portal",
+  title: 'Patient Portal',
 }
 
-export default async function PortalLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const patient = await getAuthenticatedPatient()
 
   if (!patient) {
-    redirect("/portal/login")
+    redirect('/portal/login')
   }
 
   const hospital = await prisma.hospital.findUnique({
@@ -30,7 +26,7 @@ export default async function PortalLayout({
   })
 
   if (!hospital) {
-    redirect("/portal/login")
+    redirect('/portal/login')
   }
 
   return (

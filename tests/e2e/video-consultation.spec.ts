@@ -5,15 +5,19 @@ test.describe('Video Consultations', () => {
     test('should display video consultations page', async ({ adminPage: page }) => {
       await page.goto('/video')
       await expect(
-        page.getByRole('heading', { name: /video|consultation|tele/i }).or(page.getByText(/video|consultation/i).first())
+        page
+          .getByRole('heading', { name: /video|consultation|tele/i })
+          .or(page.getByText(/video|consultation/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
     test('should have new consultation button', async ({ adminPage: page }) => {
       await page.goto('/video')
-      const newButton = page.getByRole('button', { name: /new|create|schedule/i }).first().or(
-        page.getByRole('link', { name: /new|create|schedule/i }).first()
-      )
+      const newButton = page
+        .getByRole('button', { name: /new|create|schedule/i })
+        .or(page.getByRole('link', { name: /new|create|schedule/i }).first())
+        .first()
       if (await newButton.isVisible()) {
         await expect(newButton).toBeVisible()
       }
@@ -23,7 +27,10 @@ test.describe('Video Consultations', () => {
       await page.goto('/video')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*consultation|no.*data|schedule/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*consultation|no.*data|schedule/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
   })

@@ -5,9 +5,10 @@ test.describe('Inventory Transactions', () => {
     test('should display transactions page', async ({ adminPage: page }) => {
       await page.goto('/inventory/transactions')
       await expect(
-        page.getByRole('heading', { name: /transaction|stock|movement/i }).or(
-          page.getByText(/transaction|stock.*in|stock.*out/i).first()
-        )
+        page
+          .getByRole('heading', { name: /transaction|stock|movement/i })
+          .or(page.getByText(/transaction|stock.*in|stock.*out/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -15,7 +16,10 @@ test.describe('Inventory Transactions', () => {
       await page.goto('/inventory/transactions')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*transaction|no.*data|empty/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*transaction|no.*data|empty/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -23,8 +27,11 @@ test.describe('Inventory Transactions', () => {
       await page.goto('/inventory/transactions')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/stock.?in|stock.?out|adjustment|transfer|in|out/i).first()
+        page
+          .getByText(/stock.?in|stock.?out|adjustment|transfer|in|out/i)
+          .first()
           .or(page.getByText(/no.*transaction|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -32,17 +39,22 @@ test.describe('Inventory Transactions', () => {
       await page.goto('/inventory/transactions')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/quantity|item|qty/i).first()
+        page
+          .getByText(/quantity|item|qty/i)
+          .first()
           .or(page.getByText(/no.*transaction|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should have date filter', async ({ adminPage: page }) => {
       await page.goto('/inventory/transactions')
-      const dateFilter = page.getByLabel(/date/i).or(
-        page.locator('input[type="date"]').first()
-      ).or(page.getByRole('button', { name: /date|filter/i }).first())
-      await expect(dateFilter.or(page.locator('body'))).toBeVisible()
+      const dateFilter = page
+        .getByLabel(/date/i)
+        .or(page.locator('input[type="date"]').first())
+        .or(page.getByRole('button', { name: /date|filter/i }).first())
+        .first()
+      await expect(dateFilter.or(page.locator('body')).first()).toBeVisible()
     })
   })
 
@@ -50,19 +62,27 @@ test.describe('Inventory Transactions', () => {
     test('should have stock in button from inventory page', async ({ adminPage: page }) => {
       await page.goto('/inventory')
       const stockInBtn = page.getByRole('button', { name: /stock.?in|add stock|receive/i }).first()
-      await expect(stockInBtn.or(page.getByRole('button', { name: /add|new/i }).first())).toBeVisible()
+      await expect(
+        stockInBtn.or(page.getByRole('button', { name: /add|new/i }).first()).first()
+      ).toBeVisible()
     })
 
     test('should show stock in form fields', async ({ adminPage: page }) => {
       await page.goto('/inventory')
-      const stockInBtn = page.getByRole('button', { name: /stock.?in|add stock|receive/i }).first()
+      const stockInBtn = page
+        .getByRole('button', { name: /stock.?in|add stock|receive/i })
+        .first()
         .or(page.getByRole('button', { name: /add|new/i }).first())
+        .first()
       if (await stockInBtn.isVisible()) {
         await stockInBtn.click()
         await page.waitForTimeout(500)
         await expect(
-          page.getByLabel(/item|quantity|batch|supplier/i).first()
+          page
+            .getByLabel(/item|quantity|batch|supplier/i)
+            .first()
             .or(page.getByRole('heading', { name: /stock|add|new/i }))
+            .first()
         ).toBeVisible({ timeout: 5000 })
       }
     })

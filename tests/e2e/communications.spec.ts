@@ -9,8 +9,14 @@ test.describe('Communications', () => {
 
     test('should show SMS and Email tabs', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const smsTab = page.getByRole('tab', { name: /sms/i }).or(page.getByText(/sms/i).first())
-      const emailTab = page.getByRole('tab', { name: /email/i }).or(page.getByText(/email/i).first())
+      const smsTab = page
+        .getByRole('tab', { name: /sms/i })
+        .or(page.getByText(/sms/i).first())
+        .first()
+      const emailTab = page
+        .getByRole('tab', { name: /email/i })
+        .or(page.getByText(/email/i).first())
+        .first()
       await expect(smsTab).toBeVisible()
       await expect(emailTab).toBeVisible()
     })
@@ -19,21 +25,28 @@ test.describe('Communications', () => {
   test.describe('SMS', () => {
     test('should show SMS send form', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const smsTab = page.getByRole('tab', { name: /sms/i }).or(page.getByText(/sms/i).first())
+      const smsTab = page
+        .getByRole('tab', { name: /sms/i })
+        .or(page.getByText(/sms/i).first())
+        .first()
       if (await smsTab.isVisible()) {
         await smsTab.click()
         await page.waitForTimeout(500)
       }
       // Phone input and message textarea
-      const phoneInput = page.getByLabel(/phone|recipient|number/i).or(
-        page.getByPlaceholder(/phone|number/i)
-      )
-      await expect(phoneInput.or(page.locator('body'))).toBeVisible()
+      const phoneInput = page
+        .getByLabel(/phone|recipient|number/i)
+        .or(page.getByPlaceholder(/phone|number/i))
+        .first()
+      await expect(phoneInput.or(page.locator('body')).first()).toBeVisible()
     })
 
     test('should validate SMS fields', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const smsTab = page.getByRole('tab', { name: /sms/i }).or(page.getByText(/sms/i).first())
+      const smsTab = page
+        .getByRole('tab', { name: /sms/i })
+        .or(page.getByText(/sms/i).first())
+        .first()
       if (await smsTab.isVisible()) {
         await smsTab.click()
         await page.waitForTimeout(500)
@@ -42,7 +55,12 @@ test.describe('Communications', () => {
       if (await sendButton.isVisible()) {
         await sendButton.click()
         // Should show validation errors
-        await expect(page.getByText(/required|enter|provide/i).first().or(page.locator('body'))).toBeVisible({ timeout: 3000 })
+        await expect(
+          page
+            .getByText(/required|enter|provide/i)
+            .or(page.locator('body'))
+            .first()
+        ).toBeVisible({ timeout: 3000 })
       }
     })
   })
@@ -50,7 +68,10 @@ test.describe('Communications', () => {
   test.describe('Email', () => {
     test('should show email send form', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const emailTab = page.getByRole('tab', { name: /email/i }).or(page.getByText(/email/i).first())
+      const emailTab = page
+        .getByRole('tab', { name: /email/i })
+        .or(page.getByText(/email/i).first())
+        .first()
       if (await emailTab.isVisible()) {
         await emailTab.click()
         await page.waitForTimeout(500)
@@ -62,9 +83,10 @@ test.describe('Communications', () => {
   test.describe('Templates', () => {
     test('should navigate to templates section', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const templatesTab = page.getByRole('tab', { name: /template/i }).or(
-        page.getByRole('link', { name: /template/i })
-      )
+      const templatesTab = page
+        .getByRole('tab', { name: /template/i })
+        .or(page.getByRole('link', { name: /template/i }))
+        .first()
       if (await templatesTab.isVisible()) {
         await templatesTab.click()
         await page.waitForTimeout(1000)
@@ -76,9 +98,10 @@ test.describe('Communications', () => {
   test.describe('Surveys', () => {
     test('should navigate to surveys section', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const surveysTab = page.getByRole('tab', { name: /survey/i }).or(
-        page.getByRole('link', { name: /survey/i })
-      )
+      const surveysTab = page
+        .getByRole('tab', { name: /survey/i })
+        .or(page.getByRole('link', { name: /survey/i }))
+        .first()
       if (await surveysTab.isVisible()) {
         await surveysTab.click()
         await page.waitForTimeout(1000)
@@ -90,9 +113,10 @@ test.describe('Communications', () => {
   test.describe('Automations', () => {
     test('should navigate to automations section', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const automationsTab = page.getByRole('tab', { name: /automation/i }).or(
-        page.getByRole('link', { name: /automation/i })
-      )
+      const automationsTab = page
+        .getByRole('tab', { name: /automation/i })
+        .or(page.getByRole('link', { name: /automation/i }))
+        .first()
       if (await automationsTab.isVisible()) {
         await automationsTab.click()
         await page.waitForTimeout(1000)
@@ -104,9 +128,10 @@ test.describe('Communications', () => {
   test.describe('Analytics', () => {
     test('should navigate to analytics section', async ({ adminPage: page }) => {
       await page.goto('/communications')
-      const analyticsTab = page.getByRole('tab', { name: /analytics/i }).or(
-        page.getByRole('link', { name: /analytics/i })
-      )
+      const analyticsTab = page
+        .getByRole('tab', { name: /analytics/i })
+        .or(page.getByRole('link', { name: /analytics/i }))
+        .first()
       if (await analyticsTab.isVisible()) {
         await analyticsTab.click()
         await page.waitForTimeout(1000)
