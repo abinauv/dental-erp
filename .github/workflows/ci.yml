@@ -3,8 +3,11 @@ name: CI
 on:
   push:
     branches: [main, develop]
+  # Deliberately unfiltered by base branch. With a `branches:` filter here, a
+  # stacked pull request (one targeting another feature branch rather than
+  # main) gets no checks at all — and a required status check that never runs
+  # cannot gate anything.
   pull_request:
-    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
