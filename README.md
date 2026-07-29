@@ -91,12 +91,32 @@ Edit `.env` with your database credentials and other settings. See [Environment 
 ### 4. Set up the database
 
 ```bash
-# Push the schema to your MySQL database
-npx prisma db push
+# Apply the migration history to your MySQL database
+npx prisma migrate deploy
 
 # Seed with sample data (optional)
 npx prisma db seed
 ```
+
+`prisma migrate deploy` is the recommended path — it is repeatable and safe to
+re-run when you upgrade. `npx prisma db push` also works and is handy while
+developing, but it applies the schema without recording it in
+`prisma/_prisma_migrations`, so later `migrate deploy` runs will fail against
+that database.
+
+<details>
+<summary>Upgrading a database that was created with <code>prisma db push</code></summary>
+
+Tell Prisma the existing migrations are already reflected in your schema, then
+deploy as normal from that point on:
+
+```bash
+npx prisma migrate resolve --applied 20260127152236_multi_tenancy
+npx prisma migrate resolve --applied 20260728120000_sync_schema_with_models
+npx prisma migrate deploy
+```
+
+</details>
 
 ### 5. Start the development server
 
@@ -144,8 +164,9 @@ npm run test:all     # Run all tests
 
 # Database
 npm run db:generate  # Generate Prisma client
-npm run db:push      # Push schema to database
-npm run db:migrate   # Run migrations (development)
+npm run db:push      # Push schema without recording a migration (dev only)
+npm run db:migrate   # Create a migration from schema changes (development)
+npm run db:migrate:deploy  # Apply pending migrations (setup and deploys)
 npm run db:seed      # Seed sample data
 npm run db:studio    # Open Prisma Studio (DB GUI)
 ```
