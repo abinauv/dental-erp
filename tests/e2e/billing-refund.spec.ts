@@ -5,9 +5,10 @@ test.describe('Billing Refund Workflow', () => {
     test('should navigate to payments page', async ({ adminPage: page }) => {
       await page.goto('/billing/payments')
       await expect(
-        page.getByRole('heading', { name: /payment/i }).or(
-          page.getByText(/payment/i).first()
-        )
+        page
+          .getByRole('heading', { name: /payment/i })
+          .or(page.getByText(/payment/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -15,15 +16,19 @@ test.describe('Billing Refund Workflow', () => {
       await page.goto('/billing/payments')
       await page.waitForTimeout(1000)
       // Action menu with refund option
-      const moreBtn = page.locator('[data-testid="more-actions"]').first()
+      const moreBtn = page
+        .locator('[data-testid="more-actions"]')
+        .first()
         .or(page.getByRole('button', { name: /action|more|menu|⋮/i }).first())
+        .first()
       if (await moreBtn.isVisible()) {
         await moreBtn.click()
         await page.waitForTimeout(300)
         await expect(
-          page.getByRole('menuitem', { name: /refund/i }).or(
-            page.getByText(/refund/i).first()
-          )
+          page
+            .getByRole('menuitem', { name: /refund/i })
+            .or(page.getByText(/refund/i).first())
+            .first()
         ).toBeVisible({ timeout: 3000 })
       }
     })
@@ -37,9 +42,10 @@ test.describe('Billing Refund Workflow', () => {
         await refundBtn.click()
         await page.waitForTimeout(500)
         await expect(
-          page.getByLabel(/amount|refund/i).or(
-            page.getByRole('heading', { name: /refund/i })
-          )
+          page
+            .getByLabel(/amount|refund/i)
+            .or(page.getByRole('heading', { name: /refund/i }))
+            .first()
         ).toBeVisible({ timeout: 5000 })
       }
     })
@@ -53,7 +59,10 @@ test.describe('Billing Refund Workflow', () => {
         await page.waitForTimeout(500)
         // Reason/notes field
         await expect(
-          page.getByLabel(/reason|note|comment/i).or(page.locator('textarea').first())
+          page
+            .getByLabel(/reason|note|comment/i)
+            .or(page.locator('textarea').first())
+            .first()
         ).toBeVisible({ timeout: 5000 })
       }
     })
@@ -72,8 +81,11 @@ test.describe('Billing Refund Workflow', () => {
       await page.waitForTimeout(1000)
       // Refunded payments should have a visual indicator
       await expect(
-        page.getByText(/refund|completed|pending|failed/i).first()
+        page
+          .getByText(/refund|completed|pending|failed/i)
+          .first()
           .or(page.getByText(/no.*payment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -83,9 +95,9 @@ test.describe('Billing Refund Workflow', () => {
       await page.goto('/billing')
       await page.waitForTimeout(1000)
       // Dashboard should show refund-aware totals
-      await expect(
-        page.getByText(/refund|collected|outstanding|total/i).first()
-      ).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText(/refund|collected|outstanding|total/i).first()).toBeVisible({
+        timeout: 5000,
+      })
     })
   })
 })

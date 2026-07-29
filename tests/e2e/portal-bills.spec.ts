@@ -22,8 +22,11 @@ test.describe('Patient Portal — Bills', () => {
       await page.goto('/portal/bills')
       // Portal login should show phone input
       await expect(
-        page.getByLabel(/phone/i).or(page.getByPlaceholder(/phone|mobile/i))
+        page
+          .getByLabel(/phone/i)
+          .or(page.getByPlaceholder(/phone|mobile/i))
           .or(page.getByRole('heading', { name: /login|sign in|portal/i }))
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
   })
@@ -42,8 +45,11 @@ test.describe('Patient Portal — Bills', () => {
       await page.waitForTimeout(1000)
       // Dashboard should mention bills/invoices/outstanding
       await expect(
-        page.getByText(/bill|invoice|outstanding|payment/i).first()
+        page
+          .getByText(/bill|invoice|outstanding|payment/i)
+          .first()
           .or(page.getByRole('heading', { name: /portal|login/i }))
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
   })

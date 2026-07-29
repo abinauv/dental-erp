@@ -2,19 +2,24 @@ import { test, expect } from './fixtures/auth'
 
 test.describe('Appointment Check-in / Check-out Workflow', () => {
   test.describe('Check-in Flow', () => {
-    test('should display appointment detail page with status actions', async ({ adminPage: page }) => {
+    test('should display appointment detail page with status actions', async ({
+      adminPage: page,
+    }) => {
       await page.goto('/appointments')
       await page.waitForTimeout(1000)
       // Click first appointment row to view detail
-      const row = page.locator('table tbody tr').first().or(
-        page.locator('[data-testid="appointment-row"]').first()
-      )
+      const row = page
+        .locator('table tbody tr')
+        .or(page.locator('[data-testid="appointment-row"]').first())
+        .first()
       if (await row.isVisible()) {
-        const viewLink = row.getByRole('link').first().or(row.locator('a').first())
+        const viewLink = row.getByRole('link').or(row.locator('a').first()).first()
         if (await viewLink.isVisible()) {
           await viewLink.click()
           await page.waitForTimeout(1000)
-          await expect(page.getByText(/status|scheduled|confirmed|checked|completed/i).first()).toBeVisible({ timeout: 5000 })
+          await expect(
+            page.getByText(/status|scheduled|confirmed|checked|completed/i).first()
+          ).toBeVisible({ timeout: 5000 })
         }
       }
     })
@@ -25,7 +30,7 @@ test.describe('Appointment Check-in / Check-out Workflow', () => {
       // Queue page should show check-in controls
       const checkInBtn = page.getByRole('button', { name: /check.?in|log.?in/i }).first()
       await expect(
-        checkInBtn.or(page.getByText(/queue|waiting|no.*appointment/i).first())
+        checkInBtn.or(page.getByText(/queue|waiting|no.*appointment/i).first()).first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -34,7 +39,10 @@ test.describe('Appointment Check-in / Check-out Workflow', () => {
       await page.waitForTimeout(1000)
       // Patient names should be visible in queue
       await expect(
-        page.getByText(/patient|name|dr\./i).first().or(page.getByText(/no.*appointment|empty/i).first())
+        page
+          .getByText(/patient|name|dr\./i)
+          .or(page.getByText(/no.*appointment|empty/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -50,7 +58,9 @@ test.describe('Appointment Check-in / Check-out Workflow', () => {
     test('should have check-out button for checked-in patients', async ({ adminPage: page }) => {
       await page.goto('/appointments/queue')
       await page.waitForTimeout(1000)
-      const checkOutBtn = page.getByRole('button', { name: /check.?out|log.?out|complete/i }).first()
+      const checkOutBtn = page
+        .getByRole('button', { name: /check.?out|log.?out|complete/i })
+        .first()
       // Check-out button should exist for in-progress appointments
       await expect(page.locator('body')).toBeVisible()
     })
@@ -69,14 +79,17 @@ test.describe('Appointment Check-in / Check-out Workflow', () => {
       await page.waitForTimeout(1000)
       // Status badges should be visible in the table
       await expect(
-        page.getByText(/scheduled|confirmed|checked|completed|cancelled|no.?show/i).first()
+        page
+          .getByText(/scheduled|confirmed|checked|completed|cancelled|no.?show/i)
+          .first()
           .or(page.getByText(/no.*appointment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should filter appointments by checked-in status', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const statusFilter = page.getByRole('combobox').first().or(page.locator('select').first())
+      const statusFilter = page.getByRole('combobox').or(page.locator('select').first()).first()
       if (await statusFilter.isVisible()) {
         await statusFilter.click()
         await page.waitForTimeout(300)

@@ -5,9 +5,7 @@ test.describe('Staff Leave Management', () => {
     test('should display leaves page', async ({ adminPage: page }) => {
       await page.goto('/staff/leaves')
       await expect(
-        page.getByRole('heading', { name: /leave/i }).or(
-          page.getByText(/leave/i).first()
-        )
+        page.getByRole('heading', { name: /leave/i }).or(page.getByText(/leave/i).first()).first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -15,7 +13,10 @@ test.describe('Staff Leave Management', () => {
       await page.goto('/staff/leaves')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*leave|no.*data|empty/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*leave|no.*data|empty/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -23,8 +24,11 @@ test.describe('Staff Leave Management', () => {
       await page.goto('/staff/leaves')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/pending|approved|rejected|cancelled/i).first()
+        page
+          .getByText(/pending|approved|rejected|cancelled/i)
+          .first()
           .or(page.getByText(/no.*leave|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -32,8 +36,11 @@ test.describe('Staff Leave Management', () => {
       await page.goto('/staff/leaves')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/sick|casual|annual|personal|vacation|type/i).first()
+        page
+          .getByText(/sick|casual|annual|personal|vacation|type/i)
+          .first()
           .or(page.getByText(/no.*leave|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -51,8 +58,11 @@ test.describe('Staff Leave Management', () => {
       await applyBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/type|from|start|date|reason/i).first()
+        page
+          .getByLabel(/type|from|start|date|reason/i)
+          .first()
           .or(page.getByRole('heading', { name: /apply|request|new|leave/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -74,7 +84,10 @@ test.describe('Staff Leave Management', () => {
       await applyBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/type/i).or(page.getByText(/sick|casual|annual/i).first())
+        page
+          .getByLabel(/type/i)
+          .or(page.getByText(/sick|casual|annual/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -84,7 +97,10 @@ test.describe('Staff Leave Management', () => {
       await applyBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/reason|note|comment/i).or(page.locator('textarea').first())
+        page
+          .getByLabel(/reason|note|comment/i)
+          .or(page.locator('textarea').first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -97,8 +113,11 @@ test.describe('Staff Leave Management', () => {
       const rejectBtn = page.getByRole('button', { name: /reject/i }).first()
       // At least one action button or empty state
       await expect(
-        approveBtn.or(rejectBtn).or(page.getByText(/no.*leave|no.*pending/i).first())
+        approveBtn
+          .or(rejectBtn)
+          .or(page.getByText(/no.*leave|no.*pending/i).first())
           .or(page.locator('body'))
+          .first()
       ).toBeVisible()
     })
   })

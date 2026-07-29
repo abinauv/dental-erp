@@ -1,20 +1,14 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  ClipboardList,
-  FileText,
-  Grid3x3,
-  User,
-  Calendar,
-} from "lucide-react"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ClipboardList, FileText, Grid3x3, User, Calendar } from 'lucide-react'
 
 export default function PatientRecords() {
-  const [tab, setTab] = useState("treatments")
+  const [tab, setTab] = useState('treatments')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -28,17 +22,17 @@ export default function PatientRecords() {
   }, [tab])
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    new Date(d).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     })
 
   const statusColors: Record<string, string> = {
-    COMPLETED: "bg-green-100 text-green-700",
-    IN_PROGRESS: "bg-blue-100 text-blue-700",
-    PLANNED: "bg-yellow-100 text-yellow-700",
-    CANCELLED: "bg-red-100 text-red-700",
+    COMPLETED: 'bg-green-100 text-green-700',
+    IN_PROGRESS: 'bg-blue-100 text-blue-700',
+    PLANNED: 'bg-yellow-100 text-yellow-700',
+    CANCELLED: 'bg-red-100 text-red-700',
   }
 
   return (
@@ -55,7 +49,9 @@ export default function PatientRecords() {
         <TabsContent value="treatments" className="mt-4">
           {loading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20" />
+              ))}
             </div>
           ) : !data?.treatments?.length ? (
             <Card>
@@ -86,8 +82,8 @@ export default function PatientRecords() {
                           </span>
                         </div>
                       </div>
-                      <Badge className={statusColors[t.status] || "bg-muted text-foreground"}>
-                        {t.status.replace("_", " ")}
+                      <Badge className={statusColors[t.status] || 'bg-muted text-foreground'}>
+                        {t.status.replace('_', ' ')}
                       </Badge>
                     </div>
                   </CardContent>
@@ -134,7 +130,9 @@ export default function PatientRecords() {
         <TabsContent value="documents" className="mt-4">
           {loading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16" />
+              ))}
             </div>
           ) : !data?.documents?.length ? (
             <Card>
@@ -158,7 +156,9 @@ export default function PatientRecords() {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">{doc.fileType}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {doc.fileType}
+                      </Badge>
                     </div>
                   </CardContent>
                 </Card>

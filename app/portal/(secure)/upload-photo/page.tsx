@@ -1,53 +1,45 @@
-"use client"
+'use client'
 
-import { useState, useRef } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useRef } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  Camera,
-  Upload,
-  ArrowLeft,
-  CheckCircle,
-  Loader2,
-  ImageIcon,
-  X,
-} from "lucide-react"
+} from '@/components/ui/select'
+import { Camera, Upload, ArrowLeft, CheckCircle, Loader2, ImageIcon, X } from 'lucide-react'
 
 export default function UploadPhotoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [description, setDescription] = useState("")
-  const [category, setCategory] = useState("")
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0]
     if (!selected) return
 
-    if (!["image/jpeg", "image/png", "image/webp"].includes(selected.type)) {
-      setError("Please select a JPEG, PNG, or WebP image")
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(selected.type)) {
+      setError('Please select a JPEG, PNG, or WebP image')
       return
     }
 
     if (selected.size > 10 * 1024 * 1024) {
-      setError("File size must be under 10MB")
+      setError('File size must be under 10MB')
       return
     }
 
-    setError("")
+    setError('')
     setFile(selected)
 
     const reader = new FileReader()
@@ -58,29 +50,29 @@ export default function UploadPhotoPage() {
   const removeFile = () => {
     setFile(null)
     setPreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const handleUpload = async () => {
     if (!file) return
 
     setUploading(true)
-    setError("")
+    setError('')
 
     try {
       const formData = new FormData()
-      formData.append("file", file)
-      if (description) formData.append("description", description)
-      if (category) formData.append("category", category)
+      formData.append('file', file)
+      if (description) formData.append('description', description)
+      if (category) formData.append('category', category)
 
-      const res = await fetch("/api/patient-portal/upload-photo", {
-        method: "POST",
+      const res = await fetch('/api/patient-portal/upload-photo', {
+        method: 'POST',
         body: formData,
       })
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Upload failed")
+        throw new Error(data.error || 'Upload failed')
       }
 
       setUploaded(true)
@@ -102,8 +94,8 @@ export default function UploadPhotoPage() {
               </div>
               <h2 className="text-xl font-semibold">Photo Uploaded Successfully</h2>
               <p className="text-muted-foreground">
-                Your photo has been sent to your dentist for review. They will get back to you
-                if an in-person visit is needed.
+                Your photo has been sent to your dentist for review. They will get back to you if an
+                in-person visit is needed.
               </p>
               <div className="flex gap-3 pt-4">
                 <Button
@@ -112,8 +104,8 @@ export default function UploadPhotoPage() {
                     setUploaded(false)
                     setFile(null)
                     setPreview(null)
-                    setDescription("")
-                    setCategory("")
+                    setDescription('')
+                    setCategory('')
                   }}
                 >
                   Upload Another
@@ -153,8 +145,8 @@ export default function UploadPhotoPage() {
             Photo for Triage
           </CardTitle>
           <CardDescription>
-            Take a clear photo of the area of concern. Your dentist will review it
-            and advise whether an in-person visit is needed.
+            Take a clear photo of the area of concern. Your dentist will review it and advise
+            whether an in-person visit is needed.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -191,9 +183,7 @@ export default function UploadPhotoPage() {
               >
                 <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                 <p className="font-medium">Tap to take or select a photo</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  JPEG, PNG, or WebP (max 10MB)
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">JPEG, PNG, or WebP (max 10MB)</p>
               </div>
             )}
           </div>
@@ -234,11 +224,7 @@ export default function UploadPhotoPage() {
             </div>
           )}
 
-          <Button
-            className="w-full"
-            disabled={!file || uploading}
-            onClick={handleUpload}
-          >
+          <Button className="w-full" disabled={!file || uploading} onClick={handleUpload}>
             {uploading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

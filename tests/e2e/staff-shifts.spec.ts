@@ -7,16 +7,17 @@ test.describe('Staff Shifts / Schedules', () => {
       await page.waitForTimeout(1000)
       const row = page.locator('table tbody tr').first()
       if (await row.isVisible()) {
-        const link = row.getByRole('link').first().or(row.locator('a').first())
+        const link = row.getByRole('link').or(row.locator('a').first()).first()
         if (await link.isVisible()) {
           await link.click()
           await page.waitForTimeout(1000)
           // Look for shifts tab on staff detail
-          const shiftsTab = page.getByRole('tab', { name: /shift|schedule/i }).or(
-            page.getByRole('link', { name: /shift|schedule/i })
-          )
+          const shiftsTab = page
+            .getByRole('tab', { name: /shift|schedule/i })
+            .or(page.getByRole('link', { name: /shift|schedule/i }))
+            .first()
           await expect(
-            shiftsTab.or(page.getByText(/shift|schedule|working/i).first())
+            shiftsTab.or(page.getByText(/shift|schedule|working/i).first()).first()
           ).toBeVisible({ timeout: 5000 })
         }
       }
@@ -27,20 +28,24 @@ test.describe('Staff Shifts / Schedules', () => {
       await page.waitForTimeout(1000)
       const row = page.locator('table tbody tr').first()
       if (await row.isVisible()) {
-        const link = row.getByRole('link').first().or(row.locator('a').first())
+        const link = row.getByRole('link').or(row.locator('a').first()).first()
         if (await link.isVisible()) {
           await link.click()
           await page.waitForTimeout(1000)
-          const shiftsTab = page.getByRole('tab', { name: /shift|schedule/i }).or(
-            page.getByRole('link', { name: /shift|schedule/i })
-          )
+          const shiftsTab = page
+            .getByRole('tab', { name: /shift|schedule/i })
+            .or(page.getByRole('link', { name: /shift|schedule/i }))
+            .first()
           if (await shiftsTab.isVisible()) {
             await shiftsTab.click()
             await page.waitForTimeout(1000)
             // Shift data: day, start time, end time
             await expect(
-              page.getByText(/monday|tuesday|wednesday|thursday|friday|saturday|sunday|day/i).first()
+              page
+                .getByText(/monday|tuesday|wednesday|thursday|friday|saturday|sunday|day/i)
+                .first()
                 .or(page.getByText(/no.*shift|no.*schedule/i).first())
+                .first()
             ).toBeVisible({ timeout: 5000 })
           }
         }
@@ -54,18 +59,19 @@ test.describe('Staff Shifts / Schedules', () => {
       await page.waitForTimeout(1000)
       const row = page.locator('table tbody tr').first()
       if (await row.isVisible()) {
-        const link = row.getByRole('link').first().or(row.locator('a').first())
+        const link = row.getByRole('link').or(row.locator('a').first()).first()
         if (await link.isVisible()) {
           await link.click()
           await page.waitForTimeout(1000)
-          const shiftsTab = page.getByRole('tab', { name: /shift|schedule/i }).or(
-            page.getByRole('link', { name: /shift|schedule/i })
-          )
+          const shiftsTab = page
+            .getByRole('tab', { name: /shift|schedule/i })
+            .or(page.getByRole('link', { name: /shift|schedule/i }))
+            .first()
           if (await shiftsTab.isVisible()) {
             await shiftsTab.click()
             await page.waitForTimeout(1000)
             const editBtn = page.getByRole('button', { name: /edit|manage|update/i }).first()
-            await expect(editBtn.or(page.locator('body'))).toBeVisible()
+            await expect(editBtn.or(page.locator('body')).first()).toBeVisible()
           }
         }
       }
@@ -85,9 +91,10 @@ test.describe('Staff Shifts / Schedules', () => {
       await page.waitForTimeout(1000)
       // Doctor should see their own schedule
       await expect(
-        page.getByRole('heading', { name: /appointment/i }).or(
-          page.getByText(/schedule|my.*appointment/i).first()
-        )
+        page
+          .getByRole('heading', { name: /appointment/i })
+          .or(page.getByText(/schedule|my.*appointment/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })

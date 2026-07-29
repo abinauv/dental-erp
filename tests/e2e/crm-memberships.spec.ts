@@ -5,9 +5,10 @@ test.describe('CRM Memberships', () => {
     test('should display memberships page', async ({ adminPage: page }) => {
       await page.goto('/crm/memberships')
       await expect(
-        page.getByRole('heading', { name: /membership|plan/i }).or(
-          page.getByText(/membership/i).first()
-        )
+        page
+          .getByRole('heading', { name: /membership|plan/i })
+          .or(page.getByText(/membership/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -21,8 +22,11 @@ test.describe('CRM Memberships', () => {
       await page.goto('/crm/memberships')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*plan|no.*membership|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*plan|no.*membership|no.*data/i).first())
           .or(page.locator('[class*="card"]').first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -30,8 +34,11 @@ test.describe('CRM Memberships', () => {
       await page.goto('/crm/memberships')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/₹|price|fee|annual|monthly|amount/i).first()
+        page
+          .getByText(/₹|price|fee|annual|monthly|amount/i)
+          .first()
           .or(page.getByText(/no.*plan|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -39,9 +46,12 @@ test.describe('CRM Memberships', () => {
       await page.goto('/crm/memberships')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/benefit|feature|discount|include/i).first()
+        page
+          .getByText(/benefit|feature|discount|include/i)
+          .first()
           .or(page.getByText(/no.*plan|no.*data/i).first())
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -53,8 +63,11 @@ test.describe('CRM Memberships', () => {
       await createBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/name|title/i).first()
+        page
+          .getByLabel(/name|title/i)
+          .first()
           .or(page.getByRole('heading', { name: /create|new|plan|membership/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -63,9 +76,9 @@ test.describe('CRM Memberships', () => {
       const createBtn = page.getByRole('button', { name: /create|new|add/i }).first()
       await createBtn.click()
       await page.waitForTimeout(500)
-      await expect(
-        page.getByLabel(/price|fee|amount|duration|validity/i).first()
-      ).toBeVisible({ timeout: 5000 })
+      await expect(page.getByLabel(/price|fee|amount|duration|validity/i).first()).toBeVisible({
+        timeout: 5000,
+      })
     })
   })
 
@@ -74,7 +87,7 @@ test.describe('CRM Memberships', () => {
       await page.goto('/crm/memberships')
       await page.waitForTimeout(1000)
       const enrollBtn = page.getByRole('button', { name: /enroll|subscribe|add.*member/i }).first()
-      await expect(enrollBtn.or(page.locator('body'))).toBeVisible()
+      await expect(enrollBtn.or(page.locator('body')).first()).toBeVisible()
     })
   })
 })

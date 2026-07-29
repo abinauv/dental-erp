@@ -13,8 +13,9 @@ test.describe('Authentication', () => {
   test('should show login form', async ({ page }) => {
     await page.goto('/login')
 
-    // Check for login form elements
-    await expect(page.getByRole('heading', { name: /sign in|login/i })).toBeVisible()
+    // Check for login form elements. The card heading reads "Welcome back";
+    // "Sign in" is the submit button, asserted below.
+    await expect(page.getByRole('heading', { name: /welcome|sign in|login/i })).toBeVisible()
     await expect(page.getByLabel(/email/i)).toBeVisible()
     await expect(page.getByLabel(/password/i)).toBeVisible()
     await expect(page.getByRole('button', { name: /sign in|login/i })).toBeVisible()
@@ -26,8 +27,9 @@ test.describe('Authentication', () => {
     // Click login without filling form
     await page.getByRole('button', { name: /sign in|login/i }).click()
 
-    // Should show validation errors
-    await expect(page.getByText(/required|email|password/i)).toBeVisible()
+    // Target the rendered validation message, not the field labels — a bare
+    // /email|password/ text match also hits the <label>s and trips strict mode.
+    await expect(page.locator('p.text-destructive').first()).toBeVisible()
   })
 
   test('should show error for invalid credentials', async ({ page }) => {
@@ -38,8 +40,11 @@ test.describe('Authentication', () => {
     await page.getByLabel(/password/i).fill('wrongpassword')
     await page.getByRole('button', { name: /sign in|login/i }).click()
 
-    // Should show error message
-    await expect(page.getByText(/invalid|incorrect|wrong|failed/i)).toBeVisible({ timeout: 10000 })
+    // Failure surfaces as a toast ("Login failed" / "Invalid email or
+    // password"). Scope to it so the match cannot also hit form text.
+    await expect(page.getByText(/invalid email or password|login failed/i).first()).toBeVisible({
+      timeout: 10000,
+    })
   })
 
   test('should have link to signup page', async ({ page }) => {
@@ -74,8 +79,11 @@ test.describe('Authentication', () => {
     const passwordInput = page.getByLabel(/password/i)
     await expect(passwordInput).toHaveAttribute('type', 'password')
     // Toggle button for showing/hiding password
-    const toggleBtn = page.getByRole('button', { name: /show|hide|eye|toggle/i }).first()
+    const toggleBtn = page
+      .getByRole('button', { name: /show|hide|eye|toggle/i })
+      .first()
       .or(page.locator('button:near(:text("Password"))').first())
+      .first()
     if (await toggleBtn.isVisible()) {
       await toggleBtn.click()
       // After toggle, type should change
@@ -91,7 +99,10 @@ test.describe('Authentication', () => {
     await page.getByRole('button', { name: /sign in|login/i }).click()
     // Should show validation error for bad email
     await expect(
-      page.getByText(/valid|email|invalid|format/i).first().or(page.locator('body'))
+      page
+        .getByText(/valid|email|invalid|format/i)
+        .or(page.locator('body'))
+        .first()
     ).toBeVisible({ timeout: 5000 })
   })
 
@@ -129,7 +140,9 @@ test.describe('Protected Routes', () => {
     await expect(page).toHaveURL(/.*login/)
   })
 
-  test('should redirect to login when accessing appointments page without auth', async ({ page }) => {
+  test('should redirect to login when accessing appointments page without auth', async ({
+    page,
+  }) => {
     await page.goto('/appointments')
     await expect(page).toHaveURL(/.*login/)
   })
@@ -164,7 +177,9 @@ test.describe('Protected Routes', () => {
     await expect(page).toHaveURL(/.*login/)
   })
 
-  test('should redirect to login when accessing communications page without auth', async ({ page }) => {
+  test('should redirect to login when accessing communications page without auth', async ({
+    page,
+  }) => {
     await page.goto('/communications')
     await expect(page).toHaveURL(/.*login/)
   })
