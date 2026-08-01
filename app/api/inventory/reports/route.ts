@@ -1,299 +1,409 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { StockTransactionType, SupplierStatus } from '@prisma/client'
+
+/**
+ * These reports multiply columns together (SUM(stock * price)) and do date
+ * arithmetic (DATEDIFF), neither of which Prisma expresses. The rows are
+ * fetched and reduced in JS instead - the working set is one hospital's
+ * inventory, which is small enough that this is not worth raw SQL.
+ */
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+function startOfToday() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function daysBetween(from: Date, to: Date) {
+  return Math.floor((to.getTime() - from.getTime()) / MS_PER_DAY)
+}
+
+// Stock movements in and out, matching the legacy type groupings.
+const INBOUND_TYPES: StockTransactionType[] = [
+  StockTransactionType.PURCHASE,
+  StockTransactionType.ADJUSTMENT_IN,
+]
+const OUTBOUND_TYPES: StockTransactionType[] = [
+  StockTransactionType.SALE,
+  StockTransactionType.ADJUSTMENT_OUT,
+  StockTransactionType.DAMAGED,
+  StockTransactionType.EXPIRED,
+  StockTransactionType.RETURNED,
+  StockTransactionType.CONSUMPTION,
+]
 
 // GET - Generate inventory reports
 export async function GET(request: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const reportType = searchParams.get('type') || 'summary';
+    const searchParams = request.nextUrl.searchParams
+    const reportType = searchParams.get('type') || 'summary'
 
     switch (reportType) {
       case 'summary':
-        return await getInventorySummary(hospitalId);
+        return await getInventorySummary(hospitalId)
       case 'low_stock':
-        return await getLowStockReport(hospitalId);
+        return await getLowStockReport(hospitalId)
       case 'expiring':
-        return await getExpiringItemsReport(hospitalId, searchParams);
+        return await getExpiringItemsReport(hospitalId, searchParams)
       case 'stock_valuation':
-        return await getStockValuationReport(hospitalId);
+        return await getStockValuationReport(hospitalId)
       case 'dead_stock':
-        return await getDeadStockReport(hospitalId, searchParams);
+        return await getDeadStockReport(hospitalId, searchParams)
       case 'movement':
-        return await getStockMovementReport(hospitalId, searchParams);
+        return await getStockMovementReport(hospitalId, searchParams)
       default:
-        return NextResponse.json(
-          { error: 'Invalid report type' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
   } catch (error: any) {
-    console.error('Error generating inventory report:', error);
+    console.error('Error generating inventory report:', error)
     return NextResponse.json(
       { error: 'Failed to generate inventory report', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
 // Inventory Summary Report
 async function getInventorySummary(hospitalId: string) {
-  const [summary] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      COUNT(*) as total_items,
-      SUM(CASE WHEN is_active = TRUE THEN 1 ELSE 0 END) as active_items,
-      SUM(CASE WHEN current_stock <= 0 THEN 1 ELSE 0 END) as out_of_stock_items,
-      SUM(CASE WHEN current_stock > 0 AND current_stock <= minimum_stock THEN 1 ELSE 0 END) as low_stock_items,
-      SUM(current_stock * unit_price) as total_inventory_value,
-      (SELECT COUNT(*) FROM suppliers WHERE deleted_at IS NULL AND status = 'active' AND hospital_id = ?) as active_suppliers,
-      (SELECT COUNT(*) FROM stock_alerts sa
-       INNER JOIN inventory_items ii ON sa.item_id = ii.id
-       WHERE sa.is_acknowledged = FALSE AND ii.hospital_id = ?) as pending_alerts
-    FROM inventory_items
-    WHERE deleted_at IS NULL AND hospital_id = ?
-  `, [hospitalId, hospitalId, hospitalId]);
+  const [items, activeSuppliers, pendingAlerts] = await Promise.all([
+    prisma.inventoryItem.findMany({
+      where: { hospitalId, deletedAt: null },
+      select: {
+        isActive: true,
+        currentStock: true,
+        minimumStock: true,
+        purchasePrice: true,
+        itemType: true,
+        category: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.supplier.count({
+      where: { hospitalId, deletedAt: null, status: SupplierStatus.ACTIVE },
+    }),
+    prisma.stockAlert.count({
+      where: { hospitalId, isAcknowledged: false, item: { deletedAt: null } },
+    }),
+  ])
 
-  const [categoryBreakdown] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      c.name as category,
-      COUNT(i.id) as item_count,
-      SUM(i.current_stock * i.unit_price) as category_value
-    FROM inventory_items i
-    LEFT JOIN inventory_categories c ON i.category_id = c.id
-    WHERE i.deleted_at IS NULL AND i.hospital_id = ?
-    GROUP BY c.id, c.name
-    ORDER BY category_value DESC
-  `, [hospitalId]);
+  const valueOf = (i: (typeof items)[number]) => i.currentStock * Number(i.purchasePrice)
 
-  const [typeBreakdown] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      item_type,
-      COUNT(*) as item_count,
-      SUM(current_stock * unit_price) as type_value
-    FROM inventory_items
-    WHERE deleted_at IS NULL AND hospital_id = ?
-    GROUP BY item_type
-    ORDER BY type_value DESC
-  `, [hospitalId]);
+  const summary = {
+    totalItems: items.length,
+    activeItems: items.filter((i) => i.isActive).length,
+    outOfStockItems: items.filter((i) => i.currentStock <= 0).length,
+    lowStockItems: items.filter((i) => i.currentStock > 0 && i.currentStock <= i.minimumStock)
+      .length,
+    totalInventoryValue: items.reduce((sum, i) => sum + valueOf(i), 0),
+    activeSuppliers,
+    pendingAlerts,
+  }
+
+  const byCategory = new Map<
+    string,
+    { category: string | null; itemCount: number; categoryValue: number }
+  >()
+  for (const item of items) {
+    const key = item.category?.id ?? '__uncategorised__'
+    const row = byCategory.get(key) ?? {
+      category: item.category?.name ?? null,
+      itemCount: 0,
+      categoryValue: 0,
+    }
+    row.itemCount += 1
+    row.categoryValue += valueOf(item)
+    byCategory.set(key, row)
+  }
+
+  const byType = new Map<string, { itemType: string; itemCount: number; typeValue: number }>()
+  for (const item of items) {
+    const row = byType.get(item.itemType) ?? {
+      itemType: item.itemType,
+      itemCount: 0,
+      typeValue: 0,
+    }
+    row.itemCount += 1
+    row.typeValue += valueOf(item)
+    byType.set(item.itemType, row)
+  }
 
   return NextResponse.json({
     success: true,
     data: {
-      summary: summary[0],
-      category_breakdown: categoryBreakdown,
-      type_breakdown: typeBreakdown
-    }
-  });
+      summary,
+      categoryBreakdown: [...byCategory.values()].sort((a, b) => b.categoryValue - a.categoryValue),
+      typeBreakdown: [...byType.values()].sort((a, b) => b.typeValue - a.typeValue),
+    },
+  })
 }
 
 // Low Stock Report
 async function getLowStockReport(hospitalId: string) {
-  const [lowStockItems] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      i.id,
-      i.item_code,
-      i.name,
-      i.current_stock,
-      i.minimum_stock,
-      i.reorder_point,
-      i.unit_of_measurement,
-      i.unit_price,
-      c.name as category_name,
-      s.name as supplier_name,
-      s.phone as supplier_phone,
-      CASE
-        WHEN i.current_stock <= 0 THEN 'out_of_stock'
-        WHEN i.current_stock <= i.minimum_stock THEN 'critical'
-        WHEN i.current_stock <= i.reorder_point THEN 'low'
-        ELSE 'sufficient'
-      END as urgency,
-      (i.reorder_point - i.current_stock) as suggested_order_quantity
-    FROM inventory_items i
-    LEFT JOIN inventory_categories c ON i.category_id = c.id
-    LEFT JOIN suppliers s ON i.preferred_supplier_id = s.id
-    WHERE i.deleted_at IS NULL
-      AND i.hospital_id = ?
-      AND i.is_active = TRUE
-      AND i.current_stock <= i.reorder_point
-    ORDER BY
-      CASE
-        WHEN i.current_stock <= 0 THEN 1
-        WHEN i.current_stock <= i.minimum_stock THEN 2
-        ELSE 3
-      END,
-      i.name ASC
-  `, [hospitalId]);
+  const items = await prisma.inventoryItem.findMany({
+    where: { hospitalId, deletedAt: null, isActive: true },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      currentStock: true,
+      minimumStock: true,
+      reorderLevel: true,
+      unit: true,
+      purchasePrice: true,
+      category: { select: { name: true } },
+      preferredSupplier: { select: { name: true, phone: true } },
+    },
+    orderBy: { name: 'asc' },
+  })
 
-  return NextResponse.json({
-    success: true,
-    data: lowStockItems
-  });
+  // Prisma cannot compare two columns in a where clause, so the
+  // `current_stock <= reorder_point` filter happens here.
+  const lowStock = items
+    .filter((i) => i.currentStock <= i.reorderLevel)
+    .map(({ category, preferredSupplier, ...item }) => {
+      let urgency: string
+      if (item.currentStock <= 0) urgency = 'out_of_stock'
+      else if (item.currentStock <= item.minimumStock) urgency = 'critical'
+      else urgency = 'low'
+
+      return {
+        ...item,
+        categoryName: category?.name ?? null,
+        supplierName: preferredSupplier?.name ?? null,
+        supplierPhone: preferredSupplier?.phone ?? null,
+        urgency,
+        suggestedOrderQuantity: item.reorderLevel - item.currentStock,
+      }
+    })
+
+  const rank = (urgency: string) =>
+    urgency === 'out_of_stock' ? 1 : urgency === 'critical' ? 2 : 3
+
+  lowStock.sort((a, b) => rank(a.urgency) - rank(b.urgency) || a.name.localeCompare(b.name))
+
+  return NextResponse.json({ success: true, data: lowStock })
 }
 
 // Expiring Items Report
 async function getExpiringItemsReport(hospitalId: string, searchParams: URLSearchParams) {
-  const daysAhead = parseInt(searchParams.get('days') || '30');
+  const daysAhead = parseInt(searchParams.get('days') || '30')
+  const today = startOfToday()
+  const cutoff = new Date(today.getTime() + daysAhead * MS_PER_DAY)
 
-  const [expiringItems] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      i.id,
-      i.item_code,
-      i.name,
-      b.batch_number,
-      b.expiry_date,
-      b.remaining_quantity,
-      i.unit_of_measurement,
-      i.unit_price,
-      (b.remaining_quantity * i.unit_price) as value_at_risk,
-      DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,
-      CASE
-        WHEN b.expiry_date < CURDATE() THEN 'expired'
-        WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 7 THEN 'critical'
-        WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 30 THEN 'warning'
-        ELSE 'normal'
-      END as urgency
-    FROM inventory_batches b
-    INNER JOIN inventory_items i ON b.item_id = i.id
-    WHERE i.deleted_at IS NULL
-      AND i.hospital_id = ?
-      AND b.remaining_quantity > 0
-      AND b.expiry_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
-    ORDER BY b.expiry_date ASC
-  `, [hospitalId, daysAhead]);
+  const batches = await prisma.inventoryBatch.findMany({
+    where: {
+      hospitalId,
+      remainingQty: { gt: 0 },
+      item: { deletedAt: null },
+    },
+    select: {
+      batchNumber: true,
+      expiryDate: true,
+      remainingQty: true,
+      item: {
+        select: { id: true, sku: true, name: true, unit: true, purchasePrice: true },
+      },
+    },
+    orderBy: { expiryDate: 'asc' },
+  })
 
-  const [summary] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      SUM(CASE WHEN b.expiry_date < CURDATE() THEN 1 ELSE 0 END) as expired_batches,
-      SUM(CASE WHEN b.expiry_date < CURDATE() THEN b.remaining_quantity * i.unit_price ELSE 0 END) as expired_value,
-      SUM(CASE WHEN DATEDIFF(b.expiry_date, CURDATE()) BETWEEN 0 AND ? THEN 1 ELSE 0 END) as expiring_soon_batches,
-      SUM(CASE WHEN DATEDIFF(b.expiry_date, CURDATE()) BETWEEN 0 AND ? THEN b.remaining_quantity * i.unit_price ELSE 0 END) as expiring_soon_value
-    FROM inventory_batches b
-    INNER JOIN inventory_items i ON b.item_id = i.id
-    WHERE i.deleted_at IS NULL AND i.hospital_id = ? AND b.remaining_quantity > 0
-  `, [daysAhead, daysAhead, hospitalId]);
+  const withExpiry = batches.filter(
+    (b): b is typeof b & { expiryDate: Date } => b.expiryDate != null
+  )
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      summary: summary[0],
-      items: expiringItems
-    }
-  });
+  const items = withExpiry
+    .filter((b) => b.expiryDate <= cutoff)
+    .map((b) => {
+      const daysToExpiry = daysBetween(today, b.expiryDate)
+      let urgency: string
+      if (daysToExpiry < 0) urgency = 'expired'
+      else if (daysToExpiry <= 7) urgency = 'critical'
+      else if (daysToExpiry <= 30) urgency = 'warning'
+      else urgency = 'normal'
+
+      return {
+        id: b.item.id,
+        sku: b.item.sku,
+        name: b.item.name,
+        batchNumber: b.batchNumber,
+        expiryDate: b.expiryDate,
+        remainingQty: b.remainingQty,
+        unit: b.item.unit,
+        purchasePrice: b.item.purchasePrice,
+        valueAtRisk: b.remainingQty * Number(b.item.purchasePrice),
+        daysToExpiry,
+        urgency,
+      }
+    })
+
+  // The legacy summary spans every batch on hand, not just those inside the
+  // requested window.
+  const summary = withExpiry.reduce(
+    (acc, b) => {
+      const value = b.remainingQty * Number(b.item.purchasePrice)
+      const days = daysBetween(today, b.expiryDate)
+      if (days < 0) {
+        acc.expiredBatches += 1
+        acc.expiredValue += value
+      } else if (days <= daysAhead) {
+        acc.expiringSoonBatches += 1
+        acc.expiringSoonValue += value
+      }
+      return acc
+    },
+    { expiredBatches: 0, expiredValue: 0, expiringSoonBatches: 0, expiringSoonValue: 0 }
+  )
+
+  return NextResponse.json({ success: true, data: { summary, items } })
 }
 
 // Stock Valuation Report
 async function getStockValuationReport(hospitalId: string) {
-  const [valuation] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      i.id,
-      i.item_code,
-      i.name,
-      i.current_stock,
-      i.unit_of_measurement,
-      i.unit_price,
-      (i.current_stock * i.unit_price) as stock_value,
-      c.name as category_name,
-      i.item_type
-    FROM inventory_items i
-    LEFT JOIN inventory_categories c ON i.category_id = c.id
-    WHERE i.deleted_at IS NULL
-      AND i.hospital_id = ?
-      AND i.current_stock > 0
-    ORDER BY stock_value DESC
-  `, [hospitalId]);
+  const items = await prisma.inventoryItem.findMany({
+    where: { hospitalId, deletedAt: null, currentStock: { gt: 0 } },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      currentStock: true,
+      unit: true,
+      purchasePrice: true,
+      itemType: true,
+      category: { select: { name: true } },
+    },
+  })
 
-  const [totals] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      SUM(current_stock * unit_price) as total_value,
-      COUNT(*) as items_in_stock,
-      AVG(current_stock * unit_price) as average_item_value
-    FROM inventory_items
-    WHERE deleted_at IS NULL AND hospital_id = ? AND current_stock > 0
-  `, [hospitalId]);
+  const valuation = items
+    .map(({ category, ...item }) => ({
+      ...item,
+      categoryName: category?.name ?? null,
+      stockValue: item.currentStock * Number(item.purchasePrice),
+    }))
+    .sort((a, b) => b.stockValue - a.stockValue)
+
+  const totalValue = valuation.reduce((sum, i) => sum + i.stockValue, 0)
 
   return NextResponse.json({
     success: true,
     data: {
-      totals: totals[0],
-      items: valuation
-    }
-  });
+      totals: {
+        totalValue,
+        itemsInStock: valuation.length,
+        averageItemValue: valuation.length ? totalValue / valuation.length : 0,
+      },
+      items: valuation,
+    },
+  })
 }
 
 // Dead Stock Report (items with no movement in specified days)
 async function getDeadStockReport(hospitalId: string, searchParams: URLSearchParams) {
-  const days = parseInt(searchParams.get('days') || '90');
+  const days = parseInt(searchParams.get('days') || '90')
+  const today = startOfToday()
 
-  const [deadStock] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      i.id,
-      i.item_code,
-      i.name,
-      i.current_stock,
-      i.unit_of_measurement,
-      i.unit_price,
-      (i.current_stock * i.unit_price) as locked_value,
-      c.name as category_name,
-      MAX(st.transaction_date) as last_transaction_date,
-      DATEDIFF(CURDATE(), MAX(st.transaction_date)) as days_since_last_movement
-    FROM inventory_items i
-    LEFT JOIN inventory_categories c ON i.category_id = c.id
-    LEFT JOIN stock_transactions st ON i.id = st.item_id
-    WHERE i.deleted_at IS NULL
-      AND i.hospital_id = ?
-      AND i.current_stock > 0
-    GROUP BY i.id
-    HAVING last_transaction_date IS NULL
-        OR DATEDIFF(CURDATE(), MAX(st.transaction_date)) > ?
-    ORDER BY locked_value DESC
-  `, [hospitalId, days]);
+  const items = await prisma.inventoryItem.findMany({
+    where: { hospitalId, deletedAt: null, currentStock: { gt: 0 } },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      currentStock: true,
+      unit: true,
+      purchasePrice: true,
+      category: { select: { name: true } },
+      stockTransactions: {
+        select: { transactionDate: true },
+        orderBy: { transactionDate: 'desc' },
+        take: 1,
+      },
+    },
+  })
 
-  return NextResponse.json({
-    success: true,
-    data: deadStock
-  });
+  const deadStock = items
+    .map(({ category, stockTransactions, ...item }) => {
+      const lastTransactionDate = stockTransactions[0]?.transactionDate ?? null
+      return {
+        ...item,
+        categoryName: category?.name ?? null,
+        lockedValue: item.currentStock * Number(item.purchasePrice),
+        lastTransactionDate,
+        daysSinceLastMovement: lastTransactionDate ? daysBetween(lastTransactionDate, today) : null,
+      }
+    })
+    .filter((i) => i.daysSinceLastMovement === null || i.daysSinceLastMovement > days)
+    .sort((a, b) => b.lockedValue - a.lockedValue)
+
+  return NextResponse.json({ success: true, data: deadStock })
 }
 
 // Stock Movement Report
 async function getStockMovementReport(hospitalId: string, searchParams: URLSearchParams) {
-  const startDate = searchParams.get('startDate');
-  const endDate = searchParams.get('endDate');
+  const startDate = searchParams.get('startDate')
+  const endDate = searchParams.get('endDate')
 
   if (!startDate || !endDate) {
     return NextResponse.json(
       { error: 'Start date and end date are required for movement report' },
       { status: 400 }
-    );
+    )
   }
 
-  const [movement] = await pool.execute<RowDataPacket[]>(`
-    SELECT
-      i.id,
-      i.item_code,
-      i.name,
-      SUM(CASE WHEN st.transaction_type IN ('purchase', 'adjustment', 'opening_stock') THEN st.quantity ELSE 0 END) as total_in,
-      SUM(CASE WHEN st.transaction_type IN ('sale', 'usage', 'wastage', 'return') THEN st.quantity ELSE 0 END) as total_out,
-      COUNT(st.id) as transaction_count,
-      i.current_stock,
-      i.unit_of_measurement
-    FROM inventory_items i
-    LEFT JOIN stock_transactions st ON i.id = st.item_id
-      AND st.transaction_date BETWEEN ? AND ?
-    WHERE i.deleted_at IS NULL AND i.hospital_id = ?
-    GROUP BY i.id
-    HAVING transaction_count > 0
-    ORDER BY transaction_count DESC
-  `, [startDate, endDate, hospitalId]);
+  const transactions = await prisma.stockTransaction.findMany({
+    where: {
+      hospitalId,
+      transactionDate: { gte: new Date(startDate), lte: new Date(endDate) },
+      item: { deletedAt: null },
+    },
+    select: {
+      type: true,
+      quantity: true,
+      item: {
+        select: { id: true, sku: true, name: true, currentStock: true, unit: true },
+      },
+    },
+  })
 
-  return NextResponse.json({
-    success: true,
-    data: movement
-  });
+  const byItem = new Map<
+    string,
+    {
+      id: string
+      sku: string
+      name: string
+      currentStock: number
+      unit: string
+      totalIn: number
+      totalOut: number
+      transactionCount: number
+    }
+  >()
+
+  for (const tx of transactions) {
+    const row = byItem.get(tx.item.id) ?? {
+      id: tx.item.id,
+      sku: tx.item.sku,
+      name: tx.item.name,
+      currentStock: tx.item.currentStock,
+      unit: tx.item.unit,
+      totalIn: 0,
+      totalOut: 0,
+      transactionCount: 0,
+    }
+    if (INBOUND_TYPES.includes(tx.type)) row.totalIn += tx.quantity
+    else if (OUTBOUND_TYPES.includes(tx.type)) row.totalOut += tx.quantity
+    row.transactionCount += 1
+    byItem.set(tx.item.id, row)
+  }
+
+  const movement = [...byItem.values()].sort((a, b) => b.transactionCount - a.transactionCount)
+
+  return NextResponse.json({ success: true, data: movement })
 }

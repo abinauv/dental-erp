@@ -1,158 +1,160 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 interface Transaction {
-  id: number;
-  transaction_type: string;
-  item_name: string;
-  item_code: string;
-  quantity: number;
-  unit_price: number;
-  total_amount: number;
-  transaction_date: string;
-  performed_by_name: string;
-  supplier_name: string;
-  batch_number: string;
-  notes: string;
+  id: number
+  type: string
+  itemName: string
+  sku: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+  transactionDate: string
+  performedByName: string
+  supplierName: string
+  batchNumber: string
+  notes: string
 }
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [items, setItems] = useState<any[]>([]);
-  const [suppliers, setSuppliers] = useState<any[]>([]);
-  const [transactionType, setTransactionType] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [items, setItems] = useState<any[]>([])
+  const [suppliers, setSuppliers] = useState<any[]>([])
+  const [transactionType, setTransactionType] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
     total: 0,
-    pages: 0
-  });
+    pages: 0,
+  })
 
   const [formData, setFormData] = useState({
-    transaction_type: 'purchase',
-    item_id: '',
+    type: 'purchase',
+    itemId: '',
     quantity: 0,
-    unit_price: 0,
-    transaction_date: new Date().toISOString().split('T')[0],
-    supplier_id: '',
-    notes: ''
-  });
+    unitPrice: 0,
+    transactionDate: new Date().toISOString().split('T')[0],
+    supplierId: '',
+    notes: '',
+  })
 
   useEffect(() => {
-    fetchTransactions();
-    fetchItems();
-    fetchSuppliers();
-  }, [transactionType, startDate, endDate, pagination.page]);
+    fetchTransactions()
+    fetchItems()
+    fetchSuppliers()
+  }, [transactionType, startDate, endDate, pagination.page])
 
   const fetchTransactions = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(transactionType && { type: transactionType }),
         ...(startDate && { startDate }),
-        ...(endDate && { endDate })
-      });
+        ...(endDate && { endDate }),
+      })
 
-      const response = await fetch(`/api/inventory/transactions?${params}`);
-      const data = await response.json();
+      const response = await fetch(`/api/inventory/transactions?${params}`)
+      const data = await response.json()
 
       if (data.success) {
-        setTransactions(data.data);
-        setPagination(data.pagination);
+        setTransactions(data.data)
+        setPagination(data.pagination)
       }
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error('Error fetching transactions:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const fetchItems = async () => {
     try {
-      const response = await fetch('/api/inventory/items?status=active&limit=1000');
-      const data = await response.json();
+      const response = await fetch('/api/inventory/items?status=active&limit=1000')
+      const data = await response.json()
       if (data.success) {
-        setItems(data.data);
+        setItems(data.data)
       }
     } catch (error) {
-      console.error('Error fetching items:', error);
+      console.error('Error fetching items:', error)
     }
-  };
+  }
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch('/api/inventory/suppliers?status=active');
-      const data = await response.json();
+      const response = await fetch('/api/inventory/suppliers?status=active')
+      const data = await response.json()
       if (data.success) {
-        setSuppliers(data.data);
+        setSuppliers(data.data)
       }
     } catch (error) {
-      console.error('Error fetching suppliers:', error);
+      console.error('Error fetching suppliers:', error)
     }
-  };
+  }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target
 
     if (type === 'number') {
-      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+      setFormData({ ...formData, [name]: parseFloat(value) || 0 })
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData({ ...formData, [name]: value })
     }
 
     // Auto-fill unit price when item is selected
-    if (name === 'item_id' && value) {
-      const selectedItem = items.find(item => item.id === parseInt(value));
+    if (name === 'itemId' && value) {
+      const selectedItem = items.find((item) => item.id === parseInt(value))
       if (selectedItem) {
-        setFormData(prev => ({ ...prev, unit_price: selectedItem.unit_price }));
+        setFormData((prev) => ({ ...prev, unitPrice: selectedItem.unitPrice }))
       }
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     try {
       const response = await fetch('/api/inventory/transactions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
-      });
+        body: JSON.stringify(formData),
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (data.success) {
-        alert('Transaction recorded successfully!');
-        setShowAddModal(false);
-        fetchTransactions();
+        alert('Transaction recorded successfully!')
+        setShowAddModal(false)
+        fetchTransactions()
         // Reset form
         setFormData({
-          transaction_type: 'purchase',
-          item_id: '',
+          type: 'purchase',
+          itemId: '',
           quantity: 0,
-          unit_price: 0,
-          transaction_date: new Date().toISOString().split('T')[0],
-          supplier_id: '',
-          notes: ''
-        });
+          unitPrice: 0,
+          transactionDate: new Date().toISOString().split('T')[0],
+          supplierId: '',
+          notes: '',
+        })
       } else {
-        alert(data.error || 'Failed to record transaction');
+        alert(data.error || 'Failed to record transaction')
       }
     } catch (error) {
-      console.error('Error recording transaction:', error);
-      alert('Failed to record transaction');
+      console.error('Error recording transaction:', error)
+      alert('Failed to record transaction')
     }
-  };
+  }
 
   const getTransactionTypeBadge = (type: string) => {
     const badges: any = {
@@ -162,23 +164,25 @@ export default function TransactionsPage() {
       return: 'bg-orange-100 text-orange-800',
       usage: 'bg-purple-100 text-purple-800',
       wastage: 'bg-red-100 text-red-800',
-      opening_stock: 'bg-muted text-foreground'
-    };
+      previousStock: 'bg-muted text-foreground',
+    }
 
     return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${badges[type] || 'bg-muted text-foreground'}`}>
+      <span
+        className={`px-2 py-1 text-xs font-semibold rounded-full ${badges[type] || 'bg-muted text-foreground'}`}
+      >
         {type.replace('_', ' ').toUpperCase()}
       </span>
-    );
-  };
+    )
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 2
-    }).format(amount);
-  };
+      minimumFractionDigits: 2,
+    }).format(amount)
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -277,30 +281,30 @@ export default function TransactionsPage() {
                   {transactions.map((transaction) => (
                     <tr key={transaction.id} className="hover:bg-muted/50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {new Date(transaction.transaction_date).toLocaleDateString()}
+                        {new Date(transaction.transactionDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getTransactionTypeBadge(transaction.transaction_type)}
+                        {getTransactionTypeBadge(transaction.type)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {transaction.item_name}
+                        {transaction.itemName}
                         <br />
-                        <span className="text-xs text-muted-foreground">{transaction.item_code}</span>
+                        <span className="text-xs text-muted-foreground">{transaction.sku}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {transaction.quantity}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {formatCurrency(transaction.unit_price)}
+                        {formatCurrency(transaction.unitPrice)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                        {formatCurrency(transaction.total_amount)}
+                        {formatCurrency(transaction.totalPrice)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {transaction.supplier_name || '-'}
+                        {transaction.supplierName || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {transaction.performed_by_name}
+                        {transaction.performedByName}
                       </td>
                     </tr>
                   ))}
@@ -314,7 +318,8 @@ export default function TransactionsPage() {
                 <div>
                   <p className="text-sm text-foreground">
                     Showing page <span className="font-medium">{pagination.page}</span> of{' '}
-                    <span className="font-medium">{pagination.pages}</span> ({pagination.total} total transactions)
+                    <span className="font-medium">{pagination.pages}</span> ({pagination.total}{' '}
+                    total transactions)
                   </p>
                 </div>
                 <div>
@@ -353,8 +358,8 @@ export default function TransactionsPage() {
                     Transaction Type <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="transaction_type"
-                    value={formData.transaction_type}
+                    name="type"
+                    value={formData.type}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -372,8 +377,8 @@ export default function TransactionsPage() {
                     Item <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="item_id"
-                    value={formData.item_id}
+                    name="itemId"
+                    value={formData.itemId}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -381,7 +386,7 @@ export default function TransactionsPage() {
                     <option value="">Select Item</option>
                     {items.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} ({item.item_code})
+                        {item.name} ({item.sku})
                       </option>
                     ))}
                   </select>
@@ -408,8 +413,8 @@ export default function TransactionsPage() {
                   </label>
                   <input
                     type="number"
-                    name="unit_price"
-                    value={formData.unit_price}
+                    name="unitPrice"
+                    value={formData.unitPrice}
                     onChange={handleChange}
                     step="0.01"
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -422,22 +427,22 @@ export default function TransactionsPage() {
                   </label>
                   <input
                     type="date"
-                    name="transaction_date"
-                    value={formData.transaction_date}
+                    name="transactionDate"
+                    value={formData.transactionDate}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
-                {formData.transaction_type === 'purchase' && (
+                {formData.type === 'purchase' && (
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
                       Supplier
                     </label>
                     <select
-                      name="supplier_id"
-                      value={formData.supplier_id}
+                      name="supplierId"
+                      value={formData.supplierId}
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -483,5 +488,5 @@ export default function TransactionsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

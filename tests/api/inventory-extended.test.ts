@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
+import { StockAlertType, SupplierStatus } from '@prisma/client'
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -10,30 +11,14 @@ vi.mock('@/lib/api-helpers', () => ({
   requireAuthAndRole: vi.fn(),
 }))
 
-// Mock mysql2 pool for suppliers/transactions/alerts routes
-const { mockExecute, mockConnection } = vi.hoisted(() => {
-  const mockConnection = {
-    execute: vi.fn(),
-    beginTransaction: vi.fn(),
-    commit: vi.fn(),
-    rollback: vi.fn(),
-    release: vi.fn(),
-  }
-  return { mockExecute: vi.fn(), mockConnection }
-})
-
-vi.mock('@/lib/db', () => ({
-  default: {
-    execute: mockExecute,
-    getConnection: vi.fn(() => mockConnection),
-  },
-}))
-
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { GET as categoriesGET } from '@/app/api/inventory/categories/route'
 import { GET as suppliersGET, POST as suppliersPOST } from '@/app/api/inventory/suppliers/route'
-import { GET as transactionsGET, POST as transactionsPOST } from '@/app/api/inventory/transactions/route'
+import {
+  GET as transactionsGET,
+  POST as transactionsPOST,
+} from '@/app/api/inventory/transactions/route'
 import { GET as alertsGET, POST as alertsPOST } from '@/app/api/inventory/alerts/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
@@ -64,6 +49,13 @@ function makeReq(path: string, method = 'GET', body?: any): NextRequest {
     init.headers = { 'Content-Type': 'application/json' }
   }
   return new NextRequest(url, init)
+}
+
+/** Runs interactive $transaction callbacks against the mock client. */
+function passthroughTransaction() {
+  vi.mocked(prisma.$transaction).mockImplementation((arg: any) =>
+    typeof arg === 'function' ? arg(prisma) : Promise.all(arg)
+  )
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -109,7 +101,7 @@ describe('GET /api/inventory/categories', () => {
 })
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 2. GET/POST /api/inventory/suppliers
+// 2. GET /api/inventory/suppliers
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/inventory/suppliers', () => {
@@ -123,92 +115,110 @@ describe('GET /api/inventory/suppliers', () => {
 
   it('returns suppliers with pagination', async () => {
     mockAuth()
-    // count query
-    mockExecute.mockResolvedValueOnce([[{ total: 2 }]])
-    // data query
-    mockExecute.mockResolvedValueOnce([[
-      { id: 1, name: 'DentSupply', supplier_code: 'DS001' },
-      { id: 2, name: 'MediParts', supplier_code: 'MP001' },
-    ]])
+    vi.mocked(prisma.supplier.count).mockResolvedValue(1)
+    vi.mocked(prisma.supplier.findMany).mockResolvedValue([
+      {
+        id: 's1',
+        name: 'Acme Dental',
+        code: 'SUP001',
+        _count: { preferredForItems: 3, purchaseOrders: 2 },
+        purchaseOrders: [{ totalAmount: 1000 }, { totalAmount: 250 }],
+      },
+    ] as any)
 
     const res = await suppliersGET(makeReq('/api/inventory/suppliers'))
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.success).toBe(true)
-    expect(body.data).toHaveLength(2)
-    expect(body.pagination.total).toBe(2)
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0].itemsSupplied).toBe(3)
+    expect(body.data[0].totalOrders).toBe(2)
+    expect(body.data[0].totalBusiness).toBe(1250)
+    expect(body.pagination.total).toBe(1)
   })
 
-  it('applies search filter to SQL query', async () => {
+  it('applies search filter to the where clause', async () => {
     mockAuth()
-    mockExecute.mockResolvedValueOnce([[{ total: 0 }]])
-    mockExecute.mockResolvedValueOnce([[]])
+    vi.mocked(prisma.supplier.count).mockResolvedValue(0)
+    vi.mocked(prisma.supplier.findMany).mockResolvedValue([])
 
-    await suppliersGET(makeReq('/api/inventory/suppliers?search=dent'))
+    await suppliersGET(makeReq('/api/inventory/suppliers?search=acme'))
 
-    // Both count and data queries should include search params
-    const countCall = mockExecute.mock.calls[0]
-    expect(countCall[1]).toContain('%dent%')
+    const where = vi.mocked(prisma.supplier.findMany).mock.calls[0][0].where
+    expect(where.OR).toEqual([
+      { name: { contains: 'acme' } },
+      { code: { contains: 'acme' } },
+      { contactPerson: { contains: 'acme' } },
+    ])
+  })
+
+  it('maps the legacy lowercase status filter onto the enum', async () => {
+    mockAuth()
+    vi.mocked(prisma.supplier.count).mockResolvedValue(0)
+    vi.mocked(prisma.supplier.findMany).mockResolvedValue([])
+
+    await suppliersGET(makeReq('/api/inventory/suppliers?status=blocked'))
+
+    const where = vi.mocked(prisma.supplier.findMany).mock.calls[0][0].where
+    expect(where.status).toBe(SupplierStatus.BLOCKED)
   })
 })
+
+// ═════════════════════════════════════════════════════════════════════════════
+// 3. POST /api/inventory/suppliers
+// ═════════════════════════════════════════════════════════════════════════════
 
 describe('POST /api/inventory/suppliers', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await suppliersPOST(makeReq('/api/inventory/suppliers', 'POST', { name: 'Test' }))
+    const res = await suppliersPOST(makeReq('/api/inventory/suppliers', 'POST', {}))
     expect(res.status).toBe(401)
   })
 
   it('returns 400 when required fields missing', async () => {
     mockAuth()
-    const res = await suppliersPOST(makeReq('/api/inventory/suppliers', 'POST', { name: 'Test' }))
-    const body = await res.json()
-
+    const res = await suppliersPOST(makeReq('/api/inventory/suppliers', 'POST', { name: 'X' }))
     expect(res.status).toBe(400)
-    expect(body.error).toContain('supplier_code')
   })
 
-  it('returns 409 for duplicate supplier_code', async () => {
+  it('returns 409 for duplicate supplier code', async () => {
     mockAuth()
-    // Check for existing returns a match
-    mockExecute.mockResolvedValueOnce([[{ id: 1 }]])
+    vi.mocked(prisma.supplier.findFirst).mockResolvedValue({ id: 'existing' } as any)
 
-    const res = await suppliersPOST(makeReq('/api/inventory/suppliers', 'POST', {
-      supplier_code: 'DS001',
-      name: 'DentSupply',
-      phone: '9876543210',
-    }))
-    const body = await res.json()
-
+    const res = await suppliersPOST(
+      makeReq('/api/inventory/suppliers', 'POST', {
+        code: 'SUP001',
+        name: 'Acme',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(409)
-    expect(body.error).toContain('already exists')
   })
 
   it('creates supplier successfully', async () => {
     mockAuth()
-    // No existing supplier
-    mockExecute.mockResolvedValueOnce([[]])
-    // Insert result
-    mockExecute.mockResolvedValueOnce([{ insertId: 42 }])
+    vi.mocked(prisma.supplier.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.supplier.create).mockResolvedValue({ id: 'new-id' } as any)
 
-    const res = await suppliersPOST(makeReq('/api/inventory/suppliers', 'POST', {
-      supplier_code: 'DS002',
-      name: 'New Dental Supply',
-      phone: '9876543210',
-    }))
+    const res = await suppliersPOST(
+      makeReq('/api/inventory/suppliers', 'POST', {
+        code: 'SUP002',
+        name: 'New Supplier',
+        phone: '9876543210',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
-    expect(body.success).toBe(true)
-    expect(body.data.id).toBe(42)
+    expect(body.data.id).toBe('new-id')
+    expect(vi.mocked(prisma.supplier.create).mock.calls[0][0].data.hospitalId).toBe('h1')
   })
 })
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 3. GET/POST /api/inventory/transactions
+// 4. GET /api/inventory/transactions
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/inventory/transactions', () => {
@@ -222,110 +232,164 @@ describe('GET /api/inventory/transactions', () => {
 
   it('returns transactions with pagination', async () => {
     mockAuth()
-    // count query
-    mockExecute.mockResolvedValueOnce([[{ total: 5 }]])
-    // data query
-    mockExecute.mockResolvedValueOnce([[
-      { id: 1, transaction_type: 'purchase', item_name: 'Gloves', quantity: 100 },
-    ]])
+    vi.mocked(prisma.stockTransaction.count).mockResolvedValue(1)
+    vi.mocked(prisma.stockTransaction.findMany).mockResolvedValue([
+      {
+        id: 't1',
+        type: 'PURCHASE',
+        quantity: 5,
+        performedBy: 'u1',
+        batchNumber: null,
+        item: { name: 'Composite', sku: 'IT1' },
+        supplier: { name: 'Acme' },
+        batch: null,
+      },
+    ] as any)
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'u1', name: 'Admin' }] as any)
 
     const res = await transactionsGET(makeReq('/api/inventory/transactions'))
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.success).toBe(true)
-    expect(body.pagination.total).toBe(5)
+    expect(body.data[0].itemName).toBe('Composite')
+    expect(body.data[0].supplierName).toBe('Acme')
+    expect(body.data[0].performedByName).toBe('Admin')
+    expect(body.pagination.total).toBe(1)
   })
 
   it('filters by item and type', async () => {
     mockAuth()
-    mockExecute.mockResolvedValueOnce([[{ total: 0 }]])
-    mockExecute.mockResolvedValueOnce([[]])
+    vi.mocked(prisma.stockTransaction.count).mockResolvedValue(0)
+    vi.mocked(prisma.stockTransaction.findMany).mockResolvedValue([])
 
-    await transactionsGET(makeReq('/api/inventory/transactions?itemId=item1&type=purchase'))
+    await transactionsGET(makeReq('/api/inventory/transactions?itemId=i1&type=purchase'))
 
-    const dataCall = mockExecute.mock.calls[1]
-    expect(dataCall[1]).toContain('item1')
-    expect(dataCall[1]).toContain('purchase')
+    const where = vi.mocked(prisma.stockTransaction.findMany).mock.calls[0][0].where
+    expect(where.itemId).toBe('i1')
+    expect(where.type).toBe('PURCHASE')
   })
 })
 
+// ═════════════════════════════════════════════════════════════════════════════
+// 5. POST /api/inventory/transactions
+// ═════════════════════════════════════════════════════════════════════════════
+
 describe('POST /api/inventory/transactions', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    passthroughTransaction()
+  })
 
   it('returns 400 when required fields missing', async () => {
     mockAuth()
-    const res = await transactionsPOST(makeReq('/api/inventory/transactions', 'POST', {
-      transaction_type: 'purchase',
-    }))
-    const body = await res.json()
-
+    const res = await transactionsPOST(
+      makeReq('/api/inventory/transactions', 'POST', { type: 'PURCHASE' })
+    )
     expect(res.status).toBe(400)
-    expect(body.error).toContain('item_id')
   })
 
   it('returns 404 when item not found', async () => {
     mockAuth()
-    // Item lookup returns empty
-    mockConnection.execute.mockResolvedValueOnce([[]])
+    vi.mocked(prisma.inventoryItem.findFirst).mockResolvedValue(null)
 
-    const res = await transactionsPOST(makeReq('/api/inventory/transactions', 'POST', {
-      transaction_type: 'purchase',
-      item_id: 'nonexistent',
-      quantity: 10,
-      transaction_date: '2026-02-01',
-    }))
-    const body = await res.json()
-
+    const res = await transactionsPOST(
+      makeReq('/api/inventory/transactions', 'POST', {
+        type: 'PURCHASE',
+        itemId: 'missing',
+        quantity: 5,
+        transactionDate: '2026-01-01',
+      })
+    )
     expect(res.status).toBe(404)
-    expect(body.error).toContain('Inventory item not found')
   })
 
   it('returns 400 for insufficient stock on sale', async () => {
     mockAuth()
-    // Item with low stock
-    mockConnection.execute.mockResolvedValueOnce([[{ id: 'item1', current_stock: 5, minimum_stock: 2, unit_price: 100 }]])
+    vi.mocked(prisma.inventoryItem.findFirst).mockResolvedValue({
+      id: 'i1',
+      currentStock: 2,
+      minimumStock: 1,
+      purchasePrice: 10,
+    } as any)
 
-    const res = await transactionsPOST(makeReq('/api/inventory/transactions', 'POST', {
-      transaction_type: 'sale',
-      item_id: 'item1',
-      quantity: 10,
-      transaction_date: '2026-02-01',
-    }))
-    const body = await res.json()
-
+    const res = await transactionsPOST(
+      makeReq('/api/inventory/transactions', 'POST', {
+        type: 'SALE',
+        itemId: 'i1',
+        quantity: 5,
+        transactionDate: '2026-01-01',
+      })
+    )
     expect(res.status).toBe(400)
+    const body = await res.json()
     expect(body.error).toContain('Insufficient stock')
   })
 
   it('creates purchase transaction and updates stock', async () => {
     mockAuth()
-    // Item lookup
-    mockConnection.execute.mockResolvedValueOnce([[{ id: 'item1', current_stock: 50, minimum_stock: 10, unit_price: 100 }]])
-    // Insert transaction
-    mockConnection.execute.mockResolvedValueOnce([{ insertId: 99 }])
-    // Update stock
-    mockConnection.execute.mockResolvedValueOnce([{}])
-    // Delete alerts (stock above minimum)
-    mockConnection.execute.mockResolvedValueOnce([{}])
+    vi.mocked(prisma.inventoryItem.findFirst).mockResolvedValue({
+      id: 'i1',
+      currentStock: 10,
+      minimumStock: 5,
+      purchasePrice: 20,
+    } as any)
+    vi.mocked(prisma.stockTransaction.create).mockResolvedValue({ id: 'tx1' } as any)
+    vi.mocked(prisma.inventoryItem.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.stockAlert.deleteMany).mockResolvedValue({ count: 0 } as any)
 
-    const res = await transactionsPOST(makeReq('/api/inventory/transactions', 'POST', {
-      transaction_type: 'purchase',
-      item_id: 'item1',
-      quantity: 20,
-      transaction_date: '2026-02-01',
-    }))
+    const res = await transactionsPOST(
+      makeReq('/api/inventory/transactions', 'POST', {
+        type: 'PURCHASE',
+        itemId: 'i1',
+        quantity: 5,
+        transactionDate: '2026-01-01',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
-    expect(body.success).toBe(true)
-    expect(body.data.new_stock).toBe(70)
-    expect(mockConnection.commit).toHaveBeenCalled()
+    expect(body.data.newStock).toBe(15)
+
+    const created = vi.mocked(prisma.stockTransaction.create).mock.calls[0][0].data
+    expect(created.previousStock).toBe(10)
+    expect(created.newStock).toBe(15)
+    expect(created.totalPrice).toBe(100)
+
+    expect(vi.mocked(prisma.inventoryItem.update).mock.calls[0][0].data.currentStock).toBe(15)
+    // Stock is healthy again, so open shortage alerts are cleared.
+    expect(prisma.stockAlert.deleteMany).toHaveBeenCalled()
+  })
+
+  it('raises a low stock alert when the new level is at or below the minimum', async () => {
+    mockAuth()
+    vi.mocked(prisma.inventoryItem.findFirst).mockResolvedValue({
+      id: 'i1',
+      currentStock: 6,
+      minimumStock: 5,
+      purchasePrice: 20,
+    } as any)
+    vi.mocked(prisma.stockTransaction.create).mockResolvedValue({ id: 'tx1' } as any)
+    vi.mocked(prisma.inventoryItem.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.stockAlert.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.stockAlert.create).mockResolvedValue({ id: 'a1' } as any)
+
+    const res = await transactionsPOST(
+      makeReq('/api/inventory/transactions', 'POST', {
+        type: 'CONSUMPTION',
+        itemId: 'i1',
+        quantity: 2,
+        transactionDate: '2026-01-01',
+      })
+    )
+    expect(res.status).toBe(201)
+    expect(vi.mocked(prisma.stockAlert.create).mock.calls[0][0].data.alertType).toBe(
+      StockAlertType.LOW_STOCK
+    )
   })
 })
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 4. GET/POST /api/inventory/alerts
+// 6. GET /api/inventory/alerts
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/inventory/alerts', () => {
@@ -339,66 +403,96 @@ describe('GET /api/inventory/alerts', () => {
 
   it('returns alerts with summary', async () => {
     mockAuth()
-    // alerts query
-    mockExecute.mockResolvedValueOnce([[
-      { id: 1, alert_type: 'low_stock', item_name: 'Gloves', current_stock: 3 },
-    ]])
-    // summary query
-    mockExecute.mockResolvedValueOnce([[{
-      total_alerts: 5,
-      out_of_stock: 1,
-      low_stock: 3,
-      expiring_soon: 1,
-      expired: 0,
-    }]])
+    vi.mocked(prisma.stockAlert.findMany).mockResolvedValue([
+      {
+        id: 'a1',
+        alertType: StockAlertType.LOW_STOCK,
+        isAcknowledged: false,
+        item: {
+          sku: 'IT1',
+          name: 'Composite',
+          currentStock: 2,
+          minimumStock: 5,
+          unit: 'box',
+          category: { name: 'Materials' },
+        },
+        acknowledgedByUser: null,
+      },
+    ] as any)
+    vi.mocked(prisma.stockAlert.groupBy).mockResolvedValue([
+      { alertType: StockAlertType.LOW_STOCK, _count: { _all: 2 } },
+      { alertType: StockAlertType.OUT_OF_STOCK, _count: { _all: 1 } },
+    ] as any)
 
     const res = await alertsGET(makeReq('/api/inventory/alerts'))
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.success).toBe(true)
-    expect(body.data).toHaveLength(1)
-    expect(body.summary.total_alerts).toBe(5)
-    expect(body.summary.low_stock).toBe(3)
+    expect(body.data[0].itemName).toBe('Composite')
+    expect(body.data[0].categoryName).toBe('Materials')
+    expect(body.summary.totalAlerts).toBe(3)
+    expect(body.summary.lowStock).toBe(2)
+    expect(body.summary.outOfStock).toBe(1)
+  })
+
+  it('defaults to unacknowledged alerts', async () => {
+    mockAuth()
+    vi.mocked(prisma.stockAlert.findMany).mockResolvedValue([])
+    vi.mocked(prisma.stockAlert.groupBy).mockResolvedValue([])
+
+    await alertsGET(makeReq('/api/inventory/alerts'))
+
+    const where = vi.mocked(prisma.stockAlert.findMany).mock.calls[0][0].where
+    expect(where.isAcknowledged).toBe(false)
   })
 })
+
+// ═════════════════════════════════════════════════════════════════════════════
+// 7. POST /api/inventory/alerts
+// ═════════════════════════════════════════════════════════════════════════════
 
 describe('POST /api/inventory/alerts', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns 400 when alert_id missing', async () => {
+  it('returns 400 when alert id missing', async () => {
     mockAuth()
     const res = await alertsPOST(makeReq('/api/inventory/alerts', 'POST', {}))
-    const body = await res.json()
-
     expect(res.status).toBe(400)
-    expect(body.error).toContain('Alert ID')
   })
 
   it('returns 404 when alert not found', async () => {
     mockAuth()
-    mockExecute.mockResolvedValueOnce([[]])
+    vi.mocked(prisma.stockAlert.findFirst).mockResolvedValue(null)
 
-    const res = await alertsPOST(makeReq('/api/inventory/alerts', 'POST', { alert_id: 999 }))
-    const body = await res.json()
-
+    const res = await alertsPOST(makeReq('/api/inventory/alerts', 'POST', { alertId: 'nope' }))
     expect(res.status).toBe(404)
   })
 
   it('acknowledges alert successfully', async () => {
     mockAuth()
-    // Alert check
-    mockExecute.mockResolvedValueOnce([[{ id: 1 }]])
-    // Update
-    mockExecute.mockResolvedValueOnce([{ affectedRows: 1 }])
+    vi.mocked(prisma.stockAlert.findFirst).mockResolvedValue({ id: 'a1' } as any)
+    vi.mocked(prisma.stockAlert.update).mockResolvedValue({ id: 'a1' } as any)
 
-    const res = await alertsPOST(makeReq('/api/inventory/alerts', 'POST', {
-      alert_id: 1,
-      notes: 'Ordered more stock',
-    }))
+    const res = await alertsPOST(
+      makeReq('/api/inventory/alerts', 'POST', { alertId: 'a1', notes: 'Ordered more stock' })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
     expect(body.success).toBe(true)
+
+    const data = vi.mocked(prisma.stockAlert.update).mock.calls[0][0].data
+    expect(data.isAcknowledged).toBe(true)
+    expect(data.acknowledgedBy).toBe('u1')
+    expect(data.notes).toBe('Ordered more stock')
+  })
+
+  it('still accepts the legacy alert_id key', async () => {
+    mockAuth()
+    vi.mocked(prisma.stockAlert.findFirst).mockResolvedValue({ id: 'a1' } as any)
+    vi.mocked(prisma.stockAlert.update).mockResolvedValue({ id: 'a1' } as any)
+
+    const res = await alertsPOST(makeReq('/api/inventory/alerts', 'POST', { alert_id: 'a1' }))
+    expect(res.status).toBe(200)
   })
 })
