@@ -1,29 +1,43 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { LabOrderStatus } from '@prisma/client'
 
 const mockAuth = vi.hoisted(() => ({
   requireAuthAndRole: vi.fn(),
 }))
 
-const mockPool = vi.hoisted(() => ({
-  execute: vi.fn(),
-}))
-
 vi.mock('@/lib/api-helpers', () => mockAuth)
-vi.mock('@/lib/db', () => ({ default: mockPool }))
-vi.mock('mysql2', () => ({
-  RowDataPacket: class {},
-}))
+vi.mock('@/lib/prisma', () => import('../__mocks__/prisma'))
 
+const { prisma } = await import('../__mocks__/prisma')
 const statusModule = await import('@/app/api/lab-orders/[id]/status/route')
 
 function makeRequest(body?: any) {
   return new Request('http://localhost/api/lab-orders/order-1/status', {
     method: 'PATCH',
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
 const ctx = { params: Promise.resolve({ id: 'order-1' }) }
+
+/** The order as the route selects it, before any status change. */
+function existingOrder(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'order-1',
+    status: LabOrderStatus.CREATED,
+    sentDate: null,
+    receivedDate: null,
+    deliveredDate: null,
+    ...overrides,
+  }
+}
+
+/** The data passed to prisma.labOrder.update in the transaction. */
+function updateData() {
+  return prisma.labOrder.update.mock.calls[0][0].data
+}
 
 describe('Lab Order Status API', () => {
   beforeEach(() => {
@@ -33,58 +47,65 @@ describe('Lab Order Status API', () => {
       hospitalId: 'hospital-1',
       session: { user: { id: 'user-1', role: 'ADMIN' } },
     })
+    // The route batches the update and the history insert; the mock client
+    // resolves $transaction by running the array it is given.
+    prisma.$transaction.mockImplementation((arg: any) =>
+      typeof arg === 'function' ? arg(prisma) : Promise.all(arg)
+    )
+    prisma.labOrder.update.mockResolvedValue({ id: 'order-1' })
+    prisma.labOrderHistory.create.mockResolvedValue({ id: 'history-1' })
   })
 
   describe('PATCH /api/lab-orders/[id]/status', () => {
     it('updates lab order status', async () => {
-      mockPool.execute
-        .mockResolvedValueOnce([[{ status: 'created', sent_date: null, received_date: null, delivered_date: null }]]) // SELECT
-        .mockResolvedValueOnce([{ affectedRows: 1 }]) // UPDATE
-        .mockResolvedValueOnce([{ affectedRows: 1 }]) // INSERT history
+      prisma.labOrder.findFirst.mockResolvedValue(existingOrder())
 
       const res = await statusModule.PATCH(makeRequest({ status: 'in_progress' }), ctx)
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.success).toBe(true)
       expect(body.message).toContain('updated successfully')
+      expect(updateData().status).toBe(LabOrderStatus.IN_PROGRESS)
     })
 
-    it('auto-sets sent_date for sent_to_lab status', async () => {
-      mockPool.execute
-        .mockResolvedValueOnce([[{ status: 'created', sent_date: null, received_date: null, delivered_date: null }]])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
+    it('auto-sets sentDate for sent_to_lab status', async () => {
+      prisma.labOrder.findFirst.mockResolvedValue(existingOrder())
 
       const res = await statusModule.PATCH(makeRequest({ status: 'sent_to_lab' }), ctx)
       expect(res.status).toBe(200)
-
-      // Verify the UPDATE query includes sent_date
-      const updateCall = mockPool.execute.mock.calls[1]
-      expect(updateCall[0]).toContain('sent_date')
+      expect(updateData().sentDate).toBeInstanceOf(Date)
     })
 
-    it('auto-sets received_date for ready status', async () => {
-      mockPool.execute
-        .mockResolvedValueOnce([[{ status: 'in_progress', sent_date: '2026-01-01', received_date: null, delivered_date: null }]])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
+    it('auto-sets receivedDate for ready status', async () => {
+      prisma.labOrder.findFirst.mockResolvedValue(
+        existingOrder({ status: LabOrderStatus.IN_PROGRESS, sentDate: new Date('2026-01-01') })
+      )
 
       const res = await statusModule.PATCH(makeRequest({ status: 'ready' }), ctx)
       expect(res.status).toBe(200)
-      const updateCall = mockPool.execute.mock.calls[1]
-      expect(updateCall[0]).toContain('received_date')
+      expect(updateData().receivedDate).toBeInstanceOf(Date)
     })
 
-    it('auto-sets delivered_date for fitted status', async () => {
-      mockPool.execute
-        .mockResolvedValueOnce([[{ status: 'ready', sent_date: '2026-01-01', received_date: '2026-01-10', delivered_date: null }]])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
+    it('auto-sets deliveredDate for fitted status', async () => {
+      prisma.labOrder.findFirst.mockResolvedValue(
+        existingOrder({
+          status: LabOrderStatus.READY,
+          sentDate: new Date('2026-01-01'),
+          receivedDate: new Date('2026-01-10'),
+        })
+      )
 
       const res = await statusModule.PATCH(makeRequest({ status: 'fitted' }), ctx)
       expect(res.status).toBe(200)
-      const updateCall = mockPool.execute.mock.calls[1]
-      expect(updateCall[0]).toContain('delivered_date')
+      expect(updateData().deliveredDate).toBeInstanceOf(Date)
+    })
+
+    it('does not overwrite a milestone date that is already set', async () => {
+      const sentDate = new Date('2026-01-01')
+      prisma.labOrder.findFirst.mockResolvedValue(existingOrder({ sentDate }))
+
+      await statusModule.PATCH(makeRequest({ status: 'sent_to_lab' }), ctx)
+      expect(updateData().sentDate).toBeUndefined()
     })
 
     it('returns 400 when status is missing', async () => {
@@ -102,26 +123,37 @@ describe('Lab Order Status API', () => {
     })
 
     it('returns 404 when lab order not found', async () => {
-      mockPool.execute.mockResolvedValueOnce([[]])
+      prisma.labOrder.findFirst.mockResolvedValue(null)
 
       const res = await statusModule.PATCH(makeRequest({ status: 'in_progress' }), ctx)
       expect(res.status).toBe(404)
     })
 
-    it('inserts history record with notes', async () => {
-      mockPool.execute
-        .mockResolvedValueOnce([[{ status: 'created', sent_date: null, received_date: null, delivered_date: null }]])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
+    it('records a history row with the supplied notes', async () => {
+      prisma.labOrder.findFirst.mockResolvedValue(existingOrder())
 
       await statusModule.PATCH(
         makeRequest({ status: 'in_progress', notes: 'Started work on crown' }),
         ctx
       )
 
-      // Third execute call is the history INSERT
-      const historyCall = mockPool.execute.mock.calls[2]
-      expect(historyCall[1]).toContain('Started work on crown')
+      expect(prisma.labOrderHistory.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          labOrderId: 'order-1',
+          statusFrom: LabOrderStatus.CREATED,
+          statusTo: LabOrderStatus.IN_PROGRESS,
+          changedBy: 'user-1',
+          notes: 'Started work on crown',
+        }),
+      })
+    })
+
+    it('falls back to a generated note when none is supplied', async () => {
+      prisma.labOrder.findFirst.mockResolvedValue(existingOrder())
+
+      await statusModule.PATCH(makeRequest({ status: 'in_progress' }), ctx)
+
+      expect(prisma.labOrderHistory.create.mock.calls[0][0].data.notes).toContain('IN_PROGRESS')
     })
 
     it('returns 401 when not authenticated', async () => {
@@ -135,25 +167,22 @@ describe('Lab Order Status API', () => {
       expect(res.status).toBe(401)
     })
 
-    it('accepts all 9 valid statuses', async () => {
-      const validStatuses = [
-        'created', 'sent_to_lab', 'in_progress', 'quality_check',
-        'ready', 'delivered', 'fitted', 'remake_required', 'cancelled'
-      ]
-
-      for (const status of validStatuses) {
+    it('accepts every LabOrderStatus, in legacy lowercase form', async () => {
+      for (const status of Object.values(LabOrderStatus)) {
         vi.clearAllMocks()
         mockAuth.requireAuthAndRole.mockResolvedValue({
           error: null,
           hospitalId: 'hospital-1',
           session: { user: { id: 'user-1', role: 'ADMIN' } },
         })
-        mockPool.execute
-          .mockResolvedValueOnce([[{ status: 'created', sent_date: null, received_date: null, delivered_date: null }]])
-          .mockResolvedValueOnce([{ affectedRows: 1 }])
-          .mockResolvedValueOnce([{ affectedRows: 1 }])
+        prisma.$transaction.mockImplementation((arg: any) =>
+          typeof arg === 'function' ? arg(prisma) : Promise.all(arg)
+        )
+        prisma.labOrder.findFirst.mockResolvedValue(existingOrder())
+        prisma.labOrder.update.mockResolvedValue({ id: 'order-1' })
+        prisma.labOrderHistory.create.mockResolvedValue({ id: 'history-1' })
 
-        const res = await statusModule.PATCH(makeRequest({ status }), ctx)
+        const res = await statusModule.PATCH(makeRequest({ status: status.toLowerCase() }), ctx)
         expect(res.status).toBe(200)
       }
     })

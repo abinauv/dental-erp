@@ -1,107 +1,109 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function NewInventoryItemPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState<any[]>([])
+  const [suppliers, setSuppliers] = useState<any[]>([])
   const [formData, setFormData] = useState({
-    item_code: '',
+    sku: '',
     name: '',
-    category_id: '',
-    item_type: 'dental_material',
+    categoryId: '',
+    itemType: 'DENTAL_MATERIAL',
     description: '',
-    unit_of_measurement: '',
-    current_stock: 0,
-    minimum_stock: 0,
-    reorder_point: 0,
-    maximum_stock: '',
-    unit_price: 0,
-    selling_price: 0,
-    hsn_code: '',
-    tax_percentage: 0,
-    preferred_supplier_id: '',
-    storage_location: '',
-    requires_expiry_tracking: false,
-    requires_batch_tracking: false,
-    is_active: true,
-    notes: ''
-  });
+    unit: '',
+    currentStock: 0,
+    minimumStock: 0,
+    reorderLevel: 0,
+    maximumStock: '',
+    purchasePrice: 0,
+    sellingPrice: 0,
+    hsnCode: '',
+    taxPercentage: 0,
+    preferredSupplierId: '',
+    storageLocation: '',
+    expiryTracking: false,
+    batchTracking: false,
+    isActive: true,
+    notes: '',
+  })
 
   useEffect(() => {
-    fetchCategories();
-    fetchSuppliers();
-  }, []);
+    fetchCategories()
+    fetchSuppliers()
+  }, [])
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/inventory/categories');
-      const data = await response.json();
+      const response = await fetch('/api/inventory/categories')
+      const data = await response.json()
       if (data.success) {
-        setCategories(data.data);
+        setCategories(data.data)
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching categories:', error)
     }
-  };
+  }
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch('/api/inventory/suppliers?status=active');
-      const data = await response.json();
+      const response = await fetch('/api/inventory/suppliers?status=active')
+      const data = await response.json()
       if (data.success) {
-        setSuppliers(data.data);
+        setSuppliers(data.data)
       }
     } catch (error) {
-      console.error('Error fetching suppliers:', error);
+      console.error('Error fetching suppliers:', error)
     }
-  };
+  }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target
 
     if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData({ ...formData, [name]: checked });
+      const checked = (e.target as HTMLInputElement).checked
+      setFormData({ ...formData, [name]: checked })
     } else if (type === 'number') {
-      setFormData({ ...formData, [name]: parseFloat(value) || 0 });
+      setFormData({ ...formData, [name]: parseFloat(value) || 0 })
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData({ ...formData, [name]: value })
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
       const response = await fetch('/api/inventory/items', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
-      });
+        body: JSON.stringify(formData),
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (data.success) {
-        alert('Inventory item created successfully!');
-        router.push('/inventory');
+        alert('Inventory item created successfully!')
+        router.push('/inventory')
       } else {
-        alert(data.error || 'Failed to create inventory item');
+        alert(data.error || 'Failed to create inventory item')
       }
     } catch (error) {
-      console.error('Error creating inventory item:', error);
-      alert('Failed to create inventory item');
+      console.error('Error creating inventory item:', error)
+      alert('Failed to create inventory item')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -124,8 +126,8 @@ export default function NewInventoryItemPage() {
             </label>
             <input
               type="text"
-              name="item_code"
-              value={formData.item_code}
+              name="sku"
+              value={formData.sku}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -153,8 +155,8 @@ export default function NewInventoryItemPage() {
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">Category</label>
             <select
-              name="category_id"
-              value={formData.category_id}
+              name="categoryId"
+              value={formData.categoryId}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -173,18 +175,18 @@ export default function NewInventoryItemPage() {
               Item Type <span className="text-red-500">*</span>
             </label>
             <select
-              name="item_type"
-              value={formData.item_type}
+              name="itemType"
+              value={formData.itemType}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="dental_material">Dental Material</option>
-              <option value="instrument">Instrument</option>
-              <option value="consumable">Consumable</option>
-              <option value="medicine">Medicine</option>
-              <option value="office_supply">Office Supply</option>
-              <option value="equipment">Equipment</option>
+              <option value="DENTAL_MATERIAL">Dental Material</option>
+              <option value="INSTRUMENT">Instrument</option>
+              <option value="CONSUMABLE">Consumable</option>
+              <option value="MEDICINE">Medicine</option>
+              <option value="OFFICE_SUPPLY">Office Supply</option>
+              <option value="EQUIPMENT">Equipment</option>
             </select>
           </div>
 
@@ -195,8 +197,8 @@ export default function NewInventoryItemPage() {
             </label>
             <input
               type="text"
-              name="unit_of_measurement"
-              value={formData.unit_of_measurement}
+              name="unit"
+              value={formData.unit}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -209,8 +211,8 @@ export default function NewInventoryItemPage() {
             <label className="block text-sm font-medium text-foreground mb-2">Current Stock</label>
             <input
               type="number"
-              name="current_stock"
-              value={formData.current_stock}
+              name="currentStock"
+              value={formData.currentStock}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -222,8 +224,8 @@ export default function NewInventoryItemPage() {
             <label className="block text-sm font-medium text-foreground mb-2">Minimum Stock</label>
             <input
               type="number"
-              name="minimum_stock"
-              value={formData.minimum_stock}
+              name="minimumStock"
+              value={formData.minimumStock}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -235,8 +237,8 @@ export default function NewInventoryItemPage() {
             <label className="block text-sm font-medium text-foreground mb-2">Reorder Point</label>
             <input
               type="number"
-              name="reorder_point"
-              value={formData.reorder_point}
+              name="reorderLevel"
+              value={formData.reorderLevel}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -248,8 +250,8 @@ export default function NewInventoryItemPage() {
             <label className="block text-sm font-medium text-foreground mb-2">Maximum Stock</label>
             <input
               type="number"
-              name="maximum_stock"
-              value={formData.maximum_stock}
+              name="maximumStock"
+              value={formData.maximumStock}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -261,8 +263,8 @@ export default function NewInventoryItemPage() {
             <label className="block text-sm font-medium text-foreground mb-2">Unit Price (₹)</label>
             <input
               type="number"
-              name="unit_price"
-              value={formData.unit_price}
+              name="purchasePrice"
+              value={formData.purchasePrice}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -271,11 +273,13 @@ export default function NewInventoryItemPage() {
 
           {/* Selling Price */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Selling Price (₹)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Selling Price (₹)
+            </label>
             <input
               type="number"
-              name="selling_price"
-              value={formData.selling_price}
+              name="sellingPrice"
+              value={formData.sellingPrice}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -287,8 +291,8 @@ export default function NewInventoryItemPage() {
             <label className="block text-sm font-medium text-foreground mb-2">HSN Code</label>
             <input
               type="text"
-              name="hsn_code"
-              value={formData.hsn_code}
+              name="hsnCode"
+              value={formData.hsnCode}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -296,11 +300,13 @@ export default function NewInventoryItemPage() {
 
           {/* Tax Percentage */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Tax Percentage (%)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Tax Percentage (%)
+            </label>
             <input
               type="number"
-              name="tax_percentage"
-              value={formData.tax_percentage}
+              name="taxPercentage"
+              value={formData.taxPercentage}
               onChange={handleChange}
               step="0.01"
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -309,10 +315,12 @@ export default function NewInventoryItemPage() {
 
           {/* Preferred Supplier */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Preferred Supplier</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Preferred Supplier
+            </label>
             <select
-              name="preferred_supplier_id"
-              value={formData.preferred_supplier_id}
+              name="preferredSupplierId"
+              value={formData.preferredSupplierId}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -327,11 +335,13 @@ export default function NewInventoryItemPage() {
 
           {/* Storage Location */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Storage Location</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Storage Location
+            </label>
             <input
               type="text"
-              name="storage_location"
-              value={formData.storage_location}
+              name="storageLocation"
+              value={formData.storageLocation}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g., Shelf A1"
@@ -356,8 +366,8 @@ export default function NewInventoryItemPage() {
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
-              name="requires_expiry_tracking"
-              checked={formData.requires_expiry_tracking}
+              name="expiryTracking"
+              checked={formData.expiryTracking}
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
@@ -367,8 +377,8 @@ export default function NewInventoryItemPage() {
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
-              name="requires_batch_tracking"
-              checked={formData.requires_batch_tracking}
+              name="batchTracking"
+              checked={formData.batchTracking}
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
@@ -378,8 +388,8 @@ export default function NewInventoryItemPage() {
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
-              name="is_active"
-              checked={formData.is_active}
+              name="isActive"
+              checked={formData.isActive}
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
@@ -417,5 +427,5 @@ export default function NewInventoryItemPage() {
         </div>
       </form>
     </div>
-  );
+  )
 }

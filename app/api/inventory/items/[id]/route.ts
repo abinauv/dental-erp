@@ -1,286 +1,253 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import pool from '@/lib/db';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { Prisma, StockAlertType, StockTransactionType } from '@prisma/client'
+
+function stockStatus(currentStock: number, minimumStock: number, reorderLevel: number) {
+  if (currentStock <= 0) return 'out_of_stock'
+  if (currentStock <= minimumStock) return 'low_stock'
+  if (currentStock <= reorderLevel) return 'reorder'
+  return 'sufficient'
+}
 
 // GET - Fetch single inventory item
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
-    const [items] = await pool.execute<RowDataPacket[]>(
-      `SELECT
-        i.*,
-        c.name as category_name,
-        s.name as supplier_name,
-        s.phone as supplier_phone,
-        s.email as supplier_email,
-        CASE
-          WHEN i.current_stock <= 0 THEN 'out_of_stock'
-          WHEN i.current_stock <= i.minimum_stock THEN 'low_stock'
-          WHEN i.current_stock <= i.reorder_point THEN 'reorder'
-          ELSE 'sufficient'
-        END as stock_status,
-        (SELECT COUNT(*) FROM inventory_batches WHERE item_id = i.id) as batch_count,
-        (SELECT SUM(quantity) FROM stock_transactions
-         WHERE item_id = i.id AND transaction_type = 'purchase'
-         AND transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as purchases_last_30_days,
-        (SELECT SUM(quantity) FROM stock_transactions
-         WHERE item_id = i.id AND transaction_type IN ('sale', 'usage')
-         AND transaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as usage_last_30_days
-      FROM inventory_items i
-      LEFT JOIN inventory_categories c ON i.category_id = c.id
-      LEFT JOIN suppliers s ON i.preferred_supplier_id = s.id
-      WHERE i.id = ? AND i.hospital_id = ? AND i.deleted_at IS NULL`,
-      [id, hospitalId]
-    );
+    const item = await prisma.inventoryItem.findFirst({
+      where: { id, hospitalId, deletedAt: null },
+      include: {
+        category: { select: { name: true } },
+        preferredSupplier: { select: { name: true, phone: true, email: true } },
+      },
+    })
 
-    if (items.length === 0) {
-      return NextResponse.json(
-        { error: 'Inventory item not found' },
-        { status: 404 }
-      );
+    if (!item) {
+      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
     }
 
-    // Get batches if batch tracking is enabled
-    let batches: RowDataPacket[] = [];
-    if (items[0].requires_batch_tracking) {
-      const [batchData] = await pool.execute<RowDataPacket[]>(
-        `SELECT b.*, s.name as supplier_name
-         FROM inventory_batches b
-         LEFT JOIN suppliers s ON b.supplier_id = s.id
-         WHERE b.item_id = ?
-         ORDER BY b.expiry_date ASC, b.received_date DESC`,
-        [id]
-      );
-      batches = batchData;
-    }
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    // Get recent transactions
-    const [transactions] = await pool.execute<RowDataPacket[]>(
-      `SELECT
-        st.*,
-        u.name as performed_by_name,
-        s.name as supplier_name
-      FROM stock_transactions st
-      LEFT JOIN users u ON st.performed_by = u.id
-      LEFT JOIN suppliers s ON st.supplier_id = s.id
-      WHERE st.item_id = ?
-      ORDER BY st.transaction_date DESC
-      LIMIT 20`,
-      [id]
-    );
+    const [batchCount, purchases, usage, batches, transactions] = await Promise.all([
+      prisma.inventoryBatch.count({ where: { itemId: id } }),
+      prisma.stockTransaction.aggregate({
+        _sum: { quantity: true },
+        where: {
+          itemId: id,
+          type: StockTransactionType.PURCHASE,
+          transactionDate: { gte: thirtyDaysAgo },
+        },
+      }),
+      prisma.stockTransaction.aggregate({
+        _sum: { quantity: true },
+        where: {
+          itemId: id,
+          // The legacy query counted 'sale' and 'usage'; 'usage' is CONSUMPTION here.
+          type: { in: [StockTransactionType.SALE, StockTransactionType.CONSUMPTION] },
+          transactionDate: { gte: thirtyDaysAgo },
+        },
+      }),
+      item.batchTracking
+        ? prisma.inventoryBatch.findMany({
+            where: { itemId: id },
+            orderBy: [{ expiryDate: 'asc' }, { receivedDate: 'desc' }],
+            include: { supplier: { select: { name: true } } },
+          })
+        : Promise.resolve([]),
+      prisma.stockTransaction.findMany({
+        where: { itemId: id },
+        orderBy: { transactionDate: 'desc' },
+        take: 20,
+        include: { supplier: { select: { name: true } } },
+      }),
+    ])
+
+    // performedBy is a bare user id, so resolve the names in one extra query
+    // rather than a relation the model does not declare.
+    const performerIds = [...new Set(transactions.map((t) => t.performedBy).filter(Boolean))]
+    const performers = performerIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: performerIds as string[] } },
+          select: { id: true, name: true },
+        })
+      : []
+    const performerNames = new Map(performers.map((u) => [u.id, u.name]))
+
+    const { category, preferredSupplier, ...rest } = item
 
     return NextResponse.json({
       success: true,
       data: {
-        ...items[0],
-        batches,
-        recent_transactions: transactions
-      }
-    });
+        ...rest,
+        categoryName: category?.name ?? null,
+        supplierName: preferredSupplier?.name ?? null,
+        supplierPhone: preferredSupplier?.phone ?? null,
+        supplierEmail: preferredSupplier?.email ?? null,
+        stockStatus: stockStatus(item.currentStock, item.minimumStock, item.reorderLevel),
+        batchCount,
+        purchasesLast30Days: purchases._sum.quantity ?? 0,
+        usageLast30Days: usage._sum.quantity ?? 0,
+        batches: batches.map(({ supplier, ...batch }) => ({
+          ...batch,
+          supplierName: supplier?.name ?? null,
+        })),
+        recentTransactions: transactions.map(({ supplier, ...tx }) => ({
+          ...tx,
+          supplierName: supplier?.name ?? null,
+          performedByName: tx.performedBy ? (performerNames.get(tx.performedBy) ?? null) : null,
+        })),
+      },
+    })
   } catch (error: any) {
-    console.error('Error fetching inventory item:', error);
+    console.error('Error fetching inventory item:', error)
     return NextResponse.json(
       { error: 'Failed to fetch inventory item', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
 // PUT - Update inventory item
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const {
-      item_code,
-      name,
-      category_id,
-      item_type,
-      description,
-      unit_of_measurement,
-      minimum_stock,
-      reorder_point,
-      maximum_stock,
-      unit_price,
-      selling_price,
-      hsn_code,
-      tax_percentage,
-      preferred_supplier_id,
-      storage_location,
-      requires_expiry_tracking,
-      requires_batch_tracking,
-      is_active,
-      image_url,
-      notes
-    } = body;
+    const { id } = await params
+    const body = await request.json()
 
-    // Check if item exists
-    const [existing] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM inventory_items WHERE id = ? AND hospital_id = ? AND deleted_at IS NULL',
-      [id, hospitalId]
-    );
+    const existing = await prisma.inventoryItem.findFirst({
+      where: { id, hospitalId, deletedAt: null },
+      select: { id: true, sku: true, currentStock: true, minimumStock: true },
+    })
 
-    if (existing.length === 0) {
-      return NextResponse.json(
-        { error: 'Inventory item not found' },
-        { status: 404 }
-      );
+    if (!existing) {
+      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
     }
 
-    // Check if item_code is being changed and if it conflicts
-    if (item_code && item_code !== existing[0].item_code) {
-      const [duplicate] = await pool.execute<RowDataPacket[]>(
-        'SELECT id FROM inventory_items WHERE item_code = ? AND id != ? AND hospital_id = ? AND deleted_at IS NULL',
-        [item_code, id, hospitalId]
-      );
+    if (body.sku && body.sku !== existing.sku) {
+      const duplicate = await prisma.inventoryItem.findFirst({
+        where: { sku: body.sku, hospitalId, id: { not: id }, deletedAt: null },
+        select: { id: true },
+      })
 
-      if (duplicate.length > 0) {
-        return NextResponse.json(
-          { error: 'Item code already exists' },
-          { status: 409 }
-        );
+      if (duplicate) {
+        return NextResponse.json({ error: 'Item code already exists' }, { status: 409 })
       }
     }
 
-    await pool.execute<ResultSetHeader>(
-      `UPDATE inventory_items SET
-        item_code = COALESCE(?, item_code),
-        name = COALESCE(?, name),
-        category_id = ?,
-        item_type = COALESCE(?, item_type),
-        description = ?,
-        unit_of_measurement = COALESCE(?, unit_of_measurement),
-        minimum_stock = COALESCE(?, minimum_stock),
-        reorder_point = COALESCE(?, reorder_point),
-        maximum_stock = ?,
-        unit_price = COALESCE(?, unit_price),
-        selling_price = COALESCE(?, selling_price),
-        hsn_code = ?,
-        tax_percentage = COALESCE(?, tax_percentage),
-        preferred_supplier_id = ?,
-        storage_location = ?,
-        requires_expiry_tracking = COALESCE(?, requires_expiry_tracking),
-        requires_batch_tracking = COALESCE(?, requires_batch_tracking),
-        is_active = COALESCE(?, is_active),
-        image_url = ?,
-        notes = ?
-      WHERE id = ? AND hospital_id = ?`,
-      [
-        item_code, name, category_id || null, item_type, description || null,
-        unit_of_measurement, minimum_stock, reorder_point, maximum_stock || null,
-        unit_price, selling_price, hsn_code || null, tax_percentage,
-        preferred_supplier_id || null, storage_location || null,
-        requires_expiry_tracking, requires_batch_tracking, is_active,
-        image_url || null, notes || null, id, hospitalId
-      ]
-    );
+    // Nullable columns were unconditionally overwritten by the old UPDATE;
+    // the COALESCE'd ones were left alone when absent.
+    const data: Prisma.InventoryItemUpdateInput = {
+      description: body.description ?? null,
+      maximumStock: body.maximumStock ?? null,
+      hsnCode: body.hsnCode ?? null,
+      storageLocation: body.storageLocation ?? null,
+      imageUrl: body.imageUrl ?? null,
+      notes: body.notes ?? null,
+    }
 
-    // Check if stock alert needs to be created/updated
-    const updatedMinStock = minimum_stock ?? existing[0].minimum_stock;
-    const currentStock = existing[0].current_stock;
+    if (body.sku != null) data.sku = body.sku
+    if (body.name != null) data.name = body.name
+    if (body.itemType != null) data.itemType = body.itemType
+    if (body.unit != null) data.unit = body.unit
+    if (body.minimumStock != null) data.minimumStock = body.minimumStock
+    if (body.reorderLevel != null) data.reorderLevel = body.reorderLevel
+    if (body.purchasePrice != null) data.purchasePrice = body.purchasePrice
+    if (body.sellingPrice != null) data.sellingPrice = body.sellingPrice
+    if (body.taxPercentage != null) data.taxPercentage = body.taxPercentage
+    if (body.expiryTracking != null) data.expiryTracking = body.expiryTracking
+    if (body.batchTracking != null) data.batchTracking = body.batchTracking
+    if (body.isActive != null) data.isActive = body.isActive
+
+    data.category = body.categoryId ? { connect: { id: body.categoryId } } : { disconnect: true }
+    data.preferredSupplier = body.preferredSupplierId
+      ? { connect: { id: body.preferredSupplierId } }
+      : { disconnect: true }
+
+    await prisma.inventoryItem.update({ where: { id }, data })
+
+    // Raise a stock alert if the new minimum puts the item at or below it.
+    const updatedMinStock = body.minimumStock ?? existing.minimumStock
+    const currentStock = existing.currentStock
 
     if (currentStock <= updatedMinStock) {
-      const alertType = currentStock <= 0 ? 'out_of_stock' : 'low_stock';
+      const alertType = currentStock <= 0 ? StockAlertType.OUT_OF_STOCK : StockAlertType.LOW_STOCK
 
-      // Check if alert already exists
-      const [existingAlert] = await pool.execute<RowDataPacket[]>(
-        `SELECT id FROM stock_alerts
-         WHERE item_id = ? AND alert_type = ? AND is_acknowledged = FALSE`,
-        [id, alertType]
-      );
+      const openAlert = await prisma.stockAlert.findFirst({
+        where: { itemId: id, alertType, isAcknowledged: false },
+        select: { id: true },
+      })
 
-      if (existingAlert.length === 0) {
-        await pool.execute(
-          `INSERT INTO stock_alerts (item_id, alert_type, alert_date, hospital_id)
-           VALUES (?, ?, CURDATE(), ?)`,
-          [id, alertType, hospitalId]
-        );
+      if (!openAlert) {
+        await prisma.stockAlert.create({
+          data: { hospitalId, itemId: id, alertType },
+        })
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Inventory item updated successfully'
-    });
+    return NextResponse.json({ success: true, message: 'Inventory item updated successfully' })
   } catch (error: any) {
-    console.error('Error updating inventory item:', error);
+    console.error('Error updating inventory item:', error)
     return NextResponse.json(
       { error: 'Failed to update inventory item', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
-// DELETE - Soft delete inventory item
+// DELETE - Soft delete when the item has transaction history, hard delete otherwise
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
-    // Check if item exists
-    const [existing] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM inventory_items WHERE id = ? AND hospital_id = ? AND deleted_at IS NULL',
-      [id, hospitalId]
-    );
+    const existing = await prisma.inventoryItem.findFirst({
+      where: { id, hospitalId, deletedAt: null },
+      select: { id: true },
+    })
 
-    if (existing.length === 0) {
-      return NextResponse.json(
-        { error: 'Inventory item not found' },
-        { status: 404 }
-      );
+    if (!existing) {
+      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
     }
 
-    // Check if item has been used in transactions
-    const [transactions] = await pool.execute<RowDataPacket[]>(
-      'SELECT COUNT(*) as count FROM stock_transactions WHERE item_id = ?',
-      [id]
-    );
+    const transactionCount = await prisma.stockTransaction.count({ where: { itemId: id } })
 
-    if (transactions[0].count > 0) {
-      // Soft delete if has transaction history
-      await pool.execute(
-        'UPDATE inventory_items SET deleted_at = NOW(), is_active = FALSE WHERE id = ? AND hospital_id = ?',
-        [id, hospitalId]
-      );
+    if (transactionCount > 0) {
+      await prisma.inventoryItem.update({
+        where: { id },
+        data: { deletedAt: new Date(), isActive: false },
+      })
     } else {
-      // Hard delete if no transaction history
-      await pool.execute('DELETE FROM inventory_items WHERE id = ? AND hospital_id = ?', [id, hospitalId]);
+      // Alerts cascade; batches would block the delete, so clear them first.
+      await prisma.$transaction([
+        prisma.inventoryBatch.deleteMany({ where: { itemId: id } }),
+        prisma.inventoryItem.delete({ where: { id } }),
+      ])
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Inventory item deleted successfully'
-    });
+    return NextResponse.json({ success: true, message: 'Inventory item deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting inventory item:', error);
+    console.error('Error deleting inventory item:', error)
     return NextResponse.json(
       { error: 'Failed to delete inventory item', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }

@@ -1,259 +1,267 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import pool from '@/lib/db';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { Prisma, StockAlertType, StockTransactionType } from '@prisma/client'
+
+const TRANSACTION_TYPES = Object.values(StockTransactionType) as string[]
+
+/**
+ * Which way each transaction type moves stock.
+ *
+ * RETURNED subtracts: in the legacy switch 'return' sat with sale/usage/wastage,
+ * i.e. stock going back to the supplier rather than coming back from a patient.
+ * TRANSFERRED is net-neutral - it moves stock between fromLocation and
+ * toLocation without changing the total on hand.
+ */
+const INBOUND: StockTransactionType[] = [
+  StockTransactionType.PURCHASE,
+  StockTransactionType.ADJUSTMENT_IN,
+]
+const OUTBOUND: StockTransactionType[] = [
+  StockTransactionType.SALE,
+  StockTransactionType.ADJUSTMENT_OUT,
+  StockTransactionType.DAMAGED,
+  StockTransactionType.EXPIRED,
+  StockTransactionType.RETURNED,
+  StockTransactionType.CONSUMPTION,
+]
+
+function parseType(value: unknown): StockTransactionType | null {
+  if (typeof value !== 'string') return null
+  const upper = value.toUpperCase()
+  return TRANSACTION_TYPES.includes(upper) ? (upper as StockTransactionType) : null
+}
 
 // GET - Fetch stock transactions
 export async function GET(request: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const itemId = searchParams.get('itemId');
-    const transactionType = searchParams.get('type');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = (page - 1) * limit;
+    const searchParams = request.nextUrl.searchParams
+    const itemId = searchParams.get('itemId')
+    const transactionType = parseType(searchParams.get('type'))
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
-    let query = `
-      SELECT
-        st.*,
-        i.name as item_name,
-        i.item_code,
-        u.name as performed_by_name,
-        s.name as supplier_name,
-        b.batch_number
-      FROM stock_transactions st
-      INNER JOIN inventory_items i ON st.item_id = i.id
-      LEFT JOIN users u ON st.performed_by = u.id
-      LEFT JOIN suppliers s ON st.supplier_id = s.id
-      LEFT JOIN inventory_batches b ON st.batch_id = b.id
-      WHERE i.hospital_id = ?
-    `;
+    const where: Prisma.StockTransactionWhereInput = { hospitalId }
 
-    const params: any[] = [hospitalId];
+    if (itemId) where.itemId = itemId
+    if (transactionType) where.type = transactionType
 
-    if (itemId) {
-      query += ` AND st.item_id = ?`;
-      params.push(itemId);
+    if (startDate || endDate) {
+      where.transactionDate = {
+        ...(startDate ? { gte: new Date(startDate) } : {}),
+        ...(endDate ? { lte: new Date(endDate) } : {}),
+      }
     }
 
-    if (transactionType) {
-      query += ` AND st.transaction_type = ?`;
-      params.push(transactionType);
-    }
+    const [total, transactions] = await Promise.all([
+      prisma.stockTransaction.count({ where }),
+      prisma.stockTransaction.findMany({
+        where,
+        orderBy: [{ transactionDate: 'desc' }, { createdAt: 'desc' }],
+        skip,
+        take: limit,
+        include: {
+          item: { select: { name: true, sku: true } },
+          supplier: { select: { name: true } },
+          batch: { select: { batchNumber: true } },
+        },
+      }),
+    ])
 
-    if (startDate) {
-      query += ` AND st.transaction_date >= ?`;
-      params.push(startDate);
-    }
-
-    if (endDate) {
-      query += ` AND st.transaction_date <= ?`;
-      params.push(endDate);
-    }
-
-    // Get total count
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM');
-    const [countResult] = await pool.execute<RowDataPacket[]>(countQuery, params);
-    const total = countResult[0].total;
-
-    // Add pagination
-    query += ` ORDER BY st.transaction_date DESC, st.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
-
-    const [transactions] = await pool.execute<RowDataPacket[]>(query, params);
+    // performedBy is a bare user id, so resolve names in one extra query.
+    const performerIds = [...new Set(transactions.map((t) => t.performedBy).filter(Boolean))]
+    const performers = performerIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: performerIds as string[] } },
+          select: { id: true, name: true },
+        })
+      : []
+    const performerNames = new Map(performers.map((u) => [u.id, u.name]))
 
     return NextResponse.json({
       success: true,
-      data: transactions,
+      data: transactions.map(({ item, supplier, batch, ...tx }) => ({
+        ...tx,
+        itemName: item.name,
+        sku: item.sku,
+        supplierName: supplier?.name ?? null,
+        batchNumber: batch?.batchNumber ?? tx.batchNumber ?? null,
+        performedByName: tx.performedBy ? (performerNames.get(tx.performedBy) ?? null) : null,
+      })),
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+        pages: Math.ceil(total / limit),
+      },
+    })
   } catch (error: any) {
-    console.error('Error fetching stock transactions:', error);
+    console.error('Error fetching stock transactions:', error)
     return NextResponse.json(
       { error: 'Failed to fetch stock transactions', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
 // POST - Create stock transaction (adjustment, usage, wastage, etc.)
 export async function POST(request: NextRequest) {
-  const { error, hospitalId, session } = await requireAuthAndRole();
+  const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const connection = await pool.getConnection();
-
   try {
-    const body = await request.json();
+    const body = await request.json()
     const {
-      transaction_type,
-      item_id,
-      batch_id,
+      itemId,
+      batchId,
       quantity,
-      unit_price,
-      transaction_date,
-      reference_type,
-      reference_id,
-      from_location,
-      to_location,
-      supplier_id,
-      notes
-    } = body;
+      unitPrice,
+      transactionDate,
+      referenceType,
+      referenceId,
+      fromLocation,
+      toLocation,
+      supplierId,
+      notes,
+    } = body
 
-    // Validation
-    if (!transaction_type || !item_id || !quantity || !transaction_date) {
+    const type = parseType(body.type)
+
+    if (!type || !itemId || !quantity || !transactionDate) {
       return NextResponse.json(
-        { error: 'Missing required fields: transaction_type, item_id, quantity, transaction_date' },
+        { error: 'Missing required fields: type, itemId, quantity, transactionDate' },
         { status: 400 }
-      );
+      )
     }
 
-    await connection.beginTransaction();
-
-    // Get current item details (verify it belongs to this hospital)
-    const [items] = await connection.execute<RowDataPacket[]>(
-      'SELECT * FROM inventory_items WHERE id = ? AND hospital_id = ? AND deleted_at IS NULL FOR UPDATE',
-      [item_id, hospitalId]
-    );
-
-    if (items.length === 0) {
-      await connection.rollback();
+    if (!Number.isInteger(quantity) || quantity <= 0) {
       return NextResponse.json(
-        { error: 'Inventory item not found' },
-        { status: 404 }
-      );
+        { error: 'quantity must be a positive whole number' },
+        { status: 400 }
+      )
     }
 
-    const item = items[0];
-    let newStock = parseFloat(item.current_stock);
-    const transactionQuantity = parseFloat(quantity);
+    const result = await prisma.$transaction(async (tx) => {
+      const item = await tx.inventoryItem.findFirst({
+        where: { id: itemId, hospitalId, deletedAt: null },
+        select: {
+          id: true,
+          currentStock: true,
+          minimumStock: true,
+          purchasePrice: true,
+        },
+      })
 
-    // Calculate new stock based on transaction type
-    switch (transaction_type) {
-      case 'purchase':
-      case 'adjustment':
-      case 'opening_stock':
-        newStock += transactionQuantity;
-        break;
-      case 'sale':
-      case 'usage':
-      case 'wastage':
-      case 'return':
-        newStock -= transactionQuantity;
-        if (newStock < 0) {
-          await connection.rollback();
-          return NextResponse.json(
-            { error: 'Insufficient stock for this transaction' },
-            { status: 400 }
-          );
-        }
-        break;
-      default:
-        await connection.rollback();
-        return NextResponse.json(
-          { error: 'Invalid transaction type' },
-          { status: 400 }
-        );
-    }
-
-    // Calculate total amount
-    const transactionUnitPrice = unit_price || item.unit_price;
-    const totalAmount = transactionQuantity * transactionUnitPrice;
-
-    // Insert transaction
-    const [result] = await connection.execute<ResultSetHeader>(
-      `INSERT INTO stock_transactions (
-        transaction_type, item_id, batch_id, quantity, unit_price, total_amount,
-        transaction_date, reference_type, reference_id, from_location, to_location,
-        supplier_id, performed_by, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        transaction_type, item_id, batch_id || null, quantity, transactionUnitPrice,
-        totalAmount, transaction_date, reference_type || null, reference_id || null,
-        from_location || null, to_location || null, supplier_id || null,
-        session?.user?.id, notes || null
-      ]
-    );
-
-    // Update item stock
-    await connection.execute(
-      'UPDATE inventory_items SET current_stock = ? WHERE id = ?',
-      [newStock, item_id]
-    );
-
-    // Update batch quantity if batch_id is provided
-    if (batch_id) {
-      const batchQuantityChange = ['sale', 'usage', 'wastage', 'return'].includes(transaction_type)
-        ? -transactionQuantity
-        : transactionQuantity;
-
-      await connection.execute(
-        'UPDATE inventory_batches SET remaining_quantity = remaining_quantity + ? WHERE id = ?',
-        [batchQuantityChange, batch_id]
-      );
-    }
-
-    // Create stock alert if necessary
-    if (newStock <= item.minimum_stock) {
-      const alertType = newStock <= 0 ? 'out_of_stock' : 'low_stock';
-
-      // Check if alert already exists
-      const [existingAlert] = await connection.execute<RowDataPacket[]>(
-        `SELECT id FROM stock_alerts
-         WHERE item_id = ? AND alert_type = ? AND is_acknowledged = FALSE`,
-        [item_id, alertType]
-      );
-
-      if (existingAlert.length === 0) {
-        await connection.execute(
-          `INSERT INTO stock_alerts (item_id, alert_type, alert_date)
-           VALUES (?, ?, CURDATE())`,
-          [item_id, alertType]
-        );
+      if (!item) {
+        return { status: 404 as const, error: 'Inventory item not found' }
       }
-    } else {
-      // Remove low stock alerts if stock is now sufficient
-      await connection.execute(
-        `DELETE FROM stock_alerts
-         WHERE item_id = ? AND alert_type IN ('low_stock', 'out_of_stock') AND is_acknowledged = FALSE`,
-        [item_id]
-      );
+
+      const previousStock = item.currentStock
+      let newStock = previousStock
+
+      if (INBOUND.includes(type)) newStock += quantity
+      else if (OUTBOUND.includes(type)) newStock -= quantity
+      // TRANSFERRED leaves the total unchanged.
+
+      if (newStock < 0) {
+        return { status: 400 as const, error: 'Insufficient stock for this transaction' }
+      }
+
+      const effectiveUnitPrice = unitPrice ?? Number(item.purchasePrice)
+
+      const created = await tx.stockTransaction.create({
+        data: {
+          hospitalId,
+          itemId,
+          batchId: batchId || null,
+          type,
+          quantity,
+          previousStock,
+          newStock,
+          unitPrice: effectiveUnitPrice,
+          totalPrice: quantity * effectiveUnitPrice,
+          transactionDate: new Date(transactionDate),
+          referenceType: referenceType || null,
+          referenceId: referenceId || null,
+          fromLocation: fromLocation || null,
+          toLocation: toLocation || null,
+          supplierId: supplierId || null,
+          performedBy: session?.user?.id ?? null,
+          notes: notes || null,
+        },
+        select: { id: true },
+      })
+
+      await tx.inventoryItem.update({
+        where: { id: itemId },
+        data: { currentStock: newStock },
+      })
+
+      if (batchId) {
+        await tx.inventoryBatch.update({
+          where: { id: batchId },
+          data: {
+            remainingQty: OUTBOUND.includes(type)
+              ? { decrement: quantity }
+              : { increment: quantity },
+          },
+        })
+      }
+
+      if (newStock <= item.minimumStock) {
+        const alertType = newStock <= 0 ? StockAlertType.OUT_OF_STOCK : StockAlertType.LOW_STOCK
+
+        const openAlert = await tx.stockAlert.findFirst({
+          where: { itemId, alertType, isAcknowledged: false },
+          select: { id: true },
+        })
+
+        if (!openAlert) {
+          await tx.stockAlert.create({ data: { hospitalId, itemId, alertType } })
+        }
+      } else {
+        // Stock is healthy again - clear the open shortage alerts.
+        await tx.stockAlert.deleteMany({
+          where: {
+            itemId,
+            alertType: { in: [StockAlertType.LOW_STOCK, StockAlertType.OUT_OF_STOCK] },
+            isAcknowledged: false,
+          },
+        })
+      }
+
+      return { status: 201 as const, id: created.id, newStock }
+    })
+
+    if ('error' in result) {
+      return NextResponse.json({ error: result.error }, { status: result.status })
     }
 
-    await connection.commit();
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result.insertId,
-        new_stock: newStock
+    return NextResponse.json(
+      {
+        success: true,
+        data: { id: result.id, newStock: result.newStock },
+        message: 'Stock transaction recorded successfully',
       },
-      message: 'Stock transaction recorded successfully'
-    }, { status: 201 });
+      { status: 201 }
+    )
   } catch (error: any) {
-    await connection.rollback();
-    console.error('Error creating stock transaction:', error);
+    console.error('Error creating stock transaction:', error)
     return NextResponse.json(
       { error: 'Failed to create stock transaction', details: error.message },
       { status: 500 }
-    );
-  } finally {
-    connection.release();
+    )
   }
 }
