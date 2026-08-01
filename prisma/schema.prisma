@@ -77,6 +77,7 @@ model Hospital {
   inventoryItems      InventoryItem[]
   inventoryBatches    InventoryBatch[]
   stockTransactions   StockTransaction[]
+  stockAlerts         StockAlert[]
   suppliers           Supplier[]
   purchaseOrders      PurchaseOrder[]
   labVendors          LabVendor[]
@@ -216,6 +217,9 @@ model User {
   calendarIntegrations CalendarIntegration[]
   pushDevices     PushDevice[]
   dataImportJobs  DataImportJob[]
+  acknowledgedStockAlerts StockAlert[]
+  labOrderStatusChanges   LabOrderHistory[]
+  uploadedLabOrderDocuments LabOrderDocument[]
 
   @@index([email])
   @@index([role])
@@ -1330,6 +1334,11 @@ model InventoryItem {
   name            String
   categoryId      String?
   description     String?   @db.Text
+  itemType        InventoryItemType @default(DENTAL_MATERIAL)
+  // Single "preferred supplier" pointer used by the item form and the
+  // suppliers list's items-supplied count. Distinct from SupplierItem, which
+  // records every supplier that stocks an item along with their SKU/price.
+  preferredSupplierId String?
 
   unit            String
   currentStock    Int       @default(0)
@@ -1339,6 +1348,11 @@ model InventoryItem {
 
   purchasePrice   Decimal   @db.Decimal(10, 2)
   sellingPrice    Decimal?  @db.Decimal(10, 2)
+  hsnCode         String?
+  taxPercentage   Decimal?  @db.Decimal(5, 2)
+
+  imageUrl        String?
+  notes           String?   @db.Text
 
   manufacturer    String?
   batchTracking   Boolean   @default(false)
@@ -1350,17 +1364,32 @@ model InventoryItem {
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   hospital        Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   category        InventoryCategory? @relation(fields: [categoryId], references: [id])
+  preferredSupplier Supplier? @relation("PreferredSupplierItems", fields: [preferredSupplierId], references: [id])
   stockTransactions StockTransaction[]
   batches         InventoryBatch[]
   supplierItems   SupplierItem[]
+  alerts          StockAlert[]
 
   @@unique([hospitalId, sku])
   @@index([hospitalId])
   @@index([name])
   @@index([currentStock])
+  @@index([deletedAt])
+  @@index([itemType])
+  @@index([preferredSupplierId])
+}
+
+enum InventoryItemType {
+  DENTAL_MATERIAL
+  INSTRUMENT
+  CONSUMABLE
+  MEDICINE
+  OFFICE_SUPPLY
+  EQUIPMENT
 }
 
 model InventoryBatch {
@@ -1381,6 +1410,7 @@ model InventoryBatch {
   hospital        Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   item            InventoryItem @relation(fields: [itemId], references: [id])
   supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  stockTransactions StockTransaction[]
 
   @@index([hospitalId])
   @@index([itemId])
@@ -1397,8 +1427,15 @@ model StockTransaction {
   newStock        Int
   batchNumber     String?
 
+  batchId         String?
+  supplierId      String?
+
   referenceType   String?
   referenceId     String?
+
+  // Where stock moved between, for transfer transactions.
+  fromLocation    String?
+  toLocation      String?
 
   unitPrice       Decimal?             @db.Decimal(10, 2)
   totalPrice      Decimal?             @db.Decimal(10, 2)
@@ -1406,15 +1443,23 @@ model StockTransaction {
   notes           String?
   performedBy     String?
 
+  // When the movement happened, which is not always when the row was written
+  // (back-dated stock takes, delayed goods-receipt entry).
+  transactionDate DateTime             @default(now())
   createdAt       DateTime             @default(now())
 
   hospital        Hospital             @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   item            InventoryItem        @relation(fields: [itemId], references: [id])
+  batch           InventoryBatch?      @relation(fields: [batchId], references: [id])
+  supplier        Supplier?            @relation(fields: [supplierId], references: [id])
 
   @@index([hospitalId])
   @@index([itemId])
   @@index([createdAt])
+  @@index([transactionDate])
   @@index([type])
+  @@index([batchId])
+  @@index([supplierId])
 }
 
 enum StockTransactionType {
@@ -1447,20 +1492,37 @@ model Supplier {
   bankAccountNo   String?
   bankIfsc        String?
   paymentTerms    String?
+  creditLimit     Decimal?  @db.Decimal(12, 2)
+  notes           String?   @db.Text
   rating          Int?      @default(0)
   isActive        Boolean   @default(true)
+  // Three-state lifecycle carried over from the legacy `suppliers.status`
+  // column. isActive is kept for backwards compatibility and mirrors
+  // status != BLOCKED/INACTIVE.
+  status          SupplierStatus @default(ACTIVE)
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   hospital        Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   purchaseOrders  PurchaseOrder[]
   batches         InventoryBatch[]
   supplierItems   SupplierItem[]
+  preferredForItems InventoryItem[] @relation("PreferredSupplierItems")
+  stockTransactions StockTransaction[]
 
   @@unique([hospitalId, code])
   @@index([hospitalId])
   @@index([name])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
 }
 
 model SupplierItem {
@@ -1500,6 +1562,7 @@ model PurchaseOrder {
 
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
 
   hospital        Hospital            @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   supplier        Supplier            @relation(fields: [supplierId], references: [id])
@@ -1510,6 +1573,7 @@ model PurchaseOrder {
   @@index([supplierId])
   @@index([status])
   @@index([orderDate])
+  @@index([deletedAt])
 }
 
 model PurchaseOrderItem {
@@ -1537,28 +1601,88 @@ enum PurchaseOrderStatus {
   CANCELLED
 }
 
+/// Low-stock / expiry alerts raised against an inventory item.
+/// Replaces the legacy `stock_alerts` table that app/api/inventory/alerts
+/// queried directly; that table was never part of this schema, so the route
+/// only ever worked on machines where the out-of-repo inventory SQL had been
+/// applied by hand.
+model StockAlert {
+  id              String         @id @default(cuid())
+  hospitalId      String
+  itemId          String
+
+  alertType       StockAlertType
+  alertDate       DateTime       @default(now())
+
+  isAcknowledged  Boolean        @default(false)
+  acknowledgedBy  String?
+  acknowledgedAt  DateTime?
+
+  notes           String?        @db.Text
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  hospital        Hospital       @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  item            InventoryItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  acknowledgedByUser User?       @relation(fields: [acknowledgedBy], references: [id])
+
+  @@index([hospitalId])
+  @@index([itemId])
+  @@index([alertType])
+  @@index([isAcknowledged])
+  @@index([alertDate])
+}
+
+enum StockAlertType {
+  OUT_OF_STOCK
+  LOW_STOCK
+  EXPIRING_SOON
+  EXPIRED
+}
+
 // ==================== LAB WORK MANAGEMENT ====================
 
 model LabVendor {
   id              String    @id @default(cuid())
   hospitalId      String
+  code            String?
   name            String
   contactPerson   String?
   phone           String
+  alternatePhone  String?
   email           String?
   address         String?   @db.Text
+  city            String?
+  state           String?
+  pincode         String?
+  gstNumber       String?
+  panNumber       String?
   specializations String?   @db.Text
   avgTurnaround   Int?
   rating          Int?      @default(0)
+  paymentTerms    String?
+  creditLimit     Decimal?  @db.Decimal(12, 2)
+  notes           String?   @db.Text
   isActive        Boolean   @default(true)
+  status          LabVendorStatus @default(ACTIVE)
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   hospital        Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   labOrders       LabOrder[]
 
   @@index([hospitalId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+enum LabVendorStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
 }
 
 model LabOrder {
@@ -1583,23 +1707,72 @@ model LabOrder {
   actualCost      Decimal?       @db.Decimal(10, 2)
 
   status          LabOrderStatus @default(CREATED)
+  priority        LabOrderPriority @default(NORMAL)
   qualityCheck    QualityCheckStatus?
   qualityNotes    String?
 
   notes           String?        @db.Text
+  specialInstructions String?    @db.Text
+  createdBy       String?
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
 
   hospital        Hospital       @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   patient         Patient        @relation(fields: [patientId], references: [id])
   labVendor       LabVendor      @relation(fields: [labVendorId], references: [id])
+  history         LabOrderHistory[]
+  documents       LabOrderDocument[]
 
   @@unique([hospitalId, orderNumber])
   @@index([hospitalId])
   @@index([patientId])
   @@index([status])
   @@index([orderDate])
+  @@index([deletedAt])
+}
+
+/// Status-transition audit trail for a lab order. Replaces the legacy
+/// `lab_order_history` table written by app/api/lab-orders/[id]/status.
+model LabOrderHistory {
+  id              String          @id @default(cuid())
+  labOrderId      String
+
+  statusFrom      LabOrderStatus?
+  statusTo        LabOrderStatus
+  changedBy       String?
+  notes           String?         @db.Text
+
+  createdAt       DateTime        @default(now())
+
+  labOrder        LabOrder        @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
+  changedByUser   User?           @relation(fields: [changedBy], references: [id])
+
+  @@index([labOrderId])
+  @@index([createdAt])
+}
+
+/// Files attached to a lab order (scans, prescriptions, shade photos).
+/// Replaces the legacy `lab_order_documents` table.
+model LabOrderDocument {
+  id              String    @id @default(cuid())
+  labOrderId      String
+
+  fileName        String
+  fileUrl         String
+  fileType        String?
+  fileSize        Int?
+  documentType    String?
+  uploadedBy      String?
+
+  createdAt       DateTime  @default(now())
+
+  labOrder        LabOrder  @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
+  uploadedByUser  User?     @relation(fields: [uploadedBy], references: [id])
+
+  @@index([labOrderId])
+  @@index([createdAt])
 }
 
 enum LabWorkType {
@@ -1615,6 +1788,11 @@ enum LabWorkType {
   ALIGNER
   MODEL
   OTHER
+}
+
+enum LabOrderPriority {
+  NORMAL
+  URGENT
 }
 
 enum LabOrderStatus {
