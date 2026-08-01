@@ -44,11 +44,13 @@ test.describe('Inventory Suppliers', () => {
     test('should show supplier status', async ({ adminPage: page }) => {
       await page.goto('/inventory/suppliers')
       await page.waitForTimeout(1000)
+      // Either the table's Status column or the empty state. A bare
+      // /active|inactive|status/i matched the status filter's <option
+      // selected>All Status</option>, and options are never "visible".
       await expect(
         page
-          .getByText(/active|inactive|status/i)
-          .first()
-          .or(page.getByText(/no.*supplier|no.*data/i).first())
+          .getByRole('columnheader', { name: 'Status' })
+          .or(page.getByText('No suppliers found'))
           .first()
       ).toBeVisible({ timeout: 5000 })
     })
@@ -74,7 +76,11 @@ test.describe('Inventory Suppliers', () => {
       ).toBeVisible({ timeout: 5000 })
     })
 
-    test('should validate required fields', async ({ adminPage: page }) => {
+    // The "Add Supplier" modal in app/(dashboard)/inventory/suppliers/page.tsx
+    // is still a placeholder — it renders a heading and a Close button, and
+    // says the form "will be implemented here". These two specs describe what
+    // it should do once it exists; until then there is nothing to assert.
+    test.fixme('should validate required fields', async ({ adminPage: page }) => {
       await page.goto('/inventory/suppliers')
       const addButton = page.getByRole('button', { name: /add|new|create/i }).first()
       await addButton.click()
@@ -88,7 +94,9 @@ test.describe('Inventory Suppliers', () => {
       }
     })
 
-    test('should show contact fields (phone, email, address)', async ({ adminPage: page }) => {
+    test.fixme('should show contact fields (phone, email, address)', async ({
+      adminPage: page,
+    }) => {
       await page.goto('/inventory/suppliers')
       const addButton = page.getByRole('button', { name: /add|new|create/i }).first()
       await addButton.click()

@@ -4,10 +4,9 @@ test.describe('Billing & Invoices', () => {
   test.describe('Billing Dashboard', () => {
     test('should display billing page with summary cards', async ({ adminPage: page }) => {
       await page.goto('/billing')
-      // Scoped to <main> — the sidebar has matching section headings.
-      await expect(
-        page.getByRole('main').getByRole('heading', { name: /billing|invoice/i })
-      ).toBeVisible()
+      // Exact title — /billing|invoice/i also matches the "Invoice Status"
+      // summary card heading.
+      await expect(page.getByRole('heading', { name: 'Billing & Finance' })).toBeVisible()
       // Summary metrics should be visible
       await expect(
         page.getByText(/total|revenue|billed|collected|outstanding/i).first()
@@ -68,13 +67,10 @@ test.describe('Billing & Invoices', () => {
       await newButton.click()
       await page.waitForTimeout(500)
 
-      const submitButton = page.getByRole('button', { name: /save|create|submit|generate/i })
-      if (await submitButton.isVisible()) {
-        await submitButton.click()
-        await expect(
-          page.getByText(/required|select.*patient|patient.*required/i).first()
-        ).toBeVisible({ timeout: 5000 })
-      }
+      // The form gates submission by disabling the action until a patient is
+      // chosen — that is the validation. Clicking a disabled button just hangs
+      // until the test times out, so assert the disabled state directly.
+      await expect(page.getByRole('button', { name: 'Create & Send Invoice' })).toBeDisabled()
     })
 
     test('should show GST calculation', async ({ adminPage: page }) => {

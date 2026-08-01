@@ -41,7 +41,11 @@ test.describe('Public Booking', () => {
       await expect(stepIndicator.or(page.locator('body')).first()).toBeVisible()
     })
 
-    test('should show date selection after choosing doctor', async ({ page }) => {
+    // Needs a portal-authenticated patient. /portal/book loads its doctor list
+    // from /api/patient-portal/doctors, which resolves the hospital from the
+    // patient session; unauthenticated it renders "No doctors available for
+    // booking", so there is no doctor to choose and step 2 is unreachable.
+    test.fixme('should show date selection after choosing doctor', async ({ page }) => {
       await page.goto('/portal/book')
       await page.waitForTimeout(2000)
       // Click first available doctor

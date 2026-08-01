@@ -1,29 +1,15 @@
 import { test, expect } from './fixtures/auth'
+import { openFirstPatientDetail } from './fixtures/patients'
 
 test.describe('Patient Documents', () => {
   test.describe('Documents Tab Navigation', () => {
     test('should navigate to documents tab on patient detail', async ({ adminPage: page }) => {
-      await page.goto('/patients')
-      await page.waitForTimeout(1000)
+      await openFirstPatientDetail(page)
 
-      // Click on first patient to view details
-      const patientLink = page.locator('a[href*="/patients/"]').first()
-      if (await patientLink.isVisible()) {
-        await patientLink.click()
-        await page.waitForTimeout(1000)
-
-        // Click documents tab
-        const documentsTab = page
-          .getByRole('tab', { name: /document/i })
-          .or(page.getByText(/documents/i).first())
-          .first()
-        await expect(documentsTab).toBeVisible({ timeout: 5000 })
-        await documentsTab.click()
-        await page.waitForTimeout(500)
-
-        // Documents section should be visible
-        await expect(page.locator('body')).toBeVisible()
-      }
+      const documentsTab = page.getByRole('tab', { name: /document/i })
+      await expect(documentsTab).toBeVisible({ timeout: 5000 })
+      await documentsTab.click()
+      await expect(documentsTab).toHaveAttribute('data-state', 'active')
     })
 
     test('should show upload button in documents tab', async ({ adminPage: page }) => {

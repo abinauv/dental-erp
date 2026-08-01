@@ -72,13 +72,10 @@ test.describe('Payment Plans (EMI)', () => {
     test('should require invoice or amount', async ({ adminPage: page }) => {
       await page.goto('/billing/payment-plans/new')
       await page.waitForTimeout(1000)
-      const submitBtn = page.getByRole('button', { name: /save|create|submit/i })
-      if (await submitBtn.isVisible()) {
-        await submitBtn.click()
-        await expect(page.getByText(/required|select|enter/i).first()).toBeVisible({
-          timeout: 5000,
-        })
-      }
+      // Submission is gated by disabling the action until an invoice or amount
+      // is supplied. Clicking a disabled button hangs until the test times
+      // out, so assert the disabled state directly.
+      await expect(page.getByRole('button', { name: 'Create Payment Plan' })).toBeDisabled()
     })
 
     test('should show installment configuration fields', async ({ adminPage: page }) => {

@@ -4,7 +4,9 @@ test.describe('Settings', () => {
   test.describe('Settings Page', () => {
     test('should display settings page with categories', async ({ adminPage: page }) => {
       await page.goto('/settings')
-      await expect(page.getByRole('heading', { name: /setting/i })).toBeVisible()
+      // Exact title — /setting/i also matches all six category card headings
+      // ("Appointment Settings", "Billing Settings", ...).
+      await expect(page.getByRole('heading', { name: 'Settings & Configuration' })).toBeVisible()
       // Should show settings categories
       await expect(page.getByText(/clinic|billing|communication|security/i).first()).toBeVisible()
     })
@@ -33,13 +35,10 @@ test.describe('Settings', () => {
     test('should display clinic form fields', async ({ adminPage: page }) => {
       await page.goto('/settings/clinic')
       await page.waitForTimeout(1000)
-      // Clinic settings fields
-      await expect(
-        page
-          .getByLabel(/name|website|gst|phone|address/i)
-          .or(page.locator('input').first())
-          .first()
-      ).toBeVisible({ timeout: 10000 })
+      // Assert a real labelled field. The old `.or(locator('input').first())`
+      // fallback matched the logo uploader's hidden file input, which is never
+      // visible, so the assertion could only fail.
+      await expect(page.getByLabel(/clinic name/i)).toBeVisible({ timeout: 10000 })
     })
 
     test('should save clinic settings', async ({ adminPage: page }) => {

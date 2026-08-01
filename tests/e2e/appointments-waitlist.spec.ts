@@ -75,13 +75,10 @@ test.describe('Appointment Waitlist', () => {
       const addButton = page.getByRole('button', { name: /add|new|create/i }).first()
       await addButton.click()
       await page.waitForTimeout(500)
-      const submitBtn = page.getByRole('button', { name: /save|add|submit/i })
-      if (await submitBtn.isVisible()) {
-        await submitBtn.click()
-        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({
-          timeout: 5000,
-        })
-      }
+      // Submission is gated by disabling "Add to Waitlist" until a patient is
+      // selected. Clicking a disabled button hangs until the test times out,
+      // so assert the disabled state directly.
+      await expect(page.getByRole('button', { name: 'Add to Waitlist' })).toBeDisabled()
     })
 
     test('should show preferred day and time fields', async ({ adminPage: page }) => {

@@ -83,12 +83,11 @@ test.describe('Staff Leave Management', () => {
       const applyBtn = page.getByRole('button', { name: /apply|request|new|add/i }).first()
       await applyBtn.click()
       await page.waitForTimeout(500)
-      await expect(
-        page
-          .getByLabel(/type/i)
-          .or(page.getByText(/sick|casual|annual/i).first())
-          .first()
-      ).toBeVisible({ timeout: 5000 })
+      // The dialog's <Label>s carry no htmlFor, so getByLabel cannot find
+      // them. Assert the field label and its select trigger inside the dialog.
+      const dialog = page.getByRole('dialog')
+      await expect(dialog.getByText('Leave Type *')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.getByText('Select leave type')).toBeVisible()
     })
 
     test('should have reason/notes field', async ({ adminPage: page }) => {

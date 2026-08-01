@@ -77,13 +77,11 @@ test.describe('Communication Automations', () => {
       const createBtn = page.getByRole('button', { name: /create|new|add/i }).first()
       await createBtn.click()
       await page.waitForTimeout(500)
-      await expect(
-        page
-          .getByLabel(/channel|method|via/i)
-          .first()
-          .or(page.getByText(/sms|email|whatsapp|channel/i).first())
-          .first()
-      ).toBeVisible({ timeout: 5000 })
+      // There is no separate channel field — the channel is picked through the
+      // action, whose options include "Send SMS" and "Send Email".
+      const dialog = page.getByRole('dialog')
+      await expect(dialog.getByText('Action (THEN)')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.getByText('Select action...')).toBeVisible()
     })
 
     test('should have template selection', async ({ adminPage: page }) => {
