@@ -1,51 +1,51 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 export default function InventoryReportsPage() {
-  const [activeReport, setActiveReport] = useState('summary');
-  const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState<any>(null);
+  const [activeReport, setActiveReport] = useState('summary')
+  const [loading, setLoading] = useState(false)
+  const [reportData, setReportData] = useState<any>(null)
   const [reportParams, setReportParams] = useState({
-    days: 30
-  });
+    days: 30,
+  })
 
   useEffect(() => {
-    fetchReport();
-  }, [activeReport, reportParams]);
+    fetchReport()
+  }, [activeReport, reportParams])
 
   const fetchReport = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const params = new URLSearchParams({
         type: activeReport,
         days: String(reportParams.days),
-      });
+      })
 
-      const response = await fetch(`/api/inventory/reports?${params}`);
-      const data = await response.json();
+      const response = await fetch(`/api/inventory/reports?${params}`)
+      const data = await response.json()
 
       if (data.success) {
-        setReportData(data.data);
+        setReportData(data.data)
       }
     } catch (error) {
-      console.error('Error fetching report:', error);
+      console.error('Error fetching report:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
 
   const renderSummaryReport = () => {
-    if (!reportData) return null;
+    if (!reportData) return null
 
     return (
       <div>
@@ -53,16 +53,16 @@ export default function InventoryReportsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Total Items</h3>
-            <p className="text-3xl font-bold mt-2">{reportData.summary.total_items}</p>
+            <p className="text-3xl font-bold mt-2">{reportData.summary.totalItems}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {reportData.summary.active_items} active
+              {reportData.summary.activeItems} active
             </p>
           </div>
 
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Out of Stock</h3>
             <p className="text-3xl font-bold mt-2 text-red-600">
-              {reportData.summary.out_of_stock_items}
+              {reportData.summary.outOfStockItems}
             </p>
             <p className="text-sm text-muted-foreground mt-1">Items need restock</p>
           </div>
@@ -70,7 +70,7 @@ export default function InventoryReportsPage() {
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Low Stock</h3>
             <p className="text-3xl font-bold mt-2 text-orange-600">
-              {reportData.summary.low_stock_items}
+              {reportData.summary.lowStockItems}
             </p>
             <p className="text-sm text-muted-foreground mt-1">Items below minimum</p>
           </div>
@@ -78,7 +78,7 @@ export default function InventoryReportsPage() {
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Inventory Value</h3>
             <p className="text-3xl font-bold mt-2 text-green-600">
-              {formatCurrency(reportData.summary.total_inventory_value || 0)}
+              {formatCurrency(reportData.summary.totalInventoryValue || 0)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">Total stock value</p>
           </div>
@@ -103,16 +103,16 @@ export default function InventoryReportsPage() {
                 </tr>
               </thead>
               <tbody className="bg-background divide-y divide-border">
-                {reportData.category_breakdown.map((cat: any, index: number) => (
+                {reportData.categoryBreakdown.map((cat: any, index: number) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                       {cat.category || 'Uncategorized'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {cat.item_count}
+                      {cat.itemCount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatCurrency(cat.category_value || 0)}
+                      {formatCurrency(cat.categoryValue || 0)}
                     </td>
                   </tr>
                 ))}
@@ -140,16 +140,16 @@ export default function InventoryReportsPage() {
                 </tr>
               </thead>
               <tbody className="bg-background divide-y divide-border">
-                {reportData.type_breakdown.map((type: any, index: number) => (
+                {reportData.typeBreakdown.map((type: any, index: number) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                      {type.item_type.replace('_', ' ').toUpperCase()}
+                      {type.itemType.replace('_', ' ').toUpperCase()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {type.item_count}
+                      {type.itemCount}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatCurrency(type.type_value || 0)}
+                      {formatCurrency(type.typeValue || 0)}
                     </td>
                   </tr>
                 ))}
@@ -158,11 +158,11 @@ export default function InventoryReportsPage() {
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const renderLowStockReport = () => {
-    if (!reportData || !Array.isArray(reportData)) return null;
+    if (!reportData || !Array.isArray(reportData)) return null
 
     return (
       <div className="bg-background rounded-lg shadow overflow-hidden">
@@ -197,16 +197,16 @@ export default function InventoryReportsPage() {
               {reportData.map((item: any) => (
                 <tr key={item.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                    {item.item_code}
+                    {item.sku}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                     {item.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {item.current_stock} {item.unit_of_measurement}
+                    {item.currentStock} {item.unit}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {item.minimum_stock} {item.unit_of_measurement}
+                    {item.minimumStock} {item.unit}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -214,20 +214,20 @@ export default function InventoryReportsPage() {
                         item.urgency === 'out_of_stock'
                           ? 'bg-red-100 text-red-800'
                           : item.urgency === 'critical'
-                          ? 'bg-orange-100 text-orange-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
                       {item.urgency.replace('_', ' ').toUpperCase()}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {item.suggested_order_quantity} {item.unit_of_measurement}
+                    {item.suggestedOrderQuantity} {item.unit}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {item.supplier_name || '-'}
-                    {item.supplier_phone && (
-                      <div className="text-xs text-muted-foreground">{item.supplier_phone}</div>
+                    {item.supplierName || '-'}
+                    {item.supplierPhone && (
+                      <div className="text-xs text-muted-foreground">{item.supplierPhone}</div>
                     )}
                   </td>
                 </tr>
@@ -236,11 +236,11 @@ export default function InventoryReportsPage() {
           </table>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const renderExpiringReport = () => {
-    if (!reportData) return null;
+    if (!reportData) return null
 
     return (
       <div>
@@ -249,20 +249,20 @@ export default function InventoryReportsPage() {
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Expired Batches</h3>
             <p className="text-3xl font-bold mt-2 text-red-600">
-              {reportData.summary.expired_batches || 0}
+              {reportData.summary.expiredBatches || 0}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Value: {formatCurrency(reportData.summary.expired_value || 0)}
+              Value: {formatCurrency(reportData.summary.expiredValue || 0)}
             </p>
           </div>
 
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Expiring Soon</h3>
             <p className="text-3xl font-bold mt-2 text-orange-600">
-              {reportData.summary.expiring_soon_batches || 0}
+              {reportData.summary.expiringSoonBatches || 0}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Value: {formatCurrency(reportData.summary.expiring_soon_value || 0)}
+              Value: {formatCurrency(reportData.summary.expiringSoonValue || 0)}
             </p>
           </div>
         </div>
@@ -302,22 +302,22 @@ export default function InventoryReportsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                       {item.name}
                       <br />
-                      <span className="text-xs text-muted-foreground">{item.item_code}</span>
+                      <span className="text-xs text-muted-foreground">{item.sku}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {item.batch_number}
+                      {item.batchNumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {new Date(item.expiry_date).toLocaleDateString()}
+                      {new Date(item.expiryDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {item.days_to_expiry} days
+                      {item.daysToExpiry} days
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {item.remaining_quantity} {item.unit_of_measurement}
+                      {item.remainingQty} {item.unit}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatCurrency(item.value_at_risk || 0)}
+                      {formatCurrency(item.valueAtRisk || 0)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -325,8 +325,8 @@ export default function InventoryReportsPage() {
                           item.urgency === 'expired'
                             ? 'bg-red-100 text-red-800'
                             : item.urgency === 'critical'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-yellow-100 text-yellow-800'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
                         {item.urgency.toUpperCase()}
@@ -339,11 +339,11 @@ export default function InventoryReportsPage() {
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const renderStockValuationReport = () => {
-    if (!reportData) return null;
+    if (!reportData) return null
 
     return (
       <div>
@@ -352,19 +352,19 @@ export default function InventoryReportsPage() {
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Total Stock Value</h3>
             <p className="text-3xl font-bold mt-2 text-green-600">
-              {formatCurrency(reportData.totals.total_value || 0)}
+              {formatCurrency(reportData.totals.totalValue || 0)}
             </p>
           </div>
 
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Items in Stock</h3>
-            <p className="text-3xl font-bold mt-2">{reportData.totals.items_in_stock || 0}</p>
+            <p className="text-3xl font-bold mt-2">{reportData.totals.itemsInStock || 0}</p>
           </div>
 
           <div className="bg-background p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-muted-foreground">Average Item Value</h3>
             <p className="text-3xl font-bold mt-2">
-              {formatCurrency(reportData.totals.average_item_value || 0)}
+              {formatCurrency(reportData.totals.averageItemValue || 0)}
             </p>
           </div>
         </div>
@@ -399,22 +399,22 @@ export default function InventoryReportsPage() {
                 {reportData.items.map((item: any) => (
                   <tr key={item.id} className="hover:bg-muted/50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                      {item.item_code}
+                      {item.sku}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {item.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {item.category_name || '-'}
+                      {item.categoryName || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {item.current_stock} {item.unit_of_measurement}
+                      {item.currentStock} {item.unit}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                      {formatCurrency(item.unit_price)}
+                      {formatCurrency(item.purchasePrice)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                      {formatCurrency(item.stock_value || 0)}
+                      {formatCurrency(item.stockValue || 0)}
                     </td>
                   </tr>
                 ))}
@@ -423,8 +423,8 @@ export default function InventoryReportsPage() {
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -446,7 +446,7 @@ export default function InventoryReportsPage() {
               { id: 'summary', label: 'Summary' },
               { id: 'low_stock', label: 'Low Stock' },
               { id: 'expiring', label: 'Expiring Items' },
-              { id: 'stock_valuation', label: 'Stock Valuation' }
+              { id: 'stock_valuation', label: 'Stock Valuation' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -466,14 +466,10 @@ export default function InventoryReportsPage() {
         {/* Report Parameters */}
         {activeReport === 'expiring' && (
           <div className="p-6 bg-muted/50">
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Days Ahead
-            </label>
+            <label className="block text-sm font-medium text-foreground mb-2">Days Ahead</label>
             <select
               value={reportParams.days}
-              onChange={(e) =>
-                setReportParams({ ...reportParams, days: parseInt(e.target.value) })
-              }
+              onChange={(e) => setReportParams({ ...reportParams, days: parseInt(e.target.value) })}
               className="px-4 py-2 border border-border rounded-lg"
             >
               <option value="7">7 days</option>
@@ -500,5 +496,5 @@ export default function InventoryReportsPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

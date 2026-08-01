@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,10 +20,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Checkbox } from "@/components/ui/checkbox"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Plus,
   Search,
@@ -46,32 +46,32 @@ import {
   ArrowUp,
   Minus,
   ShoppingCart,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from '@/components/ui/dropdown-menu'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface InventoryItem {
   id: string
-  item_code: string
+  sku: string
   name: string
   description: string
-  item_type: string
-  category_name: string
-  supplier_name: string
-  current_stock: number
-  minimum_stock: number
-  reorder_point: number
-  unit_of_measurement: string
-  unit_price: number
-  selling_price: number
-  stock_status: "out_of_stock" | "low_stock" | "reorder" | "sufficient"
-  is_active: boolean
+  itemType: string
+  categoryName: string
+  supplierName: string
+  currentStock: number
+  minimumStock: number
+  reorderLevel: number
+  unit: string
+  purchasePrice: number
+  sellingPrice: number
+  stockStatus: 'out_of_stock' | 'low_stock' | 'reorder' | 'sufficient'
+  isActive: boolean
 }
 
 interface Category {
@@ -100,10 +100,10 @@ export default function InventoryPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [lowStockOnly, setLowStockOnly] = useState(false)
 
   // AI Forecast
@@ -114,7 +114,7 @@ export default function InventoryPage() {
   const fetchForecast = async () => {
     try {
       setForecastLoading(true)
-      const res = await fetch("/api/ai/inventory-forecast")
+      const res = await fetch('/api/ai/inventory-forecast')
       if (!res.ok) return
       const data = await res.json()
       setForecastData(data)
@@ -128,12 +128,12 @@ export default function InventoryPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("/api/inventory/categories")
-      if (!response.ok) throw new Error("Failed to fetch categories")
+      const response = await fetch('/api/inventory/categories')
+      if (!response.ok) throw new Error('Failed to fetch categories')
       const data = await response.json()
       setCategories(data.data)
     } catch (error) {
-      console.error("Error fetching categories:", error)
+      console.error('Error fetching categories:', error)
     }
   }
 
@@ -145,20 +145,20 @@ export default function InventoryPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (categoryFilter && categoryFilter !== "all") params.append("category", categoryFilter)
-      if (typeFilter && typeFilter !== "all") params.append("type", typeFilter)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (lowStockOnly) params.append("lowStock", "true")
+      if (search) params.append('search', search)
+      if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter)
+      if (typeFilter && typeFilter !== 'all') params.append('type', typeFilter)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (lowStockOnly) params.append('lowStock', 'true')
 
       const response = await fetch(`/api/inventory/items?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch inventory items")
+      if (!response.ok) throw new Error('Failed to fetch inventory items')
 
       const data = await response.json()
       setItems(data.data)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching inventory items:", error)
+      console.error('Error fetching inventory items:', error)
     } finally {
       setLoading(false)
     }
@@ -172,30 +172,38 @@ export default function InventoryPage() {
     fetchItems()
   }, [pagination.page, search, categoryFilter, typeFilter, statusFilter, lowStockOnly])
 
+  // itemType arrives as the InventoryItemType enum (DENTAL_MATERIAL, ...).
+  const formatItemType = (type: string) =>
+    type
+      .toLowerCase()
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+
   const getStockStatusBadge = (status: string) => {
     const configs = {
       out_of_stock: {
-        label: "Out of Stock",
-        color: "text-red-700",
-        bgColor: "bg-red-100",
+        label: 'Out of Stock',
+        color: 'text-red-700',
+        bgColor: 'bg-red-100',
         icon: XCircle,
       },
       low_stock: {
-        label: "Low Stock",
-        color: "text-orange-700",
-        bgColor: "bg-orange-100",
+        label: 'Low Stock',
+        color: 'text-orange-700',
+        bgColor: 'bg-orange-100',
         icon: AlertTriangle,
       },
       reorder: {
-        label: "Reorder",
-        color: "text-yellow-700",
-        bgColor: "bg-yellow-100",
+        label: 'Reorder',
+        color: 'text-yellow-700',
+        bgColor: 'bg-yellow-100',
         icon: AlertTriangle,
       },
       sufficient: {
-        label: "Sufficient",
-        color: "text-green-700",
-        bgColor: "bg-green-100",
+        label: 'Sufficient',
+        color: 'text-green-700',
+        bgColor: 'bg-green-100',
         icon: CheckCircle,
       },
     }
@@ -212,9 +220,9 @@ export default function InventoryPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
       minimumFractionDigits: 2,
     }).format(amount)
   }
@@ -225,9 +233,7 @@ export default function InventoryPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
-          <p className="text-muted-foreground">
-            Manage inventory items and stock levels
-          </p>
+          <p className="text-muted-foreground">Manage inventory items and stock levels</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/inventory/suppliers">
@@ -250,28 +256,26 @@ export default function InventoryPage() {
           </Link>
           <ExportMenu
             filename="inventory"
-            getData={() => items.map(item => ({
-              "Item Code": item.item_code,
-              "Name": item.name,
-              "Description": item.description || "",
-              "Type": item.item_type,
-              "Category": item.category_name || "Uncategorized",
-              "Supplier": item.supplier_name || "",
-              "Current Stock": item.current_stock,
-              "Minimum Stock": item.minimum_stock,
-              "Reorder Point": item.reorder_point,
-              "Unit": item.unit_of_measurement,
-              "Unit Price": item.unit_price,
-              "Selling Price": item.selling_price,
-              "Stock Status": item.stock_status,
-              "Active": item.is_active ? "Yes" : "No",
-            }))}
+            getData={() =>
+              items.map((item) => ({
+                'Item Code': item.sku,
+                Name: item.name,
+                Description: item.description || '',
+                Type: formatItemType(item.itemType),
+                Category: item.categoryName || 'Uncategorized',
+                Supplier: item.supplierName || '',
+                'Current Stock': item.currentStock,
+                'Minimum Stock': item.minimumStock,
+                'Reorder Point': item.reorderLevel,
+                Unit: item.unit,
+                'Unit Price': item.purchasePrice,
+                'Selling Price': item.sellingPrice,
+                'Stock Status': item.stockStatus,
+                Active: item.isActive ? 'Yes' : 'No',
+              }))
+            }
           />
-          <Button
-            variant="outline"
-            onClick={fetchForecast}
-            disabled={forecastLoading}
-          >
+          <Button variant="outline" onClick={fetchForecast} disabled={forecastLoading}>
             {forecastLoading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -295,19 +299,25 @@ export default function InventoryPage() {
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="border-red-200 bg-red-50">
               <CardContent className="pt-4 pb-3">
-                <div className="text-2xl font-bold text-red-700">{forecastData.summary?.criticalItems || 0}</div>
+                <div className="text-2xl font-bold text-red-700">
+                  {forecastData.summary?.criticalItems || 0}
+                </div>
                 <div className="text-xs text-red-600">Critical (stockout &le;7d)</div>
               </CardContent>
             </Card>
             <Card className="border-amber-200 bg-amber-50">
               <CardContent className="pt-4 pb-3">
-                <div className="text-2xl font-bold text-amber-700">{forecastData.summary?.reorderItems || 0}</div>
+                <div className="text-2xl font-bold text-amber-700">
+                  {forecastData.summary?.reorderItems || 0}
+                </div>
                 <div className="text-xs text-amber-600">Need Reorder</div>
               </CardContent>
             </Card>
             <Card className="border-green-200 bg-green-50">
               <CardContent className="pt-4 pb-3">
-                <div className="text-2xl font-bold text-green-700">{forecastData.summary?.excessItems || 0}</div>
+                <div className="text-2xl font-bold text-green-700">
+                  {forecastData.summary?.excessItems || 0}
+                </div>
                 <div className="text-xs text-green-600">Excess Stock</div>
               </CardContent>
             </Card>
@@ -330,7 +340,9 @@ export default function InventoryPage() {
                     <Brain className="h-5 w-5 text-purple-600" />
                     AI Demand Forecast
                   </CardTitle>
-                  <CardDescription>Projected usage and reorder suggestions for next 30/60/90 days</CardDescription>
+                  <CardDescription>
+                    Projected usage and reorder suggestions for next 30/60/90 days
+                  </CardDescription>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowForecast(false)}>
                   Hide
@@ -353,49 +365,73 @@ export default function InventoryPage() {
                 </TableHeader>
                 <TableBody>
                   {(forecastData.forecasts || [])
-                    .filter((f: any) => f.reorderRecommended || f.urgency === "CRITICAL" || f.urgency === "SOON")
+                    .filter(
+                      (f: any) =>
+                        f.reorderRecommended || f.urgency === 'CRITICAL' || f.urgency === 'SOON'
+                    )
                     .sort((a: any, b: any) => a.daysUntilStockout - b.daysUntilStockout)
                     .map((forecast: any) => (
-                    <TableRow key={forecast.itemId}>
-                      <TableCell className="font-medium">{forecast.itemName}</TableCell>
-                      <TableCell>{forecast.currentStock}</TableCell>
-                      <TableCell>{forecast.avgDailyUsage}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          {forecast.trend === "INCREASING" && <ArrowUp className="h-3 w-3 text-red-500" />}
-                          {forecast.trend === "DECREASING" && <ArrowDown className="h-3 w-3 text-green-500" />}
-                          {forecast.trend === "STABLE" && <Minus className="h-3 w-3 text-muted-foreground" />}
-                          <span className="text-xs">{forecast.trend}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {forecast.projected30Days} / {forecast.projected60Days} / {forecast.projected90Days}
-                      </TableCell>
-                      <TableCell>
-                        <span className={forecast.daysUntilStockout <= 7 ? "text-red-600 font-bold" : forecast.daysUntilStockout <= 14 ? "text-amber-600 font-medium" : ""}>
-                          {forecast.daysUntilStockout > 365 ? "365+" : forecast.daysUntilStockout} days
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {forecast.suggestedOrderQty > 0 && (
+                      <TableRow key={forecast.itemId}>
+                        <TableCell className="font-medium">{forecast.itemName}</TableCell>
+                        <TableCell>{forecast.currentStock}</TableCell>
+                        <TableCell>{forecast.avgDailyUsage}</TableCell>
+                        <TableCell>
                           <div className="flex items-center gap-1">
-                            <ShoppingCart className="h-3 w-3" />
-                            <span className="font-medium">{forecast.suggestedOrderQty}</span>
+                            {forecast.trend === 'INCREASING' && (
+                              <ArrowUp className="h-3 w-3 text-red-500" />
+                            )}
+                            {forecast.trend === 'DECREASING' && (
+                              <ArrowDown className="h-3 w-3 text-green-500" />
+                            )}
+                            {forecast.trend === 'STABLE' && (
+                              <Minus className="h-3 w-3 text-muted-foreground" />
+                            )}
+                            <span className="text-xs">{forecast.trend}</span>
                           </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={
-                          forecast.urgency === "CRITICAL" ? "bg-red-100 text-red-700 border-0" :
-                          forecast.urgency === "SOON" ? "bg-amber-100 text-amber-700 border-0" :
-                          forecast.urgency === "NORMAL" ? "bg-blue-100 text-blue-700 border-0" :
-                          "bg-green-100 text-green-700 border-0"
-                        }>
-                          {forecast.urgency}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {forecast.projected30Days} / {forecast.projected60Days} /{' '}
+                          {forecast.projected90Days}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              forecast.daysUntilStockout <= 7
+                                ? 'text-red-600 font-bold'
+                                : forecast.daysUntilStockout <= 14
+                                  ? 'text-amber-600 font-medium'
+                                  : ''
+                            }
+                          >
+                            {forecast.daysUntilStockout > 365 ? '365+' : forecast.daysUntilStockout}{' '}
+                            days
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {forecast.suggestedOrderQty > 0 && (
+                            <div className="flex items-center gap-1">
+                              <ShoppingCart className="h-3 w-3" />
+                              <span className="font-medium">{forecast.suggestedOrderQty}</span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              forecast.urgency === 'CRITICAL'
+                                ? 'bg-red-100 text-red-700 border-0'
+                                : forecast.urgency === 'SOON'
+                                  ? 'bg-amber-100 text-amber-700 border-0'
+                                  : forecast.urgency === 'NORMAL'
+                                    ? 'bg-blue-100 text-blue-700 border-0'
+                                    : 'bg-green-100 text-green-700 border-0'
+                            }
+                          >
+                            {forecast.urgency}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </CardContent>
@@ -437,10 +473,12 @@ export default function InventoryPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="DENTAL_MATERIAL">Dental Material</SelectItem>
+                    <SelectItem value="INSTRUMENT">Instrument</SelectItem>
                     <SelectItem value="CONSUMABLE">Consumable</SelectItem>
-                    <SelectItem value="EQUIPMENT">Equipment</SelectItem>
                     <SelectItem value="MEDICINE">Medicine</SelectItem>
-                    <SelectItem value="MATERIAL">Material</SelectItem>
+                    <SelectItem value="OFFICE_SUPPLY">Office Supply</SelectItem>
+                    <SelectItem value="EQUIPMENT">Equipment</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -492,14 +530,30 @@ export default function InventoryPage() {
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : items.length === 0 ? (
@@ -521,7 +575,7 @@ export default function InventoryPage() {
                 items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <div className="font-medium">{item.item_code}</div>
+                      <div className="font-medium">{item.sku}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -539,39 +593,33 @@ export default function InventoryPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {item.category_name || "Uncategorized"}
-                      </div>
+                      <div className="text-sm">{item.categoryName || 'Uncategorized'}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {item.item_type}
-                      </Badge>
+                      <Badge variant="outline">{formatItemType(item.itemType)}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="font-medium">
-                          {item.current_stock} {item.unit_of_measurement}
+                          {item.currentStock} {item.unit}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Min: {item.minimum_stock}
+                          Min: {item.minimumStock}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">
-                        {formatCurrency(item.unit_price)}
-                      </div>
-                      {item.selling_price > 0 && (
+                      <div className="font-medium">{formatCurrency(item.purchasePrice)}</div>
+                      {item.sellingPrice > 0 && (
                         <div className="text-xs text-muted-foreground">
-                          Selling: {formatCurrency(item.selling_price)}
+                          Selling: {formatCurrency(item.sellingPrice)}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        {getStockStatusBadge(item.stock_status)}
-                        {!item.is_active && (
+                        {getStockStatusBadge(item.stockStatus)}
+                        {!item.isActive && (
                           <Badge className="bg-muted text-muted-foreground border-0">
                             Inactive
                           </Badge>
@@ -586,9 +634,7 @@ export default function InventoryPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/inventory/${item.id}`)}
-                          >
+                          <DropdownMenuItem onClick={() => router.push(`/inventory/${item.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
@@ -618,8 +664,8 @@ export default function InventoryPage() {
           {!loading && pagination.pages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} items
               </div>
               <div className="flex items-center gap-2">

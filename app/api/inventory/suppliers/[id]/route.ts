@@ -1,244 +1,208 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import pool from '@/lib/db';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { Prisma, PurchaseOrderStatus, SupplierStatus } from '@prisma/client'
+
+const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
+
+/** Accepts the legacy lowercase status values as well as the enum casing. */
+function parseStatus(value: unknown): SupplierStatus | null {
+  if (typeof value !== 'string') return null
+  const upper = value.toUpperCase()
+  return SUPPLIER_STATUSES.includes(upper) ? (upper as SupplierStatus) : null
+}
+
+// Orders that are placed but not yet fully received.
+const PENDING_ORDER_STATUSES: PurchaseOrderStatus[] = [
+  PurchaseOrderStatus.SUBMITTED,
+  PurchaseOrderStatus.APPROVED,
+  PurchaseOrderStatus.ORDERED,
+  PurchaseOrderStatus.PARTIALLY_RECEIVED,
+]
 
 // GET - Fetch single supplier with details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
-    const [suppliers] = await pool.execute<RowDataPacket[]>(
-      `SELECT
-        s.*,
-        COUNT(DISTINCT i.id) as items_supplied,
-        COUNT(DISTINCT po.id) as total_orders,
-        COALESCE(SUM(CASE WHEN po.status = 'received' THEN po.total_amount ELSE 0 END), 0) as completed_business,
-        COALESCE(SUM(CASE WHEN po.status IN ('sent', 'confirmed', 'partially_received') THEN po.total_amount ELSE 0 END), 0) as pending_business
-      FROM suppliers s
-      LEFT JOIN inventory_items i ON s.id = i.preferred_supplier_id AND i.deleted_at IS NULL
-      LEFT JOIN purchase_orders po ON s.id = po.supplier_id AND po.deleted_at IS NULL
-      WHERE s.id = ? AND s.hospital_id = ? AND s.deleted_at IS NULL
-      GROUP BY s.id`,
-      [id, hospitalId]
-    );
+    const supplier = await prisma.supplier.findFirst({
+      where: { id, hospitalId, deletedAt: null },
+    })
 
-    if (suppliers.length === 0) {
-      return NextResponse.json(
-        { error: 'Supplier not found' },
-        { status: 404 }
-      );
+    if (!supplier) {
+      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    // Get items supplied by this supplier
-    const [items] = await pool.execute<RowDataPacket[]>(
-      `SELECT id, item_code, name, current_stock, unit_price
-       FROM inventory_items
-       WHERE preferred_supplier_id = ? AND hospital_id = ? AND deleted_at IS NULL
-       ORDER BY name ASC`,
-      [id, hospitalId]
-    );
+    const [items, purchaseOrders] = await Promise.all([
+      prisma.inventoryItem.findMany({
+        where: { preferredSupplierId: id, hospitalId, deletedAt: null },
+        orderBy: { name: 'asc' },
+        select: { id: true, sku: true, name: true, currentStock: true, purchasePrice: true },
+      }),
+      prisma.purchaseOrder.findMany({
+        where: { supplierId: id, deletedAt: null },
+        orderBy: { orderDate: 'desc' },
+        select: {
+          id: true,
+          orderNumber: true,
+          orderDate: true,
+          expectedDate: true,
+          totalAmount: true,
+          status: true,
+        },
+      }),
+    ])
 
-    // Get recent purchase orders
-    const [purchaseOrders] = await pool.execute<RowDataPacket[]>(
-      `SELECT id, po_number, order_date, expected_delivery_date,
-              total_amount, status, payment_status
-       FROM purchase_orders
-       WHERE supplier_id = ? AND deleted_at IS NULL
-       ORDER BY order_date DESC
-       LIMIT 10`,
-      [id]
-    );
+    const completedBusiness = purchaseOrders
+      .filter((po) => po.status === PurchaseOrderStatus.RECEIVED)
+      .reduce((sum, po) => sum + Number(po.totalAmount), 0)
+
+    const pendingBusiness = purchaseOrders
+      .filter((po) => PENDING_ORDER_STATUSES.includes(po.status))
+      .reduce((sum, po) => sum + Number(po.totalAmount), 0)
 
     return NextResponse.json({
       success: true,
       data: {
-        ...suppliers[0],
-        items_supplied_list: items,
-        recent_purchase_orders: purchaseOrders
-      }
-    });
+        ...supplier,
+        itemsSupplied: items.length,
+        totalOrders: purchaseOrders.length,
+        completedBusiness,
+        pendingBusiness,
+        itemsSuppliedList: items,
+        recentPurchaseOrders: purchaseOrders.slice(0, 10),
+      },
+    })
   } catch (error: any) {
-    console.error('Error fetching supplier:', error);
+    console.error('Error fetching supplier:', error)
     return NextResponse.json(
       { error: 'Failed to fetch supplier', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
 // PUT - Update supplier
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const {
-      supplier_code,
-      name,
-      contact_person,
-      email,
-      phone,
-      alternate_phone,
-      address,
-      city,
-      state,
-      pincode,
-      gstin,
-      pan,
-      payment_terms,
-      credit_limit,
-      status,
-      rating,
-      notes
-    } = body;
+    const { id } = await params
+    const body = await request.json()
 
-    // Check if supplier exists and belongs to this hospital
-    const [existing] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM suppliers WHERE id = ? AND hospital_id = ? AND deleted_at IS NULL',
-      [id, hospitalId]
-    );
+    const existing = await prisma.supplier.findFirst({
+      where: { id, hospitalId, deletedAt: null },
+      select: { id: true, code: true },
+    })
 
-    if (existing.length === 0) {
-      return NextResponse.json(
-        { error: 'Supplier not found' },
-        { status: 404 }
-      );
+    if (!existing) {
+      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    // Check if supplier_code is being changed and if it conflicts
-    if (supplier_code && supplier_code !== existing[0].supplier_code) {
-      const [duplicate] = await pool.execute<RowDataPacket[]>(
-        'SELECT id FROM suppliers WHERE supplier_code = ? AND hospital_id = ? AND id != ? AND deleted_at IS NULL',
-        [supplier_code, hospitalId, id]
-      );
+    if (body.code && body.code !== existing.code) {
+      const duplicate = await prisma.supplier.findFirst({
+        where: { code: body.code, hospitalId, id: { not: id }, deletedAt: null },
+        select: { id: true },
+      })
 
-      if (duplicate.length > 0) {
-        return NextResponse.json(
-          { error: 'Supplier code already exists' },
-          { status: 409 }
-        );
+      if (duplicate) {
+        return NextResponse.json({ error: 'Supplier code already exists' }, { status: 409 })
       }
     }
 
-    await pool.execute<ResultSetHeader>(
-      `UPDATE suppliers SET
-        supplier_code = COALESCE(?, supplier_code),
-        name = COALESCE(?, name),
-        contact_person = ?,
-        email = ?,
-        phone = COALESCE(?, phone),
-        alternate_phone = ?,
-        address = ?,
-        city = ?,
-        state = ?,
-        pincode = ?,
-        gstin = ?,
-        pan = ?,
-        payment_terms = COALESCE(?, payment_terms),
-        credit_limit = COALESCE(?, credit_limit),
-        status = COALESCE(?, status),
-        rating = COALESCE(?, rating),
-        notes = ?
-      WHERE id = ? AND hospital_id = ?`,
-      [
-        supplier_code, name, contact_person || null, email || null,
-        phone, alternate_phone || null, address || null, city || null,
-        state || null, pincode || null, gstin || null, pan || null,
-        payment_terms, credit_limit, status, rating, notes || null,
-        id, hospitalId
-      ]
-    );
+    // COALESCE in the old SQL meant "leave alone when the field is absent",
+    // while the nullable columns were always overwritten. Prisma gets the same
+    // result by simply omitting undefined keys.
+    const data: Prisma.SupplierUpdateInput = {
+      contactPerson: body.contactPerson ?? null,
+      email: body.email ?? null,
+      alternatePhone: body.alternatePhone ?? null,
+      address: body.address ?? null,
+      city: body.city ?? null,
+      state: body.state ?? null,
+      pincode: body.pincode ?? null,
+      gstNumber: body.gstNumber ?? null,
+      panNumber: body.panNumber ?? null,
+      notes: body.notes ?? null,
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Supplier updated successfully'
-    });
+    if (body.code != null) data.code = body.code
+    if (body.name != null) data.name = body.name
+    if (body.phone != null) data.phone = body.phone
+    if (body.paymentTerms != null) data.paymentTerms = body.paymentTerms
+    if (body.creditLimit != null) data.creditLimit = body.creditLimit
+    if (body.rating != null) data.rating = body.rating
+
+    const status = parseStatus(body.status)
+    if (status) data.status = status
+
+    await prisma.supplier.update({ where: { id }, data })
+
+    return NextResponse.json({ success: true, message: 'Supplier updated successfully' })
   } catch (error: any) {
-    console.error('Error updating supplier:', error);
+    console.error('Error updating supplier:', error)
     return NextResponse.json(
       { error: 'Failed to update supplier', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
-// DELETE - Soft delete supplier
+// DELETE - Soft delete when the supplier is referenced, hard delete otherwise
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
-    // Check if supplier exists and belongs to this hospital
-    const [existing] = await pool.execute<RowDataPacket[]>(
-      'SELECT * FROM suppliers WHERE id = ? AND hospital_id = ? AND deleted_at IS NULL',
-      [id, hospitalId]
-    );
+    const existing = await prisma.supplier.findFirst({
+      where: { id, hospitalId, deletedAt: null },
+      select: { id: true },
+    })
 
-    if (existing.length === 0) {
-      return NextResponse.json(
-        { error: 'Supplier not found' },
-        { status: 404 }
-      );
+    if (!existing) {
+      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    // Check if supplier has purchase orders
-    const [purchaseOrders] = await pool.execute<RowDataPacket[]>(
-      'SELECT COUNT(*) as count FROM purchase_orders WHERE supplier_id = ?',
-      [id]
-    );
+    const [purchaseOrderCount, itemCount] = await Promise.all([
+      prisma.purchaseOrder.count({ where: { supplierId: id } }),
+      prisma.inventoryItem.count({
+        where: { preferredSupplierId: id, hospitalId, deletedAt: null },
+      }),
+    ])
 
-    // Check if supplier is linked to items
-    const [items] = await pool.execute<RowDataPacket[]>(
-      'SELECT COUNT(*) as count FROM inventory_items WHERE preferred_supplier_id = ? AND hospital_id = ? AND deleted_at IS NULL',
-      [id, hospitalId]
-    );
-
-    if (purchaseOrders[0].count > 0 || items[0].count > 0) {
-      // Soft delete if has relationships
-      await pool.execute(
-        'UPDATE suppliers SET deleted_at = NOW(), status = ? WHERE id = ? AND hospital_id = ?',
-        ['inactive', id, hospitalId]
-      );
+    if (purchaseOrderCount > 0 || itemCount > 0) {
+      await prisma.supplier.update({
+        where: { id },
+        data: { deletedAt: new Date(), status: SupplierStatus.INACTIVE, isActive: false },
+      })
     } else {
-      // Hard delete if no relationships
-      await pool.execute('DELETE FROM suppliers WHERE id = ? AND hospital_id = ?', [id, hospitalId]);
+      await prisma.supplier.delete({ where: { id } })
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Supplier deleted successfully'
-    });
+    return NextResponse.json({ success: true, message: 'Supplier deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting supplier:', error);
+    console.error('Error deleting supplier:', error)
     return NextResponse.json(
       { error: 'Failed to delete supplier', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }

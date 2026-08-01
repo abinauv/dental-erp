@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { InventoryItemType } from '@prisma/client'
 
 // GET - Fetch all inventory items with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get('search') || ''
     const categoryId = searchParams.get('category') || ''
+    const itemType = searchParams.get('type') || ''
     const status = searchParams.get('status') || 'all'
     const lowStock = searchParams.get('lowStock') === 'true'
     const page = parseInt(searchParams.get('page') || '1')
@@ -37,6 +39,12 @@ export async function GET(request: NextRequest) {
     // Add category filter
     if (categoryId) {
       where.categoryId = categoryId
+    }
+
+    // Add item type filter. The inventory page has always rendered this
+    // control, but the route never read the parameter, so it did nothing.
+    if (itemType && itemType in InventoryItemType) {
+      where.itemType = itemType as InventoryItemType
     }
 
     // Fetch items with related data
@@ -71,7 +79,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform data to include stock status
-    let itemsWithStatus = items.map(item => {
+    let itemsWithStatus = items.map((item) => {
       let stockStatus = 'sufficient'
       if (item.currentStock <= 0) {
         stockStatus = 'out_of_stock'
@@ -92,8 +100,8 @@ export async function GET(request: NextRequest) {
 
     // Apply low stock filter in memory (Prisma doesn't support field-to-field comparison in where clause)
     if (lowStock) {
-      itemsWithStatus = itemsWithStatus.filter(item =>
-        item.stockStatus === 'low_stock' || item.stockStatus === 'out_of_stock'
+      itemsWithStatus = itemsWithStatus.filter(
+        (item) => item.stockStatus === 'low_stock' || item.stockStatus === 'out_of_stock'
       )
     }
 
@@ -126,7 +134,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -149,6 +157,14 @@ export async function POST(request: NextRequest) {
       storageLocation,
       storageConditions,
       isActive = true,
+      // The new-item form has always sent these; until the model had them
+      // they were silently discarded on every create.
+      itemType,
+      preferredSupplierId,
+      hsnCode,
+      taxPercentage,
+      imageUrl,
+      notes,
     } = body
 
     // Validation
@@ -165,10 +181,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existing) {
-      return NextResponse.json(
-        { error: 'SKU already exists' },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: 'SKU already exists' }, { status: 409 })
     }
 
     // Create inventory item
@@ -192,6 +205,14 @@ export async function POST(request: NextRequest) {
         storageLocation: storageLocation || null,
         storageConditions: storageConditions || null,
         isActive,
+        ...(itemType && itemType in InventoryItemType
+          ? { itemType: itemType as InventoryItemType }
+          : {}),
+        preferredSupplierId: preferredSupplierId || null,
+        hsnCode: hsnCode || null,
+        taxPercentage: taxPercentage ?? null,
+        imageUrl: imageUrl || null,
+        notes: notes || null,
       },
     })
 
@@ -213,11 +234,14 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      data: item,
-      message: 'Inventory item created successfully',
-    }, { status: 201 })
+    return NextResponse.json(
+      {
+        success: true,
+        data: item,
+        message: 'Inventory item created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
     console.error('Error creating inventory item:', error)
     return NextResponse.json(
