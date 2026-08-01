@@ -4,19 +4,22 @@ test.describe('AI Settings', () => {
   test.describe('AI Configuration Page', () => {
     test('should display AI settings page', async ({ adminPage: page }) => {
       await page.goto('/settings/ai')
-      await expect(page.getByRole('heading', { name: /ai|artificial intelligence/i }).first()
-        .or(page.getByText(/ai configuration|ai settings/i).first())
+      await expect(
+        page
+          .getByRole('heading', { name: /ai|artificial intelligence/i })
+          .first()
+          .or(page.getByText(/ai configuration|ai settings/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
     test('should have master AI toggle', async ({ adminPage: page }) => {
       await page.goto('/settings/ai')
       await page.waitForTimeout(1000)
-      // Look for the main AI enabled toggle
-      const aiToggle = page.getByLabel(/enable ai|ai enabled/i).or(
-        page.getByRole('switch').first()
-      )
-      await expect(aiToggle).toBeVisible({ timeout: 10000 })
+      // The master switch, by its accessible name.
+      await expect(page.getByRole('switch', { name: 'AI Features Master Switch' })).toBeVisible({
+        timeout: 10000,
+      })
     })
 
     test('should display feature toggles', async ({ adminPage: page }) => {
@@ -30,10 +33,11 @@ test.describe('AI Settings', () => {
       const briefingToggle = page.getByText(/briefing|morning/i).first()
 
       // At least some of these should be visible
-      const anyFeatureVisible = await chatToggle.isVisible() ||
-        await commandBarToggle.isVisible() ||
-        await remindersToggle.isVisible() ||
-        await briefingToggle.isVisible()
+      const anyFeatureVisible =
+        (await chatToggle.isVisible()) ||
+        (await commandBarToggle.isVisible()) ||
+        (await remindersToggle.isVisible()) ||
+        (await briefingToggle.isVisible())
 
       expect(anyFeatureVisible).toBeTruthy()
     })
@@ -43,16 +47,23 @@ test.describe('AI Settings', () => {
       await page.waitForTimeout(1000)
 
       // Look for model preference buttons (economy, balanced, quality)
-      const economyBtn = page.getByRole('button', { name: /economy/i })
+      const economyBtn = page
+        .getByRole('button', { name: /economy/i })
         .or(page.getByText(/economy/i))
-      const balancedBtn = page.getByRole('button', { name: /balanced/i })
+        .first()
+      const balancedBtn = page
+        .getByRole('button', { name: /balanced/i })
         .or(page.getByText(/balanced/i))
-      const qualityBtn = page.getByRole('button', { name: /quality/i })
+        .first()
+      const qualityBtn = page
+        .getByRole('button', { name: /quality/i })
         .or(page.getByText(/quality/i))
+        .first()
 
-      const hasPreferences = await economyBtn.isVisible() ||
-        await balancedBtn.isVisible() ||
-        await qualityBtn.isVisible()
+      const hasPreferences =
+        (await economyBtn.isVisible()) ||
+        (await balancedBtn.isVisible()) ||
+        (await qualityBtn.isVisible())
 
       expect(hasPreferences).toBeTruthy()
     })
@@ -62,8 +73,11 @@ test.describe('AI Settings', () => {
       await page.waitForTimeout(1000)
 
       // Look for financial approval limit or monthly budget inputs
-      const budgetInput = page.getByLabel(/budget|limit|approval/i).first()
+      const budgetInput = page
+        .getByLabel(/budget|limit|approval/i)
+        .first()
         .or(page.locator('input[type="number"]').first())
+        .first()
 
       if (await budgetInput.isVisible()) {
         await expect(budgetInput).toBeVisible()
@@ -78,17 +92,17 @@ test.describe('AI Settings', () => {
       const toggles = page.getByRole('switch')
       const firstToggle = toggles.first()
       if (await firstToggle.isVisible()) {
-        const initialState = await firstToggle.getAttribute('aria-checked')
-          .catch(() => null) || await firstToggle.getAttribute('data-state')
-          .catch(() => null)
+        const initialState =
+          (await firstToggle.getAttribute('aria-checked').catch(() => null)) ||
+          (await firstToggle.getAttribute('data-state').catch(() => null))
 
         await firstToggle.click()
         await page.waitForTimeout(500)
 
         // State should have changed
-        const newState = await firstToggle.getAttribute('aria-checked')
-          .catch(() => null) || await firstToggle.getAttribute('data-state')
-          .catch(() => null)
+        const newState =
+          (await firstToggle.getAttribute('aria-checked').catch(() => null)) ||
+          (await firstToggle.getAttribute('data-state').catch(() => null))
 
         // Toggle back to original state
         await firstToggle.click()
@@ -116,9 +130,9 @@ test.describe('AI Settings', () => {
       if (await saveButton.isVisible()) {
         await saveButton.click()
         // Should show success message
-        await expect(
-          page.getByText(/saved|updated|success/i).first()
-        ).toBeVisible({ timeout: 10000 })
+        await expect(page.getByText(/saved|updated|success/i).first()).toBeVisible({
+          timeout: 10000,
+        })
       }
     })
 
@@ -127,8 +141,10 @@ test.describe('AI Settings', () => {
       await page.waitForTimeout(1000)
 
       // Click a model preference button
-      const balancedBtn = page.getByRole('button', { name: /balanced/i })
+      const balancedBtn = page
+        .getByRole('button', { name: /balanced/i })
         .or(page.getByText(/balanced/i).first())
+        .first()
       if (await balancedBtn.isVisible()) {
         await balancedBtn.click()
         await page.waitForTimeout(500)

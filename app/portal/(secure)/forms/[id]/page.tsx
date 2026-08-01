@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react"
-import { toast } from "sonner"
-import { FormRenderer, type FormField } from "@/components/forms/form-renderer"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { FormRenderer, type FormField } from '@/components/forms/form-renderer'
 
 interface Template {
   id: string
@@ -48,11 +48,11 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
           setExistingSubmission(data.existingSubmission)
         }
       } else {
-        toast.error("Form not found")
-        router.push("/portal/forms")
+        toast.error('Form not found')
+        router.push('/portal/forms')
       }
     } catch {
-      toast.error("Failed to load form")
+      toast.error('Failed to load form')
     } finally {
       setLoading(false)
     }
@@ -61,9 +61,9 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
   const handleSubmit = async (data: Record<string, unknown>, signature: string | null) => {
     setSubmitting(true)
     try {
-      const res = await fetch("/api/patient-portal/forms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/patient-portal/forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateId: id,
           data,
@@ -72,13 +72,13 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
       })
       if (res.ok) {
         setSubmitted(true)
-        toast.success("Form submitted successfully")
+        toast.success('Form submitted successfully')
       } else {
         const err = await res.json()
-        toast.error(err.error || "Failed to submit form")
+        toast.error(err.error || 'Failed to submit form')
       }
     } catch {
-      toast.error("Failed to submit form")
+      toast.error('Failed to submit form')
     } finally {
       setSubmitting(false)
     }
@@ -100,11 +100,10 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
         <CheckCircle2 className="h-16 w-16 mx-auto text-green-500" />
         <h2 className="text-2xl font-bold">Form Submitted</h2>
         <p className="text-muted-foreground">
-          Your {template.name} has been submitted successfully. The clinic team will review it shortly.
+          Your {template.name} has been submitted successfully. The clinic team will review it
+          shortly.
         </p>
-        <Button onClick={() => router.push("/portal/forms")}>
-          Back to Forms
-        </Button>
+        <Button onClick={() => router.push('/portal/forms')}>Back to Forms</Button>
       </div>
     )
   }
@@ -114,13 +113,18 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/portal/forms")}>
+          <Button variant="ghost" size="icon" onClick={() => router.push('/portal/forms')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{template.name}</h1>
             <p className="text-sm text-muted-foreground">
-              Submitted on {new Date(existingSubmission.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+              Submitted on{' '}
+              {new Date(existingSubmission.createdAt).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
             </p>
           </div>
           <Badge>{existingSubmission.status}</Badge>
@@ -144,7 +148,7 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/portal/forms")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/portal/forms')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>

@@ -1,12 +1,21 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { FileText, ClipboardCheck, FilePlus2, MessageSquareText, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react"
-import { toast } from "sonner"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  FileText,
+  ClipboardCheck,
+  FilePlus2,
+  MessageSquareText,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Loader2,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
 interface FormSubmission {
   id: string
@@ -35,11 +44,18 @@ const typeIcons: Record<string, React.ReactNode> = {
   CUSTOM: <FileText className="h-5 w-5" />,
 }
 
-const statusConfig: Record<string, { icon: React.ReactNode; label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: "Submitted", variant: "secondary" },
-  REVIEWED: { icon: <CheckCircle2 className="h-3 w-3" />, label: "Reviewed", variant: "outline" },
-  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: "Approved", variant: "default" },
-  REJECTED: { icon: <XCircle className="h-3 w-3" />, label: "Rejected", variant: "destructive" },
+const statusConfig: Record<
+  string,
+  {
+    icon: React.ReactNode
+    label: string
+    variant: 'default' | 'secondary' | 'destructive' | 'outline'
+  }
+> = {
+  SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: 'Submitted', variant: 'secondary' },
+  REVIEWED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Reviewed', variant: 'outline' },
+  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Approved', variant: 'default' },
+  REJECTED: { icon: <XCircle className="h-3 w-3" />, label: 'Rejected', variant: 'destructive' },
 }
 
 export default function PatientFormsPage() {
@@ -53,12 +69,12 @@ export default function PatientFormsPage() {
 
   const fetchForms = async () => {
     try {
-      const res = await fetch("/api/patient-portal/forms")
+      const res = await fetch('/api/patient-portal/forms')
       const data = await res.json()
       if (data.submissions) setSubmissions(data.submissions)
       if (data.availableTemplates) setTemplates(data.availableTemplates)
     } catch {
-      toast.error("Failed to load forms")
+      toast.error('Failed to load forms')
     } finally {
       setLoading(false)
     }
@@ -98,11 +114,15 @@ export default function PatientFormsPage() {
                 href={`/portal/forms/${t.id}`}
                 className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent transition-colors"
               >
-                <div className="text-primary">{typeIcons[t.type] || <FileText className="h-5 w-5" />}</div>
+                <div className="text-primary">
+                  {typeIcons[t.type] || <FileText className="h-5 w-5" />}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{t.name}</div>
                   {t.description && (
-                    <div className="text-sm text-muted-foreground line-clamp-1">{t.description}</div>
+                    <div className="text-sm text-muted-foreground line-clamp-1">
+                      {t.description}
+                    </div>
                   )}
                 </div>
                 <Button size="sm">Fill Out</Button>
@@ -128,17 +148,19 @@ export default function PatientFormsPage() {
               {submissions.map((s) => {
                 const sc = statusConfig[s.status] || statusConfig.SUBMITTED
                 return (
-                  <div
-                    key={s.id}
-                    className="flex items-center gap-3 p-3 border rounded-lg"
-                  >
+                  <div key={s.id} className="flex items-center gap-3 p-3 border rounded-lg">
                     <div className="text-muted-foreground">
                       {typeIcons[s.template.type] || <FileText className="h-5 w-5" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{s.template.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        Submitted: {new Date(s.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        Submitted:{' '}
+                        {new Date(s.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                       </div>
                     </div>
                     <Badge variant={sc.variant} className="flex items-center gap-1">

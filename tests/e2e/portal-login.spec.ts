@@ -4,20 +4,26 @@ test.describe('Patient Portal', () => {
   test.describe('Portal Login (OTP Flow)', () => {
     test('should display portal login page', async ({ page }) => {
       await page.goto('/portal/login')
-      await expect(page.getByRole('heading', { name: /patient|portal|login|sign in/i })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: /patient|portal|login|sign in/i })
+      ).toBeVisible()
     })
 
     test('should show phone number input', async ({ page }) => {
       await page.goto('/portal/login')
-      const phoneInput = page.getByLabel(/phone/i).or(page.getByPlaceholder(/phone|mobile|number/i))
+      const phoneInput = page
+        .getByLabel(/phone/i)
+        .or(page.getByPlaceholder(/phone|mobile|number/i))
+        .first()
       await expect(phoneInput).toBeVisible()
     })
 
     test('should show clinic identifier input', async ({ page }) => {
       await page.goto('/portal/login')
-      const clinicInput = page.getByLabel(/clinic|hospital|slug/i).or(
-        page.getByPlaceholder(/clinic|hospital/i)
-      )
+      const clinicInput = page
+        .getByLabel(/clinic|hospital|slug/i)
+        .or(page.getByPlaceholder(/clinic|hospital/i))
+        .first()
       if (await clinicInput.isVisible()) {
         await expect(clinicInput).toBeVisible()
       }
@@ -25,24 +31,33 @@ test.describe('Patient Portal', () => {
 
     test('should validate phone number format', async ({ page }) => {
       await page.goto('/portal/login')
-      const phoneInput = page.getByLabel(/phone/i).or(page.getByPlaceholder(/phone|mobile|number/i))
+      const phoneInput = page
+        .getByLabel(/phone/i)
+        .or(page.getByPlaceholder(/phone|mobile|number/i))
+        .first()
       await phoneInput.fill('123') // Too short
       const submitButton = page.getByRole('button', { name: /send|get otp|continue|submit/i })
       if (await submitButton.isVisible()) {
         await submitButton.click()
-        await expect(page.getByText(/valid|10.*digit|invalid|phone/i).first()).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText(/valid|10.*digit|invalid|phone/i).first()).toBeVisible({
+          timeout: 5000,
+        })
       }
     })
 
     test('should accept valid phone number and show OTP step', async ({ page }) => {
       await page.goto('/portal/login')
-      const phoneInput = page.getByLabel(/phone/i).or(page.getByPlaceholder(/phone|mobile|number/i))
+      const phoneInput = page
+        .getByLabel(/phone/i)
+        .or(page.getByPlaceholder(/phone|mobile|number/i))
+        .first()
       await phoneInput.fill('9876543210')
 
       // Fill clinic slug if required
-      const clinicInput = page.getByLabel(/clinic|hospital|slug/i).or(
-        page.getByPlaceholder(/clinic|hospital/i)
-      )
+      const clinicInput = page
+        .getByLabel(/clinic|hospital|slug/i)
+        .or(page.getByPlaceholder(/clinic|hospital/i))
+        .first()
       if (await clinicInput.isVisible()) {
         await clinicInput.fill('test-clinic')
       }
@@ -59,17 +74,23 @@ test.describe('Patient Portal', () => {
     test('should show OTP input field after sending OTP', async ({ page }) => {
       await page.goto('/portal/login')
       // This test verifies the UI has an OTP input mechanism
-      const otpInput = page.getByLabel(/otp|verification|code/i).or(
-        page.getByPlaceholder(/otp|code|verify/i)
-      )
+      const otpInput = page
+        .getByLabel(/otp|verification|code/i)
+        .or(page.getByPlaceholder(/otp|code|verify/i))
+        .first()
       // OTP input may only show after step 1
       await expect(page.locator('body')).toBeVisible()
     })
   })
 
   test.describe('Portal Dashboard', () => {
-    test('should redirect to login when accessing portal dashboard without auth', async ({ page }) => {
-      await page.goto('/portal/dashboard')
+    test('should redirect to login when accessing portal dashboard without auth', async ({
+      page,
+    }) => {
+      // The portal dashboard is /portal — app/portal/(secure)/page.tsx, where
+      // (secure) is a route group and contributes no path segment.
+      // /portal/dashboard is a 404, and a 404 never redirects.
+      await page.goto('/portal')
       // Should redirect to portal login
       await expect(page).toHaveURL(/.*(?:portal\/login|login)/)
     })

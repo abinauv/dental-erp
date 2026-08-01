@@ -4,14 +4,18 @@ test.describe('Lab Orders', () => {
   test.describe('Lab Orders List', () => {
     test('should display lab orders page', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      await expect(page.getByRole('heading', { name: /lab/i })).toBeVisible()
+      // Match the page title exactly. A /lab/i regex also matches the "Sent to
+      // Lab" stat card and the "No lab orders found" empty state, which trips
+      // strict mode.
+      await expect(page.getByRole('heading', { name: 'Lab Work Management' })).toBeVisible()
     })
 
     test('should have New Lab Order button', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      const newButton = page.getByRole('button', { name: /new.*order|add.*order|create.*order/i }).or(
-        page.getByRole('link', { name: /new.*order|add.*order|create.*order/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new.*order|add.*order|create.*order/i })
+        .or(page.getByRole('link', { name: /new.*order|add.*order|create.*order/i }))
+        .first()
       await expect(newButton).toBeVisible()
     })
 
@@ -23,17 +27,18 @@ test.describe('Lab Orders', () => {
 
     test('should have status filter', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      const statusFilter = page.getByRole('combobox').first().or(
-        page.locator('select').first()
-      )
-      await expect(statusFilter.or(page.getByText(/status|filter/i).first())).toBeVisible()
+      const statusFilter = page.getByRole('combobox').or(page.locator('select').first()).first()
+      await expect(statusFilter.or(page.getByText(/status|filter/i).first()).first()).toBeVisible()
     })
 
     test('should display orders in table', async ({ adminPage: page }) => {
       await page.goto('/lab')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*order|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*order|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -45,12 +50,14 @@ test.describe('Lab Orders', () => {
 
     test('should show tabs for active/completed orders', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      const activeTab = page.getByRole('tab', { name: /active/i }).or(
-        page.getByText(/active/i).first()
-      )
-      const completedTab = page.getByRole('tab', { name: /completed/i }).or(
-        page.getByText(/completed/i).first()
-      )
+      const activeTab = page
+        .getByRole('tab', { name: /active/i })
+        .or(page.getByText(/active/i).first())
+        .first()
+      const completedTab = page
+        .getByRole('tab', { name: /completed/i })
+        .or(page.getByText(/completed/i).first())
+        .first()
       if (await activeTab.isVisible()) {
         await expect(activeTab).toBeVisible()
       }
@@ -60,28 +67,35 @@ test.describe('Lab Orders', () => {
   test.describe('Create Lab Order', () => {
     test('should open lab order creation form', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      const newButton = page.getByRole('button', { name: /new.*order|add.*order|create/i }).or(
-        page.getByRole('link', { name: /new.*order|add.*order|create/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new.*order|add.*order|create/i })
+        .or(page.getByRole('link', { name: /new.*order|add.*order|create/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/patient/i).or(page.getByRole('heading', { name: /new|create|add/i }))
+        page
+          .getByLabel(/patient/i)
+          .or(page.getByRole('heading', { name: /new|create|add/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should validate required fields', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      const newButton = page.getByRole('button', { name: /new.*order|add.*order|create/i }).or(
-        page.getByRole('link', { name: /new.*order|add.*order|create/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new.*order|add.*order|create/i })
+        .or(page.getByRole('link', { name: /new.*order|add.*order|create/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
 
       const submitButton = page.getByRole('button', { name: /save|create|add|submit/i })
       if (await submitButton.isVisible()) {
         await submitButton.click()
-        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({
+          timeout: 5000,
+        })
       }
     })
   })
@@ -91,15 +105,19 @@ test.describe('Lab Orders', () => {
       await page.goto('/lab/vendors')
       await expect(page.locator('body')).toBeVisible()
       await expect(
-        page.getByRole('heading', { name: /vendor/i }).or(page.getByText(/vendor/i).first())
+        page
+          .getByRole('heading', { name: /vendor/i })
+          .or(page.getByText(/vendor/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
     test('should have add vendor button', async ({ adminPage: page }) => {
       await page.goto('/lab/vendors')
-      const addButton = page.getByRole('button', { name: /add.*vendor|new.*vendor/i }).or(
-        page.getByRole('link', { name: /add.*vendor|new.*vendor/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add.*vendor|new.*vendor/i })
+        .or(page.getByRole('link', { name: /add.*vendor|new.*vendor/i }))
+        .first()
       if (await addButton.isVisible()) {
         await expect(addButton).toBeVisible()
       }

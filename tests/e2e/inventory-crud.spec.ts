@@ -9,9 +9,10 @@ test.describe('Inventory Management', () => {
 
     test('should have Add Item button', async ({ adminPage: page }) => {
       await page.goto('/inventory')
-      const addButton = page.getByRole('button', { name: /add item|new item/i }).or(
-        page.getByRole('link', { name: /add item|new item/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add item|new item/i })
+        .or(page.getByRole('link', { name: /add item|new item/i }))
+        .first()
       await expect(addButton).toBeVisible()
     })
 
@@ -26,10 +27,10 @@ test.describe('Inventory Management', () => {
 
     test('should have category filter', async ({ adminPage: page }) => {
       await page.goto('/inventory')
-      const categoryFilter = page.getByRole('combobox').first().or(
-        page.locator('select').first()
-      )
-      await expect(categoryFilter.or(page.getByText(/category|filter/i).first())).toBeVisible()
+      const categoryFilter = page.getByRole('combobox').or(page.locator('select').first()).first()
+      await expect(
+        categoryFilter.or(page.getByText(/category|filter/i).first()).first()
+      ).toBeVisible()
     })
 
     test('should show stock status indicators', async ({ adminPage: page }) => {
@@ -37,7 +38,10 @@ test.describe('Inventory Management', () => {
       await page.waitForTimeout(1000)
       // Stock status badges (low stock, sufficient, etc.)
       await expect(
-        page.locator('table').or(page.getByText(/no.*item|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*item|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -50,36 +54,45 @@ test.describe('Inventory Management', () => {
     test('should support pagination', async ({ adminPage: page }) => {
       await page.goto('/inventory')
       const pagination = page.getByRole('button', { name: /next|previous/i }).first()
-      await expect(pagination.or(page.locator('body'))).toBeVisible()
+      await expect(pagination.or(page.locator('body')).first()).toBeVisible()
     })
   })
 
   test.describe('Create Inventory Item', () => {
     test('should open item creation form', async ({ adminPage: page }) => {
       await page.goto('/inventory')
-      const addButton = page.getByRole('button', { name: /add item|new item/i }).or(
-        page.getByRole('link', { name: /add item|new item/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add item|new item/i })
+        .or(page.getByRole('link', { name: /add item|new item/i }))
+        .first()
       await addButton.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/name/i).or(page.getByRole('heading', { name: /add|new|create/i }))
+        page
+          .getByLabel(/name/i)
+          .or(page.getByRole('heading', { name: /add|new|create/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should validate required fields', async ({ adminPage: page }) => {
       await page.goto('/inventory')
-      const addButton = page.getByRole('button', { name: /add item|new item/i }).or(
-        page.getByRole('link', { name: /add item|new item/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add item|new item/i })
+        .or(page.getByRole('link', { name: /add item|new item/i }))
+        .first()
       await addButton.click()
       await page.waitForTimeout(500)
 
-      const submitButton = page.getByRole('button', { name: /save|create|add|submit/i })
-      if (await submitButton.isVisible()) {
-        await submitButton.click()
-        await expect(page.getByText(/required|enter|provide/i).first()).toBeVisible({ timeout: 5000 })
-      }
+      // Native HTML5 `required` validation — the browser blocks submission and
+      // shows a bubble, so there is no error text in the DOM to assert on.
+      const submitButton = page.locator('button[type="submit"]').first()
+      await submitButton.click()
+
+      const firstRequired = page.locator('input[required]').first()
+      await expect(firstRequired).toBeVisible()
+      const blocked = await firstRequired.evaluate((el) => !(el as HTMLInputElement).validity.valid)
+      expect(blocked).toBe(true)
     })
   })
 
@@ -88,7 +101,10 @@ test.describe('Inventory Management', () => {
       await page.goto('/inventory')
       await page.waitForTimeout(1000)
       // Look for stock adjustment options in row actions
-      const moreButton = page.locator('button:has(svg)').filter({ has: page.locator('svg') }).last()
+      const moreButton = page
+        .locator('button:has(svg)')
+        .filter({ has: page.locator('svg') })
+        .last()
       if (await moreButton.isVisible()) {
         await expect(page.locator('body')).toBeVisible()
       }
@@ -98,9 +114,10 @@ test.describe('Inventory Management', () => {
   test.describe('Suppliers', () => {
     test('should navigate to suppliers page', async ({ adminPage: page }) => {
       await page.goto('/inventory')
-      const suppliersLink = page.getByRole('link', { name: /supplier/i }).or(
-        page.getByRole('tab', { name: /supplier/i })
-      )
+      const suppliersLink = page
+        .getByRole('link', { name: /supplier/i })
+        .or(page.getByRole('tab', { name: /supplier/i }))
+        .first()
       if (await suppliersLink.isVisible()) {
         await suppliersLink.click()
         await page.waitForTimeout(1000)
@@ -110,7 +127,9 @@ test.describe('Inventory Management', () => {
   })
 
   test.describe('Low Stock Alerts', () => {
-    test('should display low stock alerts if items are below minimum', async ({ adminPage: page }) => {
+    test('should display low stock alerts if items are below minimum', async ({
+      adminPage: page,
+    }) => {
       await page.goto('/inventory')
       await page.waitForTimeout(1000)
       // Low stock items should show badge or alert

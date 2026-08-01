@@ -9,26 +9,30 @@ test.describe('Appointment Management', () => {
 
     test('should have New Appointment button', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const newButton = page.getByRole('button', { name: /new appointment|add appointment/i }).or(
-        page.getByRole('link', { name: /new appointment|add appointment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new appointment|add appointment/i })
+        .or(page.getByRole('link', { name: /new appointment|add appointment/i }))
+        .first()
       await expect(newButton).toBeVisible()
     })
 
     test('should have date filter', async ({ adminPage: page }) => {
       await page.goto('/appointments')
       // Date picker or calendar filter
-      const dateInput = page.getByLabel(/date/i).or(page.locator('input[type="date"]').first())
-      await expect(dateInput.or(page.getByRole('button', { name: /today|date/i }))).toBeVisible()
+      const dateInput = page
+        .getByLabel(/date/i)
+        .or(page.locator('input[type="date"]').first())
+        .first()
+      await expect(
+        dateInput.or(page.getByRole('button', { name: /today|date/i })).first()
+      ).toBeVisible()
     })
 
     test('should have status filter', async ({ adminPage: page }) => {
       await page.goto('/appointments')
       // Status filter dropdown
-      const statusFilter = page.getByRole('combobox').first().or(
-        page.locator('select').first()
-      )
-      await expect(statusFilter.or(page.getByText(/status/i))).toBeVisible()
+      const statusFilter = page.getByRole('combobox').or(page.locator('select').first()).first()
+      await expect(statusFilter.or(page.getByText(/status/i)).first()).toBeVisible()
     })
 
     test('should have search functionality', async ({ adminPage: page }) => {
@@ -39,47 +43,62 @@ test.describe('Appointment Management', () => {
 
     test('should support pagination', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const pagination = page.getByRole('button', { name: /next|previous/i }).or(
-        page.locator('[class*="pagination"]')
-      )
-      await expect(pagination.first()).toBeVisible()
+      await page.waitForTimeout(1000)
+      // The pager is gated on `pagination.totalPages > 1` in
+      // app/(dashboard)/appointments/page.tsx, and the seed creates no
+      // appointments — so assert the controls when the list is actually
+      // paginated, and the empty state otherwise.
+      const nextButton = page.getByRole('button', { name: /next/i })
+      if (await nextButton.count()) {
+        await expect(nextButton.first()).toBeVisible()
+      } else {
+        await expect(page.getByText('No appointments found')).toBeVisible()
+      }
     })
   })
 
   test.describe('Create Appointment', () => {
     test('should open appointment creation form', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const newButton = page.getByRole('button', { name: /new appointment|add appointment/i }).or(
-        page.getByRole('link', { name: /new appointment|add appointment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new appointment|add appointment/i })
+        .or(page.getByRole('link', { name: /new appointment|add appointment/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
       // Should show form
       await expect(
-        page.getByLabel(/patient/i).or(page.getByRole('heading', { name: /new|create|book/i }))
+        page
+          .getByLabel(/patient/i)
+          .or(page.getByRole('heading', { name: /new|create|book/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should validate required fields', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const newButton = page.getByRole('button', { name: /new appointment|add appointment/i }).or(
-        page.getByRole('link', { name: /new appointment|add appointment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new appointment|add appointment/i })
+        .or(page.getByRole('link', { name: /new appointment|add appointment/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
 
       const submitButton = page.getByRole('button', { name: /save|create|book|submit/i })
       if (await submitButton.isVisible()) {
         await submitButton.click()
-        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({
+          timeout: 5000,
+        })
       }
     })
 
     test('should show appointment type options', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const newButton = page.getByRole('button', { name: /new appointment|add appointment/i }).or(
-        page.getByRole('link', { name: /new appointment|add appointment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new appointment|add appointment/i })
+        .or(page.getByRole('link', { name: /new appointment|add appointment/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
 
@@ -87,13 +106,15 @@ test.describe('Appointment Management', () => {
       if (await typeField.isVisible()) {
         await typeField.click()
         // Should show appointment type options
-        await expect(page.getByRole('option').first().or(page.getByRole('listbox'))).toBeVisible()
+        await expect(page.getByRole('option').or(page.getByRole('listbox')).first()).toBeVisible()
       }
     })
   })
 
   test.describe('Appointment Check-in/Check-out', () => {
-    test('should display check-in button for scheduled appointments', async ({ adminPage: page }) => {
+    test('should display check-in button for scheduled appointments', async ({
+      adminPage: page,
+    }) => {
       await page.goto('/appointments')
       await page.waitForTimeout(1000)
       // Check-in buttons should exist for appropriate appointments
@@ -104,11 +125,12 @@ test.describe('Appointment Management', () => {
   })
 
   test.describe('Appointment Queue (Today)', () => {
-    test('should show today\'s queue view', async ({ adminPage: page }) => {
+    test("should show today's queue view", async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const todayTab = page.getByRole('tab', { name: /today|queue/i }).or(
-        page.getByRole('link', { name: /today|queue/i })
-      )
+      const todayTab = page
+        .getByRole('tab', { name: /today|queue/i })
+        .or(page.getByRole('link', { name: /today|queue/i }))
+        .first()
       if (await todayTab.isVisible()) {
         await todayTab.click()
         await page.waitForTimeout(1000)
@@ -120,11 +142,14 @@ test.describe('Appointment Management', () => {
   test.describe('Appointment Waitlist', () => {
     test('should access waitlist from appointments page', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const waitlistTab = page.getByRole('tab', { name: /waitlist/i }).or(
-        page.getByRole('link', { name: /waitlist/i }).or(
-          page.getByRole('button', { name: /waitlist/i })
+      const waitlistTab = page
+        .getByRole('tab', { name: /waitlist/i })
+        .or(
+          page
+            .getByRole('link', { name: /waitlist/i })
+            .or(page.getByRole('button', { name: /waitlist/i }))
         )
-      )
+        .first()
       if (await waitlistTab.isVisible()) {
         await waitlistTab.click()
         await page.waitForTimeout(1000)
@@ -136,9 +161,10 @@ test.describe('Appointment Management', () => {
   test.describe('Calendar View', () => {
     test('should toggle between list and calendar view', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      const calendarToggle = page.getByRole('button', { name: /calendar|week|month/i }).or(
-        page.getByRole('tab', { name: /calendar/i })
-      )
+      const calendarToggle = page
+        .getByRole('button', { name: /calendar|week|month/i })
+        .or(page.getByRole('tab', { name: /calendar/i }))
+        .first()
       if (await calendarToggle.isVisible()) {
         await calendarToggle.click()
         await page.waitForTimeout(1000)

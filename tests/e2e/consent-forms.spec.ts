@@ -11,7 +11,10 @@ test.describe('Consent Forms', () => {
       await page.goto('/settings/forms')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/form|template|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/form|template|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -33,9 +36,10 @@ test.describe('Consent Forms', () => {
       if (await patientLink.isVisible()) {
         await patientLink.click()
         await page.waitForTimeout(1000)
-        const formsTab = page.getByRole('tab', { name: /form|consent/i }).or(
-          page.getByText(/intake.*form|consent/i).first()
-        )
+        const formsTab = page
+          .getByRole('tab', { name: /form|consent/i })
+          .or(page.getByText(/intake.*form|consent/i).first())
+          .first()
         if (await formsTab.isVisible()) {
           await formsTab.click()
           await page.waitForTimeout(1000)

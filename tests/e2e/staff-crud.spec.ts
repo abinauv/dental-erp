@@ -9,9 +9,10 @@ test.describe('Staff Management', () => {
 
     test('should have Add Staff button', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const addButton = page.getByRole('button', { name: /add staff|new staff|invite/i }).or(
-        page.getByRole('link', { name: /add staff|new staff|invite/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add staff|new staff|invite/i })
+        .or(page.getByRole('link', { name: /add staff|new staff|invite/i }))
+        .first()
       await expect(addButton).toBeVisible()
     })
 
@@ -23,17 +24,18 @@ test.describe('Staff Management', () => {
 
     test('should have role filter', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const roleFilter = page.getByRole('combobox').first().or(
-        page.locator('select').first()
-      )
-      await expect(roleFilter.or(page.getByText(/role|filter/i).first())).toBeVisible()
+      const roleFilter = page.getByRole('combobox').or(page.locator('select').first()).first()
+      await expect(roleFilter.or(page.getByText(/role|filter/i).first()).first()).toBeVisible()
     })
 
     test('should display staff in table', async ({ adminPage: page }) => {
       await page.goto('/staff')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*staff|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*staff|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -53,36 +55,46 @@ test.describe('Staff Management', () => {
   test.describe('Create Staff', () => {
     test('should open staff creation form', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const addButton = page.getByRole('button', { name: /add staff|new staff|invite/i }).or(
-        page.getByRole('link', { name: /add staff|new staff|invite/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add staff|new staff|invite/i })
+        .or(page.getByRole('link', { name: /add staff|new staff|invite/i }))
+        .first()
       await addButton.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/name/i).or(page.getByRole('heading', { name: /add|new|create|invite/i }))
+        page
+          .getByLabel(/name/i)
+          .or(page.getByRole('heading', { name: /add|new|create|invite/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should validate required fields', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const addButton = page.getByRole('button', { name: /add staff|new staff|invite/i }).or(
-        page.getByRole('link', { name: /add staff|new staff|invite/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add staff|new staff|invite/i })
+        .or(page.getByRole('link', { name: /add staff|new staff|invite/i }))
+        .first()
       await addButton.click()
       await page.waitForTimeout(500)
 
-      const submitButton = page.getByRole('button', { name: /save|create|add|submit|invite/i })
-      if (await submitButton.isVisible()) {
-        await submitButton.click()
-        await expect(page.getByText(/required|enter|provide|valid/i).first()).toBeVisible({ timeout: 5000 })
-      }
+      // Native HTML5 `required` validation — the browser blocks submission and
+      // shows a bubble, so there is no error text in the DOM to assert on.
+      const submitButton = page.locator('button[type="submit"]').first()
+      await submitButton.click()
+
+      const firstRequired = page.locator('input[required]').first()
+      await expect(firstRequired).toBeVisible()
+      const blocked = await firstRequired.evaluate((el) => !(el as HTMLInputElement).validity.valid)
+      expect(blocked).toBe(true)
     })
 
     test('should show role selection options', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const addButton = page.getByRole('button', { name: /add staff|new staff|invite/i }).or(
-        page.getByRole('link', { name: /add staff|new staff|invite/i })
-      )
+      const addButton = page
+        .getByRole('button', { name: /add staff|new staff|invite/i })
+        .or(page.getByRole('link', { name: /add staff|new staff|invite/i }))
+        .first()
       await addButton.click()
       await page.waitForTimeout(500)
 
@@ -90,7 +102,10 @@ test.describe('Staff Management', () => {
       if (await roleField.isVisible()) {
         await roleField.click()
         await expect(
-          page.getByRole('option').first().or(page.getByText(/doctor|admin|receptionist/i).first())
+          page
+            .getByRole('option')
+            .or(page.getByText(/doctor|admin|receptionist/i).first())
+            .first()
         ).toBeVisible()
       }
     })
@@ -99,9 +114,10 @@ test.describe('Staff Management', () => {
   test.describe('Staff Attendance', () => {
     test('should navigate to attendance section', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const attendanceLink = page.getByRole('link', { name: /attendance/i }).or(
-        page.getByRole('tab', { name: /attendance/i })
-      )
+      const attendanceLink = page
+        .getByRole('link', { name: /attendance/i })
+        .or(page.getByRole('tab', { name: /attendance/i }))
+        .first()
       if (await attendanceLink.isVisible()) {
         await attendanceLink.click()
         await page.waitForTimeout(1000)
@@ -113,9 +129,10 @@ test.describe('Staff Management', () => {
   test.describe('Staff Leaves', () => {
     test('should navigate to leaves section', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const leavesLink = page.getByRole('link', { name: /leave/i }).or(
-        page.getByRole('tab', { name: /leave/i })
-      )
+      const leavesLink = page
+        .getByRole('link', { name: /leave/i })
+        .or(page.getByRole('tab', { name: /leave/i }))
+        .first()
       if (await leavesLink.isVisible()) {
         await leavesLink.click()
         await page.waitForTimeout(1000)
@@ -127,9 +144,10 @@ test.describe('Staff Management', () => {
   test.describe('Staff Shifts', () => {
     test('should navigate to shifts section', async ({ adminPage: page }) => {
       await page.goto('/staff')
-      const shiftsLink = page.getByRole('link', { name: /shift|schedule/i }).or(
-        page.getByRole('tab', { name: /shift|schedule/i })
-      )
+      const shiftsLink = page
+        .getByRole('link', { name: /shift|schedule/i })
+        .or(page.getByRole('tab', { name: /shift|schedule/i }))
+        .first()
       if (await shiftsLink.isVisible()) {
         await shiftsLink.click()
         await page.waitForTimeout(1000)

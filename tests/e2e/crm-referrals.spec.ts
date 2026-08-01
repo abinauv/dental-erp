@@ -5,9 +5,10 @@ test.describe('CRM Referrals', () => {
     test('should display referrals page', async ({ adminPage: page }) => {
       await page.goto('/crm/referrals')
       await expect(
-        page.getByRole('heading', { name: /referral/i }).or(
-          page.getByText(/referral/i).first()
-        )
+        page
+          .getByRole('heading', { name: /referral/i })
+          .or(page.getByText(/referral/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -21,7 +22,10 @@ test.describe('CRM Referrals', () => {
       await page.goto('/crm/referrals')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*referral|no.*data|empty/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*referral|no.*data|empty/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -29,8 +33,11 @@ test.describe('CRM Referrals', () => {
       await page.goto('/crm/referrals')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/pending|converted|expired|completed|reward/i).first()
+        page
+          .getByText(/pending|converted|expired|completed|reward/i)
+          .first()
           .or(page.getByText(/no.*referral|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -38,8 +45,11 @@ test.describe('CRM Referrals', () => {
       await page.goto('/crm/referrals')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/referrer|referred|patient|from|to/i).first()
+        page
+          .getByText(/referrer|referred|patient|from|to/i)
+          .first()
           .or(page.getByText(/no.*referral|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -51,8 +61,11 @@ test.describe('CRM Referrals', () => {
       await createBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/referrer|patient|phone|name/i).first()
+        page
+          .getByLabel(/referrer|patient|phone|name/i)
+          .first()
           .or(page.getByRole('heading', { name: /create|new|referral/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -64,7 +77,9 @@ test.describe('CRM Referrals', () => {
       const submitBtn = page.getByRole('button', { name: /save|create|submit/i })
       if (await submitBtn.isVisible()) {
         await submitBtn.click()
-        await expect(page.getByText(/required|select|enter/i).first()).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText(/required|select|enter/i).first()).toBeVisible({
+          timeout: 5000,
+        })
       }
     })
   })
@@ -74,9 +89,12 @@ test.describe('CRM Referrals', () => {
       await page.goto('/crm/referrals')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/code|copy|share/i).first()
+        page
+          .getByText(/code|copy|share/i)
+          .first()
           .or(page.getByText(/no.*referral|no.*data/i).first())
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -84,9 +102,12 @@ test.describe('CRM Referrals', () => {
       await page.goto('/crm/referrals')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/reward|point|gift|bonus/i).first()
+        page
+          .getByText(/reward|point|gift|bonus/i)
+          .first()
           .or(page.getByText(/no.*referral|no.*data/i).first())
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })

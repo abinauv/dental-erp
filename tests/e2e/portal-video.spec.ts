@@ -6,8 +6,13 @@ test.describe('Patient Portal — Video Consultation', () => {
       await page.goto('/portal/video/test-consultation-id')
       // Should redirect to login or show error
       await expect(
-        page.getByRole('heading', { name: /login|sign in|portal|video|consultation|error|not found/i }).first()
+        page
+          .getByRole('heading', {
+            name: /login|sign in|portal|video|consultation|error|not found/i,
+          })
+          .first()
           .or(page.getByText(/login|sign in|not found|unauthorized/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
   })
@@ -25,8 +30,11 @@ test.describe('Patient Portal — Video Consultation', () => {
       await page.waitForTimeout(1000)
       // Should show login or not-found
       await expect(
-        page.getByText(/login|not found|error|unauthorized|sign in/i).first()
+        page
+          .getByText(/login|not found|error|unauthorized|sign in/i)
+          .first()
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
   })

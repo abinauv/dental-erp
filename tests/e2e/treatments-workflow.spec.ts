@@ -9,18 +9,17 @@ test.describe('Treatment Workflow', () => {
 
     test('should have New Treatment button', async ({ adminPage: page }) => {
       await page.goto('/treatments')
-      const newButton = page.getByRole('button', { name: /new treatment|add treatment/i }).or(
-        page.getByRole('link', { name: /new treatment|add treatment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new treatment|add treatment/i })
+        .or(page.getByRole('link', { name: /new treatment|add treatment/i }))
+        .first()
       await expect(newButton).toBeVisible()
     })
 
     test('should have status filter', async ({ adminPage: page }) => {
       await page.goto('/treatments')
-      const statusFilter = page.getByRole('combobox').first().or(
-        page.locator('select').first()
-      )
-      await expect(statusFilter.or(page.getByText(/status|filter/i).first())).toBeVisible()
+      const statusFilter = page.getByRole('combobox').or(page.locator('select').first()).first()
+      await expect(statusFilter.or(page.getByText(/status|filter/i).first()).first()).toBeVisible()
     })
 
     test('should have search functionality', async ({ adminPage: page }) => {
@@ -33,7 +32,10 @@ test.describe('Treatment Workflow', () => {
       await page.goto('/treatments')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*treatment|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*treatment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -47,28 +49,35 @@ test.describe('Treatment Workflow', () => {
   test.describe('Create Treatment', () => {
     test('should open treatment creation form', async ({ adminPage: page }) => {
       await page.goto('/treatments')
-      const newButton = page.getByRole('button', { name: /new treatment|add treatment/i }).or(
-        page.getByRole('link', { name: /new treatment|add treatment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new treatment|add treatment/i })
+        .or(page.getByRole('link', { name: /new treatment|add treatment/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/patient/i).or(page.getByRole('heading', { name: /new|create|add/i }))
+        page
+          .getByLabel(/patient/i)
+          .or(page.getByRole('heading', { name: /new|create|add/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
     test('should validate required fields', async ({ adminPage: page }) => {
       await page.goto('/treatments')
-      const newButton = page.getByRole('button', { name: /new treatment|add treatment/i }).or(
-        page.getByRole('link', { name: /new treatment|add treatment/i })
-      )
+      const newButton = page
+        .getByRole('button', { name: /new treatment|add treatment/i })
+        .or(page.getByRole('link', { name: /new treatment|add treatment/i }))
+        .first()
       await newButton.click()
       await page.waitForTimeout(500)
 
       const submitButton = page.getByRole('button', { name: /save|create|add|submit/i })
       if (await submitButton.isVisible()) {
         await submitButton.click()
-        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText(/required|select|choose/i).first()).toBeVisible({
+          timeout: 5000,
+        })
       }
     })
   })
@@ -76,9 +85,10 @@ test.describe('Treatment Workflow', () => {
   test.describe('Treatment Plans', () => {
     test('should navigate to treatment plans', async ({ adminPage: page }) => {
       await page.goto('/treatments')
-      const plansTab = page.getByRole('tab', { name: /plan/i }).or(
-        page.getByRole('link', { name: /plan/i })
-      )
+      const plansTab = page
+        .getByRole('tab', { name: /plan/i })
+        .or(page.getByRole('link', { name: /plan/i }))
+        .first()
       if (await plansTab.isVisible()) {
         await plansTab.click()
         await page.waitForTimeout(1000)
@@ -90,9 +100,10 @@ test.describe('Treatment Workflow', () => {
   test.describe('Dental Chart', () => {
     test('should navigate to dental chart', async ({ adminPage: page }) => {
       await page.goto('/treatments')
-      const chartLink = page.getByRole('link', { name: /dental chart|chart/i }).or(
-        page.getByRole('tab', { name: /chart/i })
-      )
+      const chartLink = page
+        .getByRole('link', { name: /dental chart|chart/i })
+        .or(page.getByRole('tab', { name: /chart/i }))
+        .first()
       if (await chartLink.isVisible()) {
         await chartLink.click()
         await page.waitForTimeout(1000)
@@ -102,7 +113,9 @@ test.describe('Treatment Workflow', () => {
   })
 
   test.describe('Treatment Status Workflow', () => {
-    test('should show start treatment button for planned treatments', async ({ adminPage: page }) => {
+    test('should show start treatment button for planned treatments', async ({
+      adminPage: page,
+    }) => {
       await page.goto('/treatments')
       await page.waitForTimeout(1000)
       // Start/complete buttons should exist for appropriate treatments

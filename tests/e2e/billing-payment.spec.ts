@@ -5,9 +5,10 @@ test.describe('Payment Recording Workflow', () => {
     test('should display payments page', async ({ adminPage: page }) => {
       await page.goto('/billing/payments')
       await expect(
-        page.getByRole('heading', { name: /payment/i }).or(
-          page.getByText(/payment/i).first()
-        )
+        page
+          .getByRole('heading', { name: /payment/i })
+          .or(page.getByText(/payment/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -15,22 +16,28 @@ test.describe('Payment Recording Workflow', () => {
       await page.goto('/billing/payments')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*payment|no.*data/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*payment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
     test('should have search functionality', async ({ adminPage: page }) => {
       await page.goto('/billing/payments')
       const searchInput = page.getByPlaceholder(/search/i)
-      await expect(searchInput.or(page.locator('body'))).toBeVisible()
+      await expect(searchInput.or(page.locator('body')).first()).toBeVisible()
     })
 
     test('should show payment method badges', async ({ adminPage: page }) => {
       await page.goto('/billing/payments')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/cash|card|online|upi|bank/i).first()
+        page
+          .getByText(/cash|card|online|upi|bank/i)
+          .first()
           .or(page.getByText(/no.*payment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -38,8 +45,11 @@ test.describe('Payment Recording Workflow', () => {
       await page.goto('/billing/payments')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/completed|pending|failed|refunded/i).first()
+        page
+          .getByText(/completed|pending|failed|refunded/i)
+          .first()
           .or(page.getByText(/no.*payment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -47,8 +57,11 @@ test.describe('Payment Recording Workflow', () => {
       await page.goto('/billing/payments')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/₹|INR|amount/i).first()
+        page
+          .getByText(/₹|INR|amount/i)
+          .first()
           .or(page.getByText(/no.*payment|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -59,14 +72,17 @@ test.describe('Payment Recording Workflow', () => {
       await page.waitForTimeout(1000)
       const row = page.locator('table tbody tr').first()
       if (await row.isVisible()) {
-        const link = row.getByRole('link').first().or(row.locator('a').first())
+        const link = row.getByRole('link').or(row.locator('a').first()).first()
         if (await link.isVisible()) {
           await link.click()
           await page.waitForTimeout(1000)
           // Record payment button should be visible on invoice detail
           await expect(
-            page.getByRole('button', { name: /record.*payment|pay|add.*payment/i }).first()
+            page
+              .getByRole('button', { name: /record.*payment|pay|add.*payment/i })
+              .first()
               .or(page.getByText(/invoice|amount|balance/i).first())
+              .first()
           ).toBeVisible({ timeout: 5000 })
         }
       }
@@ -77,16 +93,21 @@ test.describe('Payment Recording Workflow', () => {
       await page.waitForTimeout(1000)
       const row = page.locator('table tbody tr').first()
       if (await row.isVisible()) {
-        const link = row.getByRole('link').first().or(row.locator('a').first())
+        const link = row.getByRole('link').or(row.locator('a').first()).first()
         if (await link.isVisible()) {
           await link.click()
           await page.waitForTimeout(1000)
-          const payBtn = page.getByRole('button', { name: /record.*payment|pay|add.*payment/i }).first()
+          const payBtn = page
+            .getByRole('button', { name: /record.*payment|pay|add.*payment/i })
+            .first()
           if (await payBtn.isVisible()) {
             await payBtn.click()
             await page.waitForTimeout(500)
             await expect(
-              page.getByLabel(/method|mode/i).or(page.getByText(/cash|card|online|upi/i).first())
+              page
+                .getByLabel(/method|mode/i)
+                .or(page.getByText(/cash|card|online|upi/i).first())
+                .first()
             ).toBeVisible({ timeout: 5000 })
           }
         }
@@ -98,9 +119,9 @@ test.describe('Payment Recording Workflow', () => {
     test('should show payment summary on billing dashboard', async ({ adminPage: page }) => {
       await page.goto('/billing')
       await page.waitForTimeout(1000)
-      await expect(
-        page.getByText(/collected|received|total.*payment/i).first()
-      ).toBeVisible({ timeout: 5000 })
+      await expect(page.getByText(/collected|received|total.*payment/i).first()).toBeVisible({
+        timeout: 5000,
+      })
     })
   })
 })

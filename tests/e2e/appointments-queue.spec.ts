@@ -5,9 +5,10 @@ test.describe('Appointment Queue Management', () => {
     test('should display queue page with status sections', async ({ adminPage: page }) => {
       await page.goto('/appointments/queue')
       await expect(
-        page.getByRole('heading', { name: /queue|today|appointment/i }).or(
-          page.getByText(/waiting|in.?progress|upcoming|completed/i).first()
-        )
+        page
+          .getByRole('heading', { name: /queue|today|appointment/i })
+          .or(page.getByText(/waiting|in.?progress|upcoming|completed/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -15,8 +16,11 @@ test.describe('Appointment Queue Management', () => {
       await page.goto('/appointments/queue')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/waiting|checked.?in|queue/i).first()
+        page
+          .getByText(/waiting|checked.?in|queue/i)
+          .first()
           .or(page.getByText(/no.*appointment|empty/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -24,8 +28,11 @@ test.describe('Appointment Queue Management', () => {
       await page.goto('/appointments/queue')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/in.?progress|currently|treating/i).first()
+        page
+          .getByText(/in.?progress|currently|treating/i)
+          .first()
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -33,8 +40,11 @@ test.describe('Appointment Queue Management', () => {
       await page.goto('/appointments/queue')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/completed|done|finished/i).first()
+        page
+          .getByText(/completed|done|finished/i)
+          .first()
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -52,16 +62,19 @@ test.describe('Appointment Queue Management', () => {
       await page.waitForTimeout(1000)
       // Check-in / check-out / start buttons
       const actionBtn = page.getByRole('button', { name: /check|start|complete|log/i }).first()
-      await expect(actionBtn.or(page.locator('body'))).toBeVisible()
+      await expect(actionBtn.or(page.locator('body')).first()).toBeVisible()
     })
 
     test('should have doctor filter on queue page', async ({ adminPage: page }) => {
       await page.goto('/appointments/queue')
       await page.waitForTimeout(1000)
-      const doctorFilter = page.getByRole('combobox').first()
+      const doctorFilter = page
+        .getByRole('combobox')
+        .first()
         .or(page.locator('select').first())
         .or(page.getByText(/doctor|all doctor/i).first())
-      await expect(doctorFilter.or(page.locator('body'))).toBeVisible()
+        .first()
+      await expect(doctorFilter.or(page.locator('body')).first()).toBeVisible()
     })
 
     test('should show no-show button for overdue appointments', async ({ adminPage: page }) => {
@@ -69,7 +82,7 @@ test.describe('Appointment Queue Management', () => {
       await page.waitForTimeout(1000)
       // No-show marking option
       const noShowBtn = page.getByRole('button', { name: /no.?show/i }).first()
-      await expect(noShowBtn.or(page.locator('body'))).toBeVisible()
+      await expect(noShowBtn.or(page.locator('body')).first()).toBeVisible()
     })
   })
 
@@ -79,8 +92,11 @@ test.describe('Appointment Queue Management', () => {
       await page.waitForTimeout(1000)
       // Stats: average wait time, total patients, etc.
       await expect(
-        page.getByText(/wait|avg|average|total|patient/i).first()
+        page
+          .getByText(/wait|avg|average|total|patient/i)
+          .first()
           .or(page.locator('body'))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })

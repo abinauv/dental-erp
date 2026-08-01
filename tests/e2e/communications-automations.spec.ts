@@ -5,9 +5,10 @@ test.describe('Communication Automations', () => {
     test('should display automations page', async ({ adminPage: page }) => {
       await page.goto('/communications/automations')
       await expect(
-        page.getByRole('heading', { name: /automation/i }).or(
-          page.getByText(/automation/i).first()
-        )
+        page
+          .getByRole('heading', { name: /automation/i })
+          .or(page.getByText(/automation/i).first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -21,8 +22,11 @@ test.describe('Communication Automations', () => {
       await page.goto('/communications/automations')
       await page.waitForTimeout(1000)
       await expect(
-        page.locator('table').or(page.getByText(/no.*automation|no.*data|empty/i).first())
+        page
+          .locator('table')
+          .or(page.getByText(/no.*automation|no.*data|empty/i).first())
           .or(page.locator('[class*="card"]').first())
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 
@@ -30,8 +34,11 @@ test.describe('Communication Automations', () => {
       await page.goto('/communications/automations')
       await page.waitForTimeout(1000)
       await expect(
-        page.getByText(/active|inactive|enabled|disabled/i).first()
+        page
+          .getByText(/active|inactive|enabled|disabled/i)
+          .first()
           .or(page.getByText(/no.*automation|no.*data/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -43,8 +50,11 @@ test.describe('Communication Automations', () => {
       await createBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/name|trigger|event/i).first()
+        page
+          .getByLabel(/name|trigger|event/i)
+          .first()
           .or(page.getByRole('heading', { name: /create|new|automation/i }))
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -54,8 +64,11 @@ test.describe('Communication Automations', () => {
       await createBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/trigger|event|when/i).first()
+        page
+          .getByLabel(/trigger|event|when/i)
+          .first()
           .or(page.getByText(/trigger|appointment|birthday|payment|recall|follow.?up/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
 
@@ -64,10 +77,11 @@ test.describe('Communication Automations', () => {
       const createBtn = page.getByRole('button', { name: /create|new|add/i }).first()
       await createBtn.click()
       await page.waitForTimeout(500)
-      await expect(
-        page.getByLabel(/channel|method|via/i).first()
-          .or(page.getByText(/sms|email|whatsapp|channel/i).first())
-      ).toBeVisible({ timeout: 5000 })
+      // There is no separate channel field — the channel is picked through the
+      // action, whose options include "Send SMS" and "Send Email".
+      const dialog = page.getByRole('dialog')
+      await expect(dialog.getByText('Action (THEN)')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.getByText('Select action...')).toBeVisible()
     })
 
     test('should have template selection', async ({ adminPage: page }) => {
@@ -76,8 +90,11 @@ test.describe('Communication Automations', () => {
       await createBtn.click()
       await page.waitForTimeout(500)
       await expect(
-        page.getByLabel(/template|message/i).first()
+        page
+          .getByLabel(/template|message/i)
+          .first()
           .or(page.getByText(/template|message/i).first())
+          .first()
       ).toBeVisible({ timeout: 5000 })
     })
   })
@@ -87,7 +104,7 @@ test.describe('Communication Automations', () => {
       await page.goto('/communications/automations')
       await page.waitForTimeout(1000)
       const toggle = page.locator('input[type="checkbox"], [role="switch"]').first()
-      await expect(toggle.or(page.locator('body'))).toBeVisible()
+      await expect(toggle.or(page.locator('body')).first()).toBeVisible()
     })
   })
 })
