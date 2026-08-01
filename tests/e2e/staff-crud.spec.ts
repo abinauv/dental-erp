@@ -78,13 +78,15 @@ test.describe('Staff Management', () => {
       await addButton.click()
       await page.waitForTimeout(500)
 
-      const submitButton = page.getByRole('button', { name: /save|create|add|submit|invite/i })
-      if (await submitButton.isVisible()) {
-        await submitButton.click()
-        await expect(page.getByText(/required|enter|provide|valid/i).first()).toBeVisible({
-          timeout: 5000,
-        })
-      }
+      // Native HTML5 `required` validation — the browser blocks submission and
+      // shows a bubble, so there is no error text in the DOM to assert on.
+      const submitButton = page.locator('button[type="submit"]').first()
+      await submitButton.click()
+
+      const firstRequired = page.locator('input[required]').first()
+      await expect(firstRequired).toBeVisible()
+      const blocked = await firstRequired.evaluate((el) => !(el as HTMLInputElement).validity.valid)
+      expect(blocked).toBe(true)
     })
 
     test('should show role selection options', async ({ adminPage: page }) => {

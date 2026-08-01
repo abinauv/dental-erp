@@ -87,7 +87,10 @@ test.describe('Patient Portal', () => {
     test('should redirect to login when accessing portal dashboard without auth', async ({
       page,
     }) => {
-      await page.goto('/portal/dashboard')
+      // The portal dashboard is /portal — app/portal/(secure)/page.tsx, where
+      // (secure) is a route group and contributes no path segment.
+      // /portal/dashboard is a 404, and a 404 never redirects.
+      await page.goto('/portal')
       // Should redirect to portal login
       await expect(page).toHaveURL(/.*(?:portal\/login|login)/)
     })

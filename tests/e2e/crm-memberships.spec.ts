@@ -76,9 +76,12 @@ test.describe('CRM Memberships', () => {
       const createBtn = page.getByRole('button', { name: /create|new|add/i }).first()
       await createBtn.click()
       await page.waitForTimeout(500)
-      await expect(page.getByLabel(/price|fee|amount|duration|validity/i).first()).toBeVisible({
-        timeout: 5000,
-      })
+      // The dialog's <Label>s carry no htmlFor, so they are not associated
+      // with their inputs and getByLabel cannot find them. Assert the visible
+      // field labels inside the dialog instead.
+      const dialog = page.getByRole('dialog')
+      await expect(dialog.getByText(/^Price/)).toBeVisible({ timeout: 5000 })
+      await expect(dialog.getByText(/^Duration/)).toBeVisible()
     })
   })
 

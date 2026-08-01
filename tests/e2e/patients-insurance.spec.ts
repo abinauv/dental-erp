@@ -1,26 +1,15 @@
 import { test, expect } from './fixtures/auth'
+import { openFirstPatientDetail } from './fixtures/patients'
 
 test.describe('Patient Insurance', () => {
   test.describe('Insurance Tab Navigation', () => {
     test('should navigate to insurance tab on patient detail', async ({ adminPage: page }) => {
-      await page.goto('/patients')
-      await page.waitForTimeout(1000)
+      await openFirstPatientDetail(page)
 
-      const patientLink = page.locator('a[href*="/patients/"]').first()
-      if (await patientLink.isVisible()) {
-        await patientLink.click()
-        await page.waitForTimeout(1000)
-
-        const insuranceTab = page
-          .getByRole('tab', { name: /insurance/i })
-          .or(page.getByText(/insurance/i).first())
-          .first()
-        await expect(insuranceTab).toBeVisible({ timeout: 5000 })
-        await insuranceTab.click()
-        await page.waitForTimeout(500)
-
-        await expect(page.locator('body')).toBeVisible()
-      }
+      const insuranceTab = page.getByRole('tab', { name: /insurance/i })
+      await expect(insuranceTab).toBeVisible({ timeout: 5000 })
+      await insuranceTab.click()
+      await expect(insuranceTab).toHaveAttribute('data-state', 'active')
     })
 
     test('should show add insurance button', async ({ adminPage: page }) => {

@@ -76,15 +76,19 @@ test.describe('Patient Management', () => {
       await addButton.click()
       await page.waitForTimeout(500)
 
-      // Try submitting empty form
-      const submitButton = page.getByRole('button', { name: /save|create|add|submit/i })
-      if (await submitButton.isVisible()) {
-        await submitButton.click()
-        // Should show validation errors
-        await expect(page.getByText(/required|enter|provide/i).first()).toBeVisible({
-          timeout: 5000,
-        })
-      }
+      // Submit the empty form. The form relies on native HTML5 `required`, so
+      // the browser shows a constraint-validation bubble and renders nothing
+      // into the DOM — there is no error text to match. Assert that the
+      // browser actually blocked the submission instead.
+      const submitButton = page.locator('button[type="submit"]').first()
+      await submitButton.click()
+
+      const firstRequired = page.locator('input[required]').first()
+      await expect(firstRequired).toBeVisible()
+      const blocked = await firstRequired.evaluate((el) => !(el as HTMLInputElement).validity.valid)
+      expect(blocked).toBe(true)
+      // And we are still on the form rather than having navigated away.
+      await expect(page).toHaveURL(/\/patients\/new/)
     })
 
     test('should create a new patient with valid data', async ({ adminPage: page }) => {
@@ -105,7 +109,9 @@ test.describe('Patient Management', () => {
       if (await lastNameInput.isVisible()) {
         await lastNameInput.fill('Patient')
       }
-      const phoneInput = page.getByLabel(/phone/i)
+      // "Phone *" specifically — /phone/i also matches "Alternate Phone" and
+      // the emergency "Contact Phone".
+      const phoneInput = page.getByLabel('Phone *')
       if (await phoneInput.isVisible()) {
         await phoneInput.fill('9876543210')
       }
@@ -124,7 +130,7 @@ test.describe('Patient Management', () => {
       }
 
       // Submit
-      const submitButton = page.getByRole('button', { name: /save|create|add|submit/i })
+      const submitButton = page.getByRole('button', { name: 'Create Patient' })
       if (await submitButton.isVisible()) {
         await submitButton.click()
         // Should show success or navigate

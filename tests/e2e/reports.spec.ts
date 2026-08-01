@@ -4,7 +4,11 @@ test.describe('Reports & Analytics', () => {
   test.describe('Reports Page', () => {
     test('should display reports page', async ({ adminPage: page }) => {
       await page.goto('/reports')
-      await expect(page.getByRole('heading', { name: /report|analytics/i })).toBeVisible()
+      // Exact title — /report|analytics/i also matches the "Natural Language
+      // Report" panel heading.
+      await expect(
+        page.getByRole('heading', { name: 'Reports & Analytics Dashboard' })
+      ).toBeVisible()
     })
 
     test('should show report type options', async ({ adminPage: page }) => {

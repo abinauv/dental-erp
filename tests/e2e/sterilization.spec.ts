@@ -4,7 +4,9 @@ test.describe('Sterilization Management', () => {
   test.describe('Sterilization Dashboard', () => {
     test('should display sterilization page', async ({ adminPage: page }) => {
       await page.goto('/sterilization')
-      await expect(page.getByRole('heading', { name: /sterilization/i })).toBeVisible()
+      // Exact title — /sterilization/i also matches the "Sterilization Logs"
+      // card heading.
+      await expect(page.getByRole('heading', { name: 'Sterilization Center' })).toBeVisible()
     })
 
     test('should show instruments section', async ({ adminPage: page }) => {

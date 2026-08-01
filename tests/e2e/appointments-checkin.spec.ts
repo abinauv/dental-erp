@@ -2,7 +2,12 @@ import { test, expect } from './fixtures/auth'
 
 test.describe('Appointment Check-in / Check-out Workflow', () => {
   test.describe('Check-in Flow', () => {
-    test('should display appointment detail page with status actions', async ({
+    // Needs a seeded appointment. prisma/seed.ts creates none, so the
+    // appointments table renders only its empty-state row — whose single link
+    // is "Book New Appointment". The old code clicked that and then asserted
+    // check-in status text on the creation form, which cannot pass. Re-enable
+    // once the seed creates an appointment.
+    test.fixme('should display appointment detail page with status actions', async ({
       adminPage: page,
     }) => {
       await page.goto('/appointments')

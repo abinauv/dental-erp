@@ -16,12 +16,10 @@ test.describe('AI Settings', () => {
     test('should have master AI toggle', async ({ adminPage: page }) => {
       await page.goto('/settings/ai')
       await page.waitForTimeout(1000)
-      // Look for the main AI enabled toggle
-      const aiToggle = page
-        .getByLabel(/enable ai|ai enabled/i)
-        .or(page.getByRole('switch').first())
-        .first()
-      await expect(aiToggle).toBeVisible({ timeout: 10000 })
+      // The master switch, by its accessible name.
+      await expect(page.getByRole('switch', { name: 'AI Features Master Switch' })).toBeVisible({
+        timeout: 10000,
+      })
     })
 
     test('should display feature toggles', async ({ adminPage: page }) => {

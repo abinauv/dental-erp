@@ -4,8 +4,10 @@ test.describe('Lab Orders', () => {
   test.describe('Lab Orders List', () => {
     test('should display lab orders page', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      // Scoped to <main> — the sidebar has matching section headings.
-      await expect(page.getByRole('main').getByRole('heading', { name: /lab/i })).toBeVisible()
+      // Match the page title exactly. A /lab/i regex also matches the "Sent to
+      // Lab" stat card and the "No lab orders found" empty state, which trips
+      // strict mode.
+      await expect(page.getByRole('heading', { name: 'Lab Work Management' })).toBeVisible()
     })
 
     test('should have New Lab Order button', async ({ adminPage: page }) => {
