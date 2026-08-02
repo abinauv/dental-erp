@@ -33,13 +33,17 @@ test.describe('Lab Orders', () => {
 
     test('should display orders in table', async ({ adminPage: page }) => {
       await page.goto('/lab')
-      await page.waitForTimeout(1000)
-      await expect(
-        page
-          .locator('table')
-          .or(page.getByText(/no.*order|no.*data/i).first())
-          .first()
-      ).toBeVisible({ timeout: 10000 })
+      // Five seeded orders, LO-2026-0001 through -0005.
+      await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
+      await expect(page.getByText('LO-2026-0001')).toBeVisible()
+      await expect(page.locator('tbody tr')).toHaveCount(5)
+    })
+
+    test('should show vendor and work type per order', async ({ adminPage: page }) => {
+      await page.goto('/lab')
+      await expect(page.getByText('Precision Dental Lab').first()).toBeVisible({ timeout: 10000 })
+      // workType renders from the LabWorkType enum.
+      await expect(page.getByText(/crown/i).first()).toBeVisible()
     })
 
     test('should have export functionality', async ({ adminPage: page }) => {
