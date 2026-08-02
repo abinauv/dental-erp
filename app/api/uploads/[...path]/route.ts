@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthAndRole } from '@/lib/api-helpers';
-import { readFile } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
+import { getStorage, keyBelongsToHospital, StorageNotFoundError, toStorageKey } from '@/lib/storage';
 
 // GET /api/uploads/[...path] - Serve uploaded files
 export async function GET(
@@ -17,60 +15,42 @@ export async function GET(
 
   try {
     const { path: pathSegments } = await params;
+    const requested = pathSegments.join('/');
 
-    // Ensure path starts with hospitalId for multi-tenant isolation
-    // Files should be stored as: uploads/{hospitalId}/...
-    if (pathSegments[0] !== hospitalId) {
+    // Multi-tenant isolation: a storage key's first segment is the hospital
+    // that owns the file, so this comparison is what keeps one clinic out of
+    // another clinic's patient records.
+    //
+    // It runs before storage is touched and before the 404 below, deliberately.
+    // Answering 404 for "exists but is not yours" and 403 for "not yours" in
+    // the other order would turn this endpoint into an oracle for whether a
+    // given file exists in some other clinic.
+    //
+    // keyBelongsToHospital also answers false for a malformed or traversing
+    // key, so those land here as 403 rather than reaching the driver.
+    if (!keyBelongsToHospital(requested, hospitalId)) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       );
     }
 
-    const filePath = path.join(process.cwd(), 'uploads', ...pathSegments);
+    const object = await getStorage().get(toStorageKey(requested));
 
-    // Security check - ensure path doesn't escape uploads directory
-    const uploadsDir = path.join(process.cwd(), 'uploads');
-    const normalizedPath = path.normalize(filePath);
-
-    if (!normalizedPath.startsWith(uploadsDir)) {
-      return NextResponse.json(
-        { error: 'Invalid path' },
-        { status: 403 }
-      );
-    }
-
-    if (!existsSync(filePath)) {
+    return new NextResponse(new Uint8Array(object.body), {
+      headers: {
+        'Content-Type': object.contentType,
+        'Content-Length': String(object.size),
+        'Cache-Control': 'private, max-age=3600',
+      },
+    });
+  } catch (error: any) {
+    if (error instanceof StorageNotFoundError) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
       );
     }
-
-    const fileBuffer = await readFile(filePath);
-
-    // Determine content type based on extension
-    const ext = path.extname(filePath).toLowerCase();
-    const contentTypes: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.pdf': 'application/pdf',
-      '.doc': 'application/msword',
-      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    };
-
-    const contentType = contentTypes[ext] || 'application/octet-stream';
-
-    return new NextResponse(fileBuffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'private, max-age=3600',
-      },
-    });
-  } catch (error: any) {
     console.error('Error serving file:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to serve file' },
