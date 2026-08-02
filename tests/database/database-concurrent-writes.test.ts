@@ -51,11 +51,6 @@ const mockPrisma = {
   $transaction: vi.fn(),
 }
 
-vi.mock('@/lib/db', () => ({
-  prisma: mockPrisma,
-  default: mockPrisma,
-}))
-
 // ---------------------------------------------------------------------------
 // Tests — Concurrent Appointment Booking (Race Conditions)
 // ---------------------------------------------------------------------------
@@ -75,9 +70,10 @@ describe('Database — Concurrent Appointment Booking', () => {
 
     mockPrisma.$transaction.mockImplementation(async (cb: any) => {
       // Inside transaction, check for existing booking
-      const existing = bookingCount > 0
-        ? [{ id: 'a-existing', doctorId, scheduledDate: slotDate, scheduledTime: slotTime }]
-        : []
+      const existing =
+        bookingCount > 0
+          ? [{ id: 'a-existing', doctorId, scheduledDate: slotDate, scheduledTime: slotTime }]
+          : []
 
       mockPrisma.appointment.findMany.mockResolvedValue(existing)
 
@@ -102,16 +98,20 @@ describe('Database — Concurrent Appointment Booking', () => {
         scheduledTime: slotTime,
       })
 
-      return cb ? cb(mockPrisma) : mockPrisma.appointment.create({
-        data: { doctorId, scheduledDate: slotDate, scheduledTime: slotTime },
-      })
+      return cb
+        ? cb(mockPrisma)
+        : mockPrisma.appointment.create({
+            data: { doctorId, scheduledDate: slotDate, scheduledTime: slotTime },
+          })
     })
 
     // First booking succeeds
     await expect(mockPrisma.$transaction(async () => {})).resolves.not.toThrow()
 
     // Second booking fails (slot taken)
-    await expect(mockPrisma.$transaction(async () => {})).rejects.toThrow('Time slot already booked')
+    await expect(mockPrisma.$transaction(async () => {})).rejects.toThrow(
+      'Time slot already booked'
+    )
   })
 
   it('serializable isolation prevents read-then-write race', async () => {
@@ -213,9 +213,9 @@ describe('Database — Concurrent Stock Updates', () => {
       return cb(mockPrisma)
     })
 
-    await expect(
-      mockPrisma.$transaction(async (tx: any) => {})
-    ).rejects.toThrow('Insufficient stock')
+    await expect(mockPrisma.$transaction(async (tx: any) => {})).rejects.toThrow(
+      'Insufficient stock'
+    )
   })
 
   it('Prisma increment/decrement is atomic at DB level', async () => {
@@ -328,9 +328,9 @@ describe('Database — Concurrent Payment Processing', () => {
     ).resolves.not.toThrow()
 
     // Second payment on same invoice fails
-    await expect(
-      mockPrisma.$transaction(async (tx: any) => {})
-    ).rejects.toThrow('Invoice already paid')
+    await expect(mockPrisma.$transaction(async (tx: any) => {})).rejects.toThrow(
+      'Invoice already paid'
+    )
   })
 
   it('partial payments track remaining balance correctly', async () => {
@@ -360,9 +360,7 @@ describe('Database — Concurrent Payment Processing', () => {
     expect(result2.remaining).toBe(0)
 
     // Third payment fails — fully paid
-    await expect(
-      mockPrisma.$transaction(async () => {})
-    ).rejects.toThrow('Invoice fully paid')
+    await expect(mockPrisma.$transaction(async () => {})).rejects.toThrow('Invoice fully paid')
   })
 
   it('refund cannot exceed paid amount', () => {
@@ -397,9 +395,9 @@ describe('Database — Concurrent Payment Processing', () => {
       return cb(mockPrisma)
     })
 
-    await expect(
-      mockPrisma.$transaction(async () => {})
-    ).rejects.toThrow('Insufficient balance for refund')
+    await expect(mockPrisma.$transaction(async () => {})).rejects.toThrow(
+      'Insufficient balance for refund'
+    )
   })
 })
 
@@ -414,8 +412,8 @@ describe('Database — Deadlock & Retry', () => {
 
   it('Prisma transaction timeout is configured', () => {
     const transactionConfig = {
-      maxWait: 5000,   // max time to wait for connection
-      timeout: 10000,  // max time for transaction
+      maxWait: 5000, // max time to wait for connection
+      timeout: 10000, // max time for transaction
     }
 
     expect(transactionConfig.maxWait).toBeLessThanOrEqual(10000)
@@ -454,8 +452,8 @@ describe('Database — Deadlock & Retry', () => {
   it('non-deadlock errors are not retried', async () => {
     mockPrisma.$transaction.mockRejectedValue(new Error('Foreign key constraint failed'))
 
-    await expect(
-      mockPrisma.$transaction(async () => {})
-    ).rejects.toThrow('Foreign key constraint failed')
+    await expect(mockPrisma.$transaction(async () => {})).rejects.toThrow(
+      'Foreign key constraint failed'
+    )
   })
 })

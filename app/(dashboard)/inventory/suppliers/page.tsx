@@ -1,86 +1,88 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Supplier {
-  id: number;
-  supplier_code: string;
-  name: string;
-  contact_person: string;
-  phone: string;
-  email: string;
-  city: string;
-  status: string;
-  items_supplied: number;
-  total_orders: number;
-  total_business: number;
+  id: number
+  code: string
+  name: string
+  contactPerson: string
+  phone: string
+  email: string
+  city: string
+  status: string
+  itemsSupplied: number
+  totalOrders: number
+  totalBusiness: number
 }
 
 export default function SuppliersPage() {
-  const router = useRouter();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const router = useRouter()
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [showAddModal, setShowAddModal] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
     total: 0,
-    pages: 0
-  });
+    pages: 0,
+  })
 
   useEffect(() => {
-    fetchSuppliers();
-  }, [search, statusFilter, pagination.page]);
+    fetchSuppliers()
+  }, [search, statusFilter, pagination.page])
 
   const fetchSuppliers = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(search && { search }),
-        ...(statusFilter !== 'all' && { status: statusFilter })
-      });
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+      })
 
-      const response = await fetch(`/api/inventory/suppliers?${params}`);
-      const data = await response.json();
+      const response = await fetch(`/api/inventory/suppliers?${params}`)
+      const data = await response.json()
 
       if (data.success) {
-        setSuppliers(data.data);
-        setPagination(data.pagination);
+        setSuppliers(data.data)
+        setPagination(data.pagination)
       }
     } catch (error) {
-      console.error('Error fetching suppliers:', error);
+      console.error('Error fetching suppliers:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-muted text-foreground',
-      blocked: 'bg-red-100 text-red-800'
-    };
+      ACTIVE: 'bg-green-100 text-green-800',
+      INACTIVE: 'bg-muted text-foreground',
+      BLOCKED: 'bg-red-100 text-red-800',
+    }
 
     return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${badges[status as keyof typeof badges]}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span
+        className={`px-2 py-1 text-xs font-semibold rounded-full ${badges[status as keyof typeof badges]}`}
+      >
+        {status.charAt(0) + status.slice(1).toLowerCase()}
       </span>
-    );
-  };
+    )
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -119,9 +121,9 @@ export default function SuppliersPage() {
             className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="blocked">Blocked</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="BLOCKED">Blocked</option>
           </select>
         </div>
       </div>
@@ -171,13 +173,13 @@ export default function SuppliersPage() {
                   {suppliers.map((supplier) => (
                     <tr key={supplier.id} className="hover:bg-muted/50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
-                        {supplier.supplier_code}
+                        {supplier.code}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {supplier.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {supplier.contact_person || '-'}
+                        {supplier.contactPerson || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {supplier.phone}
@@ -189,10 +191,10 @@ export default function SuppliersPage() {
                         {getStatusBadge(supplier.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {supplier.items_supplied}
+                        {supplier.itemsSupplied}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {formatCurrency(supplier.total_business)}
+                        {formatCurrency(supplier.totalBusiness)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link
@@ -220,7 +222,8 @@ export default function SuppliersPage() {
                 <div>
                   <p className="text-sm text-foreground">
                     Showing page <span className="font-medium">{pagination.page}</span> of{' '}
-                    <span className="font-medium">{pagination.pages}</span> ({pagination.total} total suppliers)
+                    <span className="font-medium">{pagination.pages}</span> ({pagination.total}{' '}
+                    total suppliers)
                   </p>
                 </div>
                 <div>
@@ -253,7 +256,8 @@ export default function SuppliersPage() {
           <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
             <h2 className="text-2xl font-bold mb-4">Add New Supplier</h2>
             <p className="text-muted-foreground mb-4">
-              Supplier form will be implemented here. For now, please use the API directly or create a dedicated page.
+              Supplier form will be implemented here. For now, please use the API directly or create
+              a dedicated page.
             </p>
             <button
               onClick={() => setShowAddModal(false)}
@@ -265,5 +269,5 @@ export default function SuppliersPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -128,6 +128,8 @@ const mockPrismaClient = {
     count: vi.fn(),
     aggregate: vi.fn(),
     fields: { reorderLevel: 'reorderLevel' },
+    deleteMany: vi.fn(),
+    updateMany: vi.fn(),
   },
 
   // Medication
@@ -184,6 +186,9 @@ const mockPrismaClient = {
     update: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
+    aggregate: vi.fn(),
   },
 
   // LabVendor
@@ -195,6 +200,9 @@ const mockPrismaClient = {
     update: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
+    aggregate: vi.fn(),
   },
 
   // Document
@@ -342,6 +350,9 @@ const mockPrismaClient = {
     update: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    deleteMany: vi.fn(),
+    updateMany: vi.fn(),
+    aggregate: vi.fn(),
   },
 
   // PaymentPlan
@@ -697,6 +708,8 @@ const mockPrismaClient = {
     delete: vi.fn(),
     count: vi.fn(),
     groupBy: vi.fn(),
+    aggregate: vi.fn(),
+    deleteMany: vi.fn(),
   },
   // Waitlist
   waitlist: {
@@ -767,6 +780,65 @@ const mockPrismaClient = {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // Supplier
+  supplier: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+    aggregate: vi.fn(),
+  },
+
+  // PurchaseOrder
+  purchaseOrder: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+    aggregate: vi.fn(),
+  },
+
+  // StockAlert
+  stockAlert: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+    groupBy: vi.fn(),
+  },
+
+  // LabOrderHistory
+  labOrderHistory: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+  },
+
+  // LabOrderDocument
+  labOrderDocument: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
     count: vi.fn(),
   },
 

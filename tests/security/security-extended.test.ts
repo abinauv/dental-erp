@@ -5,21 +5,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('@/lib/db', () => ({
-  prisma: {
-    auditLog: { count: vi.fn(), findMany: vi.fn() },
-    user: { findUnique: vi.fn(), update: vi.fn() },
-    session: { findUnique: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
-    hospital: { findUnique: vi.fn() },
-  },
-  default: {
-    auditLog: { count: vi.fn(), findMany: vi.fn() },
-    user: { findUnique: vi.fn(), update: vi.fn() },
-    session: { findUnique: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
-    hospital: { findUnique: vi.fn() },
-  },
-}))
-
 // ---------------------------------------------------------------------------
 // Tests — Session Expiry
 // ---------------------------------------------------------------------------
@@ -53,8 +38,8 @@ describe('Security — Session Management', () => {
 
     it('configurable session duration', () => {
       const durations = {
-        short: 1 * 60 * 60 * 1000,   // 1 hour
-        default: 24 * 60 * 60 * 1000,  // 24 hours
+        short: 1 * 60 * 60 * 1000, // 1 hour
+        default: 24 * 60 * 60 * 1000, // 24 hours
         extended: 7 * 24 * 60 * 60 * 1000, // 7 days
       }
 
@@ -109,7 +94,7 @@ describe('Security — Brute Force Protection', () => {
       const windowMs = 15 * 60 * 1000
       const lastAttemptTime = Date.now() - windowMs - 1000 // window expired
 
-      const isWindowExpired = (Date.now() - lastAttemptTime) > windowMs
+      const isWindowExpired = Date.now() - lastAttemptTime > windowMs
       expect(isWindowExpired).toBe(true)
     })
 
@@ -242,7 +227,7 @@ describe('Security — Response Headers', () => {
     const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'"
 
     expect(csp).toContain("default-src 'self'")
-    expect(csp).toContain("script-src")
+    expect(csp).toContain('script-src')
   })
 
   it('X-Frame-Options prevents clickjacking', () => {

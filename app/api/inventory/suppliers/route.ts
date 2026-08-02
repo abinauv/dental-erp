@@ -1,166 +1,182 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import pool from '@/lib/db';
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { Prisma, SupplierStatus } from '@prisma/client'
+
+const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
+
+/** Accepts the legacy lowercase status values as well as the enum casing. */
+function parseStatus(value: string): SupplierStatus | null {
+  const upper = value.toUpperCase()
+  return SUPPLIER_STATUSES.includes(upper) ? (upper as SupplierStatus) : null
+}
 
 // GET - Fetch all suppliers
 export async function GET(request: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const search = searchParams.get('search') || '';
-    const status = searchParams.get('status') || 'all';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = (page - 1) * limit;
+    const searchParams = request.nextUrl.searchParams
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || 'all'
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
-    let query = `
-      SELECT
-        s.*,
-        COUNT(DISTINCT i.id) as items_supplied,
-        COUNT(DISTINCT po.id) as total_orders,
-        COALESCE(SUM(po.total_amount), 0) as total_business
-      FROM suppliers s
-      LEFT JOIN inventory_items i ON s.id = i.preferred_supplier_id AND i.deleted_at IS NULL
-      LEFT JOIN purchase_orders po ON s.id = po.supplier_id AND po.deleted_at IS NULL
-      WHERE s.deleted_at IS NULL AND s.hospital_id = ?
-    `;
-
-    const params: any[] = [hospitalId];
-    const searchPattern = `%${search}%`;
+    const where: Prisma.SupplierWhereInput = {
+      hospitalId,
+      deletedAt: null,
+    }
 
     if (search) {
-      query += ` AND (s.name LIKE ? OR s.supplier_code LIKE ? OR s.contact_person LIKE ?)`;
-      params.push(searchPattern, searchPattern, searchPattern);
+      where.OR = [
+        { name: { contains: search } },
+        { code: { contains: search } },
+        { contactPerson: { contains: search } },
+      ]
     }
 
     if (status !== 'all') {
-      query += ` AND s.status = ?`;
-      params.push(status);
+      const parsed = parseStatus(status)
+      if (parsed) where.status = parsed
     }
 
-    query += ` GROUP BY s.id`;
+    const [total, suppliers] = await Promise.all([
+      prisma.supplier.count({ where }),
+      prisma.supplier.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+        include: {
+          // Counts the legacy query built with COUNT(DISTINCT ...) joins.
+          _count: {
+            select: {
+              preferredForItems: { where: { deletedAt: null } },
+              purchaseOrders: { where: { deletedAt: null } },
+            },
+          },
+          purchaseOrders: {
+            where: { deletedAt: null },
+            select: { totalAmount: true },
+          },
+        },
+      }),
+    ])
 
-    // Get total count
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM suppliers s
-      WHERE s.deleted_at IS NULL AND s.hospital_id = ?
-      ${search ? 'AND (s.name LIKE ? OR s.supplier_code LIKE ? OR s.contact_person LIKE ?)' : ''}
-      ${status !== 'all' ? 'AND s.status = ?' : ''}
-    `;
-    const countParams: any[] = [hospitalId];
-    if (search) countParams.push(searchPattern, searchPattern, searchPattern);
-    if (status !== 'all') countParams.push(status);
-
-    const [countResult] = await pool.execute<RowDataPacket[]>(countQuery, countParams);
-    const total = countResult[0].total;
-
-    // Add pagination
-    query += ` ORDER BY s.name ASC LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
-
-    const [suppliers] = await pool.execute<RowDataPacket[]>(query, params);
+    const data = suppliers.map(({ _count, purchaseOrders, ...supplier }) => ({
+      ...supplier,
+      itemsSupplied: _count.preferredForItems,
+      totalOrders: _count.purchaseOrders,
+      totalBusiness: purchaseOrders.reduce((sum, po) => sum + Number(po.totalAmount), 0),
+    }))
 
     return NextResponse.json({
       success: true,
-      data: suppliers,
+      data,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+        pages: Math.ceil(total / limit),
+      },
+    })
   } catch (error: any) {
-    console.error('Error fetching suppliers:', error);
+    console.error('Error fetching suppliers:', error)
     return NextResponse.json(
       { error: 'Failed to fetch suppliers', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }
 
 // POST - Create new supplier
 export async function POST(request: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const body = await request.json();
+    const body = await request.json()
     const {
-      supplier_code,
+      code,
       name,
-      contact_person,
+      contactPerson,
       email,
       phone,
-      alternate_phone,
+      alternatePhone,
       address,
       city,
       state,
       pincode,
-      gstin,
-      pan,
-      payment_terms = 'Net 30',
-      credit_limit = 0,
-      status = 'active',
+      gstNumber,
+      panNumber,
+      paymentTerms = 'Net 30',
+      creditLimit = 0,
+      status = SupplierStatus.ACTIVE,
       rating = 0,
-      notes
-    } = body;
+      notes,
+    } = body
 
-    // Validation
-    if (!supplier_code || !name || !phone) {
+    if (!code || !name || !phone) {
       return NextResponse.json(
-        { error: 'Missing required fields: supplier_code, name, phone' },
+        { error: 'Missing required fields: code, name, phone' },
         { status: 400 }
-      );
+      )
     }
 
-    // Check if supplier_code already exists for this hospital
-    const [existing] = await pool.execute<RowDataPacket[]>(
-      'SELECT id FROM suppliers WHERE supplier_code = ? AND hospital_id = ? AND deleted_at IS NULL',
-      [supplier_code, hospitalId]
-    );
+    const existing = await prisma.supplier.findFirst({
+      where: { hospitalId, code, deletedAt: null },
+      select: { id: true },
+    })
 
-    if (existing.length > 0) {
-      return NextResponse.json(
-        { error: 'Supplier code already exists' },
-        { status: 409 }
-      );
+    if (existing) {
+      return NextResponse.json({ error: 'Supplier code already exists' }, { status: 409 })
     }
 
-    const [result] = await pool.execute<ResultSetHeader>(
-      `INSERT INTO suppliers (
-        hospital_id, supplier_code, name, contact_person, email, phone, alternate_phone,
-        address, city, state, pincode, gstin, pan, payment_terms,
-        credit_limit, status, rating, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        hospitalId, supplier_code, name, contact_person || null, email || null,
-        phone, alternate_phone || null, address || null, city || null,
-        state || null, pincode || null, gstin || null, pan || null,
-        payment_terms, credit_limit, status, rating, notes || null
-      ]
-    );
+    const supplier = await prisma.supplier.create({
+      data: {
+        hospitalId,
+        code,
+        name,
+        contactPerson: contactPerson || null,
+        email: email || null,
+        phone,
+        alternatePhone: alternatePhone || null,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        pincode: pincode || null,
+        gstNumber: gstNumber || null,
+        panNumber: panNumber || null,
+        paymentTerms,
+        creditLimit,
+        status: parseStatus(String(status)) ?? SupplierStatus.ACTIVE,
+        rating,
+        notes: notes || null,
+      },
+      select: { id: true },
+    })
 
-    return NextResponse.json({
-      success: true,
-      data: { id: result.insertId },
-      message: 'Supplier created successfully'
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: { id: supplier.id },
+        message: 'Supplier created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
-    console.error('Error creating supplier:', error);
+    console.error('Error creating supplier:', error)
     return NextResponse.json(
       { error: 'Failed to create supplier', details: error.message },
       { status: 500 }
-    );
+    )
   }
 }

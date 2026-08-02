@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -28,11 +28,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -50,24 +50,24 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/dropdown-menu'
+import { useToast } from '@/hooks/use-toast'
 
 interface LabVendor {
   id: string
-  vendor_code: string
+  code: string
   name: string
-  contact_person: string
+  contactPerson: string
   email: string
   phone: string
-  alternate_phone: string
+  alternatePhone: string
   address: string
   city: string
   state: string
@@ -75,14 +75,14 @@ interface LabVendor {
   gstin: string
   pan: string
   specializations: string
-  avg_turnaround_days: number
-  quality_rating: number
-  payment_terms: string
-  credit_limit: number
+  avgTurnaround: number
+  rating: number
+  paymentTerms: string
+  creditLimit: number
   status: 'active' | 'inactive' | 'blocked'
   notes: string
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 interface PaginationInfo {
@@ -106,32 +106,32 @@ export default function LabVendorsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingVendor, setEditingVendor] = useState<LabVendor | null>(null)
   const [formData, setFormData] = useState({
-    vendor_code: "",
-    name: "",
-    contact_person: "",
-    email: "",
-    phone: "",
-    alternate_phone: "",
-    address: "",
-    city: "",
-    state: "Tamil Nadu",
-    pincode: "",
-    gstin: "",
-    pan: "",
-    specializations: "",
-    avg_turnaround_days: 7,
-    quality_rating: 0,
-    payment_terms: "Net 30",
-    credit_limit: 0,
-    status: "active" as 'active' | 'inactive' | 'blocked',
-    notes: "",
+    code: '',
+    name: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    alternatePhone: '',
+    address: '',
+    city: '',
+    state: 'Tamil Nadu',
+    pincode: '',
+    gstin: '',
+    pan: '',
+    specializations: '',
+    avgTurnaround: 7,
+    rating: 0,
+    paymentTerms: 'Net 30',
+    creditLimit: 0,
+    status: 'active' as 'active' | 'inactive' | 'blocked',
+    notes: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -143,21 +143,21 @@ export default function LabVendorsPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
 
       const response = await fetch(`/api/lab-vendors?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch vendors")
+      if (!response.ok) throw new Error('Failed to fetch vendors')
 
       const data = await response.json()
       setVendors(data.data)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching vendors:", error)
+      console.error('Error fetching vendors:', error)
       toast({
-        title: "Error",
-        description: "Failed to fetch lab vendors",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch lab vendors',
+        variant: 'destructive',
       })
     } finally {
       setLoading(false)
@@ -172,48 +172,48 @@ export default function LabVendorsPage() {
     if (vendor) {
       setEditingVendor(vendor)
       setFormData({
-        vendor_code: vendor.vendor_code,
+        code: vendor.code,
         name: vendor.name,
-        contact_person: vendor.contact_person || "",
-        email: vendor.email || "",
+        contactPerson: vendor.contactPerson || '',
+        email: vendor.email || '',
         phone: vendor.phone,
-        alternate_phone: vendor.alternate_phone || "",
-        address: vendor.address || "",
-        city: vendor.city || "",
-        state: vendor.state || "Tamil Nadu",
-        pincode: vendor.pincode || "",
-        gstin: vendor.gstin || "",
-        pan: vendor.pan || "",
-        specializations: vendor.specializations || "",
-        avg_turnaround_days: vendor.avg_turnaround_days,
-        quality_rating: vendor.quality_rating,
-        payment_terms: vendor.payment_terms,
-        credit_limit: vendor.credit_limit,
+        alternatePhone: vendor.alternatePhone || '',
+        address: vendor.address || '',
+        city: vendor.city || '',
+        state: vendor.state || 'Tamil Nadu',
+        pincode: vendor.pincode || '',
+        gstin: vendor.gstin || '',
+        pan: vendor.pan || '',
+        specializations: vendor.specializations || '',
+        avgTurnaround: vendor.avgTurnaround,
+        rating: vendor.rating,
+        paymentTerms: vendor.paymentTerms,
+        creditLimit: vendor.creditLimit,
         status: vendor.status,
-        notes: vendor.notes || "",
+        notes: vendor.notes || '',
       })
     } else {
       setEditingVendor(null)
       setFormData({
-        vendor_code: "",
-        name: "",
-        contact_person: "",
-        email: "",
-        phone: "",
-        alternate_phone: "",
-        address: "",
-        city: "",
-        state: "Tamil Nadu",
-        pincode: "",
-        gstin: "",
-        pan: "",
-        specializations: "",
-        avg_turnaround_days: 7,
-        quality_rating: 0,
-        payment_terms: "Net 30",
-        credit_limit: 0,
-        status: "active",
-        notes: "",
+        code: '',
+        name: '',
+        contactPerson: '',
+        email: '',
+        phone: '',
+        alternatePhone: '',
+        address: '',
+        city: '',
+        state: 'Tamil Nadu',
+        pincode: '',
+        gstin: '',
+        pan: '',
+        specializations: '',
+        avgTurnaround: 7,
+        rating: 0,
+        paymentTerms: 'Net 30',
+        creditLimit: 0,
+        status: 'active',
+        notes: '',
       })
     }
     setIsDialogOpen(true)
@@ -224,34 +224,32 @@ export default function LabVendorsPage() {
     setSaving(true)
 
     try {
-      const url = editingVendor
-        ? `/api/lab-vendors/${editingVendor.id}`
-        : `/api/lab-vendors`
-      const method = editingVendor ? "PUT" : "POST"
+      const url = editingVendor ? `/api/lab-vendors/${editingVendor.id}` : `/api/lab-vendors`
+      const method = editingVendor ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to save vendor")
+        throw new Error(error.error || 'Failed to save vendor')
       }
 
       toast({
-        title: "Success",
-        description: `Lab vendor ${editingVendor ? "updated" : "created"} successfully`,
+        title: 'Success',
+        description: `Lab vendor ${editingVendor ? 'updated' : 'created'} successfully`,
       })
 
       setIsDialogOpen(false)
       fetchVendors()
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       })
     } finally {
       setSaving(false)
@@ -259,30 +257,34 @@ export default function LabVendorsPage() {
   }
 
   const handleDelete = async (vendorId: string) => {
-    const ok = await confirm({ title: "Delete Vendor", description: "Are you sure you want to delete this vendor?", confirmLabel: "Delete" })
+    const ok = await confirm({
+      title: 'Delete Vendor',
+      description: 'Are you sure you want to delete this vendor?',
+      confirmLabel: 'Delete',
+    })
     if (!ok) return
 
     try {
       const response = await fetch(`/api/lab-vendors/${vendorId}`, {
-        method: "DELETE",
+        method: 'DELETE',
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to delete vendor")
+        throw new Error(error.error || 'Failed to delete vendor')
       }
 
       toast({
-        title: "Success",
-        description: "Lab vendor deleted successfully",
+        title: 'Success',
+        description: 'Lab vendor deleted successfully',
       })
 
       fetchVendors()
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       })
     }
   }
@@ -290,18 +292,18 @@ export default function LabVendorsPage() {
   const getStatusBadge = (status: string) => {
     const configs: Record<string, { label: string; className: string; icon: any }> = {
       active: {
-        label: "Active",
-        className: "bg-green-100 text-green-800",
+        label: 'Active',
+        className: 'bg-green-100 text-green-800',
         icon: CheckCircle,
       },
       inactive: {
-        label: "Inactive",
-        className: "bg-muted text-foreground",
+        label: 'Inactive',
+        className: 'bg-muted text-foreground',
         icon: XCircle,
       },
       blocked: {
-        label: "Blocked",
-        className: "bg-red-100 text-red-800",
+        label: 'Blocked',
+        className: 'bg-red-100 text-red-800',
         icon: XCircle,
       },
     }
@@ -357,7 +359,7 @@ export default function LabVendorsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {vendors.filter(v => v.status === 'active').length}
+              {vendors.filter((v) => v.status === 'active').length}
             </div>
           </CardContent>
         </Card>
@@ -369,8 +371,8 @@ export default function LabVendorsPage() {
           <CardContent>
             <div className="text-2xl font-bold">
               {vendors.length > 0
-                ? (vendors.reduce((sum, v) => sum + v.quality_rating, 0) / vendors.length).toFixed(1)
-                : "0.0"}
+                ? (vendors.reduce((sum, v) => sum + v.rating, 0) / vendors.length).toFixed(1)
+                : '0.0'}
             </div>
           </CardContent>
         </Card>
@@ -417,9 +419,7 @@ export default function LabVendorsPage() {
             <div className="text-center py-12">
               <FlaskConical className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No vendors found</h3>
-              <p className="text-muted-foreground">
-                Get started by adding your first lab vendor
-              </p>
+              <p className="text-muted-foreground">Get started by adding your first lab vendor</p>
               <Button className="mt-4" onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Vendor
@@ -443,14 +443,12 @@ export default function LabVendorsPage() {
                 <TableBody>
                   {vendors.map((vendor) => (
                     <TableRow key={vendor.id}>
-                      <TableCell className="font-medium">
-                        {vendor.vendor_code}
-                      </TableCell>
+                      <TableCell className="font-medium">{vendor.code}</TableCell>
                       <TableCell>
                         <div>
                           <div className="font-medium">{vendor.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            {vendor.contact_person}
+                            {vendor.contactPerson}
                           </div>
                         </div>
                       </TableCell>
@@ -478,13 +476,13 @@ export default function LabVendorsPage() {
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="mr-1 h-3 w-3" />
-                          {vendor.avg_turnaround_days} days
+                          {vendor.avgTurnaround} days
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Star className="mr-1 h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          {vendor.quality_rating.toFixed(1)}
+                          {vendor.rating.toFixed(1)}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(vendor.status)}</TableCell>
@@ -496,9 +494,7 @@ export default function LabVendorsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleOpenDialog(vendor)}
-                            >
+                            <DropdownMenuItem onClick={() => handleOpenDialog(vendor)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
@@ -521,8 +517,8 @@ export default function LabVendorsPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                   {pagination.total} vendors
                 </p>
                 <div className="flex gap-2">
@@ -530,9 +526,7 @@ export default function LabVendorsPage() {
                     variant="outline"
                     size="sm"
                     disabled={pagination.page === 1}
-                    onClick={() =>
-                      setPagination({ ...pagination, page: pagination.page - 1 })
-                    }
+                    onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
@@ -541,9 +535,7 @@ export default function LabVendorsPage() {
                     variant="outline"
                     size="sm"
                     disabled={pagination.page === pagination.pages}
-                    onClick={() =>
-                      setPagination({ ...pagination, page: pagination.page + 1 })
-                    }
+                    onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
@@ -559,23 +551,17 @@ export default function LabVendorsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingVendor ? "Edit Lab Vendor" : "Add Lab Vendor"}
-            </DialogTitle>
-            <DialogDescription>
-              Enter the vendor information below
-            </DialogDescription>
+            <DialogTitle>{editingVendor ? 'Edit Lab Vendor' : 'Add Lab Vendor'}</DialogTitle>
+            <DialogDescription>Enter the vendor information below</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="vendor_code">Vendor Code *</Label>
+                <Label htmlFor="code">Vendor Code *</Label>
                 <Input
-                  id="vendor_code"
-                  value={formData.vendor_code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, vendor_code: e.target.value })
-                  }
+                  id="code"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   required
                 />
               </div>
@@ -584,9 +570,7 @@ export default function LabVendorsPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                 />
               </div>
@@ -594,13 +578,11 @@ export default function LabVendorsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="contact_person">Contact Person</Label>
+                <Label htmlFor="contactPerson">Contact Person</Label>
                 <Input
-                  id="contact_person"
-                  value={formData.contact_person}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact_person: e.target.value })
-                  }
+                  id="contactPerson"
+                  value={formData.contactPerson}
+                  onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -608,9 +590,7 @@ export default function LabVendorsPage() {
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   required
                 />
               </div>
@@ -623,19 +603,15 @@ export default function LabVendorsPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="alternate_phone">Alternate Phone</Label>
+                <Label htmlFor="alternatePhone">Alternate Phone</Label>
                 <Input
-                  id="alternate_phone"
-                  value={formData.alternate_phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, alternate_phone: e.target.value })
-                  }
+                  id="alternatePhone"
+                  value={formData.alternatePhone}
+                  onChange={(e) => setFormData({ ...formData, alternatePhone: e.target.value })}
                 />
               </div>
             </div>
@@ -645,9 +621,7 @@ export default function LabVendorsPage() {
               <Textarea
                 id="address"
                 value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={2}
               />
             </div>
@@ -658,9 +632,7 @@ export default function LabVendorsPage() {
                 <Input
                   id="city"
                   value={formData.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -668,9 +640,7 @@ export default function LabVendorsPage() {
                 <Input
                   id="state"
                   value={formData.state}
-                  onChange={(e) =>
-                    setFormData({ ...formData, state: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -678,9 +648,7 @@ export default function LabVendorsPage() {
                 <Input
                   id="pincode"
                   value={formData.pincode}
-                  onChange={(e) =>
-                    setFormData({ ...formData, pincode: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                 />
               </div>
             </div>
@@ -690,41 +658,39 @@ export default function LabVendorsPage() {
               <Input
                 id="specializations"
                 value={formData.specializations}
-                onChange={(e) =>
-                  setFormData({ ...formData, specializations: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, specializations: e.target.value })}
                 placeholder="crown, bridge, denture, etc. (comma-separated)"
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="avg_turnaround_days">Avg. Turnaround (days)</Label>
+                <Label htmlFor="avgTurnaround">Avg. Turnaround (days)</Label>
                 <Input
-                  id="avg_turnaround_days"
+                  id="avgTurnaround"
                   type="number"
-                  value={formData.avg_turnaround_days}
+                  value={formData.avgTurnaround}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      avg_turnaround_days: parseInt(e.target.value) || 0,
+                      avgTurnaround: parseInt(e.target.value) || 0,
                     })
                   }
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="quality_rating">Quality Rating</Label>
+                <Label htmlFor="rating">Quality Rating</Label>
                 <Input
-                  id="quality_rating"
+                  id="rating"
                   type="number"
                   step="0.1"
                   min="0"
                   max="5"
-                  value={formData.quality_rating}
+                  value={formData.rating}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      quality_rating: parseFloat(e.target.value) || 0,
+                      rating: parseFloat(e.target.value) || 0,
                     })
                   }
                 />
@@ -757,23 +723,17 @@ export default function LabVendorsPage() {
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
               />
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Saving..." : editingVendor ? "Update" : "Create"}
+                {saving ? 'Saving...' : editingVendor ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
           </form>
