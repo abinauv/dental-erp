@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useTheme } from 'next-themes';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link'
+import { useTheme } from 'next-themes'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Building2,
   Calendar,
@@ -19,7 +19,8 @@ import {
   Monitor,
   Upload,
   BookOpen,
-} from 'lucide-react';
+  Languages,
+} from 'lucide-react'
 
 const settingsCategories = [
   {
@@ -99,10 +100,17 @@ const settingsCategories = [
     href: '/settings/import',
     color: 'text-emerald-600 bg-emerald-50',
   },
-];
+  {
+    title: 'My Profile',
+    description: 'Your own language and formatting preferences — affects nobody else',
+    icon: Languages,
+    href: '/settings/profile',
+    color: 'text-sky-600 bg-sky-50',
+  },
+]
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme()
 
   return (
     <div className="space-y-6">
@@ -111,9 +119,7 @@ export default function SettingsPage() {
           <SettingsIcon className="w-8 h-8" />
           Settings & Configuration
         </h1>
-        <p className="text-muted-foreground mt-2">
-          Manage all system settings and configurations
-        </p>
+        <p className="text-muted-foreground mt-2">Manage all system settings and configurations</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -121,13 +127,13 @@ export default function SettingsPage() {
           <Link key={category.href} href={category.href}>
             <Card className="h-full card-interactive">
               <CardHeader>
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${category.color} mb-3`}>
+                <div
+                  className={`w-12 h-12 rounded-lg flex items-center justify-center ${category.color} mb-3`}
+                >
                   <category.icon className="w-6 h-6" />
                 </div>
                 <CardTitle className="text-xl">{category.title}</CardTitle>
-                <CardDescription className="text-sm">
-                  {category.description}
-                </CardDescription>
+                <CardDescription className="text-sm">{category.description}</CardDescription>
               </CardHeader>
             </Card>
           </Link>
@@ -146,14 +152,16 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex gap-3">
-              {([
-                { value: "light", label: "Light", icon: Sun },
-                { value: "dark", label: "Dark", icon: Moon },
-                { value: "system", label: "System", icon: Monitor },
-              ] as const).map((opt) => (
+              {(
+                [
+                  { value: 'light', label: 'Light', icon: Sun },
+                  { value: 'dark', label: 'Dark', icon: Moon },
+                  { value: 'system', label: 'System', icon: Monitor },
+                ] as const
+              ).map((opt) => (
                 <Button
                   key={opt.value}
-                  variant={theme === opt.value ? "default" : "outline"}
+                  variant={theme === opt.value ? 'default' : 'outline'}
                   className="flex items-center gap-2"
                   onClick={() => setTheme(opt.value)}
                 >
@@ -201,5 +209,5 @@ export default function SettingsPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
