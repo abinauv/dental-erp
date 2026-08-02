@@ -1,13 +1,17 @@
-import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
-import { PayPage } from "./pay-page"
+import { prisma } from '@/lib/prisma'
+import { notFound } from 'next/navigation'
+import { resolvePublicLocale } from '@/lib/i18n/request'
+import { PayPage } from './pay-page'
 
 export default async function PublicPayPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>
+  searchParams: Promise<{ lang?: string | string[] }>
 }) {
   const { token } = await params
+  const { lang } = await searchParams
 
   // Look up the payment link
   const link = await prisma.paymentLink.findUnique({
@@ -40,6 +44,8 @@ export default async function PublicPayPage({
           address: true,
           city: true,
           state: true,
+          locale: true,
+          currency: true,
         },
       },
     },
@@ -61,9 +67,16 @@ export default async function PublicPayPage({
   // Use the lesser of link amount and current balance (in case partial payments were made)
   const payableAmount = Math.min(amount, currentBalance)
 
+  // Anonymous visitor: there is no account to hang a preference on, so the
+  // clinic's locale is the baseline and `?lang=` applies to this render only.
+  // It is never written anywhere — see resolvePublicLocale.
+  const locale = resolvePublicLocale(link.hospital.locale, lang)
+
   return (
     <PayPage
       token={token}
+      locale={locale}
+      currency={link.hospital.currency}
       hospital={{
         name: link.hospital.name,
         logo: link.hospital.logo,
