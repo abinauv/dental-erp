@@ -38,7 +38,7 @@ The development Docker Compose stack is a convenience for contributors. It is ne
 | Auth                  | NextAuth v5 (beta) credentials, plus a separate patient OTP session             |
 | Observability         | `console.error`                                                                 |
 | Container             | Production `Dockerfile` — multi-stage, standalone output, non-root user         |
-| Observability probes  | `/api/health` (liveness) and `/api/ready` (readiness)                           |
+| Health probes         | `/api/health` (liveness) and `/api/ready` (readiness)                           |
 | CI                    | Lint, type check, unit tests and build on every PR; Playwright E2E nightly      |
 
 Two known infrastructure defects were listed here when this document was first published. Both are now fixed, and are kept below as the record:
