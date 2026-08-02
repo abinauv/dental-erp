@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import { resolvePublicLocale } from '@/lib/i18n/request'
+import { resolvePublicLocale } from '@/lib/i18n/config'
 import { PayPage } from './pay-page'
 
 export default async function PublicPayPage({
