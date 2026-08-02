@@ -52,14 +52,75 @@ A comprehensive, AI-powered **dental hospital management system** built with Nex
 ## Prerequisites
 
 - **Node.js** 20 or later
-- **MySQL** 8.0 or later
 - **npm** 10 or later
+- **Docker** with Compose v2 — recommended, but [optional](#alternative-setup-without-docker)
 
 ## Getting Started
 
-### Prerequisites Check
+```bash
+git clone https://github.com/abinauv/dental-erp.git
+cd dental-erp
+npm install
+cp .env.example .env
 
-Make sure MySQL is running before you start:
+# Start MySQL, Redis, MinIO and Mailpit
+docker compose -f docker-compose.dev.yml up -d
+
+# Set DATABASE_URL in .env to match the container:
+#   DATABASE_URL="mysql://root:dental@localhost:3306/dental_erp"
+
+npx prisma migrate deploy   # create the schema
+npx prisma db seed          # sample data (optional)
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+You still need to fill in `NEXTAUTH_SECRET`, `ENCRYPTION_KEY` and `CRON_SECRET`
+in `.env` — the app will not start without them. Each one has a
+`node -e "..."` command beside it in `.env.example` that prints a valid value.
+
+**The app runs on your machine, not in Docker.** Compose brings up the backing
+services only. Bind-mounting `node_modules` into a container is slow enough on
+Windows and macOS to spoil the edit-reload loop, and native hot reload is
+better. `docker-compose.dev.yml` is a convenience for contributors and is
+**never** suitable for production — every credential in it is weak and public.
+
+### What Compose gives you
+
+| Service | Port       | What it is for                                                    |
+| ------- | ---------- | ----------------------------------------------------------------- |
+| MySQL   | 3306       | The application database                                          |
+| Redis   | 6379       | Reserved for caching and queues; nothing uses it yet              |
+| MinIO   | 9000, 9001 | S3-compatible storage; reserved for Phase 3. Console on 9001      |
+| Mailpit | 1025, 8025 | Captures every outbound email. Read them at http://localhost:8025 |
+
+Mailpit is the useful one right away. Point the `SMTP_*` variables at it (the
+values are commented into `.env.example`) and you can exercise password resets,
+invitations and reminders with no credentials and no risk of emailing a real
+person.
+
+`createbuckets` runs once, creates the MinIO bucket and exits. Seeing it as
+`Exited (0)` in `docker compose ps` is success, not a failure.
+
+Useful commands:
+
+```bash
+docker compose -f docker-compose.dev.yml logs -f      # tail the services
+docker compose -f docker-compose.dev.yml down         # stop, keep the data
+docker compose -f docker-compose.dev.yml down -v      # stop and wipe the data
+```
+
+**Port 3306 already in use?** You have MySQL installed locally. Either stop it,
+or change the host port in `docker-compose.dev.yml` to `'3307:3306'` and update
+`DATABASE_URL` to match.
+
+### Alternative setup: without Docker
+
+<details>
+<summary>Install MySQL 8 yourself</summary>
+
+Docker is not a requirement. With MySQL 8.0+ installed locally:
 
 ```bash
 # Verify MySQL is accessible
@@ -69,36 +130,12 @@ mysql -u root -p -e "SELECT 1"
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS dental_erp"
 ```
 
-### 1. Clone the repository
+Then set `DATABASE_URL` in `.env` to your own credentials and continue from
+`npx prisma migrate deploy` above.
 
-```bash
-git clone https://github.com/abinauv/dental-erp.git
-cd dental-erp
-```
+</details>
 
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure environment variables
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your database credentials and other settings. See [Environment Variables](#environment-variables) for details.
-
-### 4. Set up the database
-
-```bash
-# Apply the migration history to your MySQL database
-npx prisma migrate deploy
-
-# Seed with sample data (optional)
-npx prisma db seed
-```
+### About the database setup
 
 `prisma migrate deploy` is the recommended path — it is repeatable and safe to
 re-run when you upgrade. `npx prisma db push` also works and is handy while
@@ -115,18 +152,11 @@ deploy as normal from that point on:
 ```bash
 npx prisma migrate resolve --applied 20260127152236_multi_tenancy
 npx prisma migrate resolve --applied 20260728120000_sync_schema_with_models
+npx prisma migrate resolve --applied 20260801150000_inventory_lab_prisma_models
 npx prisma migrate deploy
 ```
 
 </details>
-
-### 5. Start the development server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Default Credentials (after seeding)
 
@@ -231,8 +261,42 @@ npm run test:e2e
 
 ```bash
 docker build -t dental-erp .
-docker run -p 3000:3000 --env-file .env dental-erp
+docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads dental-erp
 ```
+
+> **Mount a volume at `/app/uploads`.** Uploaded files — patient documents,
+> scans, signed consent forms — are written to the container filesystem. Without
+> a volume they are destroyed the moment the container is replaced, which is
+> every single redeploy. The `-v` flag above is not optional in any deployment
+> you care about.
+>
+> **Already running without one?** Copy your files out before you next redeploy:
+>
+> ```bash
+> docker cp <container>:/app/uploads ./uploads-backup
+> ```
+>
+> then recreate the container with the volume mounted and copy them back.
+> Phase 3 of the [infrastructure roadmap](docs/INFRASTRUCTURE.md) removes this
+> whole class of problem by moving uploads to object storage.
+
+### Health checks
+
+Two endpoints, and the distinction between them matters:
+
+| Endpoint      | Purpose   | Checks the database | Use for                             |
+| ------------- | --------- | ------------------- | ----------------------------------- |
+| `/api/health` | Liveness  | No                  | "Is this process alive?"            |
+| `/api/ready`  | Readiness | Yes                 | "Should this instance get traffic?" |
+
+Point liveness probes at `/api/health` and readiness probes at `/api/ready`.
+Pointing a liveness probe at `/api/ready` means a brief database outage will
+make your orchestrator kill and restart otherwise-healthy containers, turning a
+short blip into a restart loop. `/api/ready` returns `503` when the database is
+unreachable — it never throws.
+
+The image carries a `HEALTHCHECK` against `/api/health`, so `docker ps` reports
+container health with no extra configuration.
 
 ### Manual
 
@@ -246,6 +310,7 @@ npm start
 - Node.js 20+
 - MySQL 8.0+ (with a dedicated database)
 - Reverse proxy (nginx/Caddy) for HTTPS in production
+- A persistent volume mounted at `/app/uploads`
 
 ## Documentation
 
