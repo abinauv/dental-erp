@@ -21,12 +21,9 @@ test.describe('Inventory Suppliers', () => {
     test('should display suppliers in table', async ({ adminPage: page }) => {
       await page.goto('/inventory/suppliers')
       await page.waitForTimeout(1000)
-      await expect(
-        page
-          .locator('table')
-          .or(page.getByText(/no.*supplier|no.*data|empty/i).first())
-          .first()
-      ).toBeVisible({ timeout: 10000 })
+      await expect(page.locator('table')).toBeVisible({ timeout: 10000 })
+      // Three seeded suppliers.
+      await expect(page.locator('tbody tr')).toHaveCount(3)
     })
 
     test('should show supplier contact details', async ({ adminPage: page }) => {
@@ -44,15 +41,16 @@ test.describe('Inventory Suppliers', () => {
     test('should show supplier status', async ({ adminPage: page }) => {
       await page.goto('/inventory/suppliers')
       await page.waitForTimeout(1000)
-      // Either the table's Status column or the empty state. A bare
-      // /active|inactive|status/i matched the status filter's <option
+      // The seed creates three suppliers, so the table renders. A bare
+      // /active|inactive|status/i used to match the filter's <option
       // selected>All Status</option>, and options are never "visible".
-      await expect(
-        page
-          .getByRole('columnheader', { name: 'Status' })
-          .or(page.getByText('No suppliers found'))
-          .first()
-      ).toBeVisible({ timeout: 5000 })
+      await expect(page.getByRole('columnheader', { name: 'Status' })).toBeVisible({
+        timeout: 10000,
+      })
+      await expect(page.getByRole('cell', { name: 'Chennai Dental Depot' })).toBeVisible()
+      // Scope to the table: the status filter has a <option>Blocked</option>
+      // too, and an unscoped match resolves to both.
+      await expect(page.getByRole('table').getByText('Blocked')).toBeVisible()
     })
 
     test('should have search functionality', async ({ adminPage: page }) => {
