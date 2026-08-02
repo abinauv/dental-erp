@@ -204,6 +204,13 @@ model User {
   emailVerified   DateTime?
   image           String?
   mustChangePassword Boolean @default(false)
+
+  // Personal locale override, BCP 47. NULL means "inherit from the clinic" and
+  // is deliberately NOT defaulted: a default would be indistinguishable from an
+  // explicit choice of en-IN, so a clinic changing its own locale would
+  // silently fail to propagate to every staff member who never expressed a
+  // preference. See docs/LOCALIZATION.md.
+  locale          String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -454,6 +461,10 @@ model Patient {
   emergencyContactName     String?
   emergencyContactPhone    String?
   emergencyContactRelation String?
+
+  // Locale override for the patient portal. NULL means "inherit from the
+  // clinic" — same reasoning as User.locale above.
+  locale          String?
 
   aiSummary       Json?
   aiSummaryAt     DateTime?
