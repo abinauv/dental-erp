@@ -1,7 +1,8 @@
 # Localization & Internationalization
 
-**Status:** step 1 (locale plumbing) is implemented; steps 2–5 are still proposals.
-See §3 for the running order.
+**Status:** step 1 (locale plumbing) is implemented, including the per-person
+locale override described in §2.1; steps 2–5 are still proposals. See §3 for the
+running order.
 
 DentalERP was built for Indian dental clinics, and that assumption is not confined
 to display strings — it reaches into the invoice schema, the tax maths and the seed
@@ -94,7 +95,64 @@ timezone  String @default("Asia/Kolkata")
 
 The patient-facing surfaces — the patient portal, public booking and public
 payment pages — resolve the locale from the clinic being booked, with an optional
-override for the patient's own preference.
+override for the patient's own preference. That override is §2.1.
+
+### 2.1 The resolution cascade — implemented
+
+`Hospital.locale` is the clinic's setting. `User.locale` and `Patient.locale` sit
+on top of it as personal overrides. Resolution walks from most specific to least
+and takes the first **supported** value:
+
+| Surface                   | Resolution                                     | Entry point                                                |
+| ------------------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| Staff UI                  | `User.locale` → `Hospital.locale` → default    | `getLocaleForRequest()`                                    |
+| Patient portal            | `Patient.locale` → `Hospital.locale` → default | `getLocaleForRequest()`, or `getLocaleForPatientRequest()` |
+| Public pages (no session) | `?lang=` → `Hospital.locale` → default         | `resolvePublicLocale()`                                    |
+
+`getLocaleForRequest()` is what `next-intl` calls. It tries the staff session
+first and the portal cookie second, because a browser can hold both at once and
+the staff session is the more specific context when it does.
+
+**Both override columns are nullable with no default.** This is the decision
+worth understanding before changing anything here:
+
+```prisma
+model User {
+  // null means "inherit from the clinic" — deliberately NOT defaulted.
+  locale String?
+}
+```
+
+A default would make "never expressed a preference" indistinguishable from
+"explicitly chose en-IN", so a clinic changing its own locale would silently
+fail to propagate to everyone who had never touched the setting.
+
+Three behaviours follow from that, covered by
+[`tests/unit/i18n-cascade.test.ts`](../tests/unit/i18n-cascade.test.ts) for the
+resolution itself and
+[`tests/api/locale-preferences.test.ts`](../tests/api/locale-preferences.test.ts)
+for what the endpoints actually write:
+
+- **Clearing the picker persists `NULL`**, not the clinic's current value.
+  Re-selecting whatever the clinic uses today would pin the user to it.
+- **An unsupported stored value falls through to the next candidate**, not
+  straight to the default. If a locale is retired, its users should land on
+  their clinic's locale. This is why resolution uses
+  `resolveLocaleCascade(...candidates)` rather than
+  `resolveLocale(user ?? clinic)` — the latter treats a non-null unsupported
+  value as a decision and skips the clinic entirely.
+- **`?lang=` is never written anywhere.** An anonymous visitor has no account to
+  store it against, and persisting it would let a shared link change what other
+  visitors see.
+
+Failure is never fatal: no session, an unreachable database or a retired locale
+all resolve to the default rather than throwing. Formatting must not be able to
+take a page down.
+
+**What the override currently changes.** Number and date formatting, and how
+amounts are grouped and punctuated — not which currency the clinic bills in, and
+not the interface language, because no component calls `useTranslations` yet.
+That is step 2 below.
 
 ### Layout
 
@@ -167,6 +225,9 @@ Sequenced so that contributors are not editing the same files simultaneously.
    columns, and `lib/i18n/format.ts` — the single formatting module the three
    former `formatCurrency`/`formatDate` copies now delegate to. Defaults are
    unchanged (`en-IN`/INR), so this step is invisible to existing clinics.
+   The per-person override in §2.1 is part of this step: nullable `User.locale`
+   and `Patient.locale`, the resolution cascade, and a picker on both surfaces.
+   Also invisible by default — a clinic that changes nothing sees no change.
 2. **String extraction.** Move literals into `messages/en-IN.json`, one module at
    a time (billing, then patients, then appointments…). Mechanical and highly
    parallelizable once step 1 sets the conventions.

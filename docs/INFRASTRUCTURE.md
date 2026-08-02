@@ -28,22 +28,23 @@ The development Docker Compose stack is a convenience for contributors. It is ne
 
 ## Where we are today
 
-| Capability            | Today                                                                          |
-| --------------------- | ------------------------------------------------------------------------------ |
-| Database              | MySQL 8 via Prisma, 81 models                                                  |
-| Dev environment       | Install MySQL locally, create the database by hand                             |
-| File storage          | Local disk under `./uploads`                                                   |
-| Cache / rate limiting | None                                                                           |
-| Background jobs       | Cron-style HTTP routes behind a shared secret, driven by an external scheduler |
-| Auth                  | NextAuth v5 (beta) credentials, plus a separate patient OTP session            |
-| Observability         | `console.error`                                                                |
-| Container             | Production `Dockerfile` — multi-stage, standalone output, non-root user        |
-| CI                    | Lint, type check, unit tests and build on every PR; Playwright E2E nightly     |
+| Capability            | Today                                                                           |
+| --------------------- | ------------------------------------------------------------------------------- |
+| Database              | MySQL 8 via Prisma, 81 models                                                   |
+| Dev environment       | `docker compose -f docker-compose.dev.yml up -d` — MySQL, Redis, MinIO, Mailpit |
+| File storage          | Local disk under `./uploads`, on a named volume                                 |
+| Cache / rate limiting | None                                                                            |
+| Background jobs       | Cron-style HTTP routes behind a shared secret, driven by an external scheduler  |
+| Auth                  | NextAuth v5 (beta) credentials, plus a separate patient OTP session             |
+| Observability         | `console.error`                                                                 |
+| Container             | Production `Dockerfile` — multi-stage, standalone output, non-root user         |
+| Health probes         | `/api/health` (liveness) and `/api/ready` (readiness)                           |
+| CI                    | Lint, type check, unit tests and build on every PR; Playwright E2E nightly      |
 
-Two known infrastructure defects are being fixed as part of the roadmap below:
+Two known infrastructure defects were listed here when this document was first published. Both are now fixed, and are kept below as the record:
 
-- **Uploads do not survive a redeploy.** The `Dockerfile` creates `uploads/` in the container's writable layer with no volume behind it, so any container replacement discards every uploaded file. Fixed in Phase 1 with a named volume, and properly in Phase 3 with object storage.
-- **The middleware matcher excludes `/api/health`, which does not exist.** Someone intended a health endpoint and it was never built, so there is nothing for an orchestrator to probe. Phase 1 adds both `/api/health` (liveness) and `/api/ready` (readiness).
+- ~~**Uploads do not survive a redeploy.**~~ The `Dockerfile` created `uploads/` in the container's writable layer with no volume behind it, so any container replacement discarded every uploaded file. **Fixed in Phase 1** with a `VOLUME` declaration and a documented named volume; Phase 3 removes the problem entirely by moving uploads to object storage. **Anyone already running the image must copy their files out before mounting a volume over the path** — see the deployment notes in the README.
+- ~~**The middleware matcher excludes `/api/health`, which does not exist.**~~ The exclusion was dead configuration with no endpoint behind it. **Fixed in Phase 1**, which added `/api/health` (liveness — touches nothing, so a database blip cannot get a healthy container killed) and `/api/ready` (readiness — checks the database and answers 503 rather than throwing).
 
 ---
 
@@ -53,8 +54,8 @@ Phases ship **one per pull request**, in order, each branched from a freshly mer
 
 | Phase | Goal                                                                  | Status  |
 | ----- | --------------------------------------------------------------------- | ------- |
-| 1     | Containerised dev environment + the two defects above                 | Planned |
-| 2     | Per-user and per-patient locale override                              | Planned |
+| 1     | Containerised dev environment + the two defects above                 | Shipped |
+| 2     | Per-user and per-patient locale override                              | Shipped |
 | 3     | Pluggable storage — local disk and S3-compatible                      | Planned |
 | 4     | Production self-hosting bundle — published images, production compose | Planned |
 | —     | _Reassessment point — everything below is drafted, not committed_     |         |
@@ -82,15 +83,15 @@ The manual MySQL setup path stays documented as an alternative. Docker will not 
 
 _Proposed by a contributor working on localization._
 
-`Hospital.locale` already exists. This adds a per-person override on top of it, so a staff member or patient is not stuck with whatever their clinic chose.
+`Hospital.locale` already existed. This adds a per-person override on top of it, so a staff member or patient is not stuck with whatever their clinic chose. Staff set it under **Settings → My Profile**; patients under **My Preferences** in the portal.
 
 **Resolution cascade — most specific wins:**
 
-| Surface                               | Resolution                                                                |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| Staff UI                              | `User.locale` → `Hospital.locale` → default                               |
-| Patient portal                        | `Patient.locale` → `Hospital.locale` → default                            |
-| Public booking / payment (no session) | `Hospital.locale` → default, with `?lang=` honoured for that request only |
+| Surface                   | Resolution                                                    |
+| ------------------------- | ------------------------------------------------------------- |
+| Staff UI                  | `User.locale` → `Hospital.locale` → default                   |
+| Patient portal            | `Patient.locale` → `Hospital.locale` → default                |
+| Public pages (no session) | `?lang=` → `Hospital.locale` → default, for that request only |
 
 **The design decision worth reviewing: the column is nullable, with no default.**
 
@@ -103,7 +104,14 @@ model User {
 
 A default value would make "never expressed a preference" indistinguishable from "explicitly chose en-IN". A clinic that later switched its default would silently fail to propagate to every staff member who had never touched the setting. That costs nothing on day one and is expensive to unpick a year later.
 
-**What this does and does not do.** The message catalogues currently hold 34 keys each and no component calls `useTranslations` yet — the i18n layer is scaffolding. A locale override therefore changes **number, date and currency formatting only**. It will not visibly switch the interface language until a genuinely different locale exists and the UI strings are extracted. That is not a reason to defer it; it is the foundation that work needs.
+Two consequences of that decision, both of which shipped and both of which have tests:
+
+- **Clearing the picker writes `NULL`, not the clinic's current value.** Re-selecting what the clinic happens to use today would pin the user to it forever.
+- **An override that is no longer supported falls through to the clinic**, rather than dropping to the global default. If a locale is retired, its users should land on their own clinic's setting — which is why resolution walks a list of candidates rather than doing `resolveLocale(user ?? clinic)`.
+
+**`?lang=` is never persisted.** An anonymous visitor has no account to store a preference against, and writing a query string to the clinic record would let any shared link change what every other visitor sees.
+
+**What this does and does not do.** The message catalogues hold 34 keys each and no component calls `useTranslations` yet — the i18n layer is scaffolding. A locale override therefore changes **number and date formatting only**, and how amounts are grouped and punctuated. It does not change which currency the clinic bills in, and it will not visibly switch the interface language until a genuinely different locale exists and the UI strings are extracted. That is not a reason to defer it; it is the foundation that work needs.
 
 See [`docs/LOCALIZATION.md`](./LOCALIZATION.md) for the wider localization design.
 
@@ -133,6 +141,6 @@ Published container images, a production Compose stack, and documentation good e
 
 ## Contributing to this
 
-The most valuable feedback is on the phases that have not been built yet — particularly Phase 2's cascade semantics, and whether anything in Phases 5–7 matters enough to commit to.
+The most valuable feedback is on the phases that have not been built yet — Phase 3's driver interface, and whether anything in Phases 5–7 matters enough to commit to. Phase 2 has shipped, but its cascade semantics are still worth arguing with: changing them later means a data migration, so an objection now is much cheaper than an objection in six months.
 
 Open an issue, or comment on the pull request for the phase in question. See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for the general workflow.
