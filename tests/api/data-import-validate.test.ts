@@ -5,8 +5,13 @@ const mockAuth = vi.hoisted(() => ({
   requireAuthAndRole: vi.fn(),
 }))
 
-const mockFs = vi.hoisted(() => ({
-  readFile: vi.fn(),
+const mockStorage = vi.hoisted(() => ({
+  name: 'local' as const,
+  put: vi.fn(),
+  get: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
+  getSignedUrl: vi.fn(),
 }))
 
 const mockParsers = vi.hoisted(() => ({
@@ -15,10 +20,9 @@ const mockParsers = vi.hoisted(() => ({
 
 vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
-vi.mock('fs/promises', () => ({ ...mockFs, default: mockFs }))
-vi.mock('path', async (importOriginal) => {
-  const actual = await importOriginal() as any
-  return { ...actual, default: actual }
+vi.mock('@/lib/storage', async (importOriginal) => {
+  const actual = (await importOriginal()) as any
+  return { ...actual, getStorage: () => mockStorage }
 })
 vi.mock('@/lib/import/parsers', () => mockParsers)
 
@@ -42,6 +46,30 @@ describe('POST /api/data-import/validate', () => {
     })
   })
 
+  it('reads an import job created before the storage refactor', async () => {
+    // Jobs already in the database hold "uploads/{hospitalId}/imports/...".
+    // They have to keep validating after an upgrade, without a data migration.
+    ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
+      id: 'job-1',
+      hospitalId: 'hospital-1',
+      entityType: 'patients',
+      filePath: 'uploads/hospital-1/imports/legacy.csv',
+      fileType: 'csv',
+    })
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
+    mockParsers.parseFile.mockResolvedValue({ columns: ['Name'], rows: [], totalRows: 0 })
+    ;(prisma.dataImportJob.update as any).mockResolvedValue({})
+
+    const res = await mod.POST(makeRequest({ jobId: 'job-1', mapping: { Name: 'firstName' } }))
+
+    expect(res.status).toBe(200)
+    expect(mockStorage.get).toHaveBeenCalledWith('hospital-1/imports/legacy.csv')
+  })
+
   it('validates rows and returns valid result', async () => {
     ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
       id: 'job-1',
@@ -51,12 +79,14 @@ describe('POST /api/data-import/validate', () => {
       fileType: 'csv',
     })
 
-    mockFs.readFile.mockResolvedValue(Buffer.from('data'))
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
     mockParsers.parseFile.mockResolvedValue({
       columns: ['Name', 'Phone'],
-      rows: [
-        { Name: 'John Doe', Phone: '9876543210' },
-      ],
+      rows: [{ Name: 'John Doe', Phone: '9876543210' }],
       totalRows: 1,
     })
 
@@ -64,10 +94,12 @@ describe('POST /api/data-import/validate', () => {
     ;(prisma.patient.findMany as any).mockResolvedValue([])
     ;(prisma.dataImportJob.update as any).mockResolvedValue({})
 
-    const res = await mod.POST(makeRequest({
-      jobId: 'job-1',
-      mapping: { Name: 'firstName', Phone: 'phone' },
-    }))
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-1',
+        mapping: { Name: 'firstName', Phone: 'phone' },
+      })
+    )
 
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -85,7 +117,11 @@ describe('POST /api/data-import/validate', () => {
       fileType: 'csv',
     })
 
-    mockFs.readFile.mockResolvedValue(Buffer.from('data'))
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
     mockParsers.parseFile.mockResolvedValue({
       columns: ['Name', 'Phone'],
       rows: [{ Name: 'John', Phone: '9876543210' }],
@@ -97,10 +133,12 @@ describe('POST /api/data-import/validate', () => {
     ])
     ;(prisma.dataImportJob.update as any).mockResolvedValue({})
 
-    const res = await mod.POST(makeRequest({
-      jobId: 'job-1',
-      mapping: { Name: 'firstName', Phone: 'phone' },
-    }))
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-1',
+        mapping: { Name: 'firstName', Phone: 'phone' },
+      })
+    )
 
     expect(res.status).toBe(200)
     const body = await res.json()
