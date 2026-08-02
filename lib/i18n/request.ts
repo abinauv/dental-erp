@@ -74,7 +74,8 @@ async function resolvePatientLocale(): Promise<Locale | null> {
  * receptionist checking the portal), and the staff session is the more
  * specific context in that case. Anonymous requests get the default; public
  * pages that know which clinic they belong to should call
- * {@link resolvePublicLocale} instead.
+ * `resolvePublicLocale` from ./config instead — it is pure, so importing it
+ * does not drag next-auth into a page that has no session to read.
  */
 export async function getLocaleForRequest(): Promise<Locale> {
   try {
@@ -100,26 +101,6 @@ export async function getLocaleForPatientRequest(): Promise<Locale> {
   } catch {
     return defaultLocale
   }
-}
-
-/**
- * Locale for a public page — payment links, and anything else reachable
- * without signing in.
- *
- * `?lang=` applies to **this request only and is never persisted**. There is no
- * account to store it against, and writing a visitor's query string to the
- * clinic record would let any link change what every other visitor sees.
- *
- * Pure by design: the caller has already loaded the clinic it is rendering, so
- * this must not go anywhere near the database.
- */
-export function resolvePublicLocale(
-  hospitalLocale: string | null | undefined,
-  langParam?: string | string[] | null
-): Locale {
-  // Next gives repeated query parameters as an array; take the first.
-  const requested = Array.isArray(langParam) ? langParam[0] : langParam
-  return resolveLocaleCascade(requested, hospitalLocale)
 }
 
 async function loadMessages(locale: Locale) {

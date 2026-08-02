@@ -67,6 +67,26 @@ export function resolveLocaleCascade(...candidates: (string | null | undefined)[
   return defaultLocale
 }
 
+/**
+ * Locale for a public page — payment links, and anything else reachable
+ * without signing in.
+ *
+ * `?lang=` applies to **this request only and is never persisted**. There is no
+ * account to store it against, and writing a visitor's query string to the
+ * clinic record would let any link change what every other visitor sees.
+ *
+ * Pure by design: the caller has already loaded the clinic it is rendering, so
+ * this must not go anywhere near the database or the session.
+ */
+export function resolvePublicLocale(
+  hospitalLocale: string | null | undefined,
+  langParam?: string | string[] | null
+): Locale {
+  // Next surfaces a repeated query parameter as an array; take the first.
+  const requested = Array.isArray(langParam) ? langParam[0] : langParam
+  return resolveLocaleCascade(requested, hospitalLocale)
+}
+
 export function getLocaleDefaults(value: string | null | undefined): LocaleDefaults {
   return localeDefaults[resolveLocale(value)]
 }
@@ -80,7 +100,15 @@ export function getLocaleDefaults(value: string | null | undefined): LocaleDefau
  */
 export function getLocaleLabel(locale: string, displayIn = 'en'): string {
   try {
-    return new Intl.DisplayNames([displayIn], { type: 'language' }).of(locale) ?? locale
+    // `languageDisplay: 'standard'` keeps the list internally consistent. The
+    // default ('dialect') renders en-US as "American English" while en-IN
+    // stays "English (India)", which reads like a mistake in a dropdown.
+    return (
+      new Intl.DisplayNames([displayIn], {
+        type: 'language',
+        languageDisplay: 'standard',
+      }).of(locale) ?? locale
+    )
   } catch {
     return locale
   }
