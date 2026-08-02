@@ -1403,6 +1403,29 @@ async function main() {
   // the pagination spec assert the real pager instead of an empty state, and
   // gives the check-in and queue specs an appointment to open.
 
+  // Appointment.doctorId points at Staff, not User, and the seed has never
+  // created a Staff row — which is part of why it created no appointments.
+  const doctorStaff = await prisma.staff.upsert({
+    where: { userId: doctor.id },
+    update: {},
+    create: {
+      hospitalId: hospital.id,
+      userId: doctor.id,
+      employeeId: 'EMP0001',
+      firstName: 'Arun',
+      lastName: 'Vijay',
+      phone: '9876543211',
+      email: 'doctor@demo-dental.com',
+      qualification: 'BDS, MDS',
+      specialization: 'Prosthodontics',
+      licenseNumber: 'TN-DENT-2018-4471',
+      city: 'Chennai',
+      state: 'Tamil Nadu',
+    },
+  })
+
+  console.log('Created doctor staff record')
+
   const appointmentCount = await prisma.appointment.count({
     where: { hospitalId: hospital.id },
   })
@@ -1439,7 +1462,7 @@ async function main() {
           hospitalId: hospital.id,
           appointmentNo: `APT2026${String(i + 1).padStart(4, '0')}`,
           patientId: patient.id,
-          doctorId: doctor.id,
+          doctorId: doctorStaff.id,
           scheduledDate,
           scheduledTime: `${String(hour).padStart(2, '0')}:00`,
           duration: 30,
