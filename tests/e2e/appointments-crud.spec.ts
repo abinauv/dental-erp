@@ -43,17 +43,11 @@ test.describe('Appointment Management', () => {
 
     test('should support pagination', async ({ adminPage: page }) => {
       await page.goto('/appointments')
-      await page.waitForTimeout(1000)
-      // The pager is gated on `pagination.totalPages > 1` in
-      // app/(dashboard)/appointments/page.tsx, and the seed creates no
-      // appointments — so assert the controls when the list is actually
-      // paginated, and the empty state otherwise.
-      const nextButton = page.getByRole('button', { name: /next/i })
-      if (await nextButton.count()) {
-        await expect(nextButton.first()).toBeVisible()
-      } else {
-        await expect(page.getByText('No appointments found')).toBeVisible()
-      }
+      // The pager only renders when totalPages > 1. The seed creates 14
+      // appointments against a page size of 10, so it must be there.
+      await expect(page.getByRole('button', { name: /next/i })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('button', { name: /previous/i })).toBeVisible()
+      await expect(page.getByText(/Showing 1 to 10 of 14/)).toBeVisible()
     })
   })
 
