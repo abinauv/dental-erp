@@ -1,0 +1,114 @@
+# Development backing services for DentalERP.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# This brings up MySQL, Redis, MinIO and Mailpit. It does NOT run the app —
+# start that on the host with `npm run dev`. Bind-mounting node_modules into a
+# container is slow enough on Windows and macOS to ruin the edit-reload loop,
+# and native hot reload is meaningfully better. A containerised app service can
+# be added behind a compose profile later for anyone who wants one.
+#
+# ---------------------------------------------------------------------------
+# NEVER USE THIS FILE IN PRODUCTION.
+#
+# Every credential below is weak, hardcoded and public. It exists so that a new
+# contributor can get a working environment without inventing passwords or
+# signing up for anything. A production deployment needs real secrets, no
+# published ports on the data services, and TLS — see docs/INFRASTRUCTURE.md.
+# ---------------------------------------------------------------------------
+
+name: dental-erp
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: dental
+      MYSQL_DATABASE: dental_erp
+    ports:
+      # If you already run MySQL locally this will fail to bind. Either stop the
+      # local server, or change the host side to e.g. '3307:3306' and update
+      # DATABASE_URL to match.
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # S3-compatible object storage. Nothing uses this yet — it is here so the
+  # storage work in Phase 3 has somewhere to point without every contributor
+  # needing an AWS account. Console at http://localhost:9001
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: dentalerp
+      MINIO_ROOT_PASSWORD: dentalerp123
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: creates the uploads bucket, then exits. `docker compose ps` will
+  # show it as Exited(0) — that is success, not a failure.
+  #
+  # Note for scripting: `docker compose up --wait` exits non-zero because of
+  # this service. --wait treats any container that exits as a failed start, and
+  # cannot be told that exiting is the whole point of this one. Use plain
+  # `up -d` (what the README documents), or `--wait` with the four long-running
+  # services named explicitly.
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 dentalerp dentalerp123 &&
+      mc mb --ignore-existing local/dental-erp-uploads &&
+      echo 'bucket ready'
+      "
+
+  # Catches all outbound SMTP so email can be tested with no credentials and no
+  # risk of mailing a real patient. Web UI at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mysql-data:
+  redis-data:
+  minio-data:

@@ -91,8 +91,15 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
-     * - api routes that don't need auth
+     * - api/health and api/ready — the liveness and readiness probes.
+     *
+     * The probes are excluded here rather than allowed through the handler so
+     * that they never invoke auth() at all. An orchestrator polls these every
+     * few seconds for the life of the container; making each poll decode a
+     * session is wasted work, and it couples the probe to the auth layer, so
+     * a fault in auth would take the health check down with it — exactly when
+     * an accurate health signal matters most.
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|api/health).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api/health|api/ready).*)',
   ],
 }
