@@ -48,7 +48,9 @@ test.describe('Inventory Suppliers', () => {
         timeout: 10000,
       })
       await expect(page.getByRole('cell', { name: 'Chennai Dental Depot' })).toBeVisible()
-      await expect(page.getByText('Blocked')).toBeVisible()
+      // Scope to the table: the status filter has a <option>Blocked</option>
+      // too, and an unscoped match resolves to both.
+      await expect(page.getByRole('table').getByText('Blocked')).toBeVisible()
     })
 
     test('should have search functionality', async ({ adminPage: page }) => {
