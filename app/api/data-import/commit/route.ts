@@ -1,36 +1,35 @@
-import { NextRequest, NextResponse } from "next/server"
-import { readFile } from "fs/promises"
-import path from "path"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
-import { parseFile } from "@/lib/import/parsers"
-import { ENTITY_SCHEMAS, coerceValue } from "@/lib/import/schema-definitions"
-import bcrypt from "bcryptjs"
+import { NextRequest, NextResponse } from 'next/server'
+import { getStorage, toStorageKey } from '@/lib/storage'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { parseFile } from '@/lib/import/parsers'
+import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
+import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
-  const { error, session, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { error, session, hospitalId } = await requireAuthAndRole(['ADMIN'])
+  if (error || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
     const { jobId, mapping, editedRows, skipErrorRows = false } = await req.json()
-    if (!jobId) return NextResponse.json({ error: "jobId is required" }, { status: 400 })
-    if (!mapping) return NextResponse.json({ error: "mapping is required" }, { status: 400 })
+    if (!jobId) return NextResponse.json({ error: 'jobId is required' }, { status: 400 })
+    if (!mapping) return NextResponse.json({ error: 'mapping is required' }, { status: 400 })
 
     // Load job
     const job = await prisma.dataImportJob.findFirst({
       where: { id: jobId, hospitalId },
     })
-    if (!job) return NextResponse.json({ error: "Import job not found" }, { status: 404 })
+    if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
 
     // Mark signoff
     await prisma.dataImportJob.update({
       where: { id: jobId },
-      data: { signedOffAt: new Date(), status: "IMPORTING" },
+      data: { signedOffAt: new Date(), status: 'IMPORTING' },
     })
 
-    // Re-parse full file
-    const filePath = path.join(process.cwd(), job.filePath)
-    const buffer = await readFile(filePath)
+    // Re-parse full file — see the note in validate/route.ts about legacy keys.
+    const { body: buffer } = await getStorage().get(toStorageKey(job.filePath))
     const parsed = await parseFile(buffer, job.fileType)
 
     const schema = ENTITY_SCHEMAS[job.entityType]
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
 
       for (const field of schema.fields) {
         const sourceCol = reverseMap[field.name]
-        let rawValue = ""
+        let rawValue = ''
         if (edits && edits[field.name] !== undefined) {
           rawValue = edits[field.name]
         } else if (sourceCol && sourceRow[sourceCol] !== undefined) {
@@ -69,33 +68,68 @@ export async function POST(req: NextRequest) {
 
     try {
       switch (job.entityType) {
-        case "patients":
-          ({ successCount, errorCount } = await importPatients(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'patients':
+          ;({ successCount, errorCount } = await importPatients(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
-        case "staff":
-          ({ successCount, errorCount } = await importStaff(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'staff':
+          ;({ successCount, errorCount } = await importStaff(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
-        case "appointments":
-          ({ successCount, errorCount } = await importAppointments(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'appointments':
+          ;({ successCount, errorCount } = await importAppointments(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
-        case "treatments":
-          ({ successCount, errorCount } = await importTreatments(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'treatments':
+          ;({ successCount, errorCount } = await importTreatments(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
-        case "invoices":
-          ({ successCount, errorCount } = await importInvoices(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'invoices':
+          ;({ successCount, errorCount } = await importInvoices(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
-        case "payments":
-          ({ successCount, errorCount } = await importPayments(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'payments':
+          ;({ successCount, errorCount } = await importPayments(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
-        case "inventory":
-          ({ successCount, errorCount } = await importInventory(hospitalId, transformedRows, skipErrorRows, importErrors))
+        case 'inventory':
+          ;({ successCount, errorCount } = await importInventory(
+            hospitalId,
+            transformedRows,
+            skipErrorRows,
+            importErrors
+          ))
           break
       }
     } catch (batchErr: any) {
       await prisma.dataImportJob.update({
         where: { id: jobId },
         data: {
-          status: "FAILED",
+          status: 'FAILED',
           errorLog: batchErr.message,
           successCount,
           errorCount,
@@ -115,7 +149,7 @@ export async function POST(req: NextRequest) {
     await prisma.dataImportJob.update({
       where: { id: jobId },
       data: {
-        status: errorCount > 0 && successCount === 0 ? "FAILED" : "COMPLETED",
+        status: errorCount > 0 && successCount === 0 ? 'FAILED' : 'COMPLETED',
         completedAt: new Date(),
         successCount,
         errorCount,
@@ -128,7 +162,7 @@ export async function POST(req: NextRequest) {
       data: {
         hospitalId,
         userId: session!.user.id,
-        action: "DATA_IMPORT",
+        action: 'DATA_IMPORT',
         entityType: job.entityType,
         entityId: jobId,
         newValues: JSON.stringify({
@@ -150,27 +184,32 @@ export async function POST(req: NextRequest) {
       errors: importErrors.slice(0, 50),
     })
   } catch (err: any) {
-    console.error("Data import commit error:", err)
-    return NextResponse.json({ error: err.message || "Import failed" }, { status: 500 })
+    console.error('Data import commit error:', err)
+    return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 })
   }
 }
 
 // ---------------------------------------------------------------------------
 // ID generation helpers (following existing patterns in the codebase)
 // ---------------------------------------------------------------------------
-async function generateId(hospitalId: string, model: string, prefix: string, field: string): Promise<string> {
+async function generateId(
+  hospitalId: string,
+  model: string,
+  prefix: string,
+  field: string
+): Promise<string> {
   const year = new Date().getFullYear()
   const idPrefix = `${prefix}${year}`
 
   const existing = await (prisma as any)[model].findFirst({
     where: { hospitalId, [field]: { startsWith: idPrefix } },
-    orderBy: { [field]: "desc" },
+    orderBy: { [field]: 'desc' },
     select: { [field]: true },
   })
 
   if (existing) {
-    const lastNum = parseInt(existing[field].replace(idPrefix, ""), 10) || 0
-    return `${idPrefix}${String(lastNum + 1).padStart(5, "0")}`
+    const lastNum = parseInt(existing[field].replace(idPrefix, ''), 10) || 0
+    return `${idPrefix}${String(lastNum + 1).padStart(5, '0')}`
   }
   return `${idPrefix}00001`
 }
@@ -185,23 +224,29 @@ async function importPatients(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   for (const row of rows) {
     try {
-      const patientId = row.patientId || await generateId(hospitalId, "patient", "PAT", "patientId")
+      const patientId =
+        row.patientId || (await generateId(hospitalId, 'patient', 'PAT', 'patientId'))
 
       // Handle name splitting: if firstName contains space and no lastName, split it
-      let firstName = row.firstName || ""
-      let lastName = row.lastName || ""
-      if (firstName && !lastName && firstName.includes(" ")) {
-        const parts = firstName.split(" ")
+      let firstName = row.firstName || ''
+      let lastName = row.lastName || ''
+      if (firstName && !lastName && firstName.includes(' ')) {
+        const parts = firstName.split(' ')
         firstName = parts[0]
-        lastName = parts.slice(1).join(" ")
+        lastName = parts.slice(1).join(' ')
       }
 
       if (!firstName || !row.phone) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: "Missing required: firstName or phone" }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: 'Missing required: firstName or phone' })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Missing firstName or phone`)
       }
 
@@ -210,7 +255,7 @@ async function importPatients(
           hospitalId,
           patientId,
           firstName,
-          lastName: lastName || ".",
+          lastName: lastName || '.',
           phone: row.phone,
           email: row.email || undefined,
           dateOfBirth: row.dateOfBirth || undefined,
@@ -249,42 +294,59 @@ async function importStaff(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   for (const row of rows) {
     try {
-      let firstName = row.firstName || ""
-      let lastName = row.lastName || ""
-      if (firstName && !lastName && firstName.includes(" ")) {
-        const parts = firstName.split(" ")
+      let firstName = row.firstName || ''
+      let lastName = row.lastName || ''
+      if (firstName && !lastName && firstName.includes(' ')) {
+        const parts = firstName.split(' ')
         firstName = parts[0]
-        lastName = parts.slice(1).join(" ")
+        lastName = parts.slice(1).join(' ')
       }
 
       if (!firstName || !row.email || !row.phone) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: "Missing required: firstName, email, or phone" }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: 'Missing required: firstName, email, or phone' })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Missing firstName, email, or phone`)
       }
 
       // Check if email already exists
       const existingUser = await prisma.user.findUnique({ where: { email: row.email } })
       if (existingUser) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Email ${row.email} already exists` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Email ${row.email} already exists` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Email ${row.email} already exists`)
       }
 
-      const employeeId = row.employeeId || await generateId(hospitalId, "staff", "EMP", "employeeId")
+      const employeeId =
+        row.employeeId || (await generateId(hospitalId, 'staff', 'EMP', 'employeeId'))
       const tempPassword = crypto.randomUUID().slice(0, 12)
       const hashedPassword = await bcrypt.hash(tempPassword, 10)
 
       // Determine role
       const roleMap: Record<string, string> = {
-        DOCTOR: "DOCTOR", RECEPTIONIST: "RECEPTIONIST", NURSE: "NURSE",
-        LAB_TECH: "LAB_TECH", ADMIN: "ADMIN",
-        Doctor: "DOCTOR", Receptionist: "RECEPTIONIST", Nurse: "NURSE",
-        doctor: "DOCTOR", receptionist: "RECEPTIONIST", nurse: "NURSE",
+        DOCTOR: 'DOCTOR',
+        RECEPTIONIST: 'RECEPTIONIST',
+        NURSE: 'NURSE',
+        LAB_TECH: 'LAB_TECH',
+        ADMIN: 'ADMIN',
+        Doctor: 'DOCTOR',
+        Receptionist: 'RECEPTIONIST',
+        Nurse: 'NURSE',
+        doctor: 'DOCTOR',
+        receptionist: 'RECEPTIONIST',
+        nurse: 'NURSE',
       }
-      const role = roleMap[row.role] || "RECEPTIONIST"
+      const role = roleMap[row.role] || 'RECEPTIONIST'
 
       await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
@@ -305,7 +367,7 @@ async function importStaff(
             userId: user.id,
             employeeId,
             firstName,
-            lastName: lastName || ".",
+            lastName: lastName || '.',
             phone: row.phone,
             email: row.email,
             dateOfBirth: row.dateOfBirth || undefined,
@@ -343,7 +405,8 @@ async function importAppointments(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   // Pre-load lookups
   const patients = await prisma.patient.findMany({
@@ -370,24 +433,39 @@ async function importAppointments(
 
   for (const row of rows) {
     try {
-      const patientId = patientLookup.get(row.patientRef) || patientLookup.get(row.patientRef?.toLowerCase?.())
+      const patientId =
+        patientLookup.get(row.patientRef) || patientLookup.get(row.patientRef?.toLowerCase?.())
       if (!patientId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Patient "${row.patientRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Patient "${row.patientRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Patient "${row.patientRef}" not found`)
       }
 
-      const doctorId = staffLookup.get(row.doctorRef) || staffLookup.get(row.doctorRef?.toLowerCase?.())
+      const doctorId =
+        staffLookup.get(row.doctorRef) || staffLookup.get(row.doctorRef?.toLowerCase?.())
       if (!doctorId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Doctor "${row.doctorRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Doctor "${row.doctorRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Doctor "${row.doctorRef}" not found`)
       }
 
       if (!row.scheduledDate || !row.scheduledTime) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: "Missing scheduledDate or scheduledTime" }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: 'Missing scheduledDate or scheduledTime' })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Missing scheduledDate or scheduledTime`)
       }
 
-      const appointmentNo = row.appointmentNo || await generateId(hospitalId, "appointment", "APT", "appointmentNo")
+      const appointmentNo =
+        row.appointmentNo || (await generateId(hospitalId, 'appointment', 'APT', 'appointmentNo'))
 
       await prisma.appointment.create({
         data: {
@@ -399,7 +477,7 @@ async function importAppointments(
           scheduledTime: row.scheduledTime,
           duration: row.duration || 30,
           appointmentType: row.appointmentType || undefined,
-          status: row.status || "COMPLETED",
+          status: row.status || 'COMPLETED',
           chiefComplaint: row.chiefComplaint || undefined,
           notes: row.notes || undefined,
           chairNumber: row.chairNumber || undefined,
@@ -424,7 +502,8 @@ async function importTreatments(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   // Pre-load lookups
   const patients = await prisma.patient.findMany({
@@ -461,30 +540,49 @@ async function importTreatments(
 
   for (const row of rows) {
     try {
-      const patientId = patientLookup.get(row.patientRef) || patientLookup.get(row.patientRef?.toLowerCase?.())
+      const patientId =
+        patientLookup.get(row.patientRef) || patientLookup.get(row.patientRef?.toLowerCase?.())
       if (!patientId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Patient "${row.patientRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Patient "${row.patientRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Patient not found`)
       }
 
-      const doctorId = staffLookup.get(row.doctorRef) || staffLookup.get(row.doctorRef?.toLowerCase?.())
+      const doctorId =
+        staffLookup.get(row.doctorRef) || staffLookup.get(row.doctorRef?.toLowerCase?.())
       if (!doctorId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Doctor "${row.doctorRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Doctor "${row.doctorRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Doctor not found`)
       }
 
       const procedureId = procLookup.get(row.procedureRef?.toLowerCase?.())
       if (!procedureId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Procedure "${row.procedureRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Procedure "${row.procedureRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Procedure not found`)
       }
 
       if (row.cost === null || row.cost === undefined) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: "Cost is required" }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: 'Cost is required' })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Cost is required`)
       }
 
-      const treatmentNo = row.treatmentNo || await generateId(hospitalId, "treatment", "TRT", "treatmentNo")
+      const treatmentNo =
+        row.treatmentNo || (await generateId(hospitalId, 'treatment', 'TRT', 'treatmentNo'))
 
       await prisma.treatment.create({
         data: {
@@ -498,7 +596,7 @@ async function importTreatments(
           diagnosis: row.diagnosis || undefined,
           findings: row.findings || undefined,
           procedureNotes: row.procedureNotes || undefined,
-          status: row.status || "COMPLETED",
+          status: row.status || 'COMPLETED',
           startTime: row.startTime || undefined,
           endTime: row.endTime || undefined,
         },
@@ -522,7 +620,8 @@ async function importInvoices(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   const patients = await prisma.patient.findMany({
     where: { hospitalId },
@@ -537,17 +636,23 @@ async function importInvoices(
 
   for (const row of rows) {
     try {
-      const patientId = patientLookup.get(row.patientRef) || patientLookup.get(row.patientRef?.toLowerCase?.())
+      const patientId =
+        patientLookup.get(row.patientRef) || patientLookup.get(row.patientRef?.toLowerCase?.())
       if (!patientId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Patient "${row.patientRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Patient "${row.patientRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Patient not found`)
       }
 
-      const invoiceNo = row.invoiceNo || await generateId(hospitalId, "invoice", "INV", "invoiceNo")
+      const invoiceNo =
+        row.invoiceNo || (await generateId(hospitalId, 'invoice', 'INV', 'invoiceNo'))
       const subtotal = row.subtotal ?? 0
       const totalAmount = row.totalAmount ?? subtotal
       const paidAmount = row.paidAmount ?? 0
-      const balanceAmount = row.balanceAmount ?? (totalAmount - paidAmount)
+      const balanceAmount = row.balanceAmount ?? totalAmount - paidAmount
       const taxableAmount = row.taxableAmount ?? subtotal
       const cgstAmount = row.cgstAmount ?? 0
       const sgstAmount = row.sgstAmount ?? 0
@@ -565,7 +670,9 @@ async function importInvoices(
           cgstAmount,
           sgstAmount,
           discountAmount: row.discountAmount || 0,
-          status: row.status || (paidAmount >= totalAmount ? "PAID" : paidAmount > 0 ? "PARTIALLY_PAID" : "PENDING"),
+          status:
+            row.status ||
+            (paidAmount >= totalAmount ? 'PAID' : paidAmount > 0 ? 'PARTIALLY_PAID' : 'PENDING'),
           dueDate: row.dueDate || undefined,
           notes: row.notes || undefined,
         },
@@ -589,7 +696,8 @@ async function importPayments(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   const invoices = await prisma.invoice.findMany({
     where: { hospitalId },
@@ -603,18 +711,28 @@ async function importPayments(
 
   for (const row of rows) {
     try {
-      const invoiceId = invoiceLookup.get(row.invoiceRef) || invoiceLookup.get(row.invoiceRef?.toLowerCase?.())
+      const invoiceId =
+        invoiceLookup.get(row.invoiceRef) || invoiceLookup.get(row.invoiceRef?.toLowerCase?.())
       if (!invoiceId) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `Invoice "${row.invoiceRef}" not found` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `Invoice "${row.invoiceRef}" not found` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Invoice not found`)
       }
 
       if (!row.amount || !row.paymentMethod) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: "Amount and paymentMethod are required" }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: 'Amount and paymentMethod are required' })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: Amount and paymentMethod are required`)
       }
 
-      const paymentNo = row.paymentNo || await generateId(hospitalId, "payment", "PAY", "paymentNo")
+      const paymentNo =
+        row.paymentNo || (await generateId(hospitalId, 'payment', 'PAY', 'paymentNo'))
 
       await prisma.payment.create({
         data: {
@@ -628,7 +746,7 @@ async function importPayments(
           bankName: row.bankName || undefined,
           chequeNumber: row.chequeNumber || undefined,
           upiId: row.upiId || undefined,
-          status: row.status || "COMPLETED",
+          status: row.status || 'COMPLETED',
           notes: row.notes || undefined,
         },
       })
@@ -651,23 +769,32 @@ async function importInventory(
   skipErrors: boolean,
   errors: { row: number; message: string }[]
 ) {
-  let successCount = 0, errorCount = 0
+  let successCount = 0,
+    errorCount = 0
 
   for (const row of rows) {
     try {
       if (!row.name || !row.unit || row.purchasePrice === null || row.purchasePrice === undefined) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: "name, unit, and purchasePrice are required" }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: 'name, unit, and purchasePrice are required' })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: name, unit, and purchasePrice are required`)
       }
 
-      const sku = row.sku || await generateId(hospitalId, "inventoryItem", "SKU", "sku")
+      const sku = row.sku || (await generateId(hospitalId, 'inventoryItem', 'SKU', 'sku'))
 
       // Check for duplicate SKU
       const existing = await prisma.inventoryItem.findFirst({
         where: { hospitalId, sku },
       })
       if (existing) {
-        if (skipErrors) { errorCount++; errors.push({ row: row._rowNum, message: `SKU "${sku}" already exists` }); continue }
+        if (skipErrors) {
+          errorCount++
+          errors.push({ row: row._rowNum, message: `SKU "${sku}" already exists` })
+          continue
+        }
         throw new Error(`Row ${row._rowNum}: SKU "${sku}" already exists`)
       }
 

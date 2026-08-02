@@ -1,25 +1,25 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, useCallback, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -28,14 +28,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -43,9 +43,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   ArrowLeft,
   Calendar,
@@ -75,14 +75,15 @@ import {
   Smile,
   Shield,
   Pen,
-} from "lucide-react"
-import { DentalChart } from "@/components/dental-chart"
-import { Patient360 } from "@/components/ai/patient-360"
-import { PatientFormSubmissions } from "@/components/forms/patient-form-submissions"
-import { PatientInsurance } from "@/components/insurance/patient-insurance"
-import { ImageViewer } from "@/components/imaging/image-viewer"
-import { ImageAnnotator, type Annotation } from "@/components/imaging/image-annotator"
-import { ImageCompare } from "@/components/imaging/image-compare"
+} from 'lucide-react'
+import { DentalChart } from '@/components/dental-chart'
+import { Patient360 } from '@/components/ai/patient-360'
+import { PatientFormSubmissions } from '@/components/forms/patient-form-submissions'
+import { PatientInsurance } from '@/components/insurance/patient-insurance'
+import { ImageViewer } from '@/components/imaging/image-viewer'
+import { ImageAnnotator, type Annotation } from '@/components/imaging/image-annotator'
+import { ImageCompare } from '@/components/imaging/image-compare'
+import { uploadUrl } from '@/lib/storage/keys'
 
 interface Patient {
   id: string
@@ -170,12 +171,12 @@ function formatFileSize(bytes: number): string {
 }
 
 function getDocumentTypeIcon(type: string) {
-  const docType = DOCUMENT_TYPES.find(d => d.value === type)
+  const docType = DOCUMENT_TYPES.find((d) => d.value === type)
   return docType?.icon || FileText
 }
 
 function getDocumentTypeLabel(type: string) {
-  const docType = DOCUMENT_TYPES.find(d => d.value === type)
+  const docType = DOCUMENT_TYPES.find((d) => d.value === type)
   return docType?.label || type
 }
 
@@ -186,7 +187,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [patient, setPatient] = useState<Patient | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState('overview')
 
   // Document upload state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
@@ -225,11 +226,11 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
       const data = await response.json()
       setPatient(data.patient)
     } catch (error: any) {
-      console.error("Error fetching patient:", error)
+      console.error('Error fetching patient:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to load patient details",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to load patient details',
       })
     } finally {
       setLoading(false)
@@ -245,12 +246,12 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
       setTimelineLoading(true)
       const typeParam = timelineFilter !== 'all' ? `?type=${timelineFilter}` : ''
       const response = await fetch(`/api/patients/${resolvedParams.id}/timeline${typeParam}`)
-      if (!response.ok) throw new Error("Failed to fetch timeline")
+      if (!response.ok) throw new Error('Failed to fetch timeline')
 
       const data = await response.json()
       setTimelineEvents(data.events)
     } catch (error) {
-      console.error("Error fetching timeline:", error)
+      console.error('Error fetching timeline:', error)
     } finally {
       setTimelineLoading(false)
     }
@@ -265,9 +266,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
   const handleUploadDocument = async () => {
     if (!uploadFile || !uploadType) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please select a file and document type",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select a file and document type',
       })
       return
     }
@@ -289,12 +290,12 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to upload document")
+        throw new Error(error.error || 'Failed to upload document')
       }
 
       toast({
-        title: "Success",
-        description: "Document uploaded successfully",
+        title: 'Success',
+        description: 'Document uploaded successfully',
       })
 
       setUploadDialogOpen(false)
@@ -304,9 +305,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
       fetchPatient()
     } catch (error: any) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to upload document",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to upload document',
       })
     } finally {
       setUploading(false)
@@ -315,8 +316,10 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
   const handleDownloadDocument = async (doc: Document) => {
     try {
-      const response = await fetch(`/api/patients/${resolvedParams.id}/documents/${doc.id}?download=true`)
-      if (!response.ok) throw new Error("Failed to download document")
+      const response = await fetch(
+        `/api/patients/${resolvedParams.id}/documents/${doc.id}?download=true`
+      )
+      if (!response.ok) throw new Error('Failed to download document')
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
@@ -329,33 +332,38 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
       document.body.removeChild(a)
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to download document",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to download document',
       })
     }
   }
 
   const handleDeleteDocument = async (docId: string) => {
-    const ok = await confirm({ title: "Delete document?", description: "Are you sure you want to delete this document?", confirmLabel: "Delete" }); if (!ok) return
+    const ok = await confirm({
+      title: 'Delete document?',
+      description: 'Are you sure you want to delete this document?',
+      confirmLabel: 'Delete',
+    })
+    if (!ok) return
 
     try {
       const response = await fetch(`/api/patients/${resolvedParams.id}/documents/${docId}`, {
         method: 'DELETE',
       })
 
-      if (!response.ok) throw new Error("Failed to delete document")
+      if (!response.ok) throw new Error('Failed to delete document')
 
       toast({
-        title: "Success",
-        description: "Document deleted successfully",
+        title: 'Success',
+        description: 'Document deleted successfully',
       })
       fetchPatient()
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete document",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete document',
       })
     }
   }
@@ -365,25 +373,25 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
     const response = await fetch(
       `/api/patients/${resolvedParams.id}/documents/${docId}/annotations`,
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ annotations }),
       }
     )
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
-      throw new Error(err.error || "Failed to save annotations")
+      throw new Error(err.error || 'Failed to save annotations')
     }
-    toast({ title: "Annotations saved" })
+    toast({ title: 'Annotations saved' })
     fetchPatient()
   }
 
   // Get image documents only
-  const imageDocuments = patient?.documents.filter((d) => d.fileType.startsWith("image/")) || []
+  const imageDocuments = patient?.documents.filter((d) => d.fileType.startsWith('image/')) || []
 
   // Get image list for viewer navigation
   const viewerImages = imageDocuments.map((d) => ({
-    src: `/api${d.filePath}`,
+    src: uploadUrl(d.filePath),
     title: d.originalName,
     subtitle: getDocumentTypeLabel(d.documentType),
   }))
@@ -433,7 +441,8 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           </Button>
           <Avatar className="h-16 w-16">
             <AvatarFallback className="text-lg">
-              {patient.firstName[0]}{patient.lastName[0]}
+              {patient.firstName[0]}
+              {patient.lastName[0]}
             </AvatarFallback>
           </Avatar>
           <div>
@@ -481,7 +490,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           <TabsTrigger value="documents" className="gap-2">
             <FolderOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Documents</span>
-            <Badge variant="secondary" className="ml-1">{patient._count.documents}</Badge>
+            <Badge variant="secondary" className="ml-1">
+              {patient._count.documents}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="appointments" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -614,32 +625,41 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
               <CardContent>
                 {patient.medicalHistory ? (
                   <div className="space-y-3">
-                    {patient.medicalHistory.allergies && patient.medicalHistory.allergies.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Allergies</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {patient.medicalHistory.allergies.map((allergy, i) => (
-                            <Badge key={i} variant="destructive">{allergy}</Badge>
-                          ))}
+                    {patient.medicalHistory.allergies &&
+                      patient.medicalHistory.allergies.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Allergies</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {patient.medicalHistory.allergies.map((allergy, i) => (
+                              <Badge key={i} variant="destructive">
+                                {allergy}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {patient.medicalHistory.chronicConditions && patient.medicalHistory.chronicConditions.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Chronic Conditions</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {patient.medicalHistory.chronicConditions.map((condition, i) => (
-                            <Badge key={i} variant="secondary">{condition}</Badge>
-                          ))}
+                      )}
+                    {patient.medicalHistory.chronicConditions &&
+                      patient.medicalHistory.chronicConditions.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Chronic Conditions</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {patient.medicalHistory.chronicConditions.map((condition, i) => (
+                              <Badge key={i} variant="secondary">
+                                {condition}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {patient.medicalHistory.currentMedications && patient.medicalHistory.currentMedications.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Current Medications</p>
-                        <p className="text-sm">{patient.medicalHistory.currentMedications.join(', ')}</p>
-                      </div>
-                    )}
+                      )}
+                    {patient.medicalHistory.currentMedications &&
+                      patient.medicalHistory.currentMedications.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Current Medications</p>
+                          <p className="text-sm">
+                            {patient.medicalHistory.currentMedications.join(', ')}
+                          </p>
+                        </div>
+                      )}
                   </div>
                 ) : (
                   <p className="text-muted-foreground">No medical history recorded</p>
@@ -745,7 +765,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                       return (
                         <div key={event.id} className="relative flex gap-4 pl-1">
                           {/* Timeline dot */}
-                          <div className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 ${getEventColor()}`}>
+                          <div
+                            className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 ${getEventColor()}`}
+                          >
                             {getEventIcon()}
                           </div>
 
@@ -755,7 +777,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                               <div>
                                 <p className="font-medium">{event.title}</p>
                                 {event.description && (
-                                  <p className="text-sm text-muted-foreground">{event.description}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {event.description}
+                                  </p>
                                 )}
                               </div>
                               <div className="text-right">
@@ -771,9 +795,11 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                             {event.status && (
                               <Badge
                                 variant={
-                                  event.status === 'COMPLETED' || event.status === 'PAID' ? 'default' :
-                                  event.status === 'CANCELLED' ? 'destructive' :
-                                  'secondary'
+                                  event.status === 'COMPLETED' || event.status === 'PAID'
+                                    ? 'default'
+                                    : event.status === 'CANCELLED'
+                                      ? 'destructive'
+                                      : 'secondary'
                                 }
                                 className="mt-2"
                               >
@@ -825,14 +851,14 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
               <div className="flex items-center gap-2">
                 {imageDocuments.length >= 2 && (
                   <Button
-                    variant={compareMode ? "default" : "outline"}
+                    variant={compareMode ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => {
                       setCompareMode((m) => !m)
                       setCompareSelection([])
                     }}
                   >
-                    {compareMode ? "Cancel Compare" : "Compare"}
+                    {compareMode ? 'Cancel Compare' : 'Compare'}
                   </Button>
                 )}
                 {compareMode && compareSelection.length === 2 && (
@@ -847,61 +873,59 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                       Upload Document
                     </Button>
                   </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Document</DialogTitle>
-                    <DialogDescription>
-                      Upload a new document for this patient
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="file">File</Label>
-                      <Input
-                        id="file"
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx"
-                        onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Supported: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX (max 10MB)
-                      </p>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Upload Document</DialogTitle>
+                      <DialogDescription>Upload a new document for this patient</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="file">File</Label>
+                        <Input
+                          id="file"
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx"
+                          onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Supported: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX (max 10MB)
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="type">Document Type</Label>
+                        <Select value={uploadType} onValueChange={setUploadType}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DOCUMENT_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description (optional)</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Enter a description..."
+                          value={uploadDescription}
+                          onChange={(e) => setUploadDescription(e.target.value)}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Document Type</Label>
-                      <Select value={uploadType} onValueChange={setUploadType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DOCUMENT_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description (optional)</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Enter a description..."
-                        value={uploadDescription}
-                        onChange={(e) => setUploadDescription(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleUploadDocument} disabled={uploading}>
-                      {uploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      Upload
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleUploadDocument} disabled={uploading}>
+                        {uploading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Upload
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
                 </Dialog>
               </div>
             </CardHeader>
@@ -929,10 +953,10 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                   <TableBody>
                     {patient.documents.map((doc) => {
                       const IconComponent = getDocumentTypeIcon(doc.documentType)
-                      const isImage = doc.fileType.startsWith("image/")
+                      const isImage = doc.fileType.startsWith('image/')
                       const isSelected = compareSelection.some((d) => d.id === doc.id)
                       return (
-                        <TableRow key={doc.id} className={isSelected ? "bg-blue-50" : ""}>
+                        <TableRow key={doc.id} className={isSelected ? 'bg-blue-50' : ''}>
                           {compareMode && (
                             <TableCell>
                               {isImage && (
@@ -957,7 +981,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                                   }}
                                 >
                                   <img
-                                    src={`/api${doc.filePath}`}
+                                    src={uploadUrl(doc.filePath)}
                                     alt=""
                                     className="h-10 w-10 object-cover"
                                   />
@@ -972,11 +996,13 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                                 {doc.description && (
                                   <p className="text-sm text-muted-foreground">{doc.description}</p>
                                 )}
-                                {doc.annotations && (doc.annotations as Annotation[]).length > 0 && (
-                                  <Badge variant="secondary" className="text-xs mt-0.5">
-                                    {(doc.annotations as Annotation[]).length} annotation{(doc.annotations as Annotation[]).length !== 1 ? "s" : ""}
-                                  </Badge>
-                                )}
+                                {doc.annotations &&
+                                  (doc.annotations as Annotation[]).length > 0 && (
+                                    <Badge variant="secondary" className="text-xs mt-0.5">
+                                      {(doc.annotations as Annotation[]).length} annotation
+                                      {(doc.annotations as Annotation[]).length !== 1 ? 's' : ''}
+                                    </Badge>
+                                  )}
                               </div>
                             </div>
                           </TableCell>
@@ -997,11 +1023,13 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                               <DropdownMenuContent align="end">
                                 {isImage && (
                                   <>
-                                    <DropdownMenuItem onClick={() => {
-                                      const idx = imageDocuments.findIndex((d) => d.id === doc.id)
-                                      setViewerIndex(idx >= 0 ? idx : 0)
-                                      setViewDocument(doc)
-                                    }}>
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        const idx = imageDocuments.findIndex((d) => d.id === doc.id)
+                                        setViewerIndex(idx >= 0 ? idx : 0)
+                                        setViewDocument(doc)
+                                      }}
+                                    >
                                       <Eye className="h-4 w-4 mr-2" />
                                       View
                                     </DropdownMenuItem>
@@ -1039,8 +1067,10 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           {viewDocument && (
             <ImageViewer
               open={!!viewDocument}
-              onOpenChange={(open) => { if (!open) setViewDocument(null) }}
-              src={`/api${viewDocument.filePath}`}
+              onOpenChange={(open) => {
+                if (!open) setViewDocument(null)
+              }}
+              src={uploadUrl(viewDocument.filePath)}
               title={viewDocument.originalName}
               subtitle={viewDocument.description || getDocumentTypeLabel(viewDocument.documentType)}
               images={viewerImages}
@@ -1054,10 +1084,14 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                 setViewDocument(null)
                 setAnnotateDocument(viewDocument)
               }}
-              onCompare={imageDocuments.length >= 2 ? () => {
-                setViewDocument(null)
-                setCompareMode(true)
-              } : undefined}
+              onCompare={
+                imageDocuments.length >= 2
+                  ? () => {
+                      setViewDocument(null)
+                      setCompareMode(true)
+                    }
+                  : undefined
+              }
             />
           )}
 
@@ -1065,8 +1099,10 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           {annotateDocument && (
             <ImageAnnotator
               open={!!annotateDocument}
-              onOpenChange={(open) => { if (!open) setAnnotateDocument(null) }}
-              src={`/api${annotateDocument.filePath}`}
+              onOpenChange={(open) => {
+                if (!open) setAnnotateDocument(null)
+              }}
+              src={uploadUrl(annotateDocument.filePath)}
               title={annotateDocument.originalName}
               annotations={(annotateDocument.annotations as Annotation[]) || []}
               onSave={(anns) => handleSaveAnnotations(annotateDocument.id, anns)}
@@ -1079,14 +1115,14 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
               open={compareOpen}
               onOpenChange={setCompareOpen}
               before={{
-                src: `/api${compareSelection[0].filePath}`,
+                src: uploadUrl(compareSelection[0].filePath),
                 title: compareSelection[0].originalName,
-                date: format(new Date(compareSelection[0].createdAt), "PP"),
+                date: format(new Date(compareSelection[0].createdAt), 'PP'),
               }}
               after={{
-                src: `/api${compareSelection[1].filePath}`,
+                src: uploadUrl(compareSelection[1].filePath),
                 title: compareSelection[1].originalName,
-                date: format(new Date(compareSelection[1].createdAt), "PP"),
+                date: format(new Date(compareSelection[1].createdAt), 'PP'),
               }}
             />
           )}
@@ -1098,9 +1134,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Appointments</CardTitle>
-                <CardDescription>
-                  Recent and upcoming appointments
-                </CardDescription>
+                <CardDescription>Recent and upcoming appointments</CardDescription>
               </div>
               <Link href={`/appointments/new?patientId=${patient.id}`}>
                 <Button>
@@ -1147,9 +1181,11 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                         <TableCell>
                           <Badge
                             variant={
-                              apt.status === 'COMPLETED' ? 'default' :
-                              apt.status === 'CANCELLED' ? 'destructive' :
-                              'secondary'
+                              apt.status === 'COMPLETED'
+                                ? 'default'
+                                : apt.status === 'CANCELLED'
+                                  ? 'destructive'
+                                  : 'secondary'
                             }
                           >
                             {apt.status}
@@ -1169,9 +1205,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           <Card>
             <CardHeader>
               <CardTitle>Treatment History</CardTitle>
-              <CardDescription>
-                Past procedures and treatments
-              </CardDescription>
+              <CardDescription>Past procedures and treatments</CardDescription>
             </CardHeader>
             <CardContent>
               {patient.treatments.length === 0 ? (
@@ -1193,12 +1227,8 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                   <TableBody>
                     {patient.treatments.map((treatment) => (
                       <TableRow key={treatment.id}>
-                        <TableCell>
-                          {format(new Date(treatment.createdAt), 'PP')}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {treatment.procedure.name}
-                        </TableCell>
+                        <TableCell>{format(new Date(treatment.createdAt), 'PP')}</TableCell>
+                        <TableCell className="font-medium">{treatment.procedure.name}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{treatment.procedure.category}</Badge>
                         </TableCell>
@@ -1210,9 +1240,11 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                         <TableCell>
                           <Badge
                             variant={
-                              treatment.status === 'COMPLETED' ? 'default' :
-                              treatment.status === 'CANCELLED' ? 'destructive' :
-                              'secondary'
+                              treatment.status === 'COMPLETED'
+                                ? 'default'
+                                : treatment.status === 'CANCELLED'
+                                  ? 'destructive'
+                                  : 'secondary'
                             }
                           >
                             {treatment.status}
@@ -1232,9 +1264,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           <Card>
             <CardHeader>
               <CardTitle>Billing History</CardTitle>
-              <CardDescription>
-                Invoices and payment records
-              </CardDescription>
+              <CardDescription>Invoices and payment records</CardDescription>
             </CardHeader>
             <CardContent>
               {patient.invoices.length === 0 ? (
@@ -1261,20 +1291,18 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                       )
                       return (
                         <TableRow key={invoice.id}>
-                          <TableCell className="font-medium">
-                            {invoice.invoiceNumber}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(invoice.createdAt), 'PP')}
-                          </TableCell>
+                          <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                          <TableCell>{format(new Date(invoice.createdAt), 'PP')}</TableCell>
                           <TableCell>₹{Number(invoice.totalAmount).toLocaleString()}</TableCell>
                           <TableCell>₹{totalPaid.toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge
                               variant={
-                                invoice.status === 'PAID' ? 'default' :
-                                invoice.status === 'CANCELLED' ? 'destructive' :
-                                'secondary'
+                                invoice.status === 'PAID'
+                                  ? 'default'
+                                  : invoice.status === 'CANCELLED'
+                                    ? 'destructive'
+                                    : 'secondary'
                               }
                             >
                               {invoice.status}
