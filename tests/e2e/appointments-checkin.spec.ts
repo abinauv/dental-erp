@@ -1,32 +1,21 @@
 import { test, expect } from './fixtures/auth'
+import { openFirstAppointmentDetail } from './fixtures/appointments'
 
 test.describe('Appointment Check-in / Check-out Workflow', () => {
   test.describe('Check-in Flow', () => {
-    // Needs a seeded appointment. prisma/seed.ts creates none, so the
-    // appointments table renders only its empty-state row — whose single link
-    // is "Book New Appointment". The old code clicked that and then asserted
-    // check-in status text on the creation form, which cannot pass. Re-enable
-    // once the seed creates an appointment.
-    test.fixme('should display appointment detail page with status actions', async ({
+    test('should display appointment detail page with status actions', async ({
       adminPage: page,
     }) => {
-      await page.goto('/appointments')
-      await page.waitForTimeout(1000)
-      // Click first appointment row to view detail
-      const row = page
-        .locator('table tbody tr')
-        .or(page.locator('[data-testid="appointment-row"]').first())
-        .first()
-      if (await row.isVisible()) {
-        const viewLink = row.getByRole('link').or(row.locator('a').first()).first()
-        if (await viewLink.isVisible()) {
-          await viewLink.click()
-          await page.waitForTimeout(1000)
-          await expect(
-            page.getByText(/status|scheduled|confirmed|checked|completed/i).first()
-          ).toBeVisible({ timeout: 5000 })
-        }
-      }
+      await openFirstAppointmentDetail(page)
+
+      // The detail page titles itself with the appointment number and shows a
+      // status badge beside it.
+      await expect(page.getByRole('heading', { name: /^APT2026\d{4}$/ })).toBeVisible({
+        timeout: 10000,
+      })
+      await expect(
+        page.getByText(/^(Scheduled|Confirmed|Checked In|In Progress|Completed)$/).first()
+      ).toBeVisible()
     })
 
     test('should have check-in button on queue page', async ({ adminPage: page }) => {

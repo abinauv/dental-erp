@@ -263,8 +263,11 @@ export default function LabWorkPage() {
     return <Badge className={config.className}>{config.label}</Badge>
   }
 
+  // workType is the LabWorkType enum (NIGHT_GUARD, ...), so lower-case the
+  // tail rather than leaving it shouting.
   const formatWorkType = (workType: string) => {
     return workType
+      .toLowerCase()
       .split('_')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')

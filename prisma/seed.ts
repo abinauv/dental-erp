@@ -6,6 +6,16 @@ import {
   ProcedureCategory,
   Plan,
   InvoiceStatus,
+  SupplierStatus,
+  InventoryItemType,
+  StockTransactionType,
+  StockAlertType,
+  LabVendorStatus,
+  LabOrderStatus,
+  LabOrderPriority,
+  LabWorkType,
+  AppointmentStatus,
+  AppointmentType,
 } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
@@ -1071,6 +1081,381 @@ async function main() {
   }
 
   console.log('Created inventory categories')
+
+  // ── Inventory: suppliers, items, batches, movements, alerts ───────────────
+  //
+  // The inventory and lab pages used to be seeded with nothing, so their e2e
+  // specs could only ever assert an empty state. Everything below exists so
+  // those specs can assert real rows: a low-stock item, an out-of-stock item,
+  // a batch near expiry, stock movements, and an open alert.
+
+  const materialsCategory = await prisma.inventoryCategory.findFirst({
+    where: { hospitalId: hospital.id, name: 'Dental Materials' },
+  })
+
+  const suppliers = [
+    {
+      code: 'SUP001',
+      name: 'Chennai Dental Depot',
+      contactPerson: 'Ravi Menon',
+      phone: '9840012345',
+      email: 'sales@chennaidental.example',
+      status: SupplierStatus.ACTIVE,
+    },
+    {
+      code: 'SUP002',
+      name: 'Southern Ortho Supplies',
+      contactPerson: 'Latha Rao',
+      phone: '9840067890',
+      email: 'orders@southernortho.example',
+      status: SupplierStatus.ACTIVE,
+    },
+    {
+      code: 'SUP003',
+      name: 'Legacy Instruments Co',
+      contactPerson: 'Mohan Das',
+      phone: '9840055555',
+      status: SupplierStatus.BLOCKED,
+    },
+  ]
+
+  for (const s of suppliers) {
+    await prisma.supplier.upsert({
+      where: { hospitalId_code: { hospitalId: hospital.id, code: s.code } },
+      update: {},
+      create: {
+        hospitalId: hospital.id,
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        paymentTerms: 'Net 30',
+        creditLimit: 100000,
+        ...s,
+      },
+    })
+  }
+
+  const primarySupplier = await prisma.supplier.findUnique({
+    where: { hospitalId_code: { hospitalId: hospital.id, code: 'SUP001' } },
+  })
+
+  // currentStock is deliberately varied so the stock-status badges, the low
+  // stock report and the alerts list all have something to show.
+  const items = [
+    {
+      sku: 'ITM001',
+      name: 'Composite Resin A2',
+      itemType: InventoryItemType.DENTAL_MATERIAL,
+      unit: 'syringe',
+      currentStock: 40,
+      minimumStock: 10,
+      reorderLevel: 20,
+      purchasePrice: 450,
+      sellingPrice: 900,
+      batchTracking: true,
+      expiryTracking: true,
+    },
+    {
+      sku: 'ITM002',
+      name: 'Disposable Gloves (M)',
+      itemType: InventoryItemType.CONSUMABLE,
+      unit: 'box',
+      currentStock: 6,
+      minimumStock: 10,
+      reorderLevel: 25,
+      purchasePrice: 320,
+      sellingPrice: 0,
+    },
+    {
+      sku: 'ITM003',
+      name: 'Lignocaine 2% Cartridge',
+      itemType: InventoryItemType.MEDICINE,
+      unit: 'cartridge',
+      currentStock: 0,
+      minimumStock: 20,
+      reorderLevel: 50,
+      purchasePrice: 25,
+      batchTracking: true,
+      expiryTracking: true,
+    },
+    {
+      sku: 'ITM004',
+      name: 'Extraction Forceps',
+      itemType: InventoryItemType.INSTRUMENT,
+      unit: 'piece',
+      currentStock: 12,
+      minimumStock: 4,
+      reorderLevel: 6,
+      purchasePrice: 1800,
+    },
+  ]
+
+  for (const item of items) {
+    await prisma.inventoryItem.upsert({
+      where: { hospitalId_sku: { hospitalId: hospital.id, sku: item.sku } },
+      update: {},
+      create: {
+        hospitalId: hospital.id,
+        categoryId: materialsCategory?.id ?? null,
+        preferredSupplierId: primarySupplier?.id ?? null,
+        storageLocation: 'Main Store',
+        ...item,
+      },
+    })
+  }
+
+  const composite = await prisma.inventoryItem.findUnique({
+    where: { hospitalId_sku: { hospitalId: hospital.id, sku: 'ITM001' } },
+  })
+  const gloves = await prisma.inventoryItem.findUnique({
+    where: { hospitalId_sku: { hospitalId: hospital.id, sku: 'ITM002' } },
+  })
+  const anaesthetic = await prisma.inventoryItem.findUnique({
+    where: { hospitalId_sku: { hospitalId: hospital.id, sku: 'ITM003' } },
+  })
+
+  if (composite && gloves && anaesthetic) {
+    const inTwentyDays = new Date()
+    inTwentyDays.setDate(inTwentyDays.getDate() + 20)
+
+    // One batch inside the 30-day window the expiring report defaults to.
+    const existingBatch = await prisma.inventoryBatch.findFirst({
+      where: { itemId: composite.id, batchNumber: 'BATCH-2026-01' },
+    })
+    if (!existingBatch) {
+      await prisma.inventoryBatch.create({
+        data: {
+          hospitalId: hospital.id,
+          itemId: composite.id,
+          batchNumber: 'BATCH-2026-01',
+          quantity: 40,
+          remainingQty: 18,
+          purchasePrice: 450,
+          expiryDate: inTwentyDays,
+          supplierId: primarySupplier?.id ?? null,
+        },
+      })
+    }
+
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const movements = [
+      { item: composite, type: StockTransactionType.PURCHASE, qty: 40, prev: 0, next: 40 },
+      { item: composite, type: StockTransactionType.CONSUMPTION, qty: 5, prev: 40, next: 35 },
+      { item: gloves, type: StockTransactionType.PURCHASE, qty: 20, prev: 0, next: 20 },
+      { item: gloves, type: StockTransactionType.CONSUMPTION, qty: 14, prev: 20, next: 6 },
+      { item: anaesthetic, type: StockTransactionType.CONSUMPTION, qty: 30, prev: 30, next: 0 },
+    ]
+
+    const movementCount = await prisma.stockTransaction.count({
+      where: { hospitalId: hospital.id },
+    })
+
+    if (movementCount === 0) {
+      for (const [i, m] of movements.entries()) {
+        const when = new Date(thirtyDaysAgo)
+        when.setDate(when.getDate() + i * 3)
+
+        await prisma.stockTransaction.create({
+          data: {
+            hospitalId: hospital.id,
+            itemId: m.item.id,
+            type: m.type,
+            quantity: m.qty,
+            previousStock: m.prev,
+            newStock: m.next,
+            unitPrice: m.item.purchasePrice,
+            totalPrice: Number(m.item.purchasePrice) * m.qty,
+            transactionDate: when,
+            supplierId:
+              m.type === StockTransactionType.PURCHASE ? (primarySupplier?.id ?? null) : null,
+            performedBy: admin.id,
+          },
+        })
+      }
+    }
+
+    // Open, unacknowledged alerts matching the two depleted items.
+    for (const [item, alertType] of [
+      [gloves, StockAlertType.LOW_STOCK],
+      [anaesthetic, StockAlertType.OUT_OF_STOCK],
+    ] as const) {
+      const open = await prisma.stockAlert.findFirst({
+        where: { itemId: item.id, alertType, isAcknowledged: false },
+      })
+      if (!open) {
+        await prisma.stockAlert.create({
+          data: { hospitalId: hospital.id, itemId: item.id, alertType },
+        })
+      }
+    }
+  }
+
+  console.log('Created suppliers, inventory items, batches, movements and alerts')
+
+  // ── Lab work: vendors and orders ──────────────────────────────────────────
+
+  const vendors = [
+    {
+      code: 'LAB001',
+      name: 'Precision Dental Lab',
+      contactPerson: 'Suresh Kumar',
+      phone: '9840111222',
+      email: 'work@precisionlab.example',
+      specializations: 'Crowns, Bridges, Veneers',
+      avgTurnaround: 5,
+      rating: 4,
+    },
+    {
+      code: 'LAB002',
+      name: 'Ortho Craft Studio',
+      contactPerson: 'Anita Joseph',
+      phone: '9840333444',
+      specializations: 'Aligners, Retainers',
+      avgTurnaround: 8,
+      rating: 5,
+    },
+  ]
+
+  for (const v of vendors) {
+    const existing = await prisma.labVendor.findFirst({
+      where: { hospitalId: hospital.id, code: v.code },
+    })
+    if (!existing) {
+      await prisma.labVendor.create({
+        data: {
+          hospitalId: hospital.id,
+          city: 'Chennai',
+          state: 'Tamil Nadu',
+          status: LabVendorStatus.ACTIVE,
+          ...v,
+        },
+      })
+    }
+  }
+
+  const primaryVendor = await prisma.labVendor.findFirst({
+    where: { hospitalId: hospital.id, code: 'LAB001' },
+  })
+
+  const seededPatients = await prisma.patient.findMany({
+    where: { hospitalId: hospital.id },
+    orderBy: { patientId: 'asc' },
+    take: 12,
+  })
+
+  if (primaryVendor && seededPatients.length) {
+    // A spread of statuses so the lab list's stat cards and status filter have
+    // something to count.
+    const labOrders = [
+      { no: 'LO-2026-0001', status: LabOrderStatus.CREATED, workType: LabWorkType.CROWN },
+      { no: 'LO-2026-0002', status: LabOrderStatus.SENT_TO_LAB, workType: LabWorkType.BRIDGE },
+      { no: 'LO-2026-0003', status: LabOrderStatus.IN_PROGRESS, workType: LabWorkType.DENTURE },
+      { no: 'LO-2026-0004', status: LabOrderStatus.READY, workType: LabWorkType.VENEER },
+      { no: 'LO-2026-0005', status: LabOrderStatus.FITTED, workType: LabWorkType.NIGHT_GUARD },
+    ]
+
+    for (const [i, o] of labOrders.entries()) {
+      const patient = seededPatients[i % seededPatients.length]
+      const orderDate = new Date()
+      orderDate.setDate(orderDate.getDate() - (labOrders.length - i) * 4)
+
+      const expectedDate = new Date(orderDate)
+      expectedDate.setDate(expectedDate.getDate() + 7)
+
+      await prisma.labOrder.upsert({
+        where: {
+          hospitalId_orderNumber: { hospitalId: hospital.id, orderNumber: o.no },
+        },
+        update: {},
+        create: {
+          hospitalId: hospital.id,
+          orderNumber: o.no,
+          patientId: patient.id,
+          labVendorId: primaryVendor.id,
+          workType: o.workType,
+          status: o.status,
+          priority: i === 0 ? LabOrderPriority.URGENT : LabOrderPriority.NORMAL,
+          toothNumbers: '16,17',
+          shadeGuide: 'A2',
+          orderDate,
+          expectedDate,
+          estimatedCost: 6500,
+          createdBy: admin.id,
+          history: {
+            create: {
+              statusFrom: null,
+              statusTo: o.status,
+              changedBy: admin.id,
+              notes: 'Seeded lab order',
+            },
+          },
+        },
+      })
+    }
+  }
+
+  console.log('Created lab vendors and lab orders')
+
+  // ── Appointments ──────────────────────────────────────────────────────────
+  //
+  // The appointments list pages at 10 per request, so seed past that: it lets
+  // the pagination spec assert the real pager instead of an empty state, and
+  // gives the check-in and queue specs an appointment to open.
+
+  const appointmentCount = await prisma.appointment.count({
+    where: { hospitalId: hospital.id },
+  })
+
+  if (appointmentCount === 0 && seededPatients.length) {
+    const statuses = [
+      AppointmentStatus.SCHEDULED,
+      AppointmentStatus.CONFIRMED,
+      AppointmentStatus.CHECKED_IN,
+      AppointmentStatus.IN_PROGRESS,
+      AppointmentStatus.COMPLETED,
+    ]
+    const types = [
+      AppointmentType.CONSULTATION,
+      AppointmentType.CHECK_UP,
+      AppointmentType.PROCEDURE,
+      AppointmentType.FOLLOW_UP,
+    ]
+
+    for (let i = 0; i < 14; i++) {
+      const patient = seededPatients[i % seededPatients.length]
+      const status = statuses[i % statuses.length]
+
+      // Today for the first few so the queue page has something, then spread
+      // across the coming days.
+      const scheduledDate = new Date()
+      scheduledDate.setHours(0, 0, 0, 0)
+      if (i >= 5) scheduledDate.setDate(scheduledDate.getDate() + (i - 4))
+
+      const hour = 9 + (i % 8)
+
+      await prisma.appointment.create({
+        data: {
+          hospitalId: hospital.id,
+          appointmentNo: `APT2026${String(i + 1).padStart(4, '0')}`,
+          patientId: patient.id,
+          doctorId: doctor.id,
+          scheduledDate,
+          scheduledTime: `${String(hour).padStart(2, '0')}:00`,
+          duration: 30,
+          appointmentType: types[i % types.length],
+          status,
+          chiefComplaint: 'Routine dental complaint',
+          checkedInAt:
+            status === AppointmentStatus.CHECKED_IN || status === AppointmentStatus.IN_PROGRESS
+              ? new Date()
+              : null,
+        },
+      })
+    }
+  }
+
+  console.log('Created appointments')
 
   // Invoice + payment link with a fixed token.
   //
