@@ -315,6 +315,7 @@ npm start
 ## Documentation
 
 - [Infrastructure Roadmap](docs/INFRASTRUCTURE.md) — how DentalERP is packaged and deployed, and what is planned next. Feedback welcome, especially on the phases not yet built.
+- [File storage](docs/STORAGE.md) — local disk vs S3, and how to move between them without losing files.
 - [Localization](docs/LOCALIZATION.md) — locale support and the message catalogue.
 
 ## Contributing
