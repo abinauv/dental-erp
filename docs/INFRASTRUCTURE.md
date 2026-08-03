@@ -37,7 +37,7 @@ The development Docker Compose stack is a convenience for contributors. It is ne
 | Background jobs       | Cron-style HTTP routes behind a shared secret, driven by an external scheduler  |
 | Auth                  | NextAuth v5 (beta) credentials, plus a separate patient OTP session             |
 | Observability         | `console.error`                                                                 |
-| Container             | Production `Dockerfile` — multi-stage, standalone output, non-root user         |
+| Container             | Published multi-arch image on GHCR (`linux/amd64`, `linux/arm64`), non-root     |
 | Health probes         | `/api/health` (liveness) and `/api/ready` (readiness)                           |
 | CI                    | Lint, type check, unit tests and build on every PR; Playwright E2E nightly      |
 
@@ -57,7 +57,7 @@ Phases ship **one per pull request**, in order, each branched from a freshly mer
 | 1     | Containerised dev environment + the two defects above                 | Shipped |
 | 2     | Per-user and per-patient locale override                              | Shipped |
 | 3     | Pluggable storage — local disk and S3-compatible                      | Shipped |
-| 4     | Production self-hosting bundle — published images, production compose | Planned |
+| 4     | Production self-hosting bundle — published images, production compose | Shipped |
 | —     | _Reassessment point — everything below is drafted, not committed_     |         |
 | 5     | Background job queue (BullMQ)                                         | Drafted |
 | 6     | Auth migration and SSO                                                | Drafted |
@@ -138,6 +138,14 @@ See [`STORAGE.md`](STORAGE.md) for how to choose a driver and how to migrate.
 
 Published container images, a production Compose stack, and documentation good enough that someone can self-host without reading the source. This is the point at which the self-hosting story is coherent, which is why it is the natural place to stop and reassess.
 
+Tagging `v*` builds `linux/amd64` and `linux/arm64` on native runners and publishes one manifest to `ghcr.io/abinauv/dental-erp`. Deploying is four commands and needs no checkout, no Node.js and no build step — see [`SELF_HOSTING.md`](../SELF_HOSTING.md).
+
+Three decisions worth knowing:
+
+- **Migrations run as a one-shot `migrate` container**, not on app boot. With more than one replica, an on-boot migration means several containers racing to alter the same schema; and when a migration fails it should fail visibly rather than inside a crash-looping app. The image carries the Prisma CLI so it can migrate its own database.
+- **Nothing has a weak default.** Every credential comes from `.env` and the stack refuses to start without it. MySQL publishes no port at all, and the app publishes on `127.0.0.1` only — put a proxy in front, and `docker-compose.caddy.yml` is a working one with automatic TLS.
+- **`connection_limit` is set explicitly.** Prisma's default is `num_cpus * 2 + 1`, and inside a container `num_cpus` is the _host's_ core count, not the container's share — on a 16-core host that is 33 connections per replica against MySQL's stock ceiling of 151. This was the last open item from the database-pool cleanup that landed in PR #20.
+
 ---
 
 ## Deliberately not doing
@@ -150,6 +158,10 @@ Published container images, a production Compose stack, and documentation good e
 
 ## Contributing to this
 
-The most valuable feedback is on the phases that have not been built yet — Phase 4's self-hosting bundle, and whether anything in Phases 5–7 matters enough to commit to. Phases 2 and 3 have shipped, but the decisions inside them are still worth arguing with: the locale cascade's semantics and the storage key format both become data migrations to change later, so an objection now is much cheaper than an objection in six months.
+Phases 0–4 were the committed scope and are now all shipped, which means **this is the reassess point** rather than a queue of work waiting to be picked up. Phases 5–7 are drafted, not agreed, and were sized before Phases 1–4 taught us anything about real pace or real demand.
+
+So the most valuable feedback right now is evidence rather than opinion: whether anyone is actually self-hosting this, whether the cron jobs are failing in practice (Phase 5 is justified by a defect class — it is worth confirming it bites before spending the largest phase on it), and whether anything has surfaced from real use that outranks what is drafted.
+
+The decisions already shipped are still worth arguing with, and some are expensive to revisit: the locale cascade's semantics, the storage key format, and the database credentials the compose stack creates on first start all become migrations rather than edits. An objection now is much cheaper than an objection in six months.
 
 Open an issue, or comment on the pull request for the phase in question. See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for the general workflow.

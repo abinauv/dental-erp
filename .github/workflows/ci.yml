@@ -8,6 +8,9 @@ on:
   # main) gets no checks at all — and a required status check that never runs
   # cannot gate anything.
   pull_request:
+  # So release.yml can run exactly these checks before publishing an image,
+  # rather than keeping a second copy of them that drifts.
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

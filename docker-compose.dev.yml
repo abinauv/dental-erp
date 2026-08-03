@@ -17,7 +17,15 @@
 # published ports on the data services, and TLS — see docs/INFRASTRUCTURE.md.
 # ---------------------------------------------------------------------------
 
-name: dental-erp
+# Distinct from the production stack's project name on purpose. Both files
+# declare volumes called mysql-data and redis-data, and a shared project name
+# would make them the same volumes — so bringing up the production stack on a
+# machine that has been running this one would silently point production at a
+# development database seeded with fake patients.
+#
+# If you were running this stack before that separation existed, clean up the
+# old project once:  docker compose -p dental-erp -f docker-compose.dev.yml down -v
+name: dental-erp-dev
 
 services:
   mysql:
