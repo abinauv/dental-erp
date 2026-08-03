@@ -115,6 +115,15 @@ docker compose -f docker-compose.dev.yml down -v      # stop and wipe the data
 or change the host port in `docker-compose.dev.yml` to `'3307:3306'` and update
 `DATABASE_URL` to match.
 
+> **If you were running this stack before August 2026**, its compose project was
+> renamed from `dental-erp` to `dental-erp-dev`, so that a production stack on
+> the same machine cannot end up sharing volumes with it. Your old containers
+> and volumes are still there under the previous name; clean them up once with:
+>
+> ```bash
+> docker compose -p dental-erp -f docker-compose.dev.yml down -v
+> ```
+
 ### Alternative setup: without Docker
 
 <details>
@@ -257,18 +266,36 @@ npm run test:e2e
 
 ## Deployment
 
-### Docker (recommended)
+**[SELF_HOSTING.md](SELF_HOSTING.md) is the full guide** — the short version is
+that you do not need a checkout, Node.js, or a build step:
 
 ```bash
-docker build -t dental-erp .
-docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads dental-erp
+mkdir -p /opt/dental-erp && cd /opt/dental-erp
+curl -fsSLO https://raw.githubusercontent.com/abinauv/dental-erp/main/docker-compose.yml
+curl -fsSL  https://raw.githubusercontent.com/abinauv/dental-erp/main/.env.production.example -o .env
+# fill in .env, then
+docker compose up -d
 ```
 
-> **Mount a volume at `/app/uploads`.** Uploaded files — patient documents,
-> scans, signed consent forms — are written to the container filesystem. Without
-> a volume they are destroyed the moment the container is replaced, which is
-> every single redeploy. The `-v` flag above is not optional in any deployment
-> you care about.
+That pulls a published multi-architecture image (`linux/amd64` and
+`linux/arm64`) from `ghcr.io/abinauv/dental-erp`, waits for MySQL, runs the
+database migrations as a one-shot container, and starts the app. Add
+`-f docker-compose.caddy.yml` for HTTPS with automatic certificates.
+
+SELF_HOSTING.md also covers backups and restores, upgrading, and what to do
+when something is wrong.
+
+### Running the image directly
+
+```bash
+docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads   ghcr.io/abinauv/dental-erp:latest
+```
+
+> **Mount a volume at `/app/uploads`.** On the default `STORAGE_DRIVER=local`,
+> uploaded files — patient documents, scans, signed consent forms — are written
+> to the container filesystem. Without a volume they are destroyed the moment
+> the container is replaced, which is every single redeploy. The `-v` flag above
+> is not optional in any deployment you care about.
 >
 > **Already running without one?** Copy your files out before you next redeploy:
 >
@@ -277,8 +304,15 @@ docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads dental-er
 > ```
 >
 > then recreate the container with the volume mounted and copy them back.
-> Phase 3 of the [infrastructure roadmap](docs/INFRASTRUCTURE.md) removes this
-> whole class of problem by moving uploads to object storage.
+> Setting `STORAGE_DRIVER=s3` removes this whole class of problem by getting
+> uploads off the container filesystem — see [docs/STORAGE.md](docs/STORAGE.md).
+
+Running the image this way does not migrate the database. The image carries the
+Prisma CLI so it can do that itself:
+
+```bash
+docker run --rm --env-file .env ghcr.io/abinauv/dental-erp:latest   node node_modules/prisma/build/index.js migrate deploy
+```
 
 ### Health checks
 
@@ -307,13 +341,18 @@ npm start
 
 ### Environment Requirements
 
+Deploying from the published image, all you need is Docker Engine 24+ with the
+Compose plugin. Building or developing from source needs:
+
 - Node.js 20+
 - MySQL 8.0+ (with a dedicated database)
-- Reverse proxy (nginx/Caddy) for HTTPS in production
+- Reverse proxy (nginx/Caddy) for HTTPS in production —
+  [`docker-compose.caddy.yml`](docker-compose.caddy.yml) is a working example
 - A persistent volume mounted at `/app/uploads`
 
 ## Documentation
 
+- [Self-hosting](SELF_HOSTING.md) — running DentalERP on your own server from a published image, with backups, TLS and upgrades.
 - [Infrastructure Roadmap](docs/INFRASTRUCTURE.md) — how DentalERP is packaged and deployed, and what is planned next. Feedback welcome, especially on the phases not yet built.
 - [File storage](docs/STORAGE.md) — local disk vs S3, and how to move between them without losing files.
 - [Localization](docs/LOCALIZATION.md) — locale support and the message catalogue.
