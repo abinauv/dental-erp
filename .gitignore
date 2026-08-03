@@ -27,11 +27,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files
+# Local env files. Deny by default and list the exceptions explicitly — a
+# template that gets committed by accident is how a real secret gets committed
+# by accident.
 .env
 .env.*
 .env copy
 !.env.example
+!.env.production.example
 
 # Vercel
 .vercel

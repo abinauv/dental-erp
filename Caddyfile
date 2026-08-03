@@ -1,0 +1,48 @@
+# Used by docker-compose.caddy.yml. See SELF_HOSTING.md.
+{
+	# Where Let's Encrypt sends warnings if renewal starts failing — which is
+	# the only notice you will get before a certificate expires.
+	#
+	# Required, not optional: an empty ACME_EMAIL expands this to a bare `email`
+	# directive and Caddy refuses to start with a parse error. Better to fail in
+	# compose naming the missing variable than here, at line 5 of a file the
+	# operator did not write.
+	email {$ACME_EMAIL}
+}
+
+{$DENTAL_ERP_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy app:3000 {
+		# Without these the app sees every request as coming from the proxy on
+		# plain HTTP, which breaks absolute URL generation and secure-cookie
+		# handling on the login flow.
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For {remote_host}
+		header_up Host {host}
+	}
+
+	# The app is a patient-records system; nothing in it should be framed by
+	# another site or sniffed into a different content type.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Caddy advertises itself by default. There is no reason to tell the
+		# internet which proxy version is in front of the clinic.
+		-Server
+	}
+
+	# Uploads are capped at 20 MB by the application (data imports); this is a
+	# little above that so the proxy is never the thing that rejects a file the
+	# app would have accepted with a useful message.
+	request_body {
+		max_size 25MB
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -1,0 +1,116 @@
+# DentalERP — production stack.
+#
+#   cp .env.production.example .env    # then fill it in
+#   docker compose up -d
+#
+# This pulls a published image; it does not build from source. See
+# SELF_HOSTING.md for the full walkthrough, including TLS and backups.
+#
+# Differences from docker-compose.dev.yml, all deliberate:
+#
+#   - MySQL publishes no port. It is reachable only from this compose network,
+#     so an exposed database is not one forgotten firewall rule away.
+#   - The app publishes on 127.0.0.1 only. Put a reverse proxy in front of it
+#     (docker-compose.caddy.yml does this with automatic TLS). Change it to
+#     '3000:3000' only if you genuinely mean to serve plaintext HTTP to the
+#     internet.
+#   - Nothing is hardcoded. Every credential comes from .env and the stack
+#     refuses to start if one is missing, rather than defaulting to something
+#     weak.
+
+name: dental-erp
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dental_erp}
+      MYSQL_USER: ${MYSQL_USER:-dental}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+    # max_connections has to clear (replicas x connection_limit) with room for
+    # the migrate job and your own mysql shell. See DB_CONNECTION_LIMIT below.
+    command:
+      - --max-connections=${MYSQL_MAX_CONNECTIONS:-151}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  # Runs `prisma migrate deploy` once and exits. `docker compose ps` shows it as
+  # Exited(0) — that is success.
+  #
+  # A one-shot service rather than an entrypoint step in the app, for two
+  # reasons: with more than one app replica, an on-boot migration means several
+  # containers racing to alter the same schema, and when a migration does fail
+  # you want it to fail visibly here rather than inside a crash-looping app.
+  migrate:
+    image: ghcr.io/abinauv/dental-erp:${DENTAL_ERP_VERSION:-latest}
+    restart: 'no'
+    command: ['node', 'node_modules/prisma/build/index.js', 'migrate', 'deploy']
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER:-dental}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-dental_erp}
+
+  app:
+    image: ghcr.io/abinauv/dental-erp:${DENTAL_ERP_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - '${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000'
+    env_file: .env
+    environment:
+      # Built from parts so it cannot drift out of step with what the mysql
+      # service was actually created with. Anything DATABASE_URL in .env is
+      # overridden by this.
+      #
+      # connection_limit is set explicitly because Prisma's default is
+      # num_cpus * 2 + 1, and in a container num_cpus is the *host's* core
+      # count — not this container's share of it. On a 16-core host that is 33
+      # connections per replica against MySQL's default ceiling of 151, so
+      # five replicas exhaust the server. Pick a number and do the arithmetic
+      # instead: replicas x DB_CONNECTION_LIMIT + headroom < MYSQL_MAX_CONNECTIONS.
+      DATABASE_URL: mysql://${MYSQL_USER:-dental}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-dental_erp}?connection_limit=${DB_CONNECTION_LIMIT:-10}&pool_timeout=20
+      # Blanked deliberately. Compose reads .env for interpolation, and env_file
+      # then hands that same file to the container — which would otherwise give
+      # the application process the database root password it has no use for.
+      MYSQL_ROOT_PASSWORD: ''
+    volumes:
+      # Only load-bearing on the default STORAGE_DRIVER=local. With
+      # STORAGE_DRIVER=s3 the files live in your bucket and this is inert —
+      # harmless to leave mounted, and it means switching drivers later does not
+      # also mean editing this file. See docs/STORAGE.md.
+      - uploads:/app/uploads
+
+  # Not started by default — nothing uses Redis yet. It is here, behind a
+  # profile, because the job queue (Phase 5 of docs/INFRASTRUCTURE.md) will need
+  # it and adding a service to a running stack later is easier if the shape is
+  # already agreed. Start it with:  docker compose --profile redis up -d
+  redis:
+    image: redis:7-alpine
+    profiles: ['redis']
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mysql-data:
+  redis-data:
+  uploads:
