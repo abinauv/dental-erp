@@ -5,9 +5,13 @@ const mockAuth = vi.hoisted(() => ({
   requireAuthAndRole: vi.fn(),
 }))
 
-const mockFs = vi.hoisted(() => ({
-  writeFile: vi.fn(),
-  mkdir: vi.fn(),
+const mockStorage = vi.hoisted(() => ({
+  name: 'local' as const,
+  put: vi.fn(),
+  get: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
+  getSignedUrl: vi.fn(),
 }))
 
 const mockParsers = vi.hoisted(() => ({
@@ -16,9 +20,12 @@ const mockParsers = vi.hoisted(() => ({
 
 vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
-vi.mock('fs/promises', () => ({ ...mockFs, default: mockFs }))
+vi.mock('@/lib/storage', async (importOriginal) => {
+  const actual = (await importOriginal()) as any
+  return { ...actual, getStorage: () => mockStorage }
+})
 vi.mock('path', async (importOriginal) => {
-  const actual = await importOriginal() as any
+  const actual = (await importOriginal()) as any
   return { ...actual, default: actual }
 })
 vi.mock('@/lib/import/parsers', () => mockParsers)
@@ -86,6 +93,52 @@ describe('POST /api/data-import/upload', () => {
     )
   })
 
+  it('stores the upload under a tenant-prefixed key and records that key', async () => {
+    const mockFile = {
+      name: 'patients.csv',
+      size: 5000,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
+    mockParsers.parseFile.mockResolvedValue({
+      columns: ['Name'],
+      rows: [{ Name: 'A' }],
+      totalRows: 1,
+    })
+    ;(prisma.dataImportJob.create as any).mockResolvedValue({ id: 'job-1' })
+
+    await mod.POST(makeMockFormDataRequest({ file: mockFile, entityType: 'patients' }))
+
+    const [key] = mockStorage.put.mock.calls[0] as any[]
+    expect(key).toMatch(/^hospital-1\/imports\/[0-9a-f-]+\.csv$/)
+
+    // The column holds the storage key itself, not a path fragment that only
+    // means something relative to one particular filesystem layout.
+    const created = (prisma.dataImportJob.create as any).mock.calls[0][0]
+    expect(created.data.filePath).toBe(key)
+  })
+
+  it('removes the stored file when the job row cannot be written', async () => {
+    // An unreferenced spreadsheet of patient data left sitting in storage is
+    // worse than a failed import.
+    const mockFile = {
+      name: 'patients.csv',
+      size: 5000,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
+    mockParsers.parseFile.mockResolvedValue({
+      columns: ['Name'],
+      rows: [{ Name: 'A' }],
+      totalRows: 1,
+    })
+    ;(prisma.dataImportJob.create as any).mockRejectedValue(new Error('constraint violation'))
+
+    const res = await mod.POST(makeMockFormDataRequest({ file: mockFile, entityType: 'patients' }))
+
+    expect(res.status).toBe(500)
+    const [putKey] = mockStorage.put.mock.calls[0] as any[]
+    expect(mockStorage.delete).toHaveBeenCalledWith(putKey)
+  })
+
   it('returns 400 when no file provided', async () => {
     const req = makeMockFormDataRequest({ entityType: 'patients' })
     const res = await mod.POST(req)
@@ -95,7 +148,11 @@ describe('POST /api/data-import/upload', () => {
   })
 
   it('returns 400 for invalid entity type', async () => {
-    const mockFile = { name: 'data.csv', size: 100, arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)) }
+    const mockFile = {
+      name: 'data.csv',
+      size: 100,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
     const req = makeMockFormDataRequest({ file: mockFile, entityType: 'invalid' })
     const res = await mod.POST(req)
     expect(res.status).toBe(400)
@@ -104,7 +161,11 @@ describe('POST /api/data-import/upload', () => {
   })
 
   it('returns 400 for unsupported file extension', async () => {
-    const mockFile = { name: 'data.doc', size: 100, arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)) }
+    const mockFile = {
+      name: 'data.doc',
+      size: 100,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
     const req = makeMockFormDataRequest({ file: mockFile, entityType: 'patients' })
     const res = await mod.POST(req)
     expect(res.status).toBe(400)
@@ -113,7 +174,11 @@ describe('POST /api/data-import/upload', () => {
   })
 
   it('returns 400 for oversized file (>20MB)', async () => {
-    const mockFile = { name: 'big.csv', size: 25 * 1024 * 1024, arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)) }
+    const mockFile = {
+      name: 'big.csv',
+      size: 25 * 1024 * 1024,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
     const req = makeMockFormDataRequest({ file: mockFile, entityType: 'patients' })
     const res = await mod.POST(req)
     expect(res.status).toBe(400)
@@ -122,7 +187,11 @@ describe('POST /api/data-import/upload', () => {
   })
 
   it('returns 400 when file has no columns', async () => {
-    const mockFile = { name: 'empty.csv', size: 10, arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)) }
+    const mockFile = {
+      name: 'empty.csv',
+      size: 10,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
     mockParsers.parseFile.mockResolvedValue({ columns: [], rows: [], totalRows: 0 })
 
     const req = makeMockFormDataRequest({ file: mockFile, entityType: 'patients' })
@@ -133,7 +202,11 @@ describe('POST /api/data-import/upload', () => {
   })
 
   it('returns 400 when file has no data rows', async () => {
-    const mockFile = { name: 'headers-only.csv', size: 20, arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)) }
+    const mockFile = {
+      name: 'headers-only.csv',
+      size: 20,
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
+    }
     mockParsers.parseFile.mockResolvedValue({ columns: ['Name'], rows: [], totalRows: 0 })
 
     const req = makeMockFormDataRequest({ file: mockFile, entityType: 'patients' })

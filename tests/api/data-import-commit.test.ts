@@ -5,8 +5,13 @@ const mockAuth = vi.hoisted(() => ({
   requireAuthAndRole: vi.fn(),
 }))
 
-const mockFs = vi.hoisted(() => ({
-  readFile: vi.fn(),
+const mockStorage = vi.hoisted(() => ({
+  name: 'local' as const,
+  put: vi.fn(),
+  get: vi.fn(),
+  delete: vi.fn(),
+  exists: vi.fn(),
+  getSignedUrl: vi.fn(),
 }))
 
 const mockParsers = vi.hoisted(() => ({
@@ -15,10 +20,9 @@ const mockParsers = vi.hoisted(() => ({
 
 vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
-vi.mock('fs/promises', () => ({ ...mockFs, default: mockFs }))
-vi.mock('path', async (importOriginal) => {
-  const actual = await importOriginal() as any
-  return { ...actual, default: actual }
+vi.mock('@/lib/storage', async (importOriginal) => {
+  const actual = (await importOriginal()) as any
+  return { ...actual, getStorage: () => mockStorage }
 })
 vi.mock('@/lib/import/parsers', () => mockParsers)
 vi.mock('bcryptjs', () => ({
@@ -56,7 +60,11 @@ describe('POST /api/data-import/commit', () => {
     })
     ;(prisma.dataImportJob.update as any).mockResolvedValue({})
 
-    mockFs.readFile.mockResolvedValue(Buffer.from('data'))
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
     mockParsers.parseFile.mockResolvedValue({
       columns: ['Name', 'Phone'],
       rows: [
@@ -71,10 +79,12 @@ describe('POST /api/data-import/commit', () => {
     ;(prisma.patient.create as any).mockResolvedValue({})
     ;(prisma.auditLog.create as any).mockResolvedValue({})
 
-    const res = await mod.POST(makeRequest({
-      jobId: 'job-1',
-      mapping: { Name: 'firstName', Phone: 'phone' },
-    }))
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-1',
+        mapping: { Name: 'firstName', Phone: 'phone' },
+      })
+    )
 
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -99,12 +109,14 @@ describe('POST /api/data-import/commit', () => {
     })
     ;(prisma.dataImportJob.update as any).mockResolvedValue({})
 
-    mockFs.readFile.mockResolvedValue(Buffer.from('data'))
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
     mockParsers.parseFile.mockResolvedValue({
       columns: ['Item', 'Unit', 'Price'],
-      rows: [
-        { Item: 'Gloves', Unit: 'box', Price: '200' },
-      ],
+      rows: [{ Item: 'Gloves', Unit: 'box', Price: '200' }],
       totalRows: 1,
     })
 
@@ -112,10 +124,12 @@ describe('POST /api/data-import/commit', () => {
     ;(prisma.inventoryItem.create as any).mockResolvedValue({})
     ;(prisma.auditLog.create as any).mockResolvedValue({})
 
-    const res = await mod.POST(makeRequest({
-      jobId: 'job-2',
-      mapping: { Item: 'name', Unit: 'unit', Price: 'purchasePrice' },
-    }))
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-2',
+        mapping: { Item: 'name', Unit: 'unit', Price: 'purchasePrice' },
+      })
+    )
 
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -134,7 +148,11 @@ describe('POST /api/data-import/commit', () => {
     })
     ;(prisma.dataImportJob.update as any).mockResolvedValue({})
 
-    mockFs.readFile.mockResolvedValue(Buffer.from('data'))
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
     mockParsers.parseFile.mockResolvedValue({
       columns: ['Name', 'Phone'],
       rows: [
@@ -148,11 +166,13 @@ describe('POST /api/data-import/commit', () => {
     ;(prisma.patient.create as any).mockResolvedValue({})
     ;(prisma.auditLog.create as any).mockResolvedValue({})
 
-    const res = await mod.POST(makeRequest({
-      jobId: 'job-3',
-      mapping: { Name: 'firstName', Phone: 'phone' },
-      skipErrorRows: true,
-    }))
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-3',
+        mapping: { Name: 'firstName', Phone: 'phone' },
+        skipErrorRows: true,
+      })
+    )
 
     expect(res.status).toBe(200)
     const body = await res.json()
@@ -190,7 +210,11 @@ describe('POST /api/data-import/commit', () => {
     })
     ;(prisma.dataImportJob.update as any).mockResolvedValue({})
 
-    mockFs.readFile.mockResolvedValue(Buffer.from('data'))
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
     mockParsers.parseFile.mockResolvedValue({
       columns: ['Name'],
       rows: [{ Name: '' }], // missing phone and firstName
@@ -200,11 +224,13 @@ describe('POST /api/data-import/commit', () => {
     ;(prisma.patient.findFirst as any).mockResolvedValue(null)
     ;(prisma.auditLog.create as any).mockResolvedValue({})
 
-    const res = await mod.POST(makeRequest({
-      jobId: 'job-4',
-      mapping: { Name: 'firstName' },
-      skipErrorRows: true,
-    }))
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-4',
+        mapping: { Name: 'firstName' },
+        skipErrorRows: true,
+      })
+    )
 
     expect(res.status).toBe(200)
     const body = await res.json()

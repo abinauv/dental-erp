@@ -32,7 +32,7 @@ The development Docker Compose stack is a convenience for contributors. It is ne
 | --------------------- | ------------------------------------------------------------------------------- |
 | Database              | MySQL 8 via Prisma, 81 models                                                   |
 | Dev environment       | `docker compose -f docker-compose.dev.yml up -d` — MySQL, Redis, MinIO, Mailpit |
-| File storage          | Local disk under `./uploads`, on a named volume                                 |
+| File storage          | Pluggable — local disk (default) or any S3-compatible bucket                    |
 | Cache / rate limiting | None                                                                            |
 | Background jobs       | Cron-style HTTP routes behind a shared secret, driven by an external scheduler  |
 | Auth                  | NextAuth v5 (beta) credentials, plus a separate patient OTP session             |
@@ -43,7 +43,7 @@ The development Docker Compose stack is a convenience for contributors. It is ne
 
 Two known infrastructure defects were listed here when this document was first published. Both are now fixed, and are kept below as the record:
 
-- ~~**Uploads do not survive a redeploy.**~~ The `Dockerfile` created `uploads/` in the container's writable layer with no volume behind it, so any container replacement discarded every uploaded file. **Fixed in Phase 1** with a `VOLUME` declaration and a documented named volume; Phase 3 removes the problem entirely by moving uploads to object storage. **Anyone already running the image must copy their files out before mounting a volume over the path** — see the deployment notes in the README.
+- ~~**Uploads do not survive a redeploy.**~~ The `Dockerfile` created `uploads/` in the container's writable layer with no volume behind it, so any container replacement discarded every uploaded file. **Fixed in Phase 1** with a `VOLUME` declaration and a documented named volume, and removed entirely in Phase 3 for anyone using the S3 driver, where the container filesystem stops being stateful at all. **Anyone already running the image must copy their files out before mounting a volume over the path** — see the deployment notes in the README.
 - ~~**The middleware matcher excludes `/api/health`, which does not exist.**~~ The exclusion was dead configuration with no endpoint behind it. **Fixed in Phase 1**, which added `/api/health` (liveness — touches nothing, so a database blip cannot get a healthy container killed) and `/api/ready` (readiness — checks the database and answers 503 rather than throwing).
 
 ---
@@ -56,7 +56,7 @@ Phases ship **one per pull request**, in order, each branched from a freshly mer
 | ----- | --------------------------------------------------------------------- | ------- |
 | 1     | Containerised dev environment + the two defects above                 | Shipped |
 | 2     | Per-user and per-patient locale override                              | Shipped |
-| 3     | Pluggable storage — local disk and S3-compatible                      | Planned |
+| 3     | Pluggable storage — local disk and S3-compatible                      | Shipped |
 | 4     | Production self-hosting bundle — published images, production compose | Planned |
 | —     | _Reassessment point — everything below is drafted, not committed_     |         |
 | 5     | Background job queue (BullMQ)                                         | Drafted |
@@ -119,9 +119,18 @@ See [`docs/LOCALIZATION.md`](./LOCALIZATION.md) for the wider localization desig
 
 ### Phase 3 — Storage abstraction
 
-A driver interface — `put`, `get`, `delete`, `getSignedUrl`, `exists` — with a local-disk implementation and an S3-compatible one. `S3_ENDPOINT` unset keeps the current local behaviour exactly.
+A driver interface — `put`, `get`, `delete`, `getSignedUrl`, `exists` — with a local-disk implementation and an S3-compatible one that works against MinIO, AWS S3, R2, Spaces, Wasabi and Ceph. `STORAGE_DRIVER` defaults to `local`, so an install that sets nothing behaves exactly as before.
 
-This is what gets uploads off the container filesystem, so DentalERP can run more than one replica and survive a redeploy without losing files. Multi-tenant isolation is preserved: every stored object stays namespaced by clinic, and the existing access check on served files does not weaken.
+This is what gets uploads off the container filesystem, so DentalERP can run more than one replica and survive a redeploy without losing files. Multi-tenant isolation is preserved: every stored object is keyed `{hospitalId}/...`, and the access check on served files is now enforced by a shared helper rather than by path arithmetic repeated in each route.
+
+Two things worth knowing if you are upgrading:
+
+- **No data migration is required.** Three different path conventions had been written into the database over time; all three are still accepted, so existing rows keep resolving. Only new writes use the canonical key.
+- **Switching to S3 does not move your files.** `npm run storage:migrate` copies them, verifies each one, and deletes nothing — so rolling back is setting `STORAGE_DRIVER` back to `local`.
+
+One of those three path conventions turned out to be a live defect rather than an inconsistency: patient-uploaded triage photos were stored in a shape neither the download endpoint nor the patient page could resolve, so they rendered as broken images, downloaded as 404s, and survived on disk after being "permanently" deleted. Having one key format fixes all three.
+
+See [`STORAGE.md`](STORAGE.md) for how to choose a driver and how to migrate.
 
 ---
 
@@ -141,6 +150,6 @@ Published container images, a production Compose stack, and documentation good e
 
 ## Contributing to this
 
-The most valuable feedback is on the phases that have not been built yet — Phase 3's driver interface, and whether anything in Phases 5–7 matters enough to commit to. Phase 2 has shipped, but its cascade semantics are still worth arguing with: changing them later means a data migration, so an objection now is much cheaper than an objection in six months.
+The most valuable feedback is on the phases that have not been built yet — Phase 4's self-hosting bundle, and whether anything in Phases 5–7 matters enough to commit to. Phases 2 and 3 have shipped, but the decisions inside them are still worth arguing with: the locale cascade's semantics and the storage key format both become data migrations to change later, so an objection now is much cheaper than an objection in six months.
 
 Open an issue, or comment on the pull request for the phase in question. See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for the general workflow.
