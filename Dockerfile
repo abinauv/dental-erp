@@ -35,6 +35,29 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# The Prisma CLI, so the image can migrate its own database. Next's standalone
+# tracing pulls in @prisma/client because the app imports it, but not the CLI —
+# that is a devDependency used only at build time. Without these three copies
+# there is no way to run `prisma migrate deploy` against a deployment except by
+# checking out the source and building a second toolchain next to it, which is
+# not a self-hosting story.
+#
+# Kept to the CLI and the packages it actually resolves at runtime rather than
+# the whole node_modules tree. @prisma/client is deliberately NOT among them:
+# the standalone build above ships its own generated copy, and overwriting that
+# with the ungenerated one would break the running application to make a
+# migration command work.
+#
+# These land after the standalone copy on purpose. @prisma/engines from the
+# deps stage is a superset of what standalone traced, and it is the one
+# carrying the schema engine that `migrate deploy` needs.
+COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
+COPY --from=deps /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
+COPY --from=deps /app/node_modules/@prisma/engines-version ./node_modules/@prisma/engines-version
+COPY --from=deps /app/node_modules/@prisma/debug ./node_modules/@prisma/debug
+COPY --from=deps /app/node_modules/@prisma/get-platform ./node_modules/@prisma/get-platform
+COPY --from=deps /app/node_modules/@prisma/fetch-engine ./node_modules/@prisma/fetch-engine
+
 # Create uploads directory
 RUN mkdir -p uploads && chown nextjs:nodejs uploads
 
@@ -45,9 +68,11 @@ RUN mkdir -p uploads && chown nextjs:nodejs uploads
 # anonymous volume rather than throwaway storage; deployments should mount a
 # named volume or bind mount over it. See the deployment section of the README.
 #
-# This is a mitigation, not the fix. Object storage (Phase 3 of
-# docs/INFRASTRUCTURE.md) removes the problem properly by getting uploads off
-# the container filesystem entirely.
+# This is a mitigation, not the fix. The fix shipped in Phase 3: set
+# STORAGE_DRIVER=s3 and the container filesystem stops being stateful at all,
+# at which point this volume is inert rather than load-bearing. It stays
+# declared because `local` is still the default and still the right choice for
+# a single-instance clinic. See docs/STORAGE.md.
 VOLUME ["/app/uploads"]
 
 USER nextjs

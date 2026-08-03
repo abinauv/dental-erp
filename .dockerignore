@@ -18,6 +18,12 @@ coverage
 !LICENSE
 Dockerfile
 .dockerignore
+# Deployment configuration describes how to run the image; it has no business
+# inside it. Shipping the compose files would also put an example domain and a
+# set of placeholder credentials into every layer.
+docker-compose*.yml
+Caddyfile
+backups
 vitest.config.*
 playwright.config.*
 tsconfig.tsbuildinfo
