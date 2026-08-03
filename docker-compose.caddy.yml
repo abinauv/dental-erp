@@ -1,0 +1,46 @@
+# Optional TLS termination with Caddy.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d
+#
+# Caddy obtains and renews a Let's Encrypt certificate on its own, with no
+# certbot, no cron entry and no renewal that quietly stops working eighteen
+# months from now. It needs two things from you: DENTAL_ERP_DOMAIN set in .env,
+# and that domain's A/AAAA record already pointing at this host — the ACME
+# challenge is served on port 80, so it cannot succeed before DNS resolves.
+#
+# Caddy reaches the app over the compose network as `app:3000`, so the
+# 127.0.0.1 publish in docker-compose.yml is not part of this path. It is left
+# in place because being able to curl the app directly on the host, bypassing
+# the proxy, is worth a lot the first time something is wrong.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+      # HTTP/3. Harmless to publish if you never use it.
+      - '443:443/udp'
+    environment:
+      DENTAL_ERP_DOMAIN: ${DENTAL_ERP_DOMAIN:?set DENTAL_ERP_DOMAIN in .env}
+      # Required rather than optional. Caddy cannot express "use this if it is
+      # set", so an empty value produces a bare `email` directive and a parse
+      # error at startup. Demanding it here fails with the variable's name
+      # instead — and an ACME account with no contact address means no warning
+      # when renewal breaks, which is not a good trade for one less line of
+      # configuration.
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and account keys. Losing this volume means re-issuing on
+      # next start, which is fine until you hit Let's Encrypt's rate limit —
+      # five duplicate certificates per week.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:
