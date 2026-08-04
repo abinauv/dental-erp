@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Search,
   ChevronLeft,
@@ -37,20 +37,20 @@ import {
   Eye,
   RotateCcw,
   IndianRupee,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   paymentMethodConfig,
   paymentStatusConfig,
   formatCurrency,
   formatDate,
-} from "@/lib/billing-utils"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from '@/lib/billing-utils'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface Payment {
   id: string
@@ -102,11 +102,11 @@ export default function PaymentsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [methodFilter, setMethodFilter] = useState("all")
-  const [dateFrom, setDateFrom] = useState("all")
-  const [dateTo, setDateTo] = useState("all")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [methodFilter, setMethodFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('all')
+  const [dateTo, setDateTo] = useState('all')
 
   const fetchPayments = async () => {
     try {
@@ -116,21 +116,21 @@ export default function PaymentsPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (methodFilter && methodFilter !== "all") params.append("paymentMethod", methodFilter)
-      if (dateFrom) params.append("dateFrom", dateFrom)
-      if (dateTo) params.append("dateTo", dateTo)
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (methodFilter && methodFilter !== 'all') params.append('paymentMethod', methodFilter)
+      if (dateFrom) params.append('dateFrom', dateFrom)
+      if (dateTo) params.append('dateTo', dateTo)
 
       const response = await fetch(`/api/payments?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch payments")
+      if (!response.ok) throw new Error('Failed to fetch payments')
 
       const data = await response.json()
       setPayments(data.payments)
       setSummary(data.summary)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching payments:", error)
+      console.error('Error fetching payments:', error)
     } finally {
       setLoading(false)
     }
@@ -143,25 +143,21 @@ export default function PaymentsPage() {
   const getStatusBadge = (status: string) => {
     const config = paymentStatusConfig[status as keyof typeof paymentStatusConfig] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const getPaymentMethodIcon = (method: string) => {
     switch (method) {
-      case "CASH":
+      case 'CASH':
         return <Banknote className="h-4 w-4" />
-      case "CARD":
+      case 'CARD':
         return <CreditCard className="h-4 w-4" />
-      case "UPI":
+      case 'UPI':
         return <Smartphone className="h-4 w-4" />
-      case "BANK_TRANSFER":
+      case 'BANK_TRANSFER':
         return <Building2 className="h-4 w-4" />
       default:
         return <CreditCard className="h-4 w-4" />
@@ -174,25 +170,25 @@ export default function PaymentsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Payments</h1>
-          <p className="text-muted-foreground">
-            View and manage all payment transactions
-          </p>
+          <p className="text-muted-foreground">View and manage all payment transactions</p>
         </div>
         <ExportMenu
           filename="payments"
-          getData={() => payments.map(p => ({
-            "Payment No": p.paymentNo,
-            "Patient": `${p.invoice.patient.firstName} ${p.invoice.patient.lastName}`,
-            "Patient ID": p.invoice.patient.patientId,
-            "Invoice No": p.invoice.invoiceNo,
-            "Payment Date": formatDate(p.paymentDate),
-            "Method": p.paymentMethod,
-            "Amount": Number(p.amount),
-            "Status": p.status,
-            "Transaction ID": p.transactionId || "",
-            "Refund Amount": p.refundAmount ? Number(p.refundAmount) : "",
-            "Notes": p.notes || "",
-          }))}
+          getData={() =>
+            payments.map((p) => ({
+              'Payment No': p.paymentNo,
+              Patient: `${p.invoice.patient.firstName} ${p.invoice.patient.lastName}`,
+              'Patient ID': p.invoice.patient.patientId,
+              'Invoice No': p.invoice.invoiceNo,
+              'Payment Date': formatDate(p.paymentDate),
+              Method: p.paymentMethod,
+              Amount: Number(p.amount),
+              Status: p.status,
+              'Transaction ID': p.transactionId || '',
+              'Refund Amount': p.refundAmount ? Number(p.refundAmount) : '',
+              Notes: p.notes || '',
+            }))
+          }
         />
       </div>
 
@@ -325,14 +321,30 @@ export default function PaymentsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : payments.length === 0 ? (
@@ -362,8 +374,7 @@ export default function PaymentsPage() {
                         </div>
                         <div>
                           <div className="font-medium">
-                            {payment.invoice.patient.firstName}{" "}
-                            {payment.invoice.patient.lastName}
+                            {payment.invoice.patient.firstName} {payment.invoice.patient.lastName}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {payment.invoice.patient.patientId}
@@ -384,15 +395,14 @@ export default function PaymentsPage() {
                       <div className="flex items-center gap-2">
                         {getPaymentMethodIcon(payment.paymentMethod)}
                         <span>
-                          {paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig]?.label ||
-                            payment.paymentMethod}
+                          {paymentMethodConfig[
+                            payment.paymentMethod as keyof typeof paymentMethodConfig
+                          ]?.label || payment.paymentMethod}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="font-medium">
-                        {formatCurrency(payment.amount)}
-                      </div>
+                      <div className="font-medium">{formatCurrency(payment.amount)}</div>
                       {payment.refundAmount && Number(payment.refundAmount) > 0 && (
                         <div className="text-sm text-red-600">
                           Refund: {formatCurrency(payment.refundAmount)}
@@ -409,18 +419,14 @@ export default function PaymentsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() =>
-                              router.push(`/billing/invoices/${payment.invoice.id}`)
-                            }
+                            onClick={() => router.push(`/billing/invoices/${payment.invoice.id}`)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             View Invoice
                           </DropdownMenuItem>
-                          {payment.status === "COMPLETED" && (
+                          {payment.status === 'COMPLETED' && (
                             <DropdownMenuItem
-                              onClick={() =>
-                                router.push(`/billing/payments/${payment.id}/refund`)
-                              }
+                              onClick={() => router.push(`/billing/payments/${payment.id}/refund`)}
                             >
                               <RotateCcw className="h-4 w-4 mr-2" />
                               Process Refund
@@ -439,8 +445,8 @@ export default function PaymentsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} payments
               </div>
               <div className="flex items-center gap-2">
