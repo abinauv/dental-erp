@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - List all payments with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
-    const search = searchParams.get("search") || ""
-    const status = searchParams.get("status") || ""
-    const paymentMethod = searchParams.get("paymentMethod") || ""
-    const dateFrom = searchParams.get("dateFrom") || ""
-    const dateTo = searchParams.get("dateTo") || ""
-    const invoiceId = searchParams.get("invoiceId") || ""
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || ''
+    const paymentMethod = searchParams.get('paymentMethod') || ''
+    const dateFrom = searchParams.get('dateFrom') || ''
+    const dateTo = searchParams.get('dateTo') || ''
+    const invoiceId = searchParams.get('invoiceId') || ''
 
     const skip = (page - 1) * limit
 
@@ -48,12 +48,12 @@ export async function GET(request: NextRequest) {
       where.invoiceId = invoiceId
     }
 
-    if (dateFrom || dateTo) {
+    if ((dateFrom && dateFrom !== 'all') || (dateTo && dateTo !== 'all')) {
       where.paymentDate = {}
-      if (dateFrom) {
+      if (dateFrom && dateFrom !== 'all') {
         where.paymentDate.gte = new Date(dateFrom)
       }
-      if (dateTo) {
+      if (dateTo && dateTo !== 'all') {
         const endDate = new Date(dateTo)
         endDate.setHours(23, 59, 59, 999)
         where.paymentDate.lte = endDate
@@ -76,18 +76,18 @@ export async function GET(request: NextRequest) {
                   firstName: true,
                   lastName: true,
                   phone: true,
-                }
-              }
-            }
-          }
+                },
+              },
+            },
+          },
         },
         orderBy: {
-          paymentDate: 'desc'
+          paymentDate: 'desc',
         },
         skip,
         take: limit,
       }),
-      prisma.payment.count({ where })
+      prisma.payment.count({ where }),
     ])
 
     // Calculate summary stats
@@ -96,13 +96,13 @@ export async function GET(request: NextRequest) {
 
     const [totalReceived, totalRefunded] = await Promise.all([
       prisma.payment.aggregate({
-        where: { ...summaryWhere, status: "COMPLETED" },
-        _sum: { amount: true }
+        where: { ...summaryWhere, status: 'COMPLETED' },
+        _sum: { amount: true },
       }),
       prisma.payment.aggregate({
-        where: { ...summaryWhere, status: "REFUNDED" },
-        _sum: { refundAmount: true }
-      })
+        where: { ...summaryWhere, status: 'REFUNDED' },
+        _sum: { refundAmount: true },
+      }),
     ])
 
     return NextResponse.json({
@@ -115,14 +115,11 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching payments:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch payments" },
-      { status: 500 }
-    )
+    console.error('Error fetching payments:', error)
+    return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
   }
 }
