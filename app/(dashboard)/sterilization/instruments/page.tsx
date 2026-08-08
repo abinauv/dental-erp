@@ -201,15 +201,15 @@ export default function InstrumentsPage() {
   }
 
   const statusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline-solid'> = {
       AVAILABLE: 'default',
       IN_USE: 'secondary',
       STERILIZING: 'secondary',
       CONTAMINATED: 'destructive',
-      MAINTENANCE: 'outline',
-      RETIRED: 'outline',
+      MAINTENANCE: 'outline-solid',
+      RETIRED: 'outline-solid',
     }
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>
+    return <Badge variant={variants[status] || 'outline-solid'}>{status}</Badge>
   }
 
   return (

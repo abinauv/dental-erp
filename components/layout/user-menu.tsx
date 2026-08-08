@@ -27,7 +27,7 @@ const roleColors: Record<string, string> = {
   ADMIN: 'destructive',
   DOCTOR: 'default',
   RECEPTIONIST: 'secondary',
-  ACCOUNTANT: 'outline',
+  ACCOUNTANT: 'outline-solid',
   LAB_TECH: 'secondary',
 }
 
@@ -57,7 +57,9 @@ export function UserMenu({ user }: UserMenuProps) {
             <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             <Badge
-              variant={roleColors[user.role] as 'default' | 'secondary' | 'destructive' | 'outline'}
+              variant={
+                roleColors[user.role] as 'default' | 'secondary' | 'destructive' | 'outline-solid'
+              }
               className="w-fit text-xs"
             >
               {user.role}

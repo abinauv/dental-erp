@@ -844,7 +844,7 @@ export default function MembershipPlansPage() {
 
               {/* Search Results Dropdown */}
               {(patientResults.length > 0 || searchingPatients) && !selectedPatient && (
-                <div className="border rounded-md mt-1 bg-background shadow-sm max-h-48 overflow-y-auto">
+                <div className="border rounded-md mt-1 bg-background shadow-xs max-h-48 overflow-y-auto">
                   {searchingPatients ? (
                     <div className="p-3 text-sm text-muted-foreground text-center">
                       Searching...

@@ -221,7 +221,7 @@ export default function InvoicesPage() {
                 placeholder="To Date"
               />
               <Button
-                variant={overdueOnly ? 'default' : 'outline'}
+                variant={overdueOnly ? 'default' : 'outline-solid'}
                 onClick={() => setOverdueOnly(!overdueOnly)}
                 size="sm"
               >

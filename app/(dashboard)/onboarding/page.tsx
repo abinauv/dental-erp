@@ -167,7 +167,7 @@ export default function OnboardingPage() {
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5 p-4">
+    <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-primary/5 p-4">
       <div className="max-w-2xl mx-auto pt-8">
         {/* Progress Steps */}
         <div className="mb-8">

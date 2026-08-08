@@ -23,7 +23,6 @@ vi.mock('@/lib/prisma', () => ({
 // Mock auth.config
 vi.mock('@/lib/auth.config', () => ({
   authConfig: {
-    trustHost: true,
     pages: {
       signIn: '/login',
     },
@@ -31,99 +30,25 @@ vi.mock('@/lib/auth.config', () => ({
   },
 }))
 
-// Mock next-auth — we test the authorize function directly
-vi.mock('next-auth', () => {
-  let capturedConfig: any = null
-  return {
-    default: (config: any) => {
-      capturedConfig = config
-      return {
-        auth: vi.fn(),
-        signIn: vi.fn(),
-        signOut: vi.fn(),
-        handlers: { GET: vi.fn(), POST: vi.fn() },
-      }
-    },
-    __getCapturedConfig: () => capturedConfig,
-  }
-})
-
-vi.mock('next-auth/providers/credentials', () => ({
-  default: (opts: any) => ({ ...opts, type: 'credentials' }),
+// Mock next-auth v4 surface used by lib/auth
+vi.mock('next-auth', () => ({
+  default: vi.fn(() => vi.fn()),
+  getServerSession: vi.fn(),
 }))
 
-import { prisma } from '@/lib/prisma'
+vi.mock('next-auth/providers/credentials', () => ({
+  default: (opts: any) => opts,
+}))
+
+import { authOptions } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
 
-// We need to extract the authorize function from the credentials provider
-// Re-import to trigger the module and capture the config
-async function getAuthorize() {
-  // Clear module cache to re-execute
-  vi.resetModules()
-
-  // Re-mock everything
-  vi.doMock('bcryptjs', () => ({
-    default: { compare: vi.fn(), hash: vi.fn() },
-    compare: vi.fn(),
-    hash: vi.fn(),
-  }))
-
-  vi.doMock('@/lib/prisma', () => ({
-    prisma: {
-      user: {
-        findUnique: vi.fn(),
-      },
-    },
-  }))
-
-  vi.doMock('@/lib/auth.config', () => ({
-    authConfig: {
-      trustHost: true,
-      pages: { signIn: '/login' },
-      callbacks: {},
-    },
-  }))
-
-  let authorizeFunc: any = null
-
-  vi.doMock('next-auth', () => ({
-    default: (config: any) => {
-      // Extract authorize from the first credentials provider
-      if (config.providers && config.providers[0]) {
-        authorizeFunc = config.providers[0].authorize
-      }
-      return {
-        auth: vi.fn(),
-        signIn: vi.fn(),
-        signOut: vi.fn(),
-        handlers: { GET: vi.fn(), POST: vi.fn() },
-      }
-    },
-  }))
-
-  vi.doMock('next-auth/providers/credentials', () => ({
-    default: (opts: any) => opts,
-  }))
-
-  // Import to trigger execution
-  const mod = await import('@/lib/auth')
-  const prismaModule = await import('@/lib/prisma')
-  const bcryptModule = await import('bcryptjs')
-
-  return { authorize: authorizeFunc, prisma: prismaModule.prisma, bcrypt: bcryptModule.default }
-}
+const authorize = (authOptions.providers?.[0] as any)?.authorize
 
 describe('NextAuth — POST /api/auth/[...nextauth]', () => {
   describe('Credentials authorize()', () => {
-    let authorize: any
-    let mockPrisma: any
-    let mockBcrypt: any
-
-    beforeEach(async () => {
-      const result = await getAuthorize()
-      authorize = result.authorize
-      mockPrisma = result.prisma
-      mockBcrypt = result.bcrypt
+    beforeEach(() => {
       vi.clearAllMocks()
     })
 
@@ -131,13 +56,13 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
       const result = await authorize({ email: 'not-an-email', password: 'password123' })
       expect(result).toBeNull()
       // Should not even hit the database
-      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled()
+      expect(prisma.user.findUnique).not.toHaveBeenCalled()
     })
 
     it('should return null for password shorter than 6 characters', async () => {
       const result = await authorize({ email: 'user@test.com', password: '12345' })
       expect(result).toBeNull()
-      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled()
+      expect(prisma.user.findUnique).not.toHaveBeenCalled()
     })
 
     it('should return null for missing credentials', async () => {
@@ -146,18 +71,18 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
     })
 
     it('should return null when user not found', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue(null)
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null)
 
       const result = await authorize({ email: 'nobody@test.com', password: 'password123' })
       expect(result).toBeNull()
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'nobody@test.com' },
         include: { staff: true, hospital: true },
       })
     })
 
     it('should return null when user is inactive', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user-1',
         email: 'inactive@test.com',
         password: '$2a$10$hashedpassword',
@@ -170,7 +95,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
     })
 
     it('should return null when hospital is inactive', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user-1',
         email: 'user@test.com',
         password: '$2a$10$hashedpassword',
@@ -183,7 +108,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
     })
 
     it('should return null when hospital is missing', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user-1',
         email: 'user@test.com',
         password: '$2a$10$hashedpassword',
@@ -196,21 +121,21 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
     })
 
     it('should return null when password does not match', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user-1',
         email: 'user@test.com',
         password: '$2a$10$hashedpassword',
         isActive: true,
         hospital: { id: 'h1', isActive: true },
       })
-      vi.mocked(mockBcrypt.compare).mockResolvedValue(false)
+      vi.mocked(bcrypt.compare).mockResolvedValue(false)
 
       const result = await authorize({ email: 'user@test.com', password: 'wrongpassword' })
       expect(result).toBeNull()
     })
 
     it('should return user object on successful login', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user-1',
         email: 'admin@clinic.com',
         name: 'Dr. Admin',
@@ -222,7 +147,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
         staff: { id: 'staff-1' },
         hospital: { id: 'hospital-1', isActive: true },
       })
-      vi.mocked(mockBcrypt.compare).mockResolvedValue(true)
+      vi.mocked(bcrypt.compare).mockResolvedValue(true)
 
       const result = await authorize({ email: 'admin@clinic.com', password: 'password123' })
 
@@ -238,7 +163,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
     })
 
     it('should return staffId as undefined when user has no staff record', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'user-1',
         email: 'admin@clinic.com',
         name: 'Admin',
@@ -250,7 +175,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
         staff: null,
         hospital: { id: 'hospital-1', isActive: true },
       })
-      vi.mocked(mockBcrypt.compare).mockResolvedValue(true)
+      vi.mocked(bcrypt.compare).mockResolvedValue(true)
 
       const result = await authorize({ email: 'admin@clinic.com', password: 'password123' })
 
@@ -260,24 +185,13 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
   })
 
   describe('Session configuration', () => {
-    it('should use JWT session strategy', async () => {
-      const result = await getAuthorize()
-      // The auth module configures JWT strategy with 8 hour maxAge
-      // We verify by checking the module exported correctly
-      expect(result.authorize).toBeDefined()
+    it('should use JWT session strategy', () => {
+      expect(authOptions.session?.strategy).toBe('jwt')
     })
   })
 
   describe('Login schema validation', () => {
-    let authorize: any
-    let mockPrisma: any
-    let mockBcrypt: any
-
-    beforeEach(async () => {
-      const result = await getAuthorize()
-      authorize = result.authorize
-      mockPrisma = result.prisma
-      mockBcrypt = result.bcrypt
+    beforeEach(() => {
       vi.clearAllMocks()
     })
 
@@ -292,7 +206,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
     })
 
     it('should accept valid email with 6+ char password', async () => {
-      vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: 'u1',
         email: 'valid@test.com',
         name: 'Test',
@@ -304,7 +218,7 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
         staff: { id: 's1' },
         hospital: { id: 'h1', isActive: true },
       })
-      vi.mocked(mockBcrypt.compare).mockResolvedValue(true)
+      vi.mocked(bcrypt.compare).mockResolvedValue(true)
 
       const result = await authorize({ email: 'valid@test.com', password: '123456' })
       expect(result).not.toBeNull()

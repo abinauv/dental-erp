@@ -182,7 +182,7 @@ export function GlobalSearch() {
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search patients, appointments, invoices, staff, treatments..."
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              className="flex-1 bg-transparent text-sm outline-hidden placeholder:text-muted-foreground"
               autoComplete="off"
               spellCheck={false}
             />

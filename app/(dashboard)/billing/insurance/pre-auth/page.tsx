@@ -66,9 +66,9 @@ interface PreAuth {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline-solid'; icon: any }
 > = {
-  PENDING: { label: 'Pending', variant: 'outline', icon: Clock },
+  PENDING: { label: 'Pending', variant: 'outline-solid', icon: Clock },
   SUBMITTED: { label: 'Submitted', variant: 'secondary', icon: FileCheck },
   APPROVED: { label: 'Approved', variant: 'default', icon: CheckCircle },
   DENIED: { label: 'Denied', variant: 'destructive', icon: XCircle },

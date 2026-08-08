@@ -6,7 +6,7 @@ import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } fr
 // Helper function to convert BigInt to Number in query results
 function convertBigIntToNumber(obj: any): any {
   if (obj === null || obj === undefined) return obj
-  if (obj instanceof Date) return obj // Preserve Date objects
+  if (obj instanceof Date) return obj
   if (typeof obj === 'bigint') return Number(obj)
   if (Array.isArray(obj)) return obj.map(convertBigIntToNumber)
   if (typeof obj === 'object') {

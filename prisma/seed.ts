@@ -1,3 +1,5 @@
+import 'dotenv/config'
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import {
   PrismaClient,
   Role,
@@ -16,10 +18,12 @@ import {
   LabWorkType,
   AppointmentStatus,
   AppointmentType,
-} from '@prisma/client'
+} from './generated/client.js'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  adapter: new PrismaMariaDb(process.env.DATABASE_URL!),
+})
 
 // Kept in sync with tests/e2e/public-payment.spec.ts.
 const E2E_PAYMENT_TOKEN = 'e2e-payment-link-token'

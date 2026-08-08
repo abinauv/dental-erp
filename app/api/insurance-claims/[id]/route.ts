@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
-import { InsuranceClaimStatus } from '@prisma/client'
+import { InsuranceClaimStatus } from '@/prisma/generated/client'
 
 // GET - Get single insurance claim details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

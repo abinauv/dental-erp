@@ -198,7 +198,7 @@ export default function PatientVideoPage({ params }: { params: Promise<{ id: str
         {/* Bottom */}
         <div className="flex items-center justify-center px-4 py-3 bg-gray-900 rounded-b-lg">
           <Button variant="destructive" size="lg" onClick={leaveCall} className="rounded-full px-6">
-            <Phone className="h-5 w-5 mr-2 rotate-[135deg]" />
+            <Phone className="h-5 w-5 mr-2 rotate-135" />
             Leave Call
           </Button>
         </div>
