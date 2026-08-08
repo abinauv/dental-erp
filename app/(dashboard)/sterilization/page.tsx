@@ -97,7 +97,7 @@ export default function SterilizationDashboardPage() {
       case 'PENDING':
         return 'secondary'
       default:
-        return 'outline'
+        return 'outline-solid'
     }
   }
 

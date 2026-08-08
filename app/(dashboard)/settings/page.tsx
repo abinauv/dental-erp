@@ -161,7 +161,7 @@ export default function SettingsPage() {
               ).map((opt) => (
                 <Button
                   key={opt.value}
-                  variant={theme === opt.value ? 'default' : 'outline'}
+                  variant={theme === opt.value ? 'default' : 'outline-solid'}
                   className="flex items-center gap-2"
                   onClick={() => setTheme(opt.value)}
                 >

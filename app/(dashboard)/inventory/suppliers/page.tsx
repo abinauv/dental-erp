@@ -105,20 +105,20 @@ export default function SuppliersPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-background rounded-lg shadow p-4 mb-6">
+      <div className="bg-background rounded-lg shadow-sm p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
             placeholder="Search by name, code, contact person..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
             <option value="ACTIVE">Active</option>
@@ -129,7 +129,7 @@ export default function SuppliersPage() {
       </div>
 
       {/* Suppliers Table */}
-      <div className="bg-background rounded-lg shadow overflow-hidden">
+      <div className="bg-background rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">Loading...</div>
         ) : suppliers.length === 0 ? (
@@ -227,7 +227,7 @@ export default function SuppliersPage() {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-xs -space-x-px">
                     <button
                       onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                       disabled={pagination.page === 1}

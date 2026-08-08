@@ -287,7 +287,7 @@ export default function CampaignAnalyticsPage() {
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-popover border rounded px-2 py-1 whitespace-nowrap z-10">
                           {day.date}: {day.sms} SMS, {day.email} Email
                         </div>
-                        <div className="flex flex-col-reverse w-full gap-[1px]">
+                        <div className="flex flex-col-reverse w-full gap-px">
                           {day.sms > 0 && (
                             <div
                               className="bg-blue-500 rounded-t-sm w-full"

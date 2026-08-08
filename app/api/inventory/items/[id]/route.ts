@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { Prisma, StockAlertType, StockTransactionType } from '@prisma/client'
+import { Prisma, StockAlertType, StockTransactionType } from '@/prisma/generated/client'
 
 function stockStatus(currentStock: number, minimumStock: number, reorderLevel: number) {
   if (currentStock <= 0) return 'out_of_stock'

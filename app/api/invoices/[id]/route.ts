@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
-import { DiscountType, InvoiceStatus } from '@prisma/client'
+import { DiscountType, InvoiceStatus } from '@/prisma/generated/client'
 
 // GET - Get single invoice with full details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

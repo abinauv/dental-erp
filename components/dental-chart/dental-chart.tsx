@@ -142,7 +142,7 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
         <TooltipTrigger asChild>
           <button
             onClick={() => onClick(number)}
-            className={`relative w-10 h-14 rounded-lg border-2 transition-all hover:scale-110 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`relative w-10 h-14 rounded-lg border-2 transition-all hover:scale-110 hover:shadow-lg focus:outline-hidden focus:ring-2 focus:ring-primary ${
               isMissing ? 'opacity-40 border-dashed' : 'border-border'
             }`}
           >
@@ -158,7 +158,7 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
               )}
             </div>
             {/* Tooth number */}
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-sm">
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-xs">
               {number}
             </span>
             {/* Surface indicators */}
@@ -347,7 +347,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
         </div>
 
         {/* Dental Chart Grid */}
-        <div className="relative bg-gradient-to-b from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/20 rounded-xl p-6">
+        <div className="relative bg-linear-to-b from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/20 rounded-xl p-6">
           {/* Upper jaw label */}
           <div className="text-center mb-2 text-sm font-medium text-muted-foreground">
             Upper Jaw (Maxilla)
@@ -575,7 +575,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                         className={`text-sm p-2 rounded ${entry.resolvedDate ? 'bg-muted' : 'bg-blue-50 dark:bg-blue-950/20'}`}
                       >
                         <div className="flex justify-between">
-                          <Badge variant={entry.resolvedDate ? 'outline' : 'default'}>
+                          <Badge variant={entry.resolvedDate ? 'outline-solid' : 'default'}>
                             {getConditionLabel(entry.condition)}
                           </Badge>
                           <span className="text-xs text-muted-foreground">

@@ -219,7 +219,7 @@ export default function PaymentPlansPage() {
         ].map((f) => (
           <Button
             key={f.value}
-            variant={statusFilter === f.value ? 'default' : 'outline'}
+            variant={statusFilter === f.value ? 'default' : 'outline-solid'}
             size="sm"
             onClick={() => {
               setStatusFilter(f.value)

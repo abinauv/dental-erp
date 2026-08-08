@@ -6,7 +6,7 @@ import {
   PaymentStatus,
   InsuranceClaimStatus,
   DiscountType,
-} from '@prisma/client'
+} from '@/prisma/generated/client'
 import {
   formatCurrency as baseFormatCurrency,
   formatDate as baseFormatDate,

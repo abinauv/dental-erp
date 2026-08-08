@@ -259,7 +259,7 @@ describe('12.2 Git Hooks — Pre-commit & Pre-push', () => {
   it('lint-staged runs eslint directly', () => {
     // `next lint` was removed in Next.js 16.
     const config = readFile('lint-staged.config.mjs')
-    expect(config).toContain('eslint --fix')
+    expect(config).toContain('eslint --no-warn-ignored')
     expect(config).not.toContain('next lint')
   })
 })
@@ -306,6 +306,6 @@ describe('12.1 Test Framework — Setup Completeness', () => {
   it('Vitest resolves @ alias to project root', () => {
     const config = readFile('vitest.config.ts')
     expect(config).toContain("'@'")
-    expect(config).toContain('__dirname')
+    expect(config).toContain('import.meta.dirname')
   })
 })

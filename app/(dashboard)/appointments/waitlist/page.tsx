@@ -1,4 +1,5 @@
 'use client'
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
@@ -320,7 +321,7 @@ export default function WaitlistPage() {
                     <Button
                       key={day}
                       type="button"
-                      variant={selectedDays.includes(day) ? 'default' : 'outline'}
+                      variant={selectedDays.includes(day) ? 'default' : 'outline-solid'}
                       size="sm"
                       className="text-xs h-7"
                       onClick={() => toggleDay(day)}
@@ -420,7 +421,7 @@ export default function WaitlistPage() {
         {['ACTIVE', 'NOTIFIED', 'BOOKED', 'CANCELLED'].map((s) => (
           <Button
             key={s}
-            variant={statusFilter === s ? 'default' : 'outline'}
+            variant={statusFilter === s ? 'default' : 'outline-solid'}
             size="sm"
             onClick={() => setStatusFilter(s)}
           >

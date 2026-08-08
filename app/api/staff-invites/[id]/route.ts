@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
-import { StaffInviteStatus } from '@prisma/client'
+import { StaffInviteStatus } from '@/prisma/generated/client'
 import { sendInviteEmail } from '@/lib/email-helpers'
 
 // Cancel/revoke an invite

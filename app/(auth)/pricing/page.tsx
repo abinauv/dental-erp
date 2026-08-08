@@ -30,7 +30,7 @@ const plans = [
     ],
     notIncluded: ['Advanced analytics', 'Custom branding', 'API access', 'Priority support'],
     cta: 'Get Started Free',
-    ctaVariant: 'outline' as const,
+    ctaVariant: 'outline-solid' as const,
   },
   {
     id: 'PROFESSIONAL',
@@ -75,7 +75,7 @@ const plans = [
     ],
     notIncluded: [],
     cta: 'Contact Sales',
-    ctaVariant: 'outline' as const,
+    ctaVariant: 'outline-solid' as const,
   },
   {
     id: 'SELF_HOSTED',
@@ -96,7 +96,7 @@ const plans = [
     ],
     notIncluded: [],
     cta: 'Purchase License',
-    ctaVariant: 'outline' as const,
+    ctaVariant: 'outline-solid' as const,
   },
 ]
 
@@ -135,9 +135,9 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5">
+    <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-primary/5">
       {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm">
+      <header className="border-b bg-background/80 backdrop-blur-xs">
         <div className="container flex h-14 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">

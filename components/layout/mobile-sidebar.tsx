@@ -42,7 +42,7 @@ export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSideba
     <div className="fixed inset-0 z-50 md:hidden">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+        className="fixed inset-0 bg-background/80 backdrop-blur-xs"
         onClick={() => setMobileOpen(false)}
       />
 

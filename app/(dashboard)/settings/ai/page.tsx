@@ -237,7 +237,7 @@ export default function AISettingsPage() {
                 setSettings((p) => ({ ...p, ai_financial_approval_limit: Number(e.target.value) }))
                 setSaved(false)
               }}
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Transactions above this amount need manual approval
@@ -254,7 +254,7 @@ export default function AISettingsPage() {
                 setSettings((p) => ({ ...p, ai_monthly_budget: Number(e.target.value) }))
                 setSaved(false)
               }}
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+              className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Estimated OpenRouter cost cap per month
@@ -306,7 +306,7 @@ function ToggleSwitch({
       className={`relative w-10 h-6 rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-muted'}`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`}
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-4' : ''}`}
       />
     </button>
   )

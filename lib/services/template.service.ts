@@ -1,7 +1,7 @@
 // Communication Template Service
 
 import prisma from '@/lib/prisma'
-import type { CommunicationChannel, TemplateCategory } from '@prisma/client'
+import type { CommunicationChannel, TemplateCategory } from '@/prisma/generated/client'
 
 export interface TemplateVariable {
   key: string

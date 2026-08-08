@@ -1,5 +1,6 @@
-import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
 // Routes that require specific roles
 const roleRoutes: Record<string, string[]> = {
@@ -30,9 +31,10 @@ const publicRoutes = [
   '/pay',
 ]
 
-export default auth((req) => {
-  const { nextUrl, auth: session } = req
-  const isLoggedIn = !!session?.user
+export default async function proxy(req: NextRequest) {
+  const { nextUrl } = req
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const isLoggedIn = !!token
   const pathname = nextUrl.pathname
 
   // Public routes - allow access
@@ -70,10 +72,10 @@ export default auth((req) => {
   }
 
   // Check role-based access
-  const userRole = session.user.role
+  const userRole = token?.role as string | undefined
   for (const [path, roles] of Object.entries(roleRoutes)) {
     if (pathname.startsWith(path)) {
-      if (!roles.includes(userRole)) {
+      if (!userRole || !roles.includes(userRole)) {
         // User doesn't have required role - redirect to dashboard
         return NextResponse.redirect(new URL('/dashboard', nextUrl))
       }
@@ -81,7 +83,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [

@@ -851,7 +851,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
               <div className="flex items-center gap-2">
                 {imageDocuments.length >= 2 && (
                   <Button
-                    variant={compareMode ? 'default' : 'outline'}
+                    variant={compareMode ? 'default' : 'outline-solid'}
                     size="sm"
                     onClick={() => {
                       setCompareMode((m) => !m)

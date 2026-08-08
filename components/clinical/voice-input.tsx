@@ -107,7 +107,7 @@ export function VoiceInput({ onTranscript, language = 'en-IN', className }: Voic
           <TooltipTrigger asChild>
             <Button
               type="button"
-              variant={isListening ? 'destructive' : 'outline'}
+              variant={isListening ? 'destructive' : 'outline-solid'}
               size="icon"
               className={`h-8 w-8 ${isListening ? 'animate-pulse' : ''}`}
               onClick={toggleListening}

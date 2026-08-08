@@ -24,7 +24,7 @@ export function VoiceOrb({ state, audioLevel, size = 120, onPress, disabled }: V
     <button
       onClick={onPress}
       disabled={disabled}
-      className="relative flex items-center justify-center focus:outline-none group"
+      className="relative flex items-center justify-center focus:outline-hidden group"
       style={{ width: size, height: size }}
       aria-label={
         state === 'idle'
@@ -97,10 +97,10 @@ export function VoiceOrb({ state, audioLevel, size = 120, onPress, disabled }: V
         className={cn(
           'relative rounded-full flex items-center justify-center transition-all duration-200 shadow-lg',
           state === 'idle' &&
-            'bg-gradient-to-br from-primary to-primary/80 group-hover:shadow-xl group-hover:scale-105',
-          state === 'listening' && 'bg-gradient-to-br from-red-500 to-red-600',
-          state === 'speaking' && 'bg-gradient-to-br from-blue-500 to-blue-600',
-          state === 'processing' && 'bg-gradient-to-br from-purple-500 to-purple-600',
+            'bg-linear-to-br from-primary to-primary/80 group-hover:shadow-xl group-hover:scale-105',
+          state === 'listening' && 'bg-linear-to-br from-red-500 to-red-600',
+          state === 'speaking' && 'bg-linear-to-br from-blue-500 to-blue-600',
+          state === 'processing' && 'bg-linear-to-br from-purple-500 to-purple-600',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
         style={{

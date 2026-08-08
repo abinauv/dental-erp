@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { StockTransactionType, SupplierStatus } from '@prisma/client'
+import { StockTransactionType, SupplierStatus } from '@/prisma/generated/client'
 
 /**
  * These reports multiply columns together (SUM(stock * price)) and do date

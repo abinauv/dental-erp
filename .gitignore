@@ -20,6 +20,7 @@
 
 # Misc
 .DS_Store
+/.history/
 *.pem
 
 # Debug
@@ -53,6 +54,7 @@ next-env.d.ts
 # Prisma
 # migration_lock.toml records the datasource provider and MUST be committed —
 # `prisma migrate` errors without it. Do not add it back here.
+/prisma/generated/
 
 # Uploads
 /uploads/*

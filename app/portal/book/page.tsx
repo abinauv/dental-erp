@@ -270,7 +270,7 @@ export default function BookAppointment() {
                     {slots.map((slot) => (
                       <Button
                         key={slot.time}
-                        variant={selectedTime === slot.time ? 'default' : 'outline'}
+                        variant={selectedTime === slot.time ? 'default' : 'outline-solid'}
                         size="sm"
                         disabled={!slot.available}
                         onClick={() => setSelectedTime(slot.time)}

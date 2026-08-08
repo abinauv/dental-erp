@@ -20,7 +20,7 @@ interface ExportMenuProps {
   /** Optional sheet name for Excel */
   sheetName?: string
   /** Button variant */
-  variant?: 'outline' | 'ghost' | 'default'
+  variant?: 'outline-solid' | 'ghost' | 'default'
   /** Button size */
   size?: 'sm' | 'default' | 'icon'
 }
@@ -29,7 +29,7 @@ export function ExportMenu({
   getData,
   filename,
   sheetName = 'Data',
-  variant = 'outline',
+  variant = 'outline-solid',
   size = 'sm',
 }: ExportMenuProps) {
   const [exporting, setExporting] = useState(false)

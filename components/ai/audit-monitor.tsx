@@ -68,7 +68,7 @@ export function AuditMonitor() {
           <select
             value={daysBack}
             onChange={(e) => setDaysBack(Number(e.target.value))}
-            className="text-xs border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary"
+            className="text-xs border rounded px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary"
           >
             <option value={3}>3 days</option>
             <option value={7}>7 days</option>

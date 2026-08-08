@@ -49,11 +49,15 @@ const statusConfig: Record<
   {
     icon: React.ReactNode
     label: string
-    variant: 'default' | 'secondary' | 'destructive' | 'outline'
+    variant: 'default' | 'secondary' | 'destructive' | 'outline-solid'
   }
 > = {
   SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: 'Submitted', variant: 'secondary' },
-  REVIEWED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Reviewed', variant: 'outline' },
+  REVIEWED: {
+    icon: <CheckCircle2 className="h-3 w-3" />,
+    label: 'Reviewed',
+    variant: 'outline-solid',
+  },
   APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Approved', variant: 'default' },
   REJECTED: { icon: <XCircle className="h-3 w-3" />, label: 'Rejected', variant: 'destructive' },
 }

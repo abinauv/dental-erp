@@ -13,7 +13,7 @@ const config = {
   '*.{ts,tsx}': () => 'tsc --noEmit -p tsconfig.json',
 
   // Call ESLint directly — the Next.js CLI's lint subcommand was removed in v16.
-  '*.{js,jsx,ts,tsx,mjs,cjs}': 'eslint --fix --no-warn-ignored',
+  '*.{js,jsx,ts,tsx,mjs,cjs}': 'eslint --no-warn-ignored',
 
   '*.{ts,tsx,js,jsx,mjs,cjs,json,css,md}': 'prettier --write --ignore-unknown',
 }

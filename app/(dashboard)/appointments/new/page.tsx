@@ -405,7 +405,7 @@ export default function NewAppointmentPage() {
                       <Button
                         key={slot.time}
                         type="button"
-                        variant={selectedTime === slot.time ? 'default' : 'outline'}
+                        variant={selectedTime === slot.time ? 'default' : 'outline-solid'}
                         size="sm"
                         disabled={!slot.available}
                         className={

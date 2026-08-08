@@ -457,7 +457,7 @@ export function ImageAnnotator({
                     <input
                       type="text"
                       autoFocus
-                      className="px-2 py-1 text-sm bg-black/80 text-white border border-zinc-500 rounded outline-none min-w-[150px]"
+                      className="px-2 py-1 text-sm bg-black/80 text-white border border-zinc-500 rounded outline-hidden min-w-[150px]"
                       placeholder="Type text..."
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}

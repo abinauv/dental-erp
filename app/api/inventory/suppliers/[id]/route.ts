@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { Prisma, PurchaseOrderStatus, SupplierStatus } from '@prisma/client'
+import { Prisma, PurchaseOrderStatus, SupplierStatus } from '@/prisma/generated/client'
 
 const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
 

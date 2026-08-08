@@ -66,7 +66,7 @@ export function PortalShell({ patient, hospital, children }: PortalShellProps) {
   return (
     <div className="min-h-screen bg-muted/50">
       {/* Top navbar */}
-      <header className="sticky top-0 z-40 bg-background border-b shadow-sm">
+      <header className="sticky top-0 z-40 bg-background border-b shadow-xs">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <button className="md:hidden p-1" onClick={() => setMobileOpen(!mobileOpen)}>

@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth'
+import NextAuth, { getServerSession, type NextAuthOptions } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { authConfig } from './auth.config'
@@ -10,10 +10,14 @@ const loginSchema = z.object({
   password: z.string().min(6),
 })
 
-export const { auth, signIn, signOut, handlers } = NextAuth({
+export const authOptions: NextAuthOptions = {
   ...authConfig,
   providers: [
     Credentials({
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
       async authorize(credentials) {
         const validated = loginSchema.safeParse(credentials)
 
@@ -53,7 +57,13 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     strategy: 'jwt',
     maxAge: 8 * 60 * 60, // 8 hours
   },
-})
+}
+
+export const authHandler = NextAuth(authOptions)
+
+export async function auth() {
+  return getServerSession(authOptions)
+}
 
 // Helper function to get current user
 export async function getCurrentUser() {
