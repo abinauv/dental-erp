@@ -48,12 +48,50 @@ describe('Appointments Today & Waitlist API', () => {
   describe('GET /api/appointments/today', () => {
     it('returns today appointments grouped by status with stats', async () => {
       ;(prisma.appointment.findMany as any).mockResolvedValue([
-        { id: 'a1', status: 'CHECKED_IN', waitTime: 10, scheduledTime: '09:00', patient: { id: 'p1' }, doctor: { id: 'd1' } },
-        { id: 'a2', status: 'CHECKED_IN', waitTime: 20, scheduledTime: '09:30', patient: { id: 'p2' }, doctor: { id: 'd1' } },
-        { id: 'a3', status: 'SCHEDULED', scheduledTime: '10:00', patient: { id: 'p3' }, doctor: { id: 'd1' } },
-        { id: 'a4', status: 'COMPLETED', scheduledTime: '08:00', patient: { id: 'p4' }, doctor: { id: 'd1' } },
-        { id: 'a5', status: 'NO_SHOW', scheduledTime: '08:30', patient: { id: 'p5' }, doctor: { id: 'd1' } },
-        { id: 'a6', status: 'IN_PROGRESS', scheduledTime: '09:15', patient: { id: 'p6' }, doctor: { id: 'd1' } },
+        {
+          id: 'a1',
+          status: 'CHECKED_IN',
+          waitTime: 10,
+          scheduledTime: '09:00',
+          patient: { id: 'p1' },
+          doctor: { id: 'd1' },
+        },
+        {
+          id: 'a2',
+          status: 'CHECKED_IN',
+          waitTime: 20,
+          scheduledTime: '09:30',
+          patient: { id: 'p2' },
+          doctor: { id: 'd1' },
+        },
+        {
+          id: 'a3',
+          status: 'SCHEDULED',
+          scheduledTime: '10:00',
+          patient: { id: 'p3' },
+          doctor: { id: 'd1' },
+        },
+        {
+          id: 'a4',
+          status: 'COMPLETED',
+          scheduledTime: '08:00',
+          patient: { id: 'p4' },
+          doctor: { id: 'd1' },
+        },
+        {
+          id: 'a5',
+          status: 'NO_SHOW',
+          scheduledTime: '08:30',
+          patient: { id: 'p5' },
+          doctor: { id: 'd1' },
+        },
+        {
+          id: 'a6',
+          status: 'IN_PROGRESS',
+          scheduledTime: '09:15',
+          patient: { id: 'p6' },
+          doctor: { id: 'd1' },
+        },
       ])
 
       const res = await todayModule.GET(makeTodayRequest())
@@ -108,7 +146,13 @@ describe('Appointments Today & Waitlist API', () => {
         .mockResolvedValueOnce(0) // booked
       ;(prisma.patient.findMany as any).mockResolvedValue([
         { id: 'p1', firstName: 'John', lastName: 'Doe', phone: '9876543210', patientId: 'PAT001' },
-        { id: 'p2', firstName: 'Jane', lastName: 'Smith', phone: '9876543211', patientId: 'PAT002' },
+        {
+          id: 'p2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          phone: '9876543211',
+          patientId: 'PAT002',
+        },
       ])
       ;(prisma.staff.findMany as any).mockResolvedValue([
         { id: 'd1', firstName: 'Dr', lastName: 'House' },
@@ -154,29 +198,29 @@ describe('Appointments Today & Waitlist API', () => {
       })
 
       const res = await waitlistModule.POST(
-        makeWaitlistRequest('POST', {}, {
-          patientId: 'p1',
-          preferredDays: 'Mon,Wed',
-          preferredTime: 'morning',
-          notes: 'Urgent',
-        })
+        makeWaitlistRequest(
+          'POST',
+          {},
+          {
+            patientId: 'p1',
+            preferredDays: 'Mon,Wed',
+            preferredTime: 'morning',
+            notes: 'Urgent',
+          }
+        )
       )
       expect(res.status).toBe(201)
     })
 
     it('returns 400 when patientId missing', async () => {
-      const res = await waitlistModule.POST(
-        makeWaitlistRequest('POST', {}, {})
-      )
+      const res = await waitlistModule.POST(makeWaitlistRequest('POST', {}, {}))
       expect(res.status).toBe(400)
     })
 
     it('returns 404 when patient not found', async () => {
       ;(prisma.patient.findFirst as any).mockResolvedValue(null)
 
-      const res = await waitlistModule.POST(
-        makeWaitlistRequest('POST', {}, { patientId: 'p999' })
-      )
+      const res = await waitlistModule.POST(makeWaitlistRequest('POST', {}, { patientId: 'p999' }))
       expect(res.status).toBe(404)
     })
 
@@ -184,9 +228,7 @@ describe('Appointments Today & Waitlist API', () => {
       ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1' })
       ;(prisma.waitlist.findFirst as any).mockResolvedValue({ id: 'w-existing' })
 
-      const res = await waitlistModule.POST(
-        makeWaitlistRequest('POST', {}, { patientId: 'p1' })
-      )
+      const res = await waitlistModule.POST(makeWaitlistRequest('POST', {}, { patientId: 'p1' }))
       expect(res.status).toBe(409)
     })
 
@@ -197,9 +239,7 @@ describe('Appointments Today & Waitlist API', () => {
         session: { user: { id: 'user-1', role: 'ACCOUNTANT' } },
       })
 
-      const res = await waitlistModule.POST(
-        makeWaitlistRequest('POST', {}, { patientId: 'p1' })
-      )
+      const res = await waitlistModule.POST(makeWaitlistRequest('POST', {}, { patientId: 'p1' }))
       expect(res.status).toBe(403)
     })
   })

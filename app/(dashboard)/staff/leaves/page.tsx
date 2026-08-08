@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -19,11 +19,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   ArrowLeft,
   Plus,
@@ -42,8 +42,8 @@ import {
   X,
   Clock,
   Loader2,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface LeaveRequest {
   id: string
@@ -79,19 +79,19 @@ interface PaginationInfo {
 }
 
 const leaveTypeLabels: Record<string, string> = {
-  CASUAL: "Casual Leave",
-  SICK: "Sick Leave",
-  EARNED: "Earned Leave",
-  UNPAID: "Unpaid Leave",
-  MATERNITY: "Maternity Leave",
-  PATERNITY: "Paternity Leave",
+  CASUAL: 'Casual Leave',
+  SICK: 'Sick Leave',
+  EARNED: 'Earned Leave',
+  UNPAID: 'Unpaid Leave',
+  MATERNITY: 'Maternity Leave',
+  PATERNITY: 'Paternity Leave',
 }
 
 const statusColors: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-700",
-  APPROVED: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
-  CANCELLED: "bg-muted text-foreground",
+  PENDING: 'bg-yellow-100 text-yellow-700',
+  APPROVED: 'bg-green-100 text-green-700',
+  REJECTED: 'bg-red-100 text-red-700',
+  CANCELLED: 'bg-muted text-foreground',
 }
 
 export default function LeavesPage() {
@@ -107,18 +107,18 @@ export default function LeavesPage() {
   })
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [leaveTypeFilter, setLeaveTypeFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [leaveTypeFilter, setLeaveTypeFilter] = useState('all')
 
   // New leave dialog
   const [newDialogOpen, setNewDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newLeaveForm, setNewLeaveForm] = useState({
-    staffId: "",
-    leaveType: "",
-    startDate: "",
-    endDate: "",
-    reason: "",
+    staffId: '',
+    leaveType: '',
+    startDate: '',
+    endDate: '',
+    reason: '',
   })
 
   // Approve/Reject action
@@ -132,21 +132,21 @@ export default function LeavesPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (statusFilter !== "all") params.append("status", statusFilter)
-      if (leaveTypeFilter !== "all") params.append("leaveType", leaveTypeFilter)
+      if (statusFilter !== 'all') params.append('status', statusFilter)
+      if (leaveTypeFilter !== 'all') params.append('leaveType', leaveTypeFilter)
 
       const response = await fetch(`/api/staff/leaves?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch leaves")
+      if (!response.ok) throw new Error('Failed to fetch leaves')
 
       const data = await response.json()
       setLeaves(data.leaves)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching leaves:", error)
+      console.error('Error fetching leaves:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch leave requests",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch leave requests',
       })
     } finally {
       setLoading(false)
@@ -155,13 +155,13 @@ export default function LeavesPage() {
 
   const fetchStaff = async () => {
     try {
-      const response = await fetch("/api/staff?all=true&status=active")
-      if (!response.ok) throw new Error("Failed to fetch staff")
+      const response = await fetch('/api/staff?all=true&status=active')
+      if (!response.ok) throw new Error('Failed to fetch staff')
 
       const data = await response.json()
       setStaffList(data.staff)
     } catch (error) {
-      console.error("Error fetching staff:", error)
+      console.error('Error fetching staff:', error)
     }
   }
 
@@ -171,11 +171,16 @@ export default function LeavesPage() {
   }, [pagination.page, statusFilter, leaveTypeFilter])
 
   const handleCreateLeave = async () => {
-    if (!newLeaveForm.staffId || !newLeaveForm.leaveType || !newLeaveForm.startDate || !newLeaveForm.endDate) {
+    if (
+      !newLeaveForm.staffId ||
+      !newLeaveForm.leaveType ||
+      !newLeaveForm.startDate ||
+      !newLeaveForm.endDate
+    ) {
       toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
       })
       return
     }
@@ -183,39 +188,39 @@ export default function LeavesPage() {
     try {
       setCreating(true)
 
-      const response = await fetch("/api/staff/leaves", {
-        method: "POST",
+      const response = await fetch('/api/staff/leaves', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(newLeaveForm),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to create leave request")
+        throw new Error(error.error || 'Failed to create leave request')
       }
 
       toast({
-        title: "Success",
-        description: "Leave request created successfully",
+        title: 'Success',
+        description: 'Leave request created successfully',
       })
 
       setNewDialogOpen(false)
       setNewLeaveForm({
-        staffId: "",
-        leaveType: "",
-        startDate: "",
-        endDate: "",
-        reason: "",
+        staffId: '',
+        leaveType: '',
+        startDate: '',
+        endDate: '',
+        reason: '',
       })
       fetchLeaves()
     } catch (error: any) {
-      console.error("Error creating leave:", error)
+      console.error('Error creating leave:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create leave request",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to create leave request',
       })
     } finally {
       setCreating(false)
@@ -227,27 +232,27 @@ export default function LeavesPage() {
       setActionLoading(leaveId)
 
       const response = await fetch(`/api/staff/leaves/${leaveId}`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: newStatus }),
       })
 
-      if (!response.ok) throw new Error("Failed to update leave status")
+      if (!response.ok) throw new Error('Failed to update leave status')
 
       toast({
-        title: "Success",
+        title: 'Success',
         description: `Leave request ${newStatus.toLowerCase()}`,
       })
 
       fetchLeaves()
     } catch (error) {
-      console.error("Error updating leave:", error)
+      console.error('Error updating leave:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update leave status",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update leave status',
       })
     } finally {
       setActionLoading(null)
@@ -255,10 +260,10 @@ export default function LeavesPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     })
   }
 
@@ -282,9 +287,7 @@ export default function LeavesPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
-            <p className="text-muted-foreground">
-              Manage staff leave requests
-            </p>
+            <p className="text-muted-foreground">Manage staff leave requests</p>
           </div>
         </div>
         <Button onClick={() => setNewDialogOpen(true)}>
@@ -348,13 +351,27 @@ export default function LeavesPage() {
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-12" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : leaves.length === 0 ? (
@@ -396,7 +413,7 @@ export default function LeavesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-muted-foreground max-w-[200px] truncate">
-                        {leave.reason || "-"}
+                        {leave.reason || '-'}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -405,13 +422,13 @@ export default function LeavesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {leave.status === "PENDING" && (
+                      {leave.status === 'PENDING' && (
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             className="text-green-600 hover:text-green-700"
-                            onClick={() => handleUpdateStatus(leave.id, "APPROVED")}
+                            onClick={() => handleUpdateStatus(leave.id, 'APPROVED')}
                             disabled={actionLoading === leave.id}
                           >
                             {actionLoading === leave.id ? (
@@ -424,7 +441,7 @@ export default function LeavesPage() {
                             variant="outline"
                             size="sm"
                             className="text-red-600 hover:text-red-700"
-                            onClick={() => handleUpdateStatus(leave.id, "REJECTED")}
+                            onClick={() => handleUpdateStatus(leave.id, 'REJECTED')}
                             disabled={actionLoading === leave.id}
                           >
                             {actionLoading === leave.id ? (
@@ -446,8 +463,8 @@ export default function LeavesPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} requests
               </div>
               <div className="flex items-center gap-2">
@@ -483,9 +500,7 @@ export default function LeavesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>New Leave Request</DialogTitle>
-            <DialogDescription>
-              Create a leave request for a staff member
-            </DialogDescription>
+            <DialogDescription>Create a leave request for a staff member</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -493,9 +508,7 @@ export default function LeavesPage() {
               <Label>Staff Member *</Label>
               <Select
                 value={newLeaveForm.staffId}
-                onValueChange={(value) =>
-                  setNewLeaveForm((prev) => ({ ...prev, staffId: value }))
-                }
+                onValueChange={(value) => setNewLeaveForm((prev) => ({ ...prev, staffId: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select staff member" />
@@ -559,9 +572,7 @@ export default function LeavesPage() {
               <Label>Reason</Label>
               <Textarea
                 value={newLeaveForm.reason}
-                onChange={(e) =>
-                  setNewLeaveForm((prev) => ({ ...prev, reason: e.target.value }))
-                }
+                onChange={(e) => setNewLeaveForm((prev) => ({ ...prev, reason: e.target.value }))}
                 placeholder="Optional reason for leave"
                 rows={3}
               />

@@ -3,10 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
 // GET — single medication
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -25,15 +22,15 @@ export async function GET(
     return NextResponse.json({ success: true, data: medication })
   } catch (err: any) {
     console.error('Error fetching medication:', err)
-    return NextResponse.json({ error: err.message || 'Failed to fetch medication' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to fetch medication' },
+      { status: 500 }
+    )
   }
 }
 
 // PUT — update medication
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -68,7 +65,10 @@ export async function PUT(
     return NextResponse.json({ success: true, data: medication })
   } catch (err: any) {
     console.error('Error updating medication:', err)
-    return NextResponse.json({ error: err.message || 'Failed to update medication' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to update medication' },
+      { status: 500 }
+    )
   }
 }
 
@@ -94,6 +94,9 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: 'Medication deactivated' })
   } catch (err: any) {
     console.error('Error deleting medication:', err)
-    return NextResponse.json({ error: err.message || 'Failed to delete medication' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to delete medication' },
+      { status: 500 }
+    )
   }
 }

@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get today's appointments for queue management
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const doctorId = searchParams.get("doctorId") || ""
+    const doctorId = searchParams.get('doctorId') || ''
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       hospitalId,
       scheduledDate: {
         gte: today,
-        lt: tomorrow
-      }
+        lt: tomorrow,
+      },
     }
 
     if (doctorId) {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
             lastName: true,
             phone: true,
             email: true,
-          }
+          },
         },
         doctor: {
           select: {
@@ -50,21 +50,19 @@ export async function GET(request: NextRequest) {
             firstName: true,
             lastName: true,
             specialization: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: [
-        { scheduledTime: 'asc' }
-      ]
+      orderBy: [{ scheduledTime: 'asc' }],
     })
 
     // Group appointments by status for queue view
-    const waiting = appointments.filter(a => a.status === "CHECKED_IN")
-    const inProgress = appointments.filter(a => a.status === "IN_PROGRESS")
-    const upcoming = appointments.filter(a => ["SCHEDULED", "CONFIRMED"].includes(a.status))
-    const completed = appointments.filter(a => a.status === "COMPLETED")
-    const noShow = appointments.filter(a => a.status === "NO_SHOW")
-    const cancelled = appointments.filter(a => a.status === "CANCELLED")
+    const waiting = appointments.filter((a) => a.status === 'CHECKED_IN')
+    const inProgress = appointments.filter((a) => a.status === 'IN_PROGRESS')
+    const upcoming = appointments.filter((a) => ['SCHEDULED', 'CONFIRMED'].includes(a.status))
+    const completed = appointments.filter((a) => a.status === 'COMPLETED')
+    const noShow = appointments.filter((a) => a.status === 'NO_SHOW')
+    const cancelled = appointments.filter((a) => a.status === 'CANCELLED')
 
     // Calculate stats
     const stats = {
@@ -75,9 +73,10 @@ export async function GET(request: NextRequest) {
       completed: completed.length,
       noShow: noShow.length,
       cancelled: cancelled.length,
-      avgWaitTime: waiting.length > 0
-        ? Math.round(waiting.reduce((acc, a) => acc + (a.waitTime || 0), 0) / waiting.length)
-        : 0
+      avgWaitTime:
+        waiting.length > 0
+          ? Math.round(waiting.reduce((acc, a) => acc + (a.waitTime || 0), 0) / waiting.length)
+          : 0,
     }
 
     return NextResponse.json({
@@ -88,15 +87,12 @@ export async function GET(request: NextRequest) {
         upcoming,
         completed,
         noShow,
-        cancelled
+        cancelled,
       },
-      stats
+      stats,
     })
   } catch (error) {
     console.error("Error fetching today's appointments:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch today's appointments" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to fetch today's appointments" }, { status: 500 })
   }
 }

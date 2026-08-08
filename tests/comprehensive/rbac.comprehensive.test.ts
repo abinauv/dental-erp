@@ -66,7 +66,7 @@ describe('RBAC - Role-Based Access Control', () => {
           canManageInventory: true,
         }
 
-        expect(Object.values(adminPermissions).every(p => p === true)).toBe(true)
+        expect(Object.values(adminPermissions).every((p) => p === true)).toBe(true)
       })
     })
 
@@ -415,18 +415,14 @@ describe('RBAC - Role-Based Access Control', () => {
 
     it('should have ADMIN in all endpoint permissions', () => {
       const allEndpoints = Object.keys(endpointPermissions)
-      const adminAccess = allEndpoints.every(
-        endpoint => endpointPermissions[endpoint as keyof typeof endpointPermissions].includes('ADMIN')
+      const adminAccess = allEndpoints.every((endpoint) =>
+        endpointPermissions[endpoint as keyof typeof endpointPermissions].includes('ADMIN')
       )
       expect(adminAccess).toBe(true)
     })
 
     it('should restrict staff management to ADMIN only', () => {
-      const staffEndpoints = [
-        'POST /api/staff',
-        'PUT /api/staff/:id',
-        'DELETE /api/staff/:id',
-      ]
+      const staffEndpoints = ['POST /api/staff', 'PUT /api/staff/:id', 'DELETE /api/staff/:id']
 
       for (const endpoint of staffEndpoints) {
         const roles = endpointPermissions[endpoint as keyof typeof endpointPermissions]

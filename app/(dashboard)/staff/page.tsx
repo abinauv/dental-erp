@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -37,14 +37,14 @@ import {
   Calendar,
   BarChart3,
   UserX,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,9 +54,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from '@/components/ui/alert-dialog'
+import { useToast } from '@/hooks/use-toast'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface Staff {
   id: string
@@ -85,19 +85,19 @@ interface PaginationInfo {
 }
 
 const roleColors: Record<string, string> = {
-  ADMIN: "bg-purple-100 text-purple-700",
-  DOCTOR: "bg-blue-100 text-blue-700",
-  RECEPTIONIST: "bg-green-100 text-green-700",
-  LAB_TECH: "bg-orange-100 text-orange-700",
-  ACCOUNTANT: "bg-yellow-100 text-yellow-700",
+  ADMIN: 'bg-purple-100 text-purple-700',
+  DOCTOR: 'bg-blue-100 text-blue-700',
+  RECEPTIONIST: 'bg-green-100 text-green-700',
+  LAB_TECH: 'bg-orange-100 text-orange-700',
+  ACCOUNTANT: 'bg-yellow-100 text-yellow-700',
 }
 
 const roleLabels: Record<string, string> = {
-  ADMIN: "Admin",
-  DOCTOR: "Doctor",
-  RECEPTIONIST: "Receptionist",
-  LAB_TECH: "Lab Tech",
-  ACCOUNTANT: "Accountant",
+  ADMIN: 'Admin',
+  DOCTOR: 'Doctor',
+  RECEPTIONIST: 'Receptionist',
+  LAB_TECH: 'Lab Tech',
+  ACCOUNTANT: 'Accountant',
 }
 
 export default function StaffPage() {
@@ -113,9 +113,9 @@ export default function StaffPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("active")
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('active')
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -129,22 +129,22 @@ export default function StaffPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (roleFilter && roleFilter !== "all") params.append("role", roleFilter)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
+      if (search) params.append('search', search)
+      if (roleFilter && roleFilter !== 'all') params.append('role', roleFilter)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
 
       const response = await fetch(`/api/staff?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch staff")
+      if (!response.ok) throw new Error('Failed to fetch staff')
 
       const data = await response.json()
       setStaff(data.staff)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching staff:", error)
+      console.error('Error fetching staff:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch staff members",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch staff members',
       })
     } finally {
       setLoading(false)
@@ -160,22 +160,22 @@ export default function StaffPage() {
 
     try {
       const response = await fetch(`/api/staff/${staffToDelete.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       })
 
-      if (!response.ok) throw new Error("Failed to deactivate staff")
+      if (!response.ok) throw new Error('Failed to deactivate staff')
 
       toast({
-        title: "Success",
-        description: "Staff member deactivated successfully",
+        title: 'Success',
+        description: 'Staff member deactivated successfully',
       })
       fetchStaff()
     } catch (error) {
-      console.error("Error deactivating staff:", error)
+      console.error('Error deactivating staff:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to deactivate staff member",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to deactivate staff member',
       })
     } finally {
       setDeleteDialogOpen(false)
@@ -184,10 +184,10 @@ export default function StaffPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     })
   }
 
@@ -197,25 +197,25 @@ export default function StaffPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Staff Management</h1>
-          <p className="text-muted-foreground">
-            Manage staff members, roles, and permissions
-          </p>
+          <p className="text-muted-foreground">Manage staff members, roles, and permissions</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ExportMenu
             filename="staff"
-            getData={() => staff.map(m => ({
-              "Employee ID": m.employeeId,
-              "First Name": m.firstName,
-              "Last Name": m.lastName,
-              "Phone": m.phone,
-              "Email": m.email || "",
-              "Role": roleLabels[m.user.role] || m.user.role,
-              "Specialization": m.specialization || "",
-              "Qualification": m.qualification || "",
-              "Joining Date": formatDate(m.joiningDate),
-              "Status": m.isActive ? "Active" : "Inactive",
-            }))}
+            getData={() =>
+              staff.map((m) => ({
+                'Employee ID': m.employeeId,
+                'First Name': m.firstName,
+                'Last Name': m.lastName,
+                Phone: m.phone,
+                Email: m.email || '',
+                Role: roleLabels[m.user.role] || m.user.role,
+                Specialization: m.specialization || '',
+                Qualification: m.qualification || '',
+                'Joining Date': formatDate(m.joiningDate),
+                Status: m.isActive ? 'Active' : 'Inactive',
+              }))
+            }
           />
           <Link href="/staff/attendance">
             <Button variant="outline">
@@ -300,14 +300,30 @@ export default function StaffPage() {
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : staff.length === 0 ? (
@@ -362,17 +378,15 @@ export default function StaffPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {member.specialization || member.qualification || "-"}
+                        {member.specialization || member.qualification || '-'}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {formatDate(member.joiningDate)}
-                      </div>
+                      <div className="text-sm">{formatDate(member.joiningDate)}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={member.isActive ? "default" : "secondary"}>
-                        {member.isActive ? "Active" : "Inactive"}
+                      <Badge variant={member.isActive ? 'default' : 'secondary'}>
+                        {member.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -383,19 +397,15 @@ export default function StaffPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/staff/${member.id}`)}
-                          >
+                          <DropdownMenuItem onClick={() => router.push(`/staff/${member.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/staff/${member.id}/edit`)}
-                          >
+                          <DropdownMenuItem onClick={() => router.push(`/staff/${member.id}/edit`)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          {member.user.role === "DOCTOR" && (
+                          {member.user.role === 'DOCTOR' && (
                             <DropdownMenuItem
                               onClick={() => router.push(`/staff/${member.id}/performance`)}
                             >
@@ -429,8 +439,8 @@ export default function StaffPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} staff members
               </div>
               <div className="flex items-center gap-2">
@@ -467,7 +477,7 @@ export default function StaffPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Deactivate Staff Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate{" "}
+              Are you sure you want to deactivate{' '}
               <strong>
                 {staffToDelete?.firstName} {staffToDelete?.lastName}
               </strong>
@@ -476,10 +486,7 @@ export default function StaffPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeactivate}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDeactivate} className="bg-red-600 hover:bg-red-700">
               Deactivate
             </AlertDialogAction>
           </AlertDialogFooter>

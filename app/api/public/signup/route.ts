@@ -1,17 +1,17 @@
-import { NextResponse } from "next/server"
-import { z } from "zod"
-import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
-import { generateUniqueSlug, generateToken, PLAN_LIMITS } from "@/lib/api-helpers"
-import { Plan, Role } from "@prisma/client"
-import { sendVerificationEmail } from "@/lib/email-helpers"
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
+import { generateUniqueSlug, generateToken, PLAN_LIMITS } from '@/lib/api-helpers'
+import { Plan, Role } from '@prisma/client'
+import { sendVerificationEmail } from '@/lib/email-helpers'
 
 const signupSchema = z.object({
-  hospitalName: z.string().min(2, "Hospital name must be at least 2 characters"),
-  adminName: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  hospitalName: z.string().min(2, 'Hospital name must be at least 2 characters'),
+  adminName: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 export async function POST(request: Request) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validated.error.flatten() },
+        { error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { error: 'An account with this email already exists' },
         { status: 409 }
       )
     }
@@ -83,9 +83,9 @@ export async function POST(request: Request) {
           hospitalId: hospital.id,
           staff: {
             create: {
-              employeeId: "EMP001",
-              firstName: adminName.split(" ")[0],
-              lastName: adminName.split(" ").slice(1).join(" ") || "",
+              employeeId: 'EMP001',
+              firstName: adminName.split(' ')[0],
+              lastName: adminName.split(' ').slice(1).join(' ') || '',
               email,
               phone,
               hospitalId: hospital.id,
@@ -108,17 +108,17 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: emailSent
-        ? "Account created successfully. Please check your email to verify your account."
-        : "Account created successfully. Email verification pending — please configure SMTP settings.",
+        ? 'Account created successfully. Please check your email to verify your account.'
+        : 'Account created successfully. Email verification pending — please configure SMTP settings.',
       hospitalId: result.hospital.id,
       emailSent,
       // Development-only: show token for testing
-      ...(process.env.NODE_ENV === "development" && { verificationToken }),
+      ...(process.env.NODE_ENV === 'development' && { verificationToken }),
     })
   } catch (error) {
-    console.error("Signup error:", error)
+    console.error('Signup error:', error)
     return NextResponse.json(
-      { error: "An error occurred during signup. Please try again." },
+      { error: 'An error occurred during signup. Please try again.' },
       { status: 500 }
     )
   }

@@ -13,7 +13,9 @@ const shiftsModule = await import('@/app/api/staff/[id]/shifts/route')
 function makeRequest(method: string, body?: any) {
   return new Request('http://localhost/api/staff/staff-1/shifts', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -122,10 +124,7 @@ describe('Staff Shifts API', () => {
     it('validates startTime and endTime required', async () => {
       ;(prisma.staff.findFirst as any).mockResolvedValue({ id: 'staff-1' })
 
-      const res = await shiftsModule.PUT(
-        makeRequest('PUT', { shifts: [{ dayOfWeek: 1 }] }),
-        ctx
-      )
+      const res = await shiftsModule.PUT(makeRequest('PUT', { shifts: [{ dayOfWeek: 1 }] }), ctx)
       expect(res.status).toBe(400)
       const body = await res.json()
       expect(body.error).toContain('startTime')

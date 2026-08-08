@@ -269,9 +269,7 @@ describe('error handling', () => {
     const errorMessage = 'Database connection lost'
     prisma.aIInsight.create.mockRejectedValueOnce(new Error(errorMessage))
 
-    await dispatchEvent(
-      buildPayload('treatment.completed', { treatmentId: 'tx-err' })
-    )
+    await dispatchEvent(buildPayload('treatment.completed', { treatmentId: 'tx-err' }))
 
     // The RUNNING execution should still have been created
     expect(prisma.aISkillExecution.create).toHaveBeenCalledTimes(1)
@@ -291,9 +289,7 @@ describe('error handling', () => {
   it('does NOT mark execution as COMPLETED when handler throws', async () => {
     prisma.aIInsight.create.mockRejectedValueOnce(new Error('Some failure'))
 
-    await dispatchEvent(
-      buildPayload('appointment.no_show', { patientName: 'Error Patient' })
-    )
+    await dispatchEvent(buildPayload('appointment.no_show', { patientName: 'Error Patient' }))
 
     // Only one update call, and it should be FAILED — not COMPLETED
     const updateCalls = prisma.aISkillExecution.update.mock.calls
@@ -304,9 +300,7 @@ describe('error handling', () => {
   it('stringifies non-Error thrown values', async () => {
     prisma.aIInsight.create.mockRejectedValueOnce('raw string error')
 
-    await dispatchEvent(
-      buildPayload('patient.created', { patientName: 'Bad Data' })
-    )
+    await dispatchEvent(buildPayload('patient.created', { patientName: 'Bad Data' }))
 
     expect(prisma.aISkillExecution.update).toHaveBeenCalledWith({
       where: { id: 'exec-1' },
@@ -331,25 +325,20 @@ describe('skill naming convention', () => {
     'patient.created',
   ]
 
-  it.each(eventTypes)(
-    'uses skill name "event.%s" for event type %s',
-    async (eventType) => {
-      await dispatchEvent(buildPayload(eventType, { dummy: true }))
+  it.each(eventTypes)('uses skill name "event.%s" for event type %s', async (eventType) => {
+    await dispatchEvent(buildPayload(eventType, { dummy: true }))
 
-      expect(prisma.aISkillExecution.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          skill: `event.${eventType}`,
-        }),
-      })
-    }
-  )
+    expect(prisma.aISkillExecution.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        skill: `event.${eventType}`,
+      }),
+    })
+  })
 })
 
 describe('insight expiresAt', () => {
   it('sets a future expiration date on created insights', async () => {
-    await dispatchEvent(
-      buildPayload('treatment.completed', { treatmentId: 'tx-exp' })
-    )
+    await dispatchEvent(buildPayload('treatment.completed', { treatmentId: 'tx-exp' }))
 
     const createCall = prisma.aIInsight.create.mock.calls[0][0]
     const expiresAt = createCall.data.expiresAt as Date

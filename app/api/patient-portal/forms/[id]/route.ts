@@ -1,12 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 // GET: Get a specific form template with fields (for patient to fill)
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { error, patient } = await requirePatientAuth(req)
   if (error) return error
@@ -19,7 +16,7 @@ export async function GET(
     })
 
     if (!template) {
-      return NextResponse.json({ error: "Form not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Form not found' }, { status: 404 })
     }
 
     // Check if patient already submitted this form
@@ -29,7 +26,7 @@ export async function GET(
         patientId: patient!.id,
         hospitalId,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json({
@@ -37,7 +34,7 @@ export async function GET(
       existingSubmission,
     })
   } catch (err) {
-    console.error("Patient form detail error:", err)
-    return NextResponse.json({ error: "Failed to load form" }, { status: 500 })
+    console.error('Patient form detail error:', err)
+    return NextResponse.json({ error: 'Failed to load form' }, { status: 500 })
   }
 }

@@ -1,33 +1,33 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Loader2, Save } from "lucide-react"
-import { DuplicateDetector } from "@/components/ai/duplicate-detector"
+} from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { ArrowLeft, Loader2, Save } from 'lucide-react'
+import { DuplicateDetector } from '@/components/ai/duplicate-detector'
 
 const BLOOD_GROUPS = [
-  { value: "A_POSITIVE", label: "A+" },
-  { value: "A_NEGATIVE", label: "A-" },
-  { value: "B_POSITIVE", label: "B+" },
-  { value: "B_NEGATIVE", label: "B-" },
-  { value: "AB_POSITIVE", label: "AB+" },
-  { value: "AB_NEGATIVE", label: "AB-" },
-  { value: "O_POSITIVE", label: "O+" },
-  { value: "O_NEGATIVE", label: "O-" },
+  { value: 'A_POSITIVE', label: 'A+' },
+  { value: 'A_NEGATIVE', label: 'A-' },
+  { value: 'B_POSITIVE', label: 'B+' },
+  { value: 'B_NEGATIVE', label: 'B-' },
+  { value: 'AB_POSITIVE', label: 'AB+' },
+  { value: 'AB_NEGATIVE', label: 'AB-' },
+  { value: 'O_POSITIVE', label: 'O+' },
+  { value: 'O_NEGATIVE', label: 'O-' },
 ]
 
 export default function NewPatientPage() {
@@ -36,26 +36,26 @@ export default function NewPatientPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    dateOfBirth: "",
-    age: "",
-    gender: "",
-    bloodGroup: "",
-    phone: "",
-    alternatePhone: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "Tamil Nadu",
-    pincode: "",
-    aadharNumber: "",
-    occupation: "",
-    referredBy: "",
-    referralCode: "",
-    emergencyContactName: "",
-    emergencyContactPhone: "",
-    emergencyContactRelation: "",
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    age: '',
+    gender: '',
+    bloodGroup: '',
+    phone: '',
+    alternatePhone: '',
+    email: '',
+    address: '',
+    city: '',
+    state: 'Tamil Nadu',
+    pincode: '',
+    aadharNumber: '',
+    occupation: '',
+    referredBy: '',
+    referralCode: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelation: '',
   })
 
   function updateField(field: string, value: string) {
@@ -67,9 +67,9 @@ export default function NewPatientPage() {
 
     if (!form.firstName || !form.lastName || !form.phone) {
       toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "First name, last name, and phone are required.",
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'First name, last name, and phone are required.',
       })
       return
     }
@@ -98,32 +98,33 @@ export default function NewPatientPage() {
       if (form.referralCode) payload.referralCode = form.referralCode
       if (form.emergencyContactName) payload.emergencyContactName = form.emergencyContactName
       if (form.emergencyContactPhone) payload.emergencyContactPhone = form.emergencyContactPhone
-      if (form.emergencyContactRelation) payload.emergencyContactRelation = form.emergencyContactRelation
+      if (form.emergencyContactRelation)
+        payload.emergencyContactRelation = form.emergencyContactRelation
 
-      const response = await fetch("/api/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: "Unknown error" }))
+        const data = await response.json().catch(() => ({ error: 'Unknown error' }))
         throw new Error(data.error || `Failed to create patient (${response.status})`)
       }
 
       const patient = await response.json()
 
       toast({
-        title: "Patient Created",
+        title: 'Patient Created',
         description: `Patient ${form.firstName} ${form.lastName} has been registered successfully.`,
       })
 
       router.push(`/patients/${patient.id}`)
     } catch (error: any) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create patient",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to create patient',
       })
     } finally {
       setSubmitting(false)
@@ -157,7 +158,7 @@ export default function NewPatientPage() {
               <Input
                 id="firstName"
                 value={form.firstName}
-                onChange={(e) => updateField("firstName", e.target.value)}
+                onChange={(e) => updateField('firstName', e.target.value)}
                 placeholder="Enter first name"
                 required
               />
@@ -167,7 +168,7 @@ export default function NewPatientPage() {
               <Input
                 id="lastName"
                 value={form.lastName}
-                onChange={(e) => updateField("lastName", e.target.value)}
+                onChange={(e) => updateField('lastName', e.target.value)}
                 placeholder="Enter last name"
                 required
               />
@@ -178,7 +179,7 @@ export default function NewPatientPage() {
                 id="dateOfBirth"
                 type="date"
                 value={form.dateOfBirth}
-                onChange={(e) => updateField("dateOfBirth", e.target.value)}
+                onChange={(e) => updateField('dateOfBirth', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -187,7 +188,7 @@ export default function NewPatientPage() {
                 id="age"
                 type="number"
                 value={form.age}
-                onChange={(e) => updateField("age", e.target.value)}
+                onChange={(e) => updateField('age', e.target.value)}
                 placeholder="Age"
                 min="0"
                 max="150"
@@ -195,7 +196,7 @@ export default function NewPatientPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="gender">Gender</Label>
-              <Select value={form.gender} onValueChange={(v) => updateField("gender", v)}>
+              <Select value={form.gender} onValueChange={(v) => updateField('gender', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
@@ -208,7 +209,7 @@ export default function NewPatientPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="bloodGroup">Blood Group</Label>
-              <Select value={form.bloodGroup} onValueChange={(v) => updateField("bloodGroup", v)}>
+              <Select value={form.bloodGroup} onValueChange={(v) => updateField('bloodGroup', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select blood group" />
                 </SelectTrigger>
@@ -236,7 +237,7 @@ export default function NewPatientPage() {
               <Input
                 id="phone"
                 value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
+                onChange={(e) => updateField('phone', e.target.value)}
                 placeholder="Enter phone number"
                 required
               />
@@ -246,7 +247,7 @@ export default function NewPatientPage() {
               <Input
                 id="alternatePhone"
                 value={form.alternatePhone}
-                onChange={(e) => updateField("alternatePhone", e.target.value)}
+                onChange={(e) => updateField('alternatePhone', e.target.value)}
                 placeholder="Alternate phone number"
               />
             </div>
@@ -256,7 +257,7 @@ export default function NewPatientPage() {
                 id="email"
                 type="email"
                 value={form.email}
-                onChange={(e) => updateField("email", e.target.value)}
+                onChange={(e) => updateField('email', e.target.value)}
                 placeholder="Enter email address"
               />
             </div>
@@ -265,7 +266,7 @@ export default function NewPatientPage() {
               <Textarea
                 id="address"
                 value={form.address}
-                onChange={(e) => updateField("address", e.target.value)}
+                onChange={(e) => updateField('address', e.target.value)}
                 placeholder="Enter full address"
                 rows={2}
               />
@@ -275,7 +276,7 @@ export default function NewPatientPage() {
               <Input
                 id="city"
                 value={form.city}
-                onChange={(e) => updateField("city", e.target.value)}
+                onChange={(e) => updateField('city', e.target.value)}
                 placeholder="City"
               />
             </div>
@@ -284,7 +285,7 @@ export default function NewPatientPage() {
               <Input
                 id="state"
                 value={form.state}
-                onChange={(e) => updateField("state", e.target.value)}
+                onChange={(e) => updateField('state', e.target.value)}
                 placeholder="State"
               />
             </div>
@@ -293,7 +294,7 @@ export default function NewPatientPage() {
               <Input
                 id="pincode"
                 value={form.pincode}
-                onChange={(e) => updateField("pincode", e.target.value)}
+                onChange={(e) => updateField('pincode', e.target.value)}
                 placeholder="Pincode"
               />
             </div>
@@ -312,7 +313,7 @@ export default function NewPatientPage() {
               <Input
                 id="aadharNumber"
                 value={form.aadharNumber}
-                onChange={(e) => updateField("aadharNumber", e.target.value)}
+                onChange={(e) => updateField('aadharNumber', e.target.value)}
                 placeholder="Enter Aadhar number"
               />
             </div>
@@ -321,7 +322,7 @@ export default function NewPatientPage() {
               <Input
                 id="occupation"
                 value={form.occupation}
-                onChange={(e) => updateField("occupation", e.target.value)}
+                onChange={(e) => updateField('occupation', e.target.value)}
                 placeholder="Enter occupation"
               />
             </div>
@@ -330,7 +331,7 @@ export default function NewPatientPage() {
               <Input
                 id="referredBy"
                 value={form.referredBy}
-                onChange={(e) => updateField("referredBy", e.target.value)}
+                onChange={(e) => updateField('referredBy', e.target.value)}
                 placeholder="Referral source"
               />
             </div>
@@ -339,7 +340,7 @@ export default function NewPatientPage() {
               <Input
                 id="referralCode"
                 value={form.referralCode}
-                onChange={(e) => updateField("referralCode", e.target.value)}
+                onChange={(e) => updateField('referralCode', e.target.value)}
                 placeholder="e.g. REF-A3B2K9"
               />
             </div>
@@ -358,7 +359,7 @@ export default function NewPatientPage() {
               <Input
                 id="emergencyContactName"
                 value={form.emergencyContactName}
-                onChange={(e) => updateField("emergencyContactName", e.target.value)}
+                onChange={(e) => updateField('emergencyContactName', e.target.value)}
                 placeholder="Emergency contact name"
               />
             </div>
@@ -367,7 +368,7 @@ export default function NewPatientPage() {
               <Input
                 id="emergencyContactPhone"
                 value={form.emergencyContactPhone}
-                onChange={(e) => updateField("emergencyContactPhone", e.target.value)}
+                onChange={(e) => updateField('emergencyContactPhone', e.target.value)}
                 placeholder="Emergency contact phone"
               />
             </div>
@@ -376,7 +377,7 @@ export default function NewPatientPage() {
               <Input
                 id="emergencyContactRelation"
                 value={form.emergencyContactRelation}
-                onChange={(e) => updateField("emergencyContactRelation", e.target.value)}
+                onChange={(e) => updateField('emergencyContactRelation', e.target.value)}
                 placeholder="e.g. Spouse, Parent"
               />
             </div>

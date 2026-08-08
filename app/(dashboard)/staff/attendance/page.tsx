@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -19,9 +19,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -29,8 +29,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import {
   ArrowLeft,
   Calendar,
@@ -40,8 +40,8 @@ import {
   Users,
   AlertCircle,
   Loader2,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface StaffMember {
   id: string
@@ -74,60 +74,60 @@ interface TodayAttendance {
 }
 
 const statusColors: Record<string, string> = {
-  PRESENT: "bg-green-100 text-green-700",
-  ABSENT: "bg-red-100 text-red-700",
-  LATE: "bg-yellow-100 text-yellow-700",
-  HALF_DAY: "bg-orange-100 text-orange-700",
-  ON_LEAVE: "bg-blue-100 text-blue-700",
+  PRESENT: 'bg-green-100 text-green-700',
+  ABSENT: 'bg-red-100 text-red-700',
+  LATE: 'bg-yellow-100 text-yellow-700',
+  HALF_DAY: 'bg-orange-100 text-orange-700',
+  ON_LEAVE: 'bg-blue-100 text-blue-700',
 }
 
 const statusLabels: Record<string, string> = {
-  PRESENT: "Present",
-  ABSENT: "Absent",
-  LATE: "Late",
-  HALF_DAY: "Half Day",
-  ON_LEAVE: "On Leave",
+  PRESENT: 'Present',
+  ABSENT: 'Absent',
+  LATE: 'Late',
+  HALF_DAY: 'Half Day',
+  ON_LEAVE: 'On Leave',
 }
 
 const roleColors: Record<string, string> = {
-  ADMIN: "bg-purple-100 text-purple-700",
-  DOCTOR: "bg-blue-100 text-blue-700",
-  RECEPTIONIST: "bg-green-100 text-green-700",
-  LAB_TECH: "bg-orange-100 text-orange-700",
-  ACCOUNTANT: "bg-yellow-100 text-yellow-700",
+  ADMIN: 'bg-purple-100 text-purple-700',
+  DOCTOR: 'bg-blue-100 text-blue-700',
+  RECEPTIONIST: 'bg-green-100 text-green-700',
+  LAB_TECH: 'bg-orange-100 text-orange-700',
+  ACCOUNTANT: 'bg-yellow-100 text-yellow-700',
 }
 
 export default function AttendancePage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [todayData, setTodayData] = useState<TodayAttendance | null>(null)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
 
   // Mark attendance dialog
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null)
   const [marking, setMarking] = useState(false)
   const [attendanceForm, setAttendanceForm] = useState({
-    status: "",
-    clockIn: "",
-    clockOut: "",
-    notes: "",
+    status: '',
+    clockIn: '',
+    clockOut: '',
+    notes: '',
   })
 
   const fetchTodayAttendance = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/staff/attendance/today")
-      if (!response.ok) throw new Error("Failed to fetch attendance")
+      const response = await fetch('/api/staff/attendance/today')
+      if (!response.ok) throw new Error('Failed to fetch attendance')
 
       const data = await response.json()
       setTodayData(data)
     } catch (error) {
-      console.error("Error fetching attendance:", error)
+      console.error('Error fetching attendance:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch attendance data",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch attendance data',
       })
     } finally {
       setLoading(false)
@@ -141,10 +141,10 @@ export default function AttendancePage() {
   const openMarkDialog = (staff: StaffMember) => {
     setSelectedStaff(staff)
     setAttendanceForm({
-      status: staff.todayStatus || "",
-      clockIn: staff.clockIn ? new Date(staff.clockIn).toTimeString().slice(0, 5) : "",
-      clockOut: staff.clockOut ? new Date(staff.clockOut).toTimeString().slice(0, 5) : "",
-      notes: staff.attendanceNotes || "",
+      status: staff.todayStatus || '',
+      clockIn: staff.clockIn ? new Date(staff.clockIn).toTimeString().slice(0, 5) : '',
+      clockOut: staff.clockOut ? new Date(staff.clockOut).toTimeString().slice(0, 5) : '',
+      notes: staff.attendanceNotes || '',
     })
     setDialogOpen(true)
   }
@@ -152,9 +152,9 @@ export default function AttendancePage() {
   const handleMarkAttendance = async () => {
     if (!selectedStaff || !attendanceForm.status) {
       toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please select a status",
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please select a status',
       })
       return
     }
@@ -162,7 +162,7 @@ export default function AttendancePage() {
     try {
       setMarking(true)
 
-      const today = new Date().toISOString().split("T")[0]
+      const today = new Date().toISOString().split('T')[0]
 
       const payload: any = {
         staffId: selectedStaff.id,
@@ -178,29 +178,29 @@ export default function AttendancePage() {
         payload.clockOut = `${today}T${attendanceForm.clockOut}:00`
       }
 
-      const response = await fetch("/api/staff/attendance", {
-        method: "POST",
+      const response = await fetch('/api/staff/attendance', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       })
 
-      if (!response.ok) throw new Error("Failed to mark attendance")
+      if (!response.ok) throw new Error('Failed to mark attendance')
 
       toast({
-        title: "Success",
-        description: "Attendance marked successfully",
+        title: 'Success',
+        description: 'Attendance marked successfully',
       })
 
       setDialogOpen(false)
       fetchTodayAttendance()
     } catch (error) {
-      console.error("Error marking attendance:", error)
+      console.error('Error marking attendance:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to mark attendance",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to mark attendance',
       })
     } finally {
       setMarking(false)
@@ -208,10 +208,10 @@ export default function AttendancePage() {
   }
 
   const formatTime = (dateString: string | null) => {
-    if (!dateString) return "-"
-    return new Date(dateString).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
@@ -227,19 +227,17 @@ export default function AttendancePage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Attendance</h1>
-            <p className="text-muted-foreground">
-              Track and manage staff attendance
-            </p>
+            <p className="text-muted-foreground">Track and manage staff attendance</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-lg font-medium">
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
+            {new Date().toLocaleDateString('en-IN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
             })}
           </span>
         </div>
@@ -263,9 +261,7 @@ export default function AttendancePage() {
                 <UserCheck className="h-4 w-4 text-green-600" />
                 <span className="text-sm text-muted-foreground">Present</span>
               </div>
-              <p className="text-2xl font-bold mt-1 text-green-600">
-                {todayData.summary.present}
-              </p>
+              <p className="text-2xl font-bold mt-1 text-green-600">{todayData.summary.present}</p>
             </CardContent>
           </Card>
           <Card>
@@ -274,9 +270,7 @@ export default function AttendancePage() {
                 <UserX className="h-4 w-4 text-red-600" />
                 <span className="text-sm text-muted-foreground">Absent</span>
               </div>
-              <p className="text-2xl font-bold mt-1 text-red-600">
-                {todayData.summary.absent}
-              </p>
+              <p className="text-2xl font-bold mt-1 text-red-600">{todayData.summary.absent}</p>
             </CardContent>
           </Card>
           <Card>
@@ -285,9 +279,7 @@ export default function AttendancePage() {
                 <Clock className="h-4 w-4 text-yellow-600" />
                 <span className="text-sm text-muted-foreground">Late</span>
               </div>
-              <p className="text-2xl font-bold mt-1 text-yellow-600">
-                {todayData.summary.late}
-              </p>
+              <p className="text-2xl font-bold mt-1 text-yellow-600">{todayData.summary.late}</p>
             </CardContent>
           </Card>
           <Card>
@@ -296,9 +288,7 @@ export default function AttendancePage() {
                 <Calendar className="h-4 w-4 text-blue-600" />
                 <span className="text-sm text-muted-foreground">On Leave</span>
               </div>
-              <p className="text-2xl font-bold mt-1 text-blue-600">
-                {todayData.summary.onLeave}
-              </p>
+              <p className="text-2xl font-bold mt-1 text-blue-600">{todayData.summary.onLeave}</p>
             </CardContent>
           </Card>
           <Card>
@@ -339,12 +329,24 @@ export default function AttendancePage() {
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : !todayData || todayData.staff.length === 0 ? (
@@ -368,9 +370,7 @@ export default function AttendancePage() {
                         <div className="font-medium">
                           {member.firstName} {member.lastName}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {member.employeeId}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{member.employeeId}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -400,7 +400,7 @@ export default function AttendancePage() {
                           openMarkDialog(member)
                         }}
                       >
-                        {member.todayStatus ? "Update" : "Mark"}
+                        {member.todayStatus ? 'Update' : 'Mark'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -415,9 +415,7 @@ export default function AttendancePage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {selectedStaff?.todayStatus ? "Update" : "Mark"} Attendance
-            </DialogTitle>
+            <DialogTitle>{selectedStaff?.todayStatus ? 'Update' : 'Mark'} Attendance</DialogTitle>
             <DialogDescription>
               {selectedStaff?.firstName} {selectedStaff?.lastName} ({selectedStaff?.employeeId})
             </DialogDescription>
@@ -428,9 +426,7 @@ export default function AttendancePage() {
               <Label>Status *</Label>
               <Select
                 value={attendanceForm.status}
-                onValueChange={(value) =>
-                  setAttendanceForm((prev) => ({ ...prev, status: value }))
-                }
+                onValueChange={(value) => setAttendanceForm((prev) => ({ ...prev, status: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -472,9 +468,7 @@ export default function AttendancePage() {
               <Label>Notes</Label>
               <Input
                 value={attendanceForm.notes}
-                onChange={(e) =>
-                  setAttendanceForm((prev) => ({ ...prev, notes: e.target.value }))
-                }
+                onChange={(e) => setAttendanceForm((prev) => ({ ...prev, notes: e.target.value }))}
                 placeholder="Optional notes"
               />
             </div>

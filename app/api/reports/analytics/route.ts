@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subQuarters, subYears, differenceInDays } from 'date-fns'
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfQuarter,
+  endOfQuarter,
+  startOfYear,
+  endOfYear,
+  subMonths,
+  subQuarters,
+  subYears,
+  differenceInDays,
+} from 'date-fns'
 
 // Helper function to get date range from preset
 function getDateRange(preset: string): { from: Date; to: Date } {
@@ -13,9 +29,15 @@ function getDateRange(preset: string): { from: Date; to: Date } {
     case 'yesterday':
       return { from: startOfDay(subDays(now, 1)), to: endOfDay(subDays(now, 1)) }
     case 'this_week':
-      return { from: startOfWeek(now, { weekStartsOn: 1 }), to: endOfWeek(now, { weekStartsOn: 1 }) }
+      return {
+        from: startOfWeek(now, { weekStartsOn: 1 }),
+        to: endOfWeek(now, { weekStartsOn: 1 }),
+      }
     case 'last_week':
-      return { from: startOfWeek(subDays(now, 7), { weekStartsOn: 1 }), to: endOfWeek(subDays(now, 7), { weekStartsOn: 1 }) }
+      return {
+        from: startOfWeek(subDays(now, 7), { weekStartsOn: 1 }),
+        to: endOfWeek(subDays(now, 7), { weekStartsOn: 1 }),
+      }
     case 'this_month':
       return { from: startOfMonth(now), to: endOfMonth(now) }
     case 'last_month':
@@ -82,15 +104,17 @@ async function getPatientAnalytics(dateFrom: Date, dateTo: Date, hospitalId: str
     },
   })
 
-  const returningPatients = patientsWithMultipleAppointments.filter(p => p._count.appointments > 1).length
+  const returningPatients = patientsWithMultipleAppointments.filter(
+    (p) => p._count.appointments > 1
+  ).length
   const newPatients = patientsInRange.length
   const totalPatients = Math.max(newPatients, patientsWithMultipleAppointments.length)
 
   // Calculate demographics
   const demographics = {
-    male: patientsInRange.filter(p => p.gender === 'MALE').length,
-    female: patientsInRange.filter(p => p.gender === 'FEMALE').length,
-    other: patientsInRange.filter(p => p.gender === 'OTHER').length,
+    male: patientsInRange.filter((p) => p.gender === 'MALE').length,
+    female: patientsInRange.filter((p) => p.gender === 'FEMALE').length,
+    other: patientsInRange.filter((p) => p.gender === 'OTHER').length,
   }
 
   // Calculate age groups
@@ -104,11 +128,14 @@ async function getPatientAnalytics(dateFrom: Date, dateTo: Date, hospitalId: str
     return '60+'
   }
 
-  const ageGroupCounts = patientsInRange.reduce((acc, p) => {
-    const group = getAgeGroup(p.dateOfBirth)
-    acc[group] = (acc[group] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const ageGroupCounts = patientsInRange.reduce(
+    (acc, p) => {
+      const group = getAgeGroup(p.dateOfBirth)
+      acc[group] = (acc[group] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   const ageGroups = Object.entries(ageGroupCounts).map(([label, count]) => ({
     label,
@@ -116,11 +143,14 @@ async function getPatientAnalytics(dateFrom: Date, dateTo: Date, hospitalId: str
   }))
 
   // Calculate acquisition sources
-  const sourceCounts = patientsInRange.reduce((acc, p) => {
-    const source = p.referredBy || 'Direct Walk-in'
-    acc[source] = (acc[source] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const sourceCounts = patientsInRange.reduce(
+    (acc, p) => {
+      const source = p.referredBy || 'Direct Walk-in'
+      acc[source] = (acc[source] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   const acquisitionSources = Object.entries(sourceCounts).map(([source, count]) => ({
     source,
@@ -158,39 +188,44 @@ async function getClinicalAnalytics(dateFrom: Date, dateTo: Date, hospitalId: st
   })
 
   const totalTreatments = treatments.length
-  const completedTreatments = treatments.filter(t => t.status === 'COMPLETED').length
-  const inProgressTreatments = treatments.filter(t => t.status === 'IN_PROGRESS').length
+  const completedTreatments = treatments.filter((t) => t.status === 'COMPLETED').length
+  const inProgressTreatments = treatments.filter((t) => t.status === 'IN_PROGRESS').length
   const completionRate = totalTreatments > 0 ? (completedTreatments / totalTreatments) * 100 : 0
 
   // Calculate average treatment duration
-  const treatmentsWithDuration = treatments.filter(t => t.startTime && t.endTime)
-  const avgTreatmentDuration = treatmentsWithDuration.length > 0
-    ? treatmentsWithDuration.reduce((sum, t) => {
-        const duration = t.endTime && t.startTime
-          ? (t.endTime.getTime() - t.startTime.getTime()) / (1000 * 60)
-          : 0
-        return sum + duration
-      }, 0) / treatmentsWithDuration.length
-    : 0
+  const treatmentsWithDuration = treatments.filter((t) => t.startTime && t.endTime)
+  const avgTreatmentDuration =
+    treatmentsWithDuration.length > 0
+      ? treatmentsWithDuration.reduce((sum, t) => {
+          const duration =
+            t.endTime && t.startTime
+              ? (t.endTime.getTime() - t.startTime.getTime()) / (1000 * 60)
+              : 0
+          return sum + duration
+        }, 0) / treatmentsWithDuration.length
+      : 0
 
   // Get common procedures
-  const procedureCounts = treatments.reduce((acc, t) => {
-    const procId = t.procedureId
-    if (!acc[procId]) {
-      acc[procId] = {
-        procedureId: procId,
-        name: t.procedure.name,
-        code: t.procedure.code,
-        count: 0,
-        completed: 0,
+  const procedureCounts = treatments.reduce(
+    (acc, t) => {
+      const procId = t.procedureId
+      if (!acc[procId]) {
+        acc[procId] = {
+          procedureId: procId,
+          name: t.procedure.name,
+          code: t.procedure.code,
+          count: 0,
+          completed: 0,
+        }
       }
-    }
-    acc[procId].count++
-    if (t.status === 'COMPLETED') {
-      acc[procId].completed++
-    }
-    return acc
-  }, {} as Record<string, any>)
+      acc[procId].count++
+      if (t.status === 'COMPLETED') {
+        acc[procId].completed++
+      }
+      return acc
+    },
+    {} as Record<string, any>
+  )
 
   const commonProcedures = Object.values(procedureCounts)
     .map((p: any) => ({
@@ -201,11 +236,14 @@ async function getClinicalAnalytics(dateFrom: Date, dateTo: Date, hospitalId: st
     .slice(0, 10)
 
   // Procedures by category
-  const categoryCounts = treatments.reduce((acc, t) => {
-    const category = t.procedure.category
-    acc[category] = (acc[category] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const categoryCounts = treatments.reduce(
+    (acc, t) => {
+      const category = t.procedure.category
+      acc[category] = (acc[category] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   const proceduresByCategory = Object.entries(categoryCounts).map(([category, count]) => ({
     category,
@@ -262,16 +300,19 @@ async function getFinancialAnalytics(dateFrom: Date, dateTo: Date, hospitalId: s
   const collectionEfficiency = totalRevenue > 0 ? (totalPaid / totalRevenue) * 100 : 0
 
   // Revenue by month (for trend)
-  const monthlyRevenue = invoices.reduce((acc, inv) => {
-    const month = inv.createdAt.toLocaleString('default', { month: 'short', year: '2-digit' })
-    if (!acc[month]) {
-      acc[month] = { revenue: 0, expenses: 0 }
-    }
-    acc[month].revenue += Number(inv.totalAmount)
-    return acc
-  }, {} as Record<string, { revenue: number; expenses: number }>)
+  const monthlyRevenue = invoices.reduce(
+    (acc, inv) => {
+      const month = inv.createdAt.toLocaleString('default', { month: 'short', year: '2-digit' })
+      if (!acc[month]) {
+        acc[month] = { revenue: 0, expenses: 0 }
+      }
+      acc[month].revenue += Number(inv.totalAmount)
+      return acc
+    },
+    {} as Record<string, { revenue: number; expenses: number }>
+  )
 
-  purchases.forEach(p => {
+  purchases.forEach((p) => {
     const month = p.createdAt.toLocaleString('default', { month: 'short', year: '2-digit' })
     if (!monthlyRevenue[month]) {
       monthlyRevenue[month] = { revenue: 0, expenses: 0 }
@@ -298,11 +339,14 @@ async function getFinancialAnalytics(dateFrom: Date, dateTo: Date, hospitalId: s
     },
   })
 
-  const methodCounts = payments.reduce((acc, p) => {
-    const method = p.paymentMethod
-    acc[method] = (acc[method] || 0) + Number(p.amount)
-    return acc
-  }, {} as Record<string, number>)
+  const methodCounts = payments.reduce(
+    (acc, p) => {
+      const method = p.paymentMethod
+      acc[method] = (acc[method] || 0) + Number(p.amount)
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   const totalPayments = Object.values(methodCounts).reduce((sum, amt) => sum + amt, 0)
 
@@ -344,17 +388,20 @@ async function getOperationalAnalytics(dateFrom: Date, dateTo: Date, hospitalId:
   })
 
   const totalAppointments = appointments.length
-  const completedAppointments = appointments.filter(a => a.status === 'COMPLETED').length
-  const cancelledAppointments = appointments.filter(a => a.status === 'CANCELLED').length
-  const noShowCount = appointments.filter(a => a.status === 'NO_SHOW').length
+  const completedAppointments = appointments.filter((a) => a.status === 'COMPLETED').length
+  const cancelledAppointments = appointments.filter((a) => a.status === 'CANCELLED').length
+  const noShowCount = appointments.filter((a) => a.status === 'NO_SHOW').length
   const noShowRate = totalAppointments > 0 ? (noShowCount / totalAppointments) * 100 : 0
-  const appointmentUtilization = totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0
+  const appointmentUtilization =
+    totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0
 
   // Calculate average wait time
-  const appointmentsWithWaitTime = appointments.filter(a => a.waitTime !== null)
-  const avgWaitTime = appointmentsWithWaitTime.length > 0
-    ? appointmentsWithWaitTime.reduce((sum, a) => sum + (a.waitTime || 0), 0) / appointmentsWithWaitTime.length
-    : 0
+  const appointmentsWithWaitTime = appointments.filter((a) => a.waitTime !== null)
+  const avgWaitTime =
+    appointmentsWithWaitTime.length > 0
+      ? appointmentsWithWaitTime.reduce((sum, a) => sum + (a.waitTime || 0), 0) /
+        appointmentsWithWaitTime.length
+      : 0
 
   // Staff productivity
   const staffMap = new Map()
@@ -386,7 +433,7 @@ async function getOperationalAnalytics(dateFrom: Date, dateTo: Date, hospitalId:
     },
   })
 
-  treatments.forEach(t => {
+  treatments.forEach((t) => {
     if (staffMap.has(t.doctorId)) {
       const staff = staffMap.get(t.doctorId)
       if (t.status === 'COMPLETED') {
@@ -410,7 +457,7 @@ async function getOperationalAnalytics(dateFrom: Date, dateTo: Date, hospitalId:
   })
 
   const totalStockUsed = stockTransactions
-    .filter(t => ['SALE', 'CONSUMPTION'].includes(t.type))
+    .filter((t) => ['SALE', 'CONSUMPTION'].includes(t.type))
     .reduce((sum, t) => sum + t.quantity, 0)
 
   const avgInventoryValue = await prisma.inventoryItem.aggregate({
@@ -420,9 +467,10 @@ async function getOperationalAnalytics(dateFrom: Date, dateTo: Date, hospitalId:
     },
   })
 
-  const inventoryTurnover = (avgInventoryValue._sum.currentStock || 0) > 0
-    ? totalStockUsed / (avgInventoryValue._sum.currentStock || 1)
-    : 0
+  const inventoryTurnover =
+    (avgInventoryValue._sum.currentStock || 0) > 0
+      ? totalStockUsed / (avgInventoryValue._sum.currentStock || 1)
+      : 0
 
   // Low stock items
   const lowStockItems = await prisma.inventoryItem.count({
@@ -497,9 +545,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data)
   } catch (error) {
     console.error('Analytics API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch analytics data' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch analytics data' }, { status: 500 })
   }
 }

@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 /**
  * POST: Public booking endpoint.
  * Requires patient phone verification (patient must exist).
  * Body: { phone, doctorId, date, time, type, chiefComplaint }
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params
     const body = await req.json()
@@ -24,7 +21,7 @@ export async function POST(
 
     if (!phone || !doctorId || !date || !time) {
       return NextResponse.json(
-        { error: "Phone, doctor, date, and time are required" },
+        { error: 'Phone, doctor, date, and time are required' },
         { status: 400 }
       )
     }
@@ -35,14 +32,11 @@ export async function POST(
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: "Clinic not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 })
     }
 
     if (!hospital.patientPortalEnabled) {
-      return NextResponse.json(
-        { error: "Online booking is not enabled" },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Online booking is not enabled' }, { status: 403 })
     }
 
     // Find patient by phone
@@ -53,7 +47,7 @@ export async function POST(
 
     if (!patient) {
       return NextResponse.json(
-        { error: "No patient account found with this phone number. Please contact the clinic." },
+        { error: 'No patient account found with this phone number. Please contact the clinic.' },
         { status: 404 }
       )
     }
@@ -65,7 +59,7 @@ export async function POST(
     })
 
     if (!doctor) {
-      return NextResponse.json({ error: "Doctor not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
     }
 
     // Check for duplicate booking
@@ -77,13 +71,13 @@ export async function POST(
         doctorId,
         scheduledDate: dateObj,
         scheduledTime: time,
-        status: { notIn: ["CANCELLED", "NO_SHOW", "RESCHEDULED"] },
+        status: { notIn: ['CANCELLED', 'NO_SHOW', 'RESCHEDULED'] },
       },
     })
 
     if (existing) {
       return NextResponse.json(
-        { error: "You already have a booking at this time" },
+        { error: 'You already have a booking at this time' },
         { status: 409 }
       )
     }
@@ -91,13 +85,11 @@ export async function POST(
     // Generate appointment number
     const lastAppt = await prisma.appointment.findFirst({
       where: { hospitalId: hospital.id },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: { appointmentNo: true },
     })
-    const lastNum = lastAppt
-      ? parseInt(lastAppt.appointmentNo.replace(/\D/g, "")) || 0
-      : 0
-    const appointmentNo = `APT${String(lastNum + 1).padStart(5, "0")}`
+    const lastNum = lastAppt ? parseInt(lastAppt.appointmentNo.replace(/\D/g, '')) || 0 : 0
+    const appointmentNo = `APT${String(lastNum + 1).padStart(5, '0')}`
 
     const appointment = await prisma.appointment.create({
       data: {
@@ -107,8 +99,8 @@ export async function POST(
         doctorId,
         scheduledDate: dateObj,
         scheduledTime: time,
-        appointmentType: (type as any) || "CONSULTATION",
-        status: "SCHEDULED",
+        appointmentType: (type as any) || 'CONSULTATION',
+        status: 'SCHEDULED',
         chiefComplaint: chiefComplaint || null,
       },
     })
@@ -126,10 +118,7 @@ export async function POST(
       { status: 201 }
     )
   } catch (err: unknown) {
-    console.error("Public booking error:", err)
-    return NextResponse.json(
-      { error: "Failed to book appointment" },
-      { status: 500 }
-    )
+    console.error('Public booking error:', err)
+    return NextResponse.json({ error: 'Failed to book appointment' }, { status: 500 })
   }
 }

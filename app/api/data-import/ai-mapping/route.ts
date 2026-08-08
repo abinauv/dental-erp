@@ -1,26 +1,27 @@
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
-import { complete, extractJSON } from "@/lib/ai/openrouter"
-import { AI_MODELS } from "@/lib/ai/models"
-import { ENTITY_SCHEMAS } from "@/lib/import/schema-definitions"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { complete, extractJSON } from '@/lib/ai/openrouter'
+import { AI_MODELS } from '@/lib/ai/models'
+import { ENTITY_SCHEMAS } from '@/lib/import/schema-definitions'
 
 export async function POST(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
+  if (error || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
     const { jobId } = await req.json()
-    if (!jobId) return NextResponse.json({ error: "jobId is required" }, { status: 400 })
+    if (!jobId) return NextResponse.json({ error: 'jobId is required' }, { status: 400 })
 
     // Load the import job
     const job = await prisma.dataImportJob.findFirst({
       where: { id: jobId, hospitalId },
     })
-    if (!job) return NextResponse.json({ error: "Import job not found" }, { status: 404 })
+    if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
 
     const schema = ENTITY_SCHEMAS[job.entityType]
-    if (!schema) return NextResponse.json({ error: "Invalid entity type" }, { status: 400 })
+    if (!schema) return NextResponse.json({ error: 'Invalid entity type' }, { status: 400 })
 
     const sourceColumns = job.sourceColumns as string[]
     const sampleData = (job.previewData as Record<string, string>[])?.slice(0, 3) || []
@@ -79,13 +80,13 @@ Map each source column to the most appropriate target field.`
     try {
       aiResult = await complete(
         [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
         { ...AI_MODELS.fast, maxTokens: 4096, temperature: 0.1 }
       )
     } catch (aiErr: any) {
-      console.error("AI mapping error:", aiErr)
+      console.error('AI mapping error:', aiErr)
       // Fallback: return empty mapping so user can map manually
       const emptyMapping: Record<string, string | null> = {}
       const emptyConfidence: Record<string, number> = {}
@@ -99,7 +100,7 @@ Map each source column to the most appropriate target field.`
         confidence: emptyConfidence,
         unmappedRequired: schema.fields.filter((f) => f.required).map((f) => f.name),
         splitFields: [],
-        aiError: "AI mapping unavailable. Please map columns manually.",
+        aiError: 'AI mapping unavailable. Please map columns manually.',
       })
     }
 
@@ -115,13 +116,15 @@ Map each source column to the most appropriate target field.`
       } catch {
         // Return empty mapping on parse failure
         const emptyMapping: Record<string, string | null> = {}
-        sourceColumns.forEach((col) => { emptyMapping[col] = null })
+        sourceColumns.forEach((col) => {
+          emptyMapping[col] = null
+        })
         return NextResponse.json({
           mapping: emptyMapping,
           confidence: {},
           unmappedRequired: schema.fields.filter((f) => f.required).map((f) => f.name),
           splitFields: [],
-          aiError: "Could not parse AI response. Please map columns manually.",
+          aiError: 'Could not parse AI response. Please map columns manually.',
         })
       }
     }
@@ -151,7 +154,7 @@ Map each source column to the most appropriate target field.`
     // Update the job
     await prisma.dataImportJob.update({
       where: { id: jobId },
-      data: { columnMapping: mapping, status: "MAPPED" },
+      data: { columnMapping: mapping, status: 'MAPPED' },
     })
 
     return NextResponse.json({
@@ -161,7 +164,7 @@ Map each source column to the most appropriate target field.`
       splitFields: parsed.splitFields || [],
     })
   } catch (err: any) {
-    console.error("AI mapping route error:", err)
-    return NextResponse.json({ error: err.message || "Mapping failed" }, { status: 500 })
+    console.error('AI mapping route error:', err)
+    return NextResponse.json({ error: err.message || 'Mapping failed' }, { status: 500 })
   }
 }

@@ -1,13 +1,9 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import {
   Search,
   Users,
@@ -17,8 +13,8 @@ import {
   Stethoscope,
   Loader2,
   ArrowRight,
-} from "lucide-react"
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
+} from 'lucide-react'
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
 
 interface SearchResult {
   id: string
@@ -36,17 +32,17 @@ interface SearchResults {
 }
 
 const CATEGORIES = [
-  { key: "patients" as const, label: "Patients", icon: Users },
-  { key: "appointments" as const, label: "Appointments", icon: Calendar },
-  { key: "invoices" as const, label: "Invoices", icon: Receipt },
-  { key: "staff" as const, label: "Staff", icon: UserCog },
-  { key: "treatments" as const, label: "Treatments", icon: Stethoscope },
+  { key: 'patients' as const, label: 'Patients', icon: Users },
+  { key: 'appointments' as const, label: 'Appointments', icon: Calendar },
+  { key: 'invoices' as const, label: 'Invoices', icon: Receipt },
+  { key: 'staff' as const, label: 'Staff', icon: UserCog },
+  { key: 'treatments' as const, label: 'Treatments', icon: Stethoscope },
 ]
 
 export function GlobalSearch() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResults | null>(null)
   const [loading, setLoading] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -64,7 +60,7 @@ export function GlobalSearch() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
-        e.key === "/" &&
+        e.key === '/' &&
         !open &&
         !(e.target instanceof HTMLInputElement) &&
         !(e.target instanceof HTMLTextAreaElement) &&
@@ -74,8 +70,8 @@ export function GlobalSearch() {
         setOpen(true)
       }
     }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open])
 
   // Focus input when dialog opens
@@ -83,7 +79,7 @@ export function GlobalSearch() {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 0)
     } else {
-      setQuery("")
+      setQuery('')
       setResults(null)
       setActiveIndex(-1)
     }
@@ -129,13 +125,13 @@ export function GlobalSearch() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") {
+    if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActiveIndex((i) => Math.min(i + 1, flatResults.length - 1))
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActiveIndex((i) => Math.max(i - 1, -1))
-    } else if (e.key === "Enter" && activeIndex >= 0 && flatResults[activeIndex]) {
+    } else if (e.key === 'Enter' && activeIndex >= 0 && flatResults[activeIndex]) {
       e.preventDefault()
       navigateTo(flatResults[activeIndex].href)
     }
@@ -198,15 +194,14 @@ export function GlobalSearch() {
             {/* Empty state */}
             {query.length < 2 && (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                Type at least 2 characters to search across patients, appointments, invoices, staff, and treatments.
+                Type at least 2 characters to search across patients, appointments, invoices, staff,
+                and treatments.
               </div>
             )}
 
             {/* Loading */}
             {query.length >= 2 && loading && !results && (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                Searching...
-              </div>
+              <div className="p-6 text-center text-sm text-muted-foreground">Searching...</div>
             )}
 
             {/* No results */}
@@ -241,16 +236,20 @@ export function GlobalSearch() {
                             key={`${cat.key}-${item.id}`}
                             type="button"
                             className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                              isActive ? "bg-accent" : "hover:bg-accent/50"
+                              isActive ? 'bg-accent' : 'hover:bg-accent/50'
                             }`}
                             onClick={() => navigateTo(item.href)}
                             onMouseEnter={() => setActiveIndex(globalIdx)}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium truncate">{item.label}</div>
-                              <div className="text-xs text-muted-foreground truncate">{item.sublabel}</div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {item.sublabel}
+                              </div>
                             </div>
-                            <ArrowRight className={`h-4 w-4 text-muted-foreground shrink-0 transition-opacity ${isActive ? "opacity-100" : "opacity-0"}`} />
+                            <ArrowRight
+                              className={`h-4 w-4 text-muted-foreground shrink-0 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`}
+                            />
                           </button>
                         )
                       })}
@@ -264,11 +263,16 @@ export function GlobalSearch() {
           {/* Footer */}
           {results && totalResults > 0 && (
             <div className="border-t px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
-              <span>{totalResults} result{totalResults !== 1 ? "s" : ""}</span>
+              <span>
+                {totalResults} result{totalResults !== 1 ? 's' : ''}
+              </span>
               <span>
                 <kbd className="rounded border px-1 py-0.5 font-mono text-[10px]">↑↓</kbd> navigate
                 <kbd className="ml-2 rounded border px-1 py-0.5 font-mono text-[10px]">↵</kbd> open
-                <kbd className="ml-2 rounded border px-1 py-0.5 font-mono text-[10px]">esc</kbd> close
+                <kbd className="ml-2 rounded border px-1 py-0.5 font-mono text-[10px]">
+                  esc
+                </kbd>{' '}
+                close
               </span>
             </div>
           )}

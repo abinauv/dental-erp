@@ -377,9 +377,21 @@ describe('POST /api/ai/command', () => {
       lastName: 'Doe',
       age: 30,
       phone: '9876543210',
-      medicalHistory: { drugAllergies: 'Penicillin', hasDiabetes: false, hasHypertension: false, isPregnant: false, hasBleedingDisorder: false },
+      medicalHistory: {
+        drugAllergies: 'Penicillin',
+        hasDiabetes: false,
+        hasHypertension: false,
+        isPregnant: false,
+        hasBleedingDisorder: false,
+      },
       treatmentPlans: [{ title: 'Root Canal', status: 'IN_PROGRESS' }],
-      appointments: [{ scheduledDate: new Date('2025-01-15'), appointmentType: 'CONSULTATION', status: 'COMPLETED' }],
+      appointments: [
+        {
+          scheduledDate: new Date('2025-01-15'),
+          appointmentType: 'CONSULTATION',
+          status: 'COMPLETED',
+        },
+      ],
       invoices: [{ balanceAmount: 500 }],
     } as any)
 
@@ -412,8 +424,20 @@ describe('POST /api/ai/command', () => {
     })
 
     vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([
-      { name: 'Latex Gloves', currentStock: 200, minimumStock: 50, reorderLevel: 100, unit: 'pairs' },
-      { name: 'Nitrile Gloves', currentStock: 30, minimumStock: 50, reorderLevel: 80, unit: 'pairs' },
+      {
+        name: 'Latex Gloves',
+        currentStock: 200,
+        minimumStock: 50,
+        reorderLevel: 100,
+        unit: 'pairs',
+      },
+      {
+        name: 'Nitrile Gloves',
+        currentStock: 30,
+        minimumStock: 50,
+        reorderLevel: 80,
+        unit: 'pairs',
+      },
     ] as any)
 
     const req = new Request('http://localhost/api/ai/command', {
@@ -802,14 +826,14 @@ describe('GET /api/ai/usage', () => {
     // All-time counts
     vi.mocked(prisma.aIConversation.count).mockResolvedValue(150)
     vi.mocked(prisma.aISkillExecution.count)
-      .mockResolvedValueOnce(300)   // totalExecs
-      .mockResolvedValueOnce(45)    // monthExecs
+      .mockResolvedValueOnce(300) // totalExecs
+      .mockResolvedValueOnce(45) // monthExecs
     vi.mocked(prisma.aIInsight.count).mockResolvedValue(25)
 
     // Aggregates
     vi.mocked(prisma.aISkillExecution.aggregate)
       .mockResolvedValueOnce({ _sum: { cost: 120.5, tokensUsed: 500000 } } as any) // all-time
-      .mockResolvedValueOnce({ _sum: { cost: 30.0, tokensUsed: 100000 } } as any)  // month
+      .mockResolvedValueOnce({ _sum: { cost: 30.0, tokensUsed: 100000 } } as any) // month
 
     // Skill breakdown
     vi.mocked(prisma.aISkillExecution.findMany).mockResolvedValue([
@@ -911,7 +935,11 @@ describe('POST /api/ai/clinical', () => {
       } as any)
 
       vi.mocked(prisma.appointment.findMany).mockResolvedValue([
-        { scheduledDate: new Date('2025-01-10'), appointmentType: 'CONSULTATION', status: 'COMPLETED' },
+        {
+          scheduledDate: new Date('2025-01-10'),
+          appointmentType: 'CONSULTATION',
+          status: 'COMPLETED',
+        },
       ] as any)
       vi.mocked(prisma.treatment.findMany).mockResolvedValue([
         { status: 'COMPLETED', createdAt: new Date() },
@@ -991,12 +1019,26 @@ describe('POST /api/ai/clinical', () => {
 
     it('returns duplicate candidates scored by AI', async () => {
       vi.mocked(prisma.patient.findMany).mockResolvedValue([
-        { id: 'p1', patientId: 'PAT-001', firstName: 'John', lastName: 'Doe', phone: '9876543210', email: null, dateOfBirth: null },
+        {
+          id: 'p1',
+          patientId: 'PAT-001',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '9876543210',
+          email: null,
+          dateOfBirth: null,
+        },
       ] as any)
 
       const aiDuplicateResult = JSON.stringify({
         duplicates: [
-          { id: 'p1', patientId: 'PAT-001', name: 'John Doe', confidence: 0.85, matchFields: ['phone', 'name'] },
+          {
+            id: 'p1',
+            patientId: 'PAT-001',
+            name: 'John Doe',
+            confidence: 0.85,
+            matchFields: ['phone', 'name'],
+          },
         ],
       })
       vi.mocked(complete).mockResolvedValue({
@@ -1202,7 +1244,11 @@ describe('POST /api/ai/clinical', () => {
       const drugResult = JSON.stringify({
         safe: false,
         interactions: [
-          { drugs: 'Ibuprofen + Aspirin', severity: 'moderate', description: 'Increased bleeding risk.' },
+          {
+            drugs: 'Ibuprofen + Aspirin',
+            severity: 'moderate',
+            description: 'Increased bleeding risk.',
+          },
         ],
         allergies: [],
         recommendations: ['Consider alternative NSAID.'],

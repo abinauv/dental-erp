@@ -111,7 +111,12 @@ describe('POST /api/ai/query', () => {
 
   it('executes whitelisted patient query successfully', async () => {
     mockAuth()
-    const aiResponse = JSON.stringify({ model: 'patient', filters: { name: 'John' }, limit: 5, summary: 'Patients named John' })
+    const aiResponse = JSON.stringify({
+      model: 'patient',
+      filters: { name: 'John' },
+      limit: 5,
+      summary: 'Patients named John',
+    })
     mockComplete.mockResolvedValue({ content: aiResponse })
     mockExtractJSON.mockReturnValue(aiResponse)
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
@@ -131,7 +136,11 @@ describe('POST /api/ai/query', () => {
 
   it('executes whitelisted invoice query successfully', async () => {
     mockAuth()
-    const aiResponse = JSON.stringify({ model: 'invoice', filters: { status: 'PENDING' }, limit: 10 })
+    const aiResponse = JSON.stringify({
+      model: 'invoice',
+      filters: { status: 'PENDING' },
+      limit: 10,
+    })
     mockComplete.mockResolvedValue({ content: aiResponse })
     mockExtractJSON.mockReturnValue(aiResponse)
     vi.mocked(prisma.invoice.findMany).mockResolvedValue([
@@ -178,9 +187,7 @@ describe('POST /api/ai/query', () => {
 
     await queryPOST(makeReq('/api/ai/query', 'POST', { query: 'all patients' }))
 
-    expect(prisma.patient.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: 50 })
-    )
+    expect(prisma.patient.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 50 }))
   })
 
   it('logs execution to aISkillExecution', async () => {
@@ -237,27 +244,38 @@ describe('GET /api/ai/no-show-risk', () => {
     vi.mocked(prisma.appointment.findMany)
       .mockResolvedValueOnce([
         {
-          id: 'a1', patientId: 'p1', status: 'SCHEDULED',
+          id: 'a1',
+          patientId: 'p1',
+          status: 'SCHEDULED',
           scheduledDate: new Date(now.getTime() + 86400000),
           scheduledTime: '10:00',
           appointmentType: 'CHECKUP',
-          patient: { id: 'p1', firstName: 'John', lastName: 'Doe', phone: '1234567890', createdAt: new Date('2025-01-01') },
+          patient: {
+            id: 'p1',
+            firstName: 'John',
+            lastName: 'Doe',
+            phone: '1234567890',
+            createdAt: new Date('2025-01-01'),
+          },
           doctor: { id: 'd1', firstName: 'Dr', lastName: 'Smith' },
         },
       ] as any)
-      .mockResolvedValueOnce([
-        { patientId: 'p1', scheduledDate: new Date('2025-12-01') },
-      ] as any) // last visits
+      .mockResolvedValueOnce([{ patientId: 'p1', scheduledDate: new Date('2025-12-01') }] as any) // last visits
 
     vi.mocked(prisma.appointment.groupBy).mockResolvedValue([
       { patientId: 'p1', status: 'COMPLETED', _count: { id: 8 } },
       { patientId: 'p1', status: 'NO_SHOW', _count: { id: 2 } },
     ] as any)
 
-    const aiPredictions = JSON.stringify([{
-      appointmentId: 'a1', riskScore: 45, riskLevel: 'MEDIUM',
-      factors: ['20% historical no-show rate'], recommendation: 'Send reminder',
-    }])
+    const aiPredictions = JSON.stringify([
+      {
+        appointmentId: 'a1',
+        riskScore: 45,
+        riskLevel: 'MEDIUM',
+        factors: ['20% historical no-show rate'],
+        recommendation: 'Send reminder',
+      },
+    ])
     mockComplete.mockResolvedValue({ content: aiPredictions, model: 'test-model' })
     mockExtractJSON.mockReturnValue(aiPredictions)
 
@@ -278,11 +296,19 @@ describe('GET /api/ai/no-show-risk', () => {
     vi.mocked(prisma.appointment.findMany)
       .mockResolvedValueOnce([
         {
-          id: 'a1', patientId: 'p1', status: 'CONFIRMED',
+          id: 'a1',
+          patientId: 'p1',
+          status: 'CONFIRMED',
           scheduledDate: new Date(now.getTime() + 86400000),
           scheduledTime: '14:00',
           appointmentType: 'CLEANING',
-          patient: { id: 'p1', firstName: 'Jane', lastName: 'Doe', phone: '1234567890', createdAt: new Date('2025-06-01') },
+          patient: {
+            id: 'p1',
+            firstName: 'Jane',
+            lastName: 'Doe',
+            phone: '1234567890',
+            createdAt: new Date('2025-06-01'),
+          },
           doctor: { id: 'd1', firstName: 'Dr', lastName: 'Jones' },
         },
       ] as any)
@@ -360,23 +386,29 @@ describe('GET /api/ai/pricing-suggestions', () => {
   it('returns pricing suggestions successfully', async () => {
     mockAuth()
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      name: 'Test Clinic', workingHours: '09:00-18:00',
+      name: 'Test Clinic',
+      workingHours: '09:00-18:00',
     } as any)
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([
       {
-        scheduledDate: new Date('2026-02-10'), scheduledTime: '10:00',
-        duration: 30, status: 'COMPLETED', doctorId: 'd1',
+        scheduledDate: new Date('2026-02-10'),
+        scheduledTime: '10:00',
+        duration: 30,
+        status: 'COMPLETED',
+        doctorId: 'd1',
         doctor: { firstName: 'Dr', lastName: 'Smith' },
       },
     ] as any)
-    vi.mocked(prisma.user.findMany).mockResolvedValue([
-      { id: 'd1', name: 'Dr Smith' },
-    ] as any)
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'd1', name: 'Dr Smith' }] as any)
     vi.mocked(prisma.procedure.findMany).mockResolvedValue([
       { id: 'pr1', name: 'Cleaning', basePrice: 500, category: 'Preventive' },
     ] as any)
     vi.mocked(prisma.invoice.findMany).mockResolvedValue([
-      { totalAmount: 5000, createdAt: new Date(), items: [{ description: 'Cleaning', amount: 500 }] },
+      {
+        totalAmount: 5000,
+        createdAt: new Date(),
+        items: [{ description: 'Cleaning', amount: 500 }],
+      },
     ] as any)
 
     const suggestions = { peakHours: ['10:00-12:00'], suggestedIncrease: '15%' }
@@ -401,7 +433,8 @@ describe('GET /api/ai/pricing-suggestions', () => {
   it('returns raw content when AI response is not parseable JSON', async () => {
     mockAuth()
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      name: 'Test Clinic', workingHours: '09:00-18:00',
+      name: 'Test Clinic',
+      workingHours: '09:00-18:00',
     } as any)
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([])
     vi.mocked(prisma.user.findMany).mockResolvedValue([])
@@ -427,7 +460,8 @@ describe('GET /api/ai/pricing-suggestions', () => {
   it('logs skill execution with token usage', async () => {
     mockAuth()
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      name: 'Test Clinic', workingHours: null,
+      name: 'Test Clinic',
+      workingHours: null,
     } as any)
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([])
     vi.mocked(prisma.user.findMany).mockResolvedValue([])

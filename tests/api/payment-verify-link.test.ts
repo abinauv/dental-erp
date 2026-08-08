@@ -90,62 +90,96 @@ describe('POST /api/payments/verify', () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue(null)
 
-    const res = await verifyPOST(makeReq('/api/payments/verify', 'POST', {
-      invoiceId: 'inv-none', orderId: 'order1', paymentId: 'pay1',
-    }))
+    const res = await verifyPOST(
+      makeReq('/api/payments/verify', 'POST', {
+        invoiceId: 'inv-none',
+        orderId: 'order1',
+        paymentId: 'pay1',
+      })
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns 400 when gateway not configured', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', balanceAmount: 5000, paidAmount: 0, totalAmount: 5000,
+      id: 'inv1',
+      balanceAmount: 5000,
+      paidAmount: 0,
+      totalAmount: 5000,
     } as any)
     vi.mocked(getGateway).mockResolvedValue(null)
 
-    const res = await verifyPOST(makeReq('/api/payments/verify', 'POST', {
-      invoiceId: 'inv1', orderId: 'order1', paymentId: 'pay1',
-    }))
+    const res = await verifyPOST(
+      makeReq('/api/payments/verify', 'POST', {
+        invoiceId: 'inv1',
+        orderId: 'order1',
+        paymentId: 'pay1',
+      })
+    )
     expect(res.status).toBe(400)
   })
 
   it('returns 400 when verification fails', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', balanceAmount: 5000, paidAmount: 0, totalAmount: 5000,
+      id: 'inv1',
+      balanceAmount: 5000,
+      paidAmount: 0,
+      totalAmount: 5000,
     } as any)
     vi.mocked(getGateway).mockResolvedValue({
       gateway: { verifyPayment: vi.fn().mockResolvedValue({ verified: false, status: 'FAILED' }) },
       credentials: { provider: 'RAZORPAY' },
     } as any)
 
-    const res = await verifyPOST(makeReq('/api/payments/verify', 'POST', {
-      invoiceId: 'inv1', orderId: 'order1', paymentId: 'pay1', signature: 'sig',
-    }))
+    const res = await verifyPOST(
+      makeReq('/api/payments/verify', 'POST', {
+        invoiceId: 'inv1',
+        orderId: 'order1',
+        paymentId: 'pay1',
+        signature: 'sig',
+      })
+    )
     expect(res.status).toBe(400)
   })
 
   it('verifies payment and creates record', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', balanceAmount: 5000, paidAmount: 0, totalAmount: 5000,
+      id: 'inv1',
+      balanceAmount: 5000,
+      paidAmount: 0,
+      totalAmount: 5000,
     } as any)
     vi.mocked(getGateway).mockResolvedValue({
       gateway: {
         verifyPayment: vi.fn().mockResolvedValue({
-          verified: true, status: 'CAPTURED', transactionId: 'txn123', amount: 5000,
+          verified: true,
+          status: 'CAPTURED',
+          transactionId: 'txn123',
+          amount: 5000,
         }),
       },
       credentials: { provider: 'RAZORPAY' },
     } as any)
     vi.mocked(prisma.payment.findFirst).mockResolvedValue({ paymentNo: 'PAY00010' } as any)
-    vi.mocked(prisma.$transaction).mockResolvedValue([{
-      id: 'pay1', paymentNo: 'PAY00011', amount: 5000,
-    }] as any)
+    vi.mocked(prisma.$transaction).mockResolvedValue([
+      {
+        id: 'pay1',
+        paymentNo: 'PAY00011',
+        amount: 5000,
+      },
+    ] as any)
 
-    const res = await verifyPOST(makeReq('/api/payments/verify', 'POST', {
-      invoiceId: 'inv1', orderId: 'order1', paymentId: 'pay1', signature: 'sig',
-    }))
+    const res = await verifyPOST(
+      makeReq('/api/payments/verify', 'POST', {
+        invoiceId: 'inv1',
+        orderId: 'order1',
+        paymentId: 'pay1',
+        signature: 'sig',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -185,7 +219,10 @@ describe('POST /api/payments/link', () => {
   it('returns 400 when invoice fully paid', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', invoiceNo: 'INV001', balanceAmount: 0, status: 'PAID',
+      id: 'inv1',
+      invoiceNo: 'INV001',
+      balanceAmount: 0,
+      status: 'PAID',
     } as any)
 
     const res = await linkPOST(makeReq('/api/payments/link', 'POST', { invoiceId: 'inv1' }))
@@ -197,7 +234,10 @@ describe('POST /api/payments/link', () => {
   it('returns 400 when gateway not enabled', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', invoiceNo: 'INV001', balanceAmount: 5000, status: 'PENDING',
+      id: 'inv1',
+      invoiceNo: 'INV001',
+      balanceAmount: 5000,
+      status: 'PENDING',
     } as any)
     vi.mocked(prisma.paymentGatewayConfig.findUnique).mockResolvedValue(null)
 
@@ -208,13 +248,18 @@ describe('POST /api/payments/link', () => {
   it('creates payment link successfully', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', invoiceNo: 'INV001', balanceAmount: 3000, status: 'PARTIALLY_PAID',
+      id: 'inv1',
+      invoiceNo: 'INV001',
+      balanceAmount: 3000,
+      status: 'PARTIALLY_PAID',
     } as any)
     vi.mocked(prisma.paymentGatewayConfig.findUnique).mockResolvedValue({
       isEnabled: true,
     } as any)
     vi.mocked(prisma.paymentLink.create).mockResolvedValue({
-      id: 'pl1', token: 'abc123', amount: 3000,
+      id: 'pl1',
+      token: 'abc123',
+      amount: 3000,
     } as any)
 
     const res = await linkPOST(makeReq('/api/payments/link', 'POST', { invoiceId: 'inv1' }))
@@ -243,7 +288,12 @@ describe('GET /api/settings/audit-logs', () => {
   it('returns audit logs with pagination', async () => {
     mockAuth()
     vi.mocked(prisma.auditLog.findMany).mockResolvedValue([
-      { id: 'al1', action: 'CREATE', entityType: 'Patient', user: { name: 'Admin', email: 'a@b.com', role: 'ADMIN' } },
+      {
+        id: 'al1',
+        action: 'CREATE',
+        entityType: 'Patient',
+        user: { name: 'Admin', email: 'a@b.com', role: 'ADMIN' },
+      },
     ] as any)
     vi.mocked(prisma.auditLog.count).mockResolvedValue(1)
 
@@ -261,7 +311,12 @@ describe('GET /api/settings/audit-logs', () => {
     vi.mocked(prisma.auditLog.findMany).mockResolvedValue([])
     vi.mocked(prisma.auditLog.count).mockResolvedValue(0)
 
-    await auditLogsGET(makeReq('/api/settings/audit-logs?userId=u1&entityType=Patient&action=CREATE&from=2026-01-01&to=2026-02-28', 'GET'))
+    await auditLogsGET(
+      makeReq(
+        '/api/settings/audit-logs?userId=u1&entityType=Patient&action=CREATE&from=2026-01-01&to=2026-02-28',
+        'GET'
+      )
+    )
 
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

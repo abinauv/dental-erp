@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
-import { useAI, type Suggestion } from "./ai-provider"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useAI, type Suggestion } from './ai-provider'
+import { cn } from '@/lib/utils'
 
 const URGENCY_STYLES: Record<string, string> = {
-  normal: "border-muted bg-muted/50 text-foreground",
-  warning: "border-amber-200 bg-amber-50 text-amber-900",
-  critical: "border-red-200 bg-red-50 text-red-900",
+  normal: 'border-muted bg-muted/50 text-foreground',
+  warning: 'border-amber-200 bg-amber-50 text-amber-900',
+  critical: 'border-red-200 bg-red-50 text-red-900',
 }
 
 /**
@@ -35,7 +35,7 @@ export function SmartSuggestions({ patientId }: { patientId?: string }) {
     if (result?.result?.message) {
       setFeedback(result.result.message)
     } else if (result?.result?.success) {
-      setFeedback("Done!")
+      setFeedback('Done!')
     }
     setExecuting(null)
     // Auto-clear feedback
@@ -49,7 +49,7 @@ export function SmartSuggestions({ patientId }: { patientId?: string }) {
           <div
             key={i}
             className={cn(
-              "rounded-lg border px-3 py-2 max-w-xs transition-colors",
+              'rounded-lg border px-3 py-2 max-w-xs transition-colors',
               URGENCY_STYLES[s.urgency] || URGENCY_STYLES.normal
             )}
           >
@@ -64,7 +64,7 @@ export function SmartSuggestions({ patientId }: { patientId?: string }) {
               disabled={executing === s.action}
               className="mt-2 text-xs underline underline-offset-2 hover:no-underline disabled:opacity-40 transition-opacity"
             >
-              {executing === s.action ? "Working…" : "Do this →"}
+              {executing === s.action ? 'Working…' : 'Do this →'}
             </button>
           </div>
         ))}

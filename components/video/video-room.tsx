@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Mic,
   MicOff,
@@ -19,7 +19,7 @@ import {
   AlertTriangle,
   Maximize,
   Minimize,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface PatientInfo {
   id: string
@@ -43,7 +43,7 @@ interface VideoRoomProps {
   roomUrl: string
   roomName: string
   token: string | null
-  provider: "daily" | "jitsi"
+  provider: 'daily' | 'jitsi'
   participantName: string
   isDoctor: boolean
   consultationId: string
@@ -72,7 +72,7 @@ export default function VideoRoom({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [startTime] = useState(Date.now())
-  const [notes, setNotes] = useState("")
+  const [notes, setNotes] = useState('')
   const [showSidebar, setShowSidebar] = useState(isDoctor)
   const [callActive, setCallActive] = useState(true)
 
@@ -89,15 +89,15 @@ export default function VideoRoom({
     const h = Math.floor(seconds / 3600)
     const m = Math.floor((seconds % 3600) / 60)
     const s = seconds % 60
-    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-    return `${m}:${String(s).padStart(2, "0")}`
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    return `${m}:${String(s).padStart(2, '0')}`
   }
 
   // Build iframe URL
   const getIframeUrl = useCallback(() => {
-    if (provider === "daily") {
+    if (provider === 'daily') {
       const url = new URL(roomUrl)
-      if (token) url.searchParams.set("t", token)
+      if (token) url.searchParams.set('t', token)
       return url.toString()
     }
     // Jitsi
@@ -123,8 +123,8 @@ export default function VideoRoom({
 
   useEffect(() => {
     const handleFs = () => setIsFullscreen(!!document.fullscreenElement)
-    document.addEventListener("fullscreenchange", handleFs)
-    return () => document.removeEventListener("fullscreenchange", handleFs)
+    document.addEventListener('fullscreenchange', handleFs)
+    return () => document.removeEventListener('fullscreenchange', handleFs)
   }, [])
 
   if (!callActive) {
@@ -133,9 +133,7 @@ export default function VideoRoom({
         <div className="text-center space-y-2">
           <Phone className="h-12 w-12 text-muted-foreground mx-auto" />
           <h2 className="text-xl font-semibold">Call Ended</h2>
-          <p className="text-muted-foreground">
-            Duration: {formatDuration(elapsed)}
-          </p>
+          <p className="text-muted-foreground">Duration: {formatDuration(elapsed)}</p>
         </div>
         {isDoctor && (
           <div className="w-full max-w-lg space-y-3">
@@ -179,7 +177,7 @@ export default function VideoRoom({
                 onClick={() => setShowSidebar(!showSidebar)}
               >
                 <FileText className="h-4 w-4 mr-1" />
-                {showSidebar ? "Hide" : "Show"} Panel
+                {showSidebar ? 'Hide' : 'Show'} Panel
               </Button>
             )}
             <Button
@@ -200,7 +198,7 @@ export default function VideoRoom({
             src={getIframeUrl()}
             className="w-full h-full min-h-[400px]"
             allow="camera; microphone; fullscreen; display-capture; autoplay"
-            style={{ border: "none" }}
+            style={{ border: 'none' }}
           />
         </div>
 
@@ -232,20 +230,26 @@ export default function VideoRoom({
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div>
-                  <span className="font-medium">{patient.firstName} {patient.lastName}</span>
+                  <span className="font-medium">
+                    {patient.firstName} {patient.lastName}
+                  </span>
                   <span className="text-muted-foreground ml-2">({patient.patientId})</span>
                 </div>
                 {patient.phone && <div className="text-muted-foreground">{patient.phone}</div>}
                 {patient.gender && (
-                  <div className="text-muted-foreground capitalize">{patient.gender.toLowerCase()}</div>
+                  <div className="text-muted-foreground capitalize">
+                    {patient.gender.toLowerCase()}
+                  </div>
                 )}
                 {patient.medicalHistory && (
                   <div className="space-y-1 pt-2 border-t">
-                    <div className="font-medium text-xs text-muted-foreground uppercase">Medical Alerts</div>
+                    <div className="font-medium text-xs text-muted-foreground uppercase">
+                      Medical Alerts
+                    </div>
                     {patient.medicalHistory.hasAllergies && (
                       <div className="flex items-center gap-1 text-red-600 text-xs">
                         <AlertTriangle className="h-3 w-3" />
-                        Allergies: {patient.medicalHistory.drugAllergies || "Yes"}
+                        Allergies: {patient.medicalHistory.drugAllergies || 'Yes'}
                       </div>
                     )}
                     {patient.medicalHistory.hasDiabetes && (
@@ -282,7 +286,7 @@ export default function VideoRoom({
                 <div className="text-muted-foreground">{appointment.appointmentNo}</div>
                 {appointment.chiefComplaint && (
                   <div>
-                    <span className="text-muted-foreground">Complaint:</span>{" "}
+                    <span className="text-muted-foreground">Complaint:</span>{' '}
                     {appointment.chiefComplaint}
                   </div>
                 )}

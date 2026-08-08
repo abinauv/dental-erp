@@ -1,26 +1,26 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { generateClaimNo } from "@/lib/billing-utils"
-import { InsuranceClaimStatus } from "@prisma/client"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { generateClaimNo } from '@/lib/billing-utils'
+import { InsuranceClaimStatus } from '@prisma/client'
 
 // GET - List insurance claims with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
-    const search = searchParams.get("search") || ""
-    const status = searchParams.get("status") || ""
-    const patientId = searchParams.get("patientId") || ""
-    const provider = searchParams.get("provider") || ""
-    const dateFrom = searchParams.get("dateFrom") || ""
-    const dateTo = searchParams.get("dateTo") || ""
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || ''
+    const patientId = searchParams.get('patientId') || ''
+    const provider = searchParams.get('provider') || ''
+    const dateFrom = searchParams.get('dateFrom') || ''
+    const dateTo = searchParams.get('dateTo') || ''
 
     const skip = (page - 1) * limit
 
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
               firstName: true,
               lastName: true,
               phone: true,
-            }
+            },
           },
           invoices: {
             select: {
@@ -81,32 +81,32 @@ export async function GET(request: NextRequest) {
               invoiceNo: true,
               totalAmount: true,
               insuranceAmount: true,
-            }
-          }
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: 'desc',
         },
         skip,
         take: limit,
       }),
-      prisma.insuranceClaim.count({ where })
+      prisma.insuranceClaim.count({ where }),
     ])
 
     // Calculate summary stats
     const [totalClaimed, totalApproved, totalSettled] = await Promise.all([
       prisma.insuranceClaim.aggregate({
-        where: { hospitalId, status: { not: "DRAFT" } },
-        _sum: { claimAmount: true }
+        where: { hospitalId, status: { not: 'DRAFT' } },
+        _sum: { claimAmount: true },
       }),
       prisma.insuranceClaim.aggregate({
-        where: { hospitalId, status: { in: ["APPROVED", "PARTIALLY_APPROVED", "SETTLED"] } },
-        _sum: { approvedAmount: true }
+        where: { hospitalId, status: { in: ['APPROVED', 'PARTIALLY_APPROVED', 'SETTLED'] } },
+        _sum: { approvedAmount: true },
       }),
       prisma.insuranceClaim.aggregate({
-        where: { hospitalId, status: "SETTLED" },
-        _sum: { settledAmount: true }
-      })
+        where: { hospitalId, status: 'SETTLED' },
+        _sum: { settledAmount: true },
+      }),
     ])
 
     return NextResponse.json({
@@ -120,15 +120,12 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching insurance claims:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch insurance claims" },
-      { status: 500 }
-    )
+    console.error('Error fetching insurance claims:', error)
+    return NextResponse.json({ error: 'Failed to fetch insurance claims' }, { status: 500 })
   }
 }
 
@@ -136,12 +133,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "ACCOUNTANT"].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to create insurance claims" },
         { status: 403 }
@@ -161,42 +158,27 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!patientId) {
-      return NextResponse.json(
-        { error: "Patient is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Patient is required' }, { status: 400 })
     }
 
     if (!insuranceProvider) {
-      return NextResponse.json(
-        { error: "Insurance provider is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Insurance provider is required' }, { status: 400 })
     }
 
     if (!policyNumber) {
-      return NextResponse.json(
-        { error: "Policy number is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Policy number is required' }, { status: 400 })
     }
 
     if (!claimAmount || claimAmount <= 0) {
-      return NextResponse.json(
-        { error: "Valid claim amount is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Valid claim amount is required' }, { status: 400 })
     }
 
     // Check if patient exists
     const patient = await prisma.patient.findUnique({
-      where: { id: patientId, hospitalId }
+      where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json(
-        { error: "Patient not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Validate invoices if provided
@@ -205,8 +187,8 @@ export async function POST(request: NextRequest) {
         where: {
           id: { in: invoiceIds },
           patientId: patientId,
-          hospitalId
-        }
+          hospitalId,
+        },
       })
 
       if (invoices.length !== invoiceIds.length) {
@@ -229,17 +211,17 @@ export async function POST(request: NextRequest) {
         insuranceProvider,
         policyNumber,
         claimAmount,
-        status: "DRAFT",
+        status: 'DRAFT',
         notes,
         documents,
-      }
+      },
     })
 
     // Link invoices to claim if provided
     if (invoiceIds.length > 0) {
       await prisma.invoice.updateMany({
         where: { id: { in: invoiceIds }, hospitalId },
-        data: { insuranceClaimId: claim.id }
+        data: { insuranceClaimId: claim.id },
       })
     }
 
@@ -254,17 +236,14 @@ export async function POST(request: NextRequest) {
             firstName: true,
             lastName: true,
             phone: true,
-          }
+          },
         },
-      }
+      },
     })
 
     return NextResponse.json(fullClaim, { status: 201 })
   } catch (error) {
-    console.error("Error creating insurance claim:", error)
-    return NextResponse.json(
-      { error: "Failed to create insurance claim" },
-      { status: 500 }
-    )
+    console.error('Error creating insurance claim:', error)
+    return NextResponse.json({ error: 'Failed to create insurance claim' }, { status: 500 })
   }
 }

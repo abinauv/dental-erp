@@ -1,11 +1,11 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const billingAgent: Skill = {
-  name: "billing-agent",
-  displayName: "Billing Agent",
-  description: "Invoice generation, GST calculation, and payment reminder handling",
-  allowedRoles: ["ADMIN", "ACCOUNTANT"],
-  modelTier: "billing",
+  name: 'billing-agent',
+  displayName: 'Billing Agent',
+  description: 'Invoice generation, GST calculation, and payment reminder handling',
+  allowedRoles: ['ADMIN', 'ACCOUNTANT'],
+  modelTier: 'billing',
   systemPrompt: (hospitalName, contextStr) => `You handle billing operations for ${hospitalName}.
 
 CONTEXT:

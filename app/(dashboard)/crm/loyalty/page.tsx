@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -15,16 +15,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Gift, Plus, Minus, Search, TrendingUp, Star, ArrowLeft, Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/select'
+import { Gift, Plus, Minus, Search, TrendingUp, Star, ArrowLeft, Loader2 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -54,33 +54,33 @@ interface Pagination {
   totalPages: number
 }
 
-type PointType = "VISIT" | "REFERRAL" | "TREATMENT" | "BIRTHDAY" | "SIGNUP" | "REDEMPTION"
+type PointType = 'VISIT' | 'REFERRAL' | 'TREATMENT' | 'BIRTHDAY' | 'SIGNUP' | 'REDEMPTION'
 
 const AWARD_TYPES: { value: PointType; label: string }[] = [
-  { value: "VISIT", label: "Visit" },
-  { value: "REFERRAL", label: "Referral" },
-  { value: "TREATMENT", label: "Treatment" },
-  { value: "BIRTHDAY", label: "Birthday" },
-  { value: "SIGNUP", label: "Sign-up" },
+  { value: 'VISIT', label: 'Visit' },
+  { value: 'REFERRAL', label: 'Referral' },
+  { value: 'TREATMENT', label: 'Treatment' },
+  { value: 'BIRTHDAY', label: 'Birthday' },
+  { value: 'SIGNUP', label: 'Sign-up' },
 ]
 
-const ALL_TYPES: { value: PointType | "ALL"; label: string }[] = [
-  { value: "ALL", label: "All Types" },
-  { value: "VISIT", label: "Visit" },
-  { value: "REFERRAL", label: "Referral" },
-  { value: "TREATMENT", label: "Treatment" },
-  { value: "BIRTHDAY", label: "Birthday" },
-  { value: "SIGNUP", label: "Sign-up" },
-  { value: "REDEMPTION", label: "Redemption" },
+const ALL_TYPES: { value: PointType | 'ALL'; label: string }[] = [
+  { value: 'ALL', label: 'All Types' },
+  { value: 'VISIT', label: 'Visit' },
+  { value: 'REFERRAL', label: 'Referral' },
+  { value: 'TREATMENT', label: 'Treatment' },
+  { value: 'BIRTHDAY', label: 'Birthday' },
+  { value: 'SIGNUP', label: 'Sign-up' },
+  { value: 'REDEMPTION', label: 'Redemption' },
 ]
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  VISIT: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-  REFERRAL: "bg-green-100 text-green-800 hover:bg-green-100",
-  TREATMENT: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-  REDEMPTION: "bg-red-100 text-red-800 hover:bg-red-100",
-  BIRTHDAY: "bg-amber-100 text-amber-800 hover:bg-amber-100",
-  SIGNUP: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100",
+  VISIT: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
+  REFERRAL: 'bg-green-100 text-green-800 hover:bg-green-100',
+  TREATMENT: 'bg-purple-100 text-purple-800 hover:bg-purple-100',
+  REDEMPTION: 'bg-red-100 text-red-800 hover:bg-red-100',
+  BIRTHDAY: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
+  SIGNUP: 'bg-cyan-100 text-cyan-800 hover:bg-cyan-100',
 }
 
 // ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 function usePatientSearch() {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const [results, setResults] = useState<Patient[]>([])
   const [searching, setSearching] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -112,7 +112,7 @@ function usePatientSearch() {
         const res = await fetch(`/api/patients?search=${encodeURIComponent(value.trim())}&limit=5`)
         if (res.ok) {
           const data = await res.json()
-          const patients = Array.isArray(data) ? data : data.patients ?? []
+          const patients = Array.isArray(data) ? data : (data.patients ?? [])
           setResults(patients)
         }
       } catch {
@@ -124,7 +124,7 @@ function usePatientSearch() {
   }, [])
 
   const clear = useCallback(() => {
-    setQuery("")
+    setQuery('')
     setResults([])
     setShowDropdown(false)
   }, [])
@@ -143,23 +143,28 @@ export default function LoyaltyPage() {
   const awardSearch = usePatientSearch()
   const [awardPatient, setAwardPatient] = useState<Patient | null>(null)
   const [awardBalance, setAwardBalance] = useState<number | null>(null)
-  const [awardPoints, setAwardPoints] = useState("")
-  const [awardType, setAwardType] = useState<PointType>("VISIT")
-  const [awardDesc, setAwardDesc] = useState("")
+  const [awardPoints, setAwardPoints] = useState('')
+  const [awardType, setAwardType] = useState<PointType>('VISIT')
+  const [awardDesc, setAwardDesc] = useState('')
   const [awardSubmitting, setAwardSubmitting] = useState(false)
 
   // ---- Redeem state ----
   const redeemSearch = usePatientSearch()
   const [redeemPatient, setRedeemPatient] = useState<Patient | null>(null)
   const [redeemBalance, setRedeemBalance] = useState<number | null>(null)
-  const [redeemPoints, setRedeemPoints] = useState("")
-  const [redeemDesc, setRedeemDesc] = useState("")
+  const [redeemPoints, setRedeemPoints] = useState('')
+  const [redeemDesc, setRedeemDesc] = useState('')
   const [redeemSubmitting, setRedeemSubmitting] = useState(false)
 
   // ---- Transaction log state ----
   const [transactions, setTransactions] = useState<LoyaltyTransaction[]>([])
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 })
-  const [filterType, setFilterType] = useState<PointType | "ALL">("ALL")
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  })
+  const [filterType, setFilterType] = useState<PointType | 'ALL'>('ALL')
   const [logLoading, setLogLoading] = useState(true)
 
   // -------------------------------------------------------------------
@@ -179,44 +184,53 @@ export default function LoyaltyPage() {
   // -------------------------------------------------------------------
   // Select patient for Award
   // -------------------------------------------------------------------
-  const selectAwardPatient = useCallback(async (patient: Patient) => {
-    setAwardPatient(patient)
-    awardSearch.setShowDropdown(false)
-    awardSearch.search("")
-    const bal = await fetchBalance(patient.id)
-    setAwardBalance(bal)
-  }, [awardSearch, fetchBalance])
+  const selectAwardPatient = useCallback(
+    async (patient: Patient) => {
+      setAwardPatient(patient)
+      awardSearch.setShowDropdown(false)
+      awardSearch.search('')
+      const bal = await fetchBalance(patient.id)
+      setAwardBalance(bal)
+    },
+    [awardSearch, fetchBalance]
+  )
 
   // -------------------------------------------------------------------
   // Select patient for Redeem
   // -------------------------------------------------------------------
-  const selectRedeemPatient = useCallback(async (patient: Patient) => {
-    setRedeemPatient(patient)
-    redeemSearch.setShowDropdown(false)
-    redeemSearch.search("")
-    const bal = await fetchBalance(patient.id)
-    setRedeemBalance(bal)
-  }, [redeemSearch, fetchBalance])
+  const selectRedeemPatient = useCallback(
+    async (patient: Patient) => {
+      setRedeemPatient(patient)
+      redeemSearch.setShowDropdown(false)
+      redeemSearch.search('')
+      const bal = await fetchBalance(patient.id)
+      setRedeemBalance(bal)
+    },
+    [redeemSearch, fetchBalance]
+  )
 
   // -------------------------------------------------------------------
   // Fetch transaction log
   // -------------------------------------------------------------------
-  const fetchTransactions = useCallback(async (page: number = 1) => {
-    setLogLoading(true)
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: "20" })
-      if (filterType !== "ALL") params.set("type", filterType)
-      const res = await fetch(`/api/loyalty?${params.toString()}`)
-      if (!res.ok) throw new Error("Failed to load")
-      const data = await res.json()
-      setTransactions(data.transactions ?? [])
-      setPagination(data.pagination ?? { page, limit: 20, total: 0, totalPages: 0 })
-    } catch {
-      toast({ title: "Failed to load transactions", variant: "destructive" })
-    } finally {
-      setLogLoading(false)
-    }
-  }, [filterType, toast])
+  const fetchTransactions = useCallback(
+    async (page: number = 1) => {
+      setLogLoading(true)
+      try {
+        const params = new URLSearchParams({ page: String(page), limit: '20' })
+        if (filterType !== 'ALL') params.set('type', filterType)
+        const res = await fetch(`/api/loyalty?${params.toString()}`)
+        if (!res.ok) throw new Error('Failed to load')
+        const data = await res.json()
+        setTransactions(data.transactions ?? [])
+        setPagination(data.pagination ?? { page, limit: 20, total: 0, totalPages: 0 })
+      } catch {
+        toast({ title: 'Failed to load transactions', variant: 'destructive' })
+      } finally {
+        setLogLoading(false)
+      }
+    },
+    [filterType, toast]
+  )
 
   useEffect(() => {
     fetchTransactions(1)
@@ -228,20 +242,20 @@ export default function LoyaltyPage() {
   async function handleAward(e: React.FormEvent) {
     e.preventDefault()
     if (!awardPatient) {
-      toast({ title: "Please select a patient", variant: "destructive" })
+      toast({ title: 'Please select a patient', variant: 'destructive' })
       return
     }
     const pts = parseInt(awardPoints)
     if (!pts || pts <= 0) {
-      toast({ title: "Points must be a positive number", variant: "destructive" })
+      toast({ title: 'Points must be a positive number', variant: 'destructive' })
       return
     }
 
     setAwardSubmitting(true)
     try {
-      const res = await fetch("/api/loyalty", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/loyalty', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: awardPatient.id,
           points: pts,
@@ -250,24 +264,26 @@ export default function LoyaltyPage() {
         }),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }))
-        throw new Error(err.error || "Failed to award points")
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(err.error || 'Failed to award points')
       }
 
-      toast({ title: `+${pts} points awarded to ${awardPatient.firstName} ${awardPatient.lastName}` })
+      toast({
+        title: `+${pts} points awarded to ${awardPatient.firstName} ${awardPatient.lastName}`,
+      })
 
       // Reset form
       setAwardPatient(null)
       setAwardBalance(null)
-      setAwardPoints("")
-      setAwardType("VISIT")
-      setAwardDesc("")
+      setAwardPoints('')
+      setAwardType('VISIT')
+      setAwardDesc('')
       awardSearch.clear()
 
       // Refresh log
       fetchTransactions(1)
     } catch (error: any) {
-      toast({ title: error.message || "Failed to award points", variant: "destructive" })
+      toast({ title: error.message || 'Failed to award points', variant: 'destructive' })
     } finally {
       setAwardSubmitting(false)
     }
@@ -279,49 +295,51 @@ export default function LoyaltyPage() {
   async function handleRedeem(e: React.FormEvent) {
     e.preventDefault()
     if (!redeemPatient) {
-      toast({ title: "Please select a patient", variant: "destructive" })
+      toast({ title: 'Please select a patient', variant: 'destructive' })
       return
     }
     const pts = parseInt(redeemPoints)
     if (!pts || pts <= 0) {
-      toast({ title: "Points must be a positive number", variant: "destructive" })
+      toast({ title: 'Points must be a positive number', variant: 'destructive' })
       return
     }
     if (redeemBalance !== null && pts > redeemBalance) {
-      toast({ title: "Insufficient points balance", variant: "destructive" })
+      toast({ title: 'Insufficient points balance', variant: 'destructive' })
       return
     }
 
     setRedeemSubmitting(true)
     try {
-      const res = await fetch("/api/loyalty", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/loyalty', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: redeemPatient.id,
           points: -pts,
-          type: "REDEMPTION",
-          description: redeemDesc || "Points redeemed",
+          type: 'REDEMPTION',
+          description: redeemDesc || 'Points redeemed',
         }),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }))
-        throw new Error(err.error || "Failed to redeem points")
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(err.error || 'Failed to redeem points')
       }
 
-      toast({ title: `-${pts} points redeemed for ${redeemPatient.firstName} ${redeemPatient.lastName}` })
+      toast({
+        title: `-${pts} points redeemed for ${redeemPatient.firstName} ${redeemPatient.lastName}`,
+      })
 
       // Reset form
       setRedeemPatient(null)
       setRedeemBalance(null)
-      setRedeemPoints("")
-      setRedeemDesc("")
+      setRedeemPoints('')
+      setRedeemDesc('')
       redeemSearch.clear()
 
       // Refresh log
       fetchTransactions(1)
     } catch (error: any) {
-      toast({ title: error.message || "Failed to redeem points", variant: "destructive" })
+      toast({ title: error.message || 'Failed to redeem points', variant: 'destructive' })
     } finally {
       setRedeemSubmitting(false)
     }
@@ -408,27 +426,28 @@ export default function LoyaltyPage() {
                       }}
                       className="pl-9"
                     />
-                    {awardSearch.showDropdown && (awardSearch.results.length > 0 || awardSearch.searching) && (
-                      <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
-                        {awardSearch.searching ? (
-                          <div className="p-3 text-sm text-muted-foreground">Searching...</div>
-                        ) : (
-                          awardSearch.results.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-accent text-sm"
-                              onClick={() => selectAwardPatient(p)}
-                            >
-                              <span className="font-medium">
-                                {p.firstName} {p.lastName}
-                              </span>
-                              <span className="text-muted-foreground">{p.phone}</span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
+                    {awardSearch.showDropdown &&
+                      (awardSearch.results.length > 0 || awardSearch.searching) && (
+                        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+                          {awardSearch.searching ? (
+                            <div className="p-3 text-sm text-muted-foreground">Searching...</div>
+                          ) : (
+                            awardSearch.results.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-accent text-sm"
+                                onClick={() => selectAwardPatient(p)}
+                              >
+                                <span className="font-medium">
+                                  {p.firstName} {p.lastName}
+                                </span>
+                                <span className="text-muted-foreground">{p.phone}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -550,27 +569,28 @@ export default function LoyaltyPage() {
                       }}
                       className="pl-9"
                     />
-                    {redeemSearch.showDropdown && (redeemSearch.results.length > 0 || redeemSearch.searching) && (
-                      <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
-                        {redeemSearch.searching ? (
-                          <div className="p-3 text-sm text-muted-foreground">Searching...</div>
-                        ) : (
-                          redeemSearch.results.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-accent text-sm"
-                              onClick={() => selectRedeemPatient(p)}
-                            >
-                              <span className="font-medium">
-                                {p.firstName} {p.lastName}
-                              </span>
-                              <span className="text-muted-foreground">{p.phone}</span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
+                    {redeemSearch.showDropdown &&
+                      (redeemSearch.results.length > 0 || redeemSearch.searching) && (
+                        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+                          {redeemSearch.searching ? (
+                            <div className="p-3 text-sm text-muted-foreground">Searching...</div>
+                          ) : (
+                            redeemSearch.results.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-accent text-sm"
+                                onClick={() => selectRedeemPatient(p)}
+                              >
+                                <span className="font-medium">
+                                  {p.firstName} {p.lastName}
+                                </span>
+                                <span className="text-muted-foreground">{p.phone}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -653,7 +673,10 @@ export default function LoyaltyPage() {
               <CardDescription>Recent loyalty point transactions</CardDescription>
             </div>
             <div className="w-48">
-              <Select value={filterType} onValueChange={(v) => setFilterType(v as PointType | "ALL")}>
+              <Select
+                value={filterType}
+                onValueChange={(v) => setFilterType(v as PointType | 'ALL')}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
@@ -697,10 +720,10 @@ export default function LoyaltyPage() {
                     {transactions.map((tx) => (
                       <TableRow key={tx.id}>
                         <TableCell className="whitespace-nowrap text-sm">
-                          {new Date(tx.createdAt).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
+                          {new Date(tx.createdAt).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
                           })}
                         </TableCell>
                         <TableCell className="font-medium">
@@ -709,10 +732,7 @@ export default function LoyaltyPage() {
                             : tx.patientId}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={TYPE_BADGE_COLORS[tx.type] || ""}
-                          >
+                          <Badge variant="secondary" className={TYPE_BADGE_COLORS[tx.type] || ''}>
                             {tx.type}
                           </Badge>
                         </TableCell>

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 // GET: List pending/completed forms for the patient
 export async function GET(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
           select: { id: true, name: true, type: true, description: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     })
 
     // Get active templates available for this hospital (for new submissions)
@@ -37,13 +37,13 @@ export async function GET(req: NextRequest) {
         type: true,
         description: true,
       },
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
     })
 
     return NextResponse.json({ submissions, availableTemplates })
   } catch (err) {
-    console.error("Patient forms error:", err)
-    return NextResponse.json({ error: "Failed to load forms" }, { status: 500 })
+    console.error('Patient forms error:', err)
+    return NextResponse.json({ error: 'Failed to load forms' }, { status: 500 })
   }
 }
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const { templateId, data, signature, appointmentId } = body
 
     if (!templateId) {
-      return NextResponse.json({ error: "templateId is required" }, { status: 400 })
+      return NextResponse.json({ error: 'templateId is required' }, { status: 400 })
     }
 
     const hospitalId = patient!.hospitalId
@@ -68,12 +68,14 @@ export async function POST(req: NextRequest) {
       where: { id: templateId, hospitalId, isActive: true },
     })
     if (!template) {
-      return NextResponse.json({ error: "Form template not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Form template not found' }, { status: 404 })
     }
 
     // Get client IP
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") || "unknown"
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      'unknown'
 
     const submission = await prisma.formSubmission.create({
       data: {
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ submission }, { status: 201 })
   } catch (err) {
-    console.error("Patient form submit error:", err)
-    return NextResponse.json({ error: "Failed to submit form" }, { status: 500 })
+    console.error('Patient form submit error:', err)
+    return NextResponse.json({ error: 'Failed to submit form' }, { status: 500 })
   }
 }

@@ -1,27 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  FileCheck,
-} from "lucide-react"
-import { formatCurrency } from "@/lib/billing-utils"
+} from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { ArrowLeft, Plus, Trash2, FileCheck } from 'lucide-react'
+import { formatCurrency } from '@/lib/billing-utils'
 
 interface Patient {
   id: string
@@ -51,11 +46,11 @@ export default function NewPreAuthPage() {
   const { toast } = useToast()
   const [patients, setPatients] = useState<Patient[]>([])
   const [policies, setPolicies] = useState<Policy[]>([])
-  const [patientSearch, setPatientSearch] = useState("")
+  const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  const [selectedPolicyId, setSelectedPolicyId] = useState("")
-  const [procedures, setProcedures] = useState<Procedure[]>([{ name: "", code: "", cost: "" }])
-  const [notes, setNotes] = useState("")
+  const [selectedPolicyId, setSelectedPolicyId] = useState('')
+  const [procedures, setProcedures] = useState<Procedure[]>([{ name: '', code: '', cost: '' }])
+  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
   // Search patients
@@ -66,7 +61,9 @@ export default function NewPreAuthPage() {
     }
     const timeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/patients?search=${encodeURIComponent(patientSearch)}&limit=10`)
+        const res = await fetch(
+          `/api/patients?search=${encodeURIComponent(patientSearch)}&limit=10`
+        )
         if (res.ok) {
           const data = await res.json()
           setPatients(data.patients || [])
@@ -80,7 +77,7 @@ export default function NewPreAuthPage() {
   useEffect(() => {
     if (!selectedPatient) {
       setPolicies([])
-      setSelectedPolicyId("")
+      setSelectedPolicyId('')
       return
     }
     const fetchPolicies = async () => {
@@ -96,7 +93,7 @@ export default function NewPreAuthPage() {
   }, [selectedPatient])
 
   const addProcedure = () => {
-    setProcedures([...procedures, { name: "", code: "", cost: "" }])
+    setProcedures([...procedures, { name: '', code: '', cost: '' }])
   }
 
   const removeProcedure = (index: number) => {
@@ -114,24 +111,24 @@ export default function NewPreAuthPage() {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !selectedPolicyId) {
-      toast({ title: "Please select a patient and insurance policy", variant: "destructive" })
+      toast({ title: 'Please select a patient and insurance policy', variant: 'destructive' })
       return
     }
     const validProcedures = procedures.filter((p) => p.name.trim())
     if (validProcedures.length === 0) {
-      toast({ title: "Add at least one procedure", variant: "destructive" })
+      toast({ title: 'Add at least one procedure', variant: 'destructive' })
       return
     }
     if (totalCost <= 0) {
-      toast({ title: "Total estimated cost must be greater than 0", variant: "destructive" })
+      toast({ title: 'Total estimated cost must be greater than 0', variant: 'destructive' })
       return
     }
 
     setSaving(true)
     try {
-      const res = await fetch("/api/pre-authorizations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/pre-authorizations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
           insurancePolicyId: selectedPolicyId,
@@ -147,13 +144,13 @@ export default function NewPreAuthPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Failed to create")
+        throw new Error(data.error || 'Failed to create')
       }
 
-      toast({ title: "Pre-authorization request created" })
-      router.push("/billing/insurance/pre-auth")
+      toast({ title: 'Pre-authorization request created' })
+      router.push('/billing/insurance/pre-auth')
     } catch (err: any) {
-      toast({ title: err.message, variant: "destructive" })
+      toast({ title: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -182,10 +179,19 @@ export default function NewPreAuthPage() {
           {selectedPatient ? (
             <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
               <div>
-                <p className="font-medium">{selectedPatient.firstName} {selectedPatient.lastName}</p>
+                <p className="font-medium">
+                  {selectedPatient.firstName} {selectedPatient.lastName}
+                </p>
                 <p className="text-sm text-muted-foreground">{selectedPatient.patientId}</p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => { setSelectedPatient(null); setPatientSearch("") }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedPatient(null)
+                  setPatientSearch('')
+                }}
+              >
                 Change
               </Button>
             </div>
@@ -205,11 +211,13 @@ export default function NewPreAuthPage() {
                       className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
                       onClick={() => {
                         setSelectedPatient(p)
-                        setPatientSearch("")
+                        setPatientSearch('')
                         setPatients([])
                       }}
                     >
-                      <span className="font-medium">{p.firstName} {p.lastName}</span>
+                      <span className="font-medium">
+                        {p.firstName} {p.lastName}
+                      </span>
                       <span className="text-muted-foreground ml-2">{p.patientId}</span>
                     </button>
                   ))}
@@ -228,7 +236,9 @@ export default function NewPreAuthPage() {
           </CardHeader>
           <CardContent>
             {policies.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active insurance policies found for this patient.</p>
+              <p className="text-sm text-muted-foreground">
+                No active insurance policies found for this patient.
+              </p>
             ) : (
               <div className="space-y-3">
                 <Select value={selectedPolicyId} onValueChange={setSelectedPolicyId}>
@@ -256,13 +266,17 @@ export default function NewPreAuthPage() {
                     {selectedPolicy.annualMaximum && (
                       <div>
                         <p className="text-muted-foreground">Annual Maximum</p>
-                        <p className="font-medium">{formatCurrency(Number(selectedPolicy.annualMaximum))}</p>
+                        <p className="font-medium">
+                          {formatCurrency(Number(selectedPolicy.annualMaximum))}
+                        </p>
                       </div>
                     )}
                     {selectedPolicy.remainingAmount != null && (
                       <div>
                         <p className="text-muted-foreground">Remaining</p>
-                        <p className="font-medium text-green-600">{formatCurrency(Number(selectedPolicy.remainingAmount))}</p>
+                        <p className="font-medium text-green-600">
+                          {formatCurrency(Number(selectedPolicy.remainingAmount))}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -293,7 +307,7 @@ export default function NewPreAuthPage() {
                     <Input
                       placeholder="e.g., Root Canal Treatment"
                       value={proc.name}
-                      onChange={(e) => updateProcedure(i, "name", e.target.value)}
+                      onChange={(e) => updateProcedure(i, 'name', e.target.value)}
                     />
                   </div>
                   <div className="col-span-3">
@@ -301,7 +315,7 @@ export default function NewPreAuthPage() {
                     <Input
                       placeholder="e.g., D3310"
                       value={proc.code}
-                      onChange={(e) => updateProcedure(i, "code", e.target.value)}
+                      onChange={(e) => updateProcedure(i, 'code', e.target.value)}
                     />
                   </div>
                   <div className="col-span-3">
@@ -310,7 +324,7 @@ export default function NewPreAuthPage() {
                       type="number"
                       placeholder="0"
                       value={proc.cost}
-                      onChange={(e) => updateProcedure(i, "cost", e.target.value)}
+                      onChange={(e) => updateProcedure(i, 'cost', e.target.value)}
                     />
                   </div>
                   <div className="col-span-1">
@@ -349,10 +363,12 @@ export default function NewPreAuthPage() {
               rows={3}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
+              <Button variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
               <Button onClick={handleSubmit} disabled={saving}>
                 <FileCheck className="h-4 w-4 mr-2" />
-                {saving ? "Creating..." : "Create Pre-Authorization"}
+                {saving ? 'Creating...' : 'Create Pre-Authorization'}
               </Button>
             </div>
           </CardContent>

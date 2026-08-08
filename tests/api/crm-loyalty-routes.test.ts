@@ -65,22 +65,22 @@ describe('GET /api/crm/dashboard', () => {
     mockAuth()
     // 9 parallel queries
     vi.mocked(prisma.patientMembership.count)
-      .mockResolvedValueOnce(5)  // active memberships
-      .mockResolvedValueOnce(8)  // total memberships
+      .mockResolvedValueOnce(5) // active memberships
+      .mockResolvedValueOnce(8) // total memberships
     vi.mocked(prisma.patientMembership.findMany).mockResolvedValue([
       { plan: { price: 1000 } },
       { plan: { price: 2000 } },
     ] as any)
     vi.mocked(prisma.referral.count)
-      .mockResolvedValueOnce(20)  // total referrals
-      .mockResolvedValueOnce(8)   // converted
-      .mockResolvedValueOnce(3)   // rewarded
+      .mockResolvedValueOnce(20) // total referrals
+      .mockResolvedValueOnce(8) // converted
+      .mockResolvedValueOnce(3) // rewarded
     vi.mocked(prisma.loyaltyTransaction.aggregate).mockResolvedValue({
       _sum: { points: 5000 },
     } as any)
     vi.mocked(prisma.patient.count)
-      .mockResolvedValueOnce(100)  // totalActive
-      .mockResolvedValueOnce(75)   // recentVisitors
+      .mockResolvedValueOnce(100) // totalActive
+      .mockResolvedValueOnce(75) // recentVisitors
 
     const res = await crmDashboardGET(makeReq('/api/crm/dashboard'))
     const body = await res.json()
@@ -143,9 +143,14 @@ describe('POST /api/loyalty', () => {
 
   it('returns 403 for unauthorized role', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
-    const res = await loyaltyPOST(makeReq('/api/loyalty', 'POST', {
-      patientId: 'p1', points: 100, type: 'EARNED', description: 'Visit',
-    }))
+    const res = await loyaltyPOST(
+      makeReq('/api/loyalty', 'POST', {
+        patientId: 'p1',
+        points: 100,
+        type: 'EARNED',
+        description: 'Visit',
+      })
+    )
     expect(res.status).toBe(403)
   })
 
@@ -160,9 +165,14 @@ describe('POST /api/loyalty', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue(null)
 
-    const res = await loyaltyPOST(makeReq('/api/loyalty', 'POST', {
-      patientId: 'p-none', points: 100, type: 'EARNED', description: 'Visit',
-    }))
+    const res = await loyaltyPOST(
+      makeReq('/api/loyalty', 'POST', {
+        patientId: 'p-none',
+        points: 100,
+        type: 'EARNED',
+        description: 'Visit',
+      })
+    )
     expect(res.status).toBe(404)
   })
 
@@ -173,9 +183,14 @@ describe('POST /api/loyalty', () => {
       _sum: { points: 50 },
     } as any)
 
-    const res = await loyaltyPOST(makeReq('/api/loyalty', 'POST', {
-      patientId: 'p1', points: -100, type: 'REDEEMED', description: 'Discount',
-    }))
+    const res = await loyaltyPOST(
+      makeReq('/api/loyalty', 'POST', {
+        patientId: 'p1',
+        points: -100,
+        type: 'REDEEMED',
+        description: 'Discount',
+      })
+    )
     const body = await res.json()
     expect(res.status).toBe(400)
     expect(body.error).toContain('Insufficient')
@@ -185,12 +200,19 @@ describe('POST /api/loyalty', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.loyaltyTransaction.create).mockResolvedValue({
-      id: 'lt1', points: 100, type: 'EARNED',
+      id: 'lt1',
+      points: 100,
+      type: 'EARNED',
     } as any)
 
-    const res = await loyaltyPOST(makeReq('/api/loyalty', 'POST', {
-      patientId: 'p1', points: 100, type: 'EARNED', description: 'Visit reward',
-    }))
+    const res = await loyaltyPOST(
+      makeReq('/api/loyalty', 'POST', {
+        patientId: 'p1',
+        points: 100,
+        type: 'EARNED',
+        description: 'Visit reward',
+      })
+    )
     expect(res.status).toBe(201)
   })
 })
@@ -240,37 +262,56 @@ describe('POST /api/memberships/plans', () => {
 
   it('returns 403 for non-admin', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
-    const res = await plansPOST(makeReq('/api/memberships/plans', 'POST', {
-      name: 'Basic', price: 500, duration: 12,
-    }))
+    const res = await plansPOST(
+      makeReq('/api/memberships/plans', 'POST', {
+        name: 'Basic',
+        price: 500,
+        duration: 12,
+      })
+    )
     expect(res.status).toBe(403)
   })
 
   it('returns 400 when name missing', async () => {
     mockAuth()
-    const res = await plansPOST(makeReq('/api/memberships/plans', 'POST', {
-      price: 500, duration: 12,
-    }))
+    const res = await plansPOST(
+      makeReq('/api/memberships/plans', 'POST', {
+        price: 500,
+        duration: 12,
+      })
+    )
     expect(res.status).toBe(400)
   })
 
   it('returns 400 for invalid price', async () => {
     mockAuth()
-    const res = await plansPOST(makeReq('/api/memberships/plans', 'POST', {
-      name: 'Basic', price: -10, duration: 12,
-    }))
+    const res = await plansPOST(
+      makeReq('/api/memberships/plans', 'POST', {
+        name: 'Basic',
+        price: -10,
+        duration: 12,
+      })
+    )
     expect(res.status).toBe(400)
   })
 
   it('creates membership plan', async () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.create).mockResolvedValue({
-      id: 'mp1', name: 'Gold', price: 1999, duration: 12,
+      id: 'mp1',
+      name: 'Gold',
+      price: 1999,
+      duration: 12,
     } as any)
 
-    const res = await plansPOST(makeReq('/api/memberships/plans', 'POST', {
-      name: 'Gold', price: 1999, duration: 12, benefits: ['10% discount', 'Priority'],
-    }))
+    const res = await plansPOST(
+      makeReq('/api/memberships/plans', 'POST', {
+        name: 'Gold',
+        price: 1999,
+        duration: 12,
+        benefits: ['10% discount', 'Priority'],
+      })
+    )
     expect(res.status).toBe(201)
   })
 })
@@ -284,9 +325,12 @@ describe('POST /api/memberships/enroll', () => {
 
   it('returns 403 for unauthorized role', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
-    const res = await enrollPOST(makeReq('/api/memberships/enroll', 'POST', {
-      patientId: 'p1', planId: 'mp1',
-    }))
+    const res = await enrollPOST(
+      makeReq('/api/memberships/enroll', 'POST', {
+        patientId: 'p1',
+        planId: 'mp1',
+      })
+    )
     expect(res.status).toBe(403)
   })
 
@@ -300,9 +344,12 @@ describe('POST /api/memberships/enroll', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue(null)
 
-    const res = await enrollPOST(makeReq('/api/memberships/enroll', 'POST', {
-      patientId: 'p-none', planId: 'mp1',
-    }))
+    const res = await enrollPOST(
+      makeReq('/api/memberships/enroll', 'POST', {
+        patientId: 'p-none',
+        planId: 'mp1',
+      })
+    )
     expect(res.status).toBe(404)
   })
 
@@ -310,13 +357,19 @@ describe('POST /api/memberships/enroll', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', hospitalId: 'h1', isActive: true, duration: 12,
+      id: 'mp1',
+      hospitalId: 'h1',
+      isActive: true,
+      duration: 12,
     } as any)
     vi.mocked(prisma.patientMembership.findFirst).mockResolvedValue({ id: 'existing' } as any)
 
-    const res = await enrollPOST(makeReq('/api/memberships/enroll', 'POST', {
-      patientId: 'p1', planId: 'mp1',
-    }))
+    const res = await enrollPOST(
+      makeReq('/api/memberships/enroll', 'POST', {
+        patientId: 'p1',
+        planId: 'mp1',
+      })
+    )
     expect(res.status).toBe(409)
   })
 
@@ -324,18 +377,26 @@ describe('POST /api/memberships/enroll', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', hospitalId: 'h1', isActive: true, duration: 12,
+      id: 'mp1',
+      hospitalId: 'h1',
+      isActive: true,
+      duration: 12,
     } as any)
     vi.mocked(prisma.patientMembership.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.patientMembership.create).mockResolvedValue({
-      id: 'pm1', patientId: 'p1', planId: 'mp1',
+      id: 'pm1',
+      patientId: 'p1',
+      planId: 'mp1',
       plan: { name: 'Gold', price: 1999, duration: 12 },
       patient: { firstName: 'John', lastName: 'Doe', patientId: 'PT001' },
     } as any)
 
-    const res = await enrollPOST(makeReq('/api/memberships/enroll', 'POST', {
-      patientId: 'p1', planId: 'mp1',
-    }))
+    const res = await enrollPOST(
+      makeReq('/api/memberships/enroll', 'POST', {
+        patientId: 'p1',
+        planId: 'mp1',
+      })
+    )
     expect(res.status).toBe(201)
   })
 })
@@ -377,10 +438,10 @@ describe('GET /api/referrals', () => {
       { id: 'r1', referrerPatientId: 'p1', referredName: 'Jane', status: 'PENDING' },
     ] as any)
     vi.mocked(prisma.referral.count)
-      .mockResolvedValueOnce(1)   // filtered count
-      .mockResolvedValueOnce(10)  // total
-      .mockResolvedValueOnce(4)   // converted
-      .mockResolvedValueOnce(2)   // rewarded
+      .mockResolvedValueOnce(1) // filtered count
+      .mockResolvedValueOnce(10) // total
+      .mockResolvedValueOnce(4) // converted
+      .mockResolvedValueOnce(2) // rewarded
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
       { id: 'p1', firstName: 'John', lastName: 'Doe', patientId: 'PT001' },
     ] as any)
@@ -400,9 +461,13 @@ describe('POST /api/referrals', () => {
 
   it('returns 403 for unauthorized role', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
-    const res = await referralsPOST(makeReq('/api/referrals', 'POST', {
-      referrerPatientId: 'p1', referredName: 'Jane', referredPhone: '9876543210',
-    }))
+    const res = await referralsPOST(
+      makeReq('/api/referrals', 'POST', {
+        referrerPatientId: 'p1',
+        referredName: 'Jane',
+        referredPhone: '9876543210',
+      })
+    )
     expect(res.status).toBe(403)
   })
 
@@ -416,9 +481,13 @@ describe('POST /api/referrals', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue(null)
 
-    const res = await referralsPOST(makeReq('/api/referrals', 'POST', {
-      referrerPatientId: 'p-none', referredName: 'Jane', referredPhone: '9876543210',
-    }))
+    const res = await referralsPOST(
+      makeReq('/api/referrals', 'POST', {
+        referrerPatientId: 'p-none',
+        referredName: 'Jane',
+        referredPhone: '9876543210',
+      })
+    )
     expect(res.status).toBe(404)
   })
 
@@ -427,12 +496,18 @@ describe('POST /api/referrals', () => {
     vi.mocked(prisma.patient.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.referral.findUnique).mockResolvedValue(null) // unique code
     vi.mocked(prisma.referral.create).mockResolvedValue({
-      id: 'r1', referralCode: 'REF-ABC123', referredName: 'Jane',
+      id: 'r1',
+      referralCode: 'REF-ABC123',
+      referredName: 'Jane',
     } as any)
 
-    const res = await referralsPOST(makeReq('/api/referrals', 'POST', {
-      referrerPatientId: 'p1', referredName: 'Jane', referredPhone: '9876543210',
-    }))
+    const res = await referralsPOST(
+      makeReq('/api/referrals', 'POST', {
+        referrerPatientId: 'p1',
+        referredName: 'Jane',
+        referredPhone: '9876543210',
+      })
+    )
     expect(res.status).toBe(201)
   })
 })

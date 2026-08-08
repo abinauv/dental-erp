@@ -24,7 +24,9 @@ const mod = await import('@/app/api/ai/analyze/route')
 function makeRequest(body?: any) {
   return new Request('http://localhost/api/ai/analyze', {
     method: 'POST',
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -135,7 +137,21 @@ describe('POST /api/ai/analyze', () => {
   it('returns 502 when AI fails for risk_score', async () => {
     ;(prisma.patient.findUnique as any).mockResolvedValue({
       id: 'p1',
-      medicalHistory: { drugAllergies: null, hasDiabetes: false, hasHypertension: false, hasHeartDisease: false, hasHepatitis: false, hasHiv: false, hasEpilepsy: false, isPregnant: false, hasBleedingDisorder: false, smokingStatus: 'NEVER', alcoholConsumption: 'NEVER', currentMedications: null, otherConditions: null },
+      medicalHistory: {
+        drugAllergies: null,
+        hasDiabetes: false,
+        hasHypertension: false,
+        hasHeartDisease: false,
+        hasHepatitis: false,
+        hasHiv: false,
+        hasEpilepsy: false,
+        isPregnant: false,
+        hasBleedingDisorder: false,
+        smokingStatus: 'NEVER',
+        alcoholConsumption: 'NEVER',
+        currentMedications: null,
+        otherConditions: null,
+      },
     })
     mockOpenRouter.complete.mockRejectedValue(new Error('AI service down'))
 

@@ -4,13 +4,13 @@
 
 The DentalERP test suite uses **Vitest** (unit/integration) and **Playwright** (E2E) to provide comprehensive test coverage across the entire application.
 
-| Metric | Count |
-|--------|-------|
-| Vitest test files | 175+ |
-| Vitest tests | 4,000+ |
-| Playwright E2E spec files | 51 |
-| Playwright E2E tests | ~478 |
-| Browser projects | 6 (Chrome, Firefox, Safari, Edge, Mobile Chrome, Mobile Safari) |
+| Metric                    | Count                                                           |
+| ------------------------- | --------------------------------------------------------------- |
+| Vitest test files         | 175+                                                            |
+| Vitest tests              | 4,000+                                                          |
+| Playwright E2E spec files | 51                                                              |
+| Playwright E2E tests      | ~478                                                            |
+| Browser projects          | 6 (Chrome, Firefox, Safari, Edge, Mobile Chrome, Mobile Safari) |
 
 ## Directory Structure
 
@@ -118,12 +118,12 @@ Reports are generated in `coverage/` in text, JSON, and HTML formats.
 
 Tests run automatically via GitHub Actions (`.github/workflows/ci.yml`):
 
-| Job | Trigger | What runs |
-|-----|---------|-----------|
-| `lint-and-type-check` | PR | `next lint` + `tsc --noEmit` |
-| `unit-tests` | PR | `vitest run` with coverage upload |
-| `e2e-tests` | merge to main | Playwright with MySQL service container |
-| `build` | PR | `next build` verification |
+| Job                   | Trigger       | What runs                               |
+| --------------------- | ------------- | --------------------------------------- |
+| `lint-and-type-check` | PR            | `next lint` + `tsc --noEmit`            |
+| `unit-tests`          | PR            | `vitest run` with coverage upload       |
+| `e2e-tests`           | merge to main | Playwright with MySQL service container |
+| `build`               | PR            | `next build` verification               |
 
 ### Git Hooks (Husky)
 
@@ -141,8 +141,8 @@ Tests run automatically via GitHub Actions (`.github/workflows/ci.yml`):
 
 ## Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `vitest.config.ts` | Vitest config: jsdom, aliases, coverage, timeouts |
+| File                   | Purpose                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `vitest.config.ts`     | Vitest config: jsdom, aliases, coverage, timeouts        |
 | `playwright.config.ts` | Playwright: 6 browsers, retries, screenshots, web server |
-| `tests/setup.ts` | Global setup: DOM polyfills, fetch, cleanup |
+| `tests/setup.ts`       | Global setup: DOM polyfills, fetch, cleanup              |

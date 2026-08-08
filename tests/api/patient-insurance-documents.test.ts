@@ -21,7 +21,7 @@ vi.mock('fs', () => {
   return { ...m, default: m }
 })
 vi.mock('path', async (importOriginal) => {
-  const actual = await importOriginal() as any
+  const actual = (await importOriginal()) as any
   return { ...actual, default: actual }
 })
 
@@ -32,7 +32,9 @@ const docListModule = await import('@/app/api/patients/[id]/documents/route')
 function makeInsuranceRequest(method: string, body?: any) {
   return new Request('http://localhost/api/patients/p1/insurance', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -41,7 +43,9 @@ function makeDocDetailRequest(method: string, params: Record<string, string> = {
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
   return new Request(url.toString(), {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -80,7 +84,12 @@ describe('Patient Insurance & Documents API', () => {
           id: 'ins-2',
           policyNumber: 'POL002',
           isActive: false,
-          provider: { id: 'prov-2', name: 'ICICI Lombard', code: 'ICICI', contactPhone: '0987654321' },
+          provider: {
+            id: 'prov-2',
+            name: 'ICICI Lombard',
+            code: 'ICICI',
+            contactPhone: '0987654321',
+          },
         },
       ])
 
@@ -200,7 +209,12 @@ describe('Patient Insurance & Documents API', () => {
       ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1' })
       ;(prisma.document.findMany as any).mockResolvedValue([
         { id: 'doc-1', documentType: 'XRAY', originalName: 'xray.jpg', treatment: null },
-        { id: 'doc-2', documentType: 'PRESCRIPTION', originalName: 'rx.pdf', treatment: { id: 't1', procedure: { name: 'Filling' } } },
+        {
+          id: 'doc-2',
+          documentType: 'PRESCRIPTION',
+          originalName: 'rx.pdf',
+          treatment: { id: 't1', procedure: { name: 'Filling' } },
+        },
       ])
 
       const res = await docListModule.GET(makeDocListRequest(), docListCtx)
@@ -214,10 +228,7 @@ describe('Patient Insurance & Documents API', () => {
       ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1' })
       ;(prisma.document.findMany as any).mockResolvedValue([])
 
-      await docListModule.GET(
-        makeDocListRequest({ type: 'XRAY', treatmentId: 't1' }),
-        docListCtx
-      )
+      await docListModule.GET(makeDocListRequest({ type: 'XRAY', treatmentId: 't1' }), docListCtx)
       expect(prisma.document.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -273,7 +284,11 @@ describe('Patient Insurance & Documents API', () => {
       })
 
       const res = await docDetailModule.PATCH(
-        makeDocDetailRequest('PATCH', {}, { description: 'Updated description', documentType: 'REPORT' }),
+        makeDocDetailRequest(
+          'PATCH',
+          {},
+          { description: 'Updated description', documentType: 'REPORT' }
+        ),
         docDetailCtx
       )
       expect(res.status).toBe(200)

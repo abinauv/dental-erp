@@ -1,11 +1,11 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const noShowPredictor: Skill = {
-  name: "no-show-predictor",
-  displayName: "No-Show Predictor",
-  description: "Predicts appointment no-show probability based on patient history and patterns",
-  allowedRoles: ["ADMIN", "DOCTOR", "RECEPTIONIST"],
-  modelTier: "insights",
+  name: 'no-show-predictor',
+  displayName: 'No-Show Predictor',
+  description: 'Predicts appointment no-show probability based on patient history and patterns',
+  allowedRoles: ['ADMIN', 'DOCTOR', 'RECEPTIONIST'],
+  modelTier: 'insights',
   systemPrompt: (hospitalName, contextStr) => `You are a no-show prediction AI for ${hospitalName}.
 
 CONTEXT:

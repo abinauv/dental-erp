@@ -1,19 +1,25 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Receipt, Save } from 'lucide-react';
-import { GatewaySettings } from '@/components/billing/gateway-settings';
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Receipt, Save } from 'lucide-react'
+import { GatewaySettings } from '@/components/billing/gateway-settings'
 
 export default function BillingSettingsPage() {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
+  const { toast } = useToast()
+  const [saving, setSaving] = useState(false)
 
   const [settings, setSettings] = useState({
     cgstRate: '9',
@@ -23,70 +29,71 @@ export default function BillingSettingsPage() {
     receiptPrefix: 'REC',
     invoiceStartingNumber: '1001',
     invoiceNotes: 'Thank you for choosing our services.',
-    termsAndConditions: 'Payment is due within 30 days from the invoice date.\nLate payments may incur additional charges.',
+    termsAndConditions:
+      'Payment is due within 30 days from the invoice date.\nLate payments may incur additional charges.',
     currencySymbol: '₹',
     currencyCode: 'INR',
     enableAutoInvoice: 'true',
     lateFeePercentage: '2',
     minimumDueAmount: '100',
-  });
+  })
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    fetchSettings()
+  }, [])
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('/api/settings?category=billing');
-      const result = await response.json();
+      const response = await fetch('/api/settings?category=billing')
+      const result = await response.json()
 
       if (result.success && result.data) {
-        const settingsMap: any = {};
+        const settingsMap: any = {}
         result.data.forEach((s: any) => {
-          const key = s.key.replace('billing.', '');
-          settingsMap[key] = s.value;
-        });
+          const key = s.key.replace('billing.', '')
+          settingsMap[key] = s.value
+        })
 
-        setSettings(prev => ({ ...prev, ...settingsMap }));
+        setSettings((prev) => ({ ...prev, ...settingsMap }))
       }
     } catch (error) {
-      console.error('Failed to fetch settings:', error);
+      console.error('Failed to fetch settings:', error)
     }
-  };
+  }
 
   const handleSaveSettings = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
       const settingsArray = Object.entries(settings).map(([key, value]) => ({
         key: `billing.${key}`,
         value: value.toString(),
         category: 'billing',
-      }));
+      }))
 
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: settingsArray }),
-      });
+      })
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'Billing settings saved successfully',
-        });
+        })
       } else {
-        throw new Error('Failed to save settings');
+        throw new Error('Failed to save settings')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -95,7 +102,9 @@ export default function BillingSettingsPage() {
           <Receipt className="w-8 h-8" />
           Billing Settings
         </h1>
-        <p className="text-muted-foreground">Configure invoicing, tax rates, and payment settings</p>
+        <p className="text-muted-foreground">
+          Configure invoicing, tax rates, and payment settings
+        </p>
       </div>
 
       <div className="space-y-6">
@@ -137,8 +146,9 @@ export default function BillingSettingsPage() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
-                <strong>Total GST:</strong> {parseFloat(settings.cgstRate) + parseFloat(settings.sgstRate)}%
-                (CGST {settings.cgstRate}% + SGST {settings.sgstRate}%)
+                <strong>Total GST:</strong>{' '}
+                {parseFloat(settings.cgstRate) + parseFloat(settings.sgstRate)}% (CGST{' '}
+                {settings.cgstRate}% + SGST {settings.sgstRate}%)
               </p>
             </div>
           </CardContent>
@@ -178,14 +188,17 @@ export default function BillingSettingsPage() {
                   id="invoiceStartingNumber"
                   type="number"
                   value={settings.invoiceStartingNumber}
-                  onChange={(e) => setSettings({ ...settings, invoiceStartingNumber: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, invoiceStartingNumber: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div className="bg-muted/50 border rounded-lg p-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Preview:</strong> {settings.invoicePrefix}{settings.invoiceStartingNumber}
+                <strong>Preview:</strong> {settings.invoicePrefix}
+                {settings.invoiceStartingNumber}
               </p>
             </div>
           </CardContent>
@@ -205,7 +218,9 @@ export default function BillingSettingsPage() {
                   id="defaultPaymentTerms"
                   type="number"
                   value={settings.defaultPaymentTerms}
-                  onChange={(e) => setSettings({ ...settings, defaultPaymentTerms: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, defaultPaymentTerms: e.target.value })
+                  }
                 />
                 <p className="text-sm text-muted-foreground mt-1">Days until payment is due</p>
               </div>
@@ -297,9 +312,7 @@ export default function BillingSettingsPage() {
                 rows={4}
                 placeholder="Payment is due within 30 days..."
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                Payment terms and conditions
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">Payment terms and conditions</p>
             </div>
           </CardContent>
         </Card>
@@ -313,5 +326,5 @@ export default function BillingSettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

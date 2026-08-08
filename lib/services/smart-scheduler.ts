@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma"
+import prisma from '@/lib/prisma'
 
 /**
  * Smart Scheduler Service
@@ -15,28 +15,28 @@ interface CancelledSlot {
 }
 
 function getDayOfWeek(date: Date): string {
-  const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
+  const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
   return days[date.getDay()]
 }
 
 function getTimeOfDay(time: string): string {
-  const hour = parseInt(time.split(":")[0])
-  if (hour < 12) return "MORNING"
-  if (hour < 17) return "AFTERNOON"
-  return "EVENING"
+  const hour = parseInt(time.split(':')[0])
+  if (hour < 12) return 'MORNING'
+  if (hour < 17) return 'AFTERNOON'
+  return 'EVENING'
 }
 
 /**
  * Find waitlisted patients that match a cancelled appointment slot
  */
-export async function findMatchingWaitlistPatients(
-  slot: CancelledSlot
-): Promise<Array<{
-  id: string
-  patientId: string
-  patientName: string
-  patientPhone: string
-}>> {
+export async function findMatchingWaitlistPatients(slot: CancelledSlot): Promise<
+  Array<{
+    id: string
+    patientId: string
+    patientName: string
+    patientPhone: string
+  }>
+> {
   const dayOfWeek = getDayOfWeek(slot.scheduledDate)
   const timeOfDay = getTimeOfDay(slot.scheduledTime)
 
@@ -44,13 +44,13 @@ export async function findMatchingWaitlistPatients(
   const waitlistEntries = await prisma.waitlist.findMany({
     where: {
       hospitalId: slot.hospitalId,
-      status: "ACTIVE",
+      status: 'ACTIVE',
       OR: [
         { doctorId: slot.doctorId },
         { doctorId: null }, // No doctor preference
       ],
     },
-    orderBy: { createdAt: "asc" }, // First come, first served
+    orderBy: { createdAt: 'asc' }, // First come, first served
   })
 
   // Filter by preferred days and time
@@ -102,20 +102,18 @@ export async function findMatchingWaitlistPatients(
       }
     })
     .filter(Boolean) as Array<{
-      id: string
-      patientId: string
-      patientName: string
-      patientPhone: string
-    }>
+    id: string
+    patientId: string
+    patientName: string
+    patientPhone: string
+  }>
 }
 
 /**
  * Process a cancelled appointment — find waitlist matches and mark them as notified
  * Returns the list of patients to notify (caller handles actual SMS sending)
  */
-export async function handleCancellationWaitlist(
-  slot: CancelledSlot
-): Promise<{
+export async function handleCancellationWaitlist(slot: CancelledSlot): Promise<{
   matchedPatients: Array<{
     id: string
     patientId: string
@@ -136,11 +134,11 @@ export async function handleCancellationWaitlist(
     select: { firstName: true, lastName: true },
   })
 
-  const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : "your doctor"
-  const dateStr = slot.scheduledDate.toLocaleDateString("en-IN", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
+  const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'your doctor'
+  const dateStr = slot.scheduledDate.toLocaleDateString('en-IN', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
   })
 
   // Mark top matching entries as NOTIFIED (limit to 3 to avoid overbooking)
@@ -152,7 +150,7 @@ export async function handleCancellationWaitlist(
         id: { in: toNotify.map((m) => m.id) },
       },
       data: {
-        status: "NOTIFIED",
+        status: 'NOTIFIED',
         notifiedAt: new Date(),
       },
     })
@@ -171,14 +169,11 @@ export async function handleCancellationWaitlist(
 /**
  * Book a waitlisted patient into the freed slot
  */
-export async function bookFromWaitlist(
-  waitlistId: string,
-  appointmentId: string
-): Promise<void> {
+export async function bookFromWaitlist(waitlistId: string, appointmentId: string): Promise<void> {
   await prisma.waitlist.update({
     where: { id: waitlistId },
     data: {
-      status: "BOOKED",
+      status: 'BOOKED',
       bookedAt: new Date(),
     },
   })

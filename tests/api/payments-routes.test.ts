@@ -91,7 +91,13 @@ describe('GET /api/payments', () => {
           id: 'inv1',
           invoiceNo: 'INV001',
           totalAmount: 10000,
-          patient: { id: 'p1', patientId: 'PT001', firstName: 'John', lastName: 'Doe', phone: '9876543210' },
+          patient: {
+            id: 'p1',
+            patientId: 'PT001',
+            firstName: 'John',
+            lastName: 'Doe',
+            phone: '9876543210',
+          },
         },
       },
     ]
@@ -127,9 +133,7 @@ describe('GET /api/payments', () => {
     expect(prisma.payment.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          OR: expect.arrayContaining([
-            { paymentNo: { contains: 'PAY001' } },
-          ]),
+          OR: expect.arrayContaining([{ paymentNo: { contains: 'PAY001' } }]),
         }),
       })
     )
@@ -195,7 +199,9 @@ describe('GET /api/payments', () => {
     mockAuth()
     vi.mocked(prisma.payment.findMany).mockResolvedValue([])
     vi.mocked(prisma.payment.count).mockResolvedValue(0)
-    vi.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { amount: null, refundAmount: null } } as any)
+    vi.mocked(prisma.payment.aggregate).mockResolvedValue({
+      _sum: { amount: null, refundAmount: null },
+    } as any)
 
     const res = await paymentsGET(makeReq('/api/payments'))
     const body = await res.json()
@@ -214,7 +220,9 @@ describe('POST /api/payments/create-order', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockHospitalAuthError()
-    const res = await createOrderPOST(makeReq('/api/payments/create-order', 'POST', { invoiceId: 'inv1' }))
+    const res = await createOrderPOST(
+      makeReq('/api/payments/create-order', 'POST', { invoiceId: 'inv1' })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -231,9 +239,11 @@ describe('POST /api/payments/create-order', () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue(null)
 
-    const res = await createOrderPOST(makeReq('/api/payments/create-order', 'POST', {
-      invoiceId: 'inv-nonexistent',
-    }))
+    const res = await createOrderPOST(
+      makeReq('/api/payments/create-order', 'POST', {
+        invoiceId: 'inv-nonexistent',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(404)
@@ -249,9 +259,11 @@ describe('POST /api/payments/create-order', () => {
       hospital: { name: 'Test Clinic' },
     } as any)
 
-    const res = await createOrderPOST(makeReq('/api/payments/create-order', 'POST', {
-      invoiceId: 'inv1',
-    }))
+    const res = await createOrderPOST(
+      makeReq('/api/payments/create-order', 'POST', {
+        invoiceId: 'inv1',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -270,9 +282,11 @@ describe('POST /api/payments/create-order', () => {
     } as any)
     vi.mocked(getGateway).mockResolvedValue(null)
 
-    const res = await createOrderPOST(makeReq('/api/payments/create-order', 'POST', {
-      invoiceId: 'inv1',
-    }))
+    const res = await createOrderPOST(
+      makeReq('/api/payments/create-order', 'POST', {
+        invoiceId: 'inv1',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -305,9 +319,11 @@ describe('POST /api/payments/create-order', () => {
       credentials: { keyId: 'rzp_test_key' },
     } as any)
 
-    const res = await createOrderPOST(makeReq('/api/payments/create-order', 'POST', {
-      invoiceId: 'inv1',
-    }))
+    const res = await createOrderPOST(
+      makeReq('/api/payments/create-order', 'POST', {
+        invoiceId: 'inv1',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -336,15 +352,15 @@ describe('POST /api/payments/create-order', () => {
     }
     vi.mocked(getGateway).mockResolvedValue({ gateway: mockGateway, credentials: {} } as any)
 
-    const res = await createOrderPOST(makeReq('/api/payments/create-order', 'POST', {
-      invoiceId: 'inv1',
-      amount: 9999, // more than balance
-    }))
+    const res = await createOrderPOST(
+      makeReq('/api/payments/create-order', 'POST', {
+        invoiceId: 'inv1',
+        amount: 9999, // more than balance
+      })
+    )
     const body = await res.json()
 
     expect(body.order.amount).toBe(3000) // capped to balance
-    expect(mockGateway.createOrder).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 3000 })
-    )
+    expect(mockGateway.createOrder).toHaveBeenCalledWith(expect.objectContaining({ amount: 3000 }))
   })
 })

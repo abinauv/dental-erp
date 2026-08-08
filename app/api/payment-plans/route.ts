@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import prisma from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
 
 // GET /api/payment-plans — List payment plans
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get("status")
-    const patientId = searchParams.get("patientId")
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "20")
+    const status = searchParams.get('status')
+    const patientId = searchParams.get('patientId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: any = { hospitalId }
     if (status) where.status = status
@@ -31,10 +31,10 @@ export async function GET(req: NextRequest) {
             select: { id: true, invoiceNo: true, totalAmount: true, balanceAmount: true },
           },
           schedules: {
-            orderBy: { installmentNo: "asc" },
+            orderBy: { installmentNo: 'asc' },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -43,13 +43,13 @@ export async function GET(req: NextRequest) {
 
     // Summary counts
     const [activeCount, completedCount, defaultedCount, totalOutstanding] = await Promise.all([
-      prisma.paymentPlan.count({ where: { hospitalId, status: "ACTIVE" } }),
-      prisma.paymentPlan.count({ where: { hospitalId, status: "COMPLETED" } }),
-      prisma.paymentPlan.count({ where: { hospitalId, status: "DEFAULTED" } }),
+      prisma.paymentPlan.count({ where: { hospitalId, status: 'ACTIVE' } }),
+      prisma.paymentPlan.count({ where: { hospitalId, status: 'COMPLETED' } }),
+      prisma.paymentPlan.count({ where: { hospitalId, status: 'DEFAULTED' } }),
       prisma.paymentPlanSchedule.aggregate({
         where: {
           plan: { hospitalId },
-          status: { in: ["PENDING", "OVERDUE"] },
+          status: { in: ['PENDING', 'OVERDUE'] },
         },
         _sum: { amount: true },
       }),
@@ -66,8 +66,8 @@ export async function GET(req: NextRequest) {
           amount: Number(s.amount),
           paidAmount: s.paidAmount ? Number(s.paidAmount) : null,
         })),
-        paidInstallments: plan.schedules.filter((s) => s.status === "PAID").length,
-        overdueInstallments: plan.schedules.filter((s) => s.status === "OVERDUE").length,
+        paidInstallments: plan.schedules.filter((s) => s.status === 'PAID').length,
+        overdueInstallments: plan.schedules.filter((s) => s.status === 'OVERDUE').length,
       })),
       total,
       page,
@@ -80,8 +80,8 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error("Error fetching payment plans:", err)
-    return NextResponse.json({ error: "Failed to fetch payment plans" }, { status: 500 })
+    console.error('Error fetching payment plans:', err)
+    return NextResponse.json({ error: 'Failed to fetch payment plans' }, { status: 500 })
   }
 }
 
@@ -89,19 +89,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    if (!["ADMIN", "ACCOUNTANT", "RECEPTIONIST"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+    if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
     const body = await req.json()
     const {
       invoiceId,
       installments,
-      frequency = "MONTHLY",
+      frequency = 'MONTHLY',
       downPayment = 0,
       interestRate = 0,
       startDate,
@@ -110,16 +110,13 @@ export async function POST(req: NextRequest) {
 
     if (!invoiceId || !installments || !startDate) {
       return NextResponse.json(
-        { error: "Invoice, installments count, and start date are required" },
+        { error: 'Invoice, installments count, and start date are required' },
         { status: 400 }
       )
     }
 
     if (installments < 2 || installments > 60) {
-      return NextResponse.json(
-        { error: "Installments must be between 2 and 60" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Installments must be between 2 and 60' }, { status: 400 })
     }
 
     // Fetch the invoice
@@ -127,23 +124,23 @@ export async function POST(req: NextRequest) {
       where: { id: invoiceId, hospitalId },
     })
     if (!invoice) {
-      return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
-    if (invoice.status === "PAID" || invoice.status === "CANCELLED") {
+    if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
       return NextResponse.json(
-        { error: "Cannot create payment plan for a paid or cancelled invoice" },
+        { error: 'Cannot create payment plan for a paid or cancelled invoice' },
         { status: 400 }
       )
     }
 
     // Check if invoice already has an active plan
     const existingPlan = await prisma.paymentPlan.findFirst({
-      where: { invoiceId, hospitalId, status: "ACTIVE" },
+      where: { invoiceId, hospitalId, status: 'ACTIVE' },
     })
     if (existingPlan) {
       return NextResponse.json(
-        { error: "This invoice already has an active payment plan" },
+        { error: 'This invoice already has an active payment plan' },
         { status: 409 }
       )
     }
@@ -169,13 +166,13 @@ export async function POST(req: NextRequest) {
       const dueDate = new Date(planStartDate)
 
       switch (frequency) {
-        case "WEEKLY":
+        case 'WEEKLY':
           dueDate.setDate(dueDate.getDate() + i * 7)
           break
-        case "BIWEEKLY":
+        case 'BIWEEKLY':
           dueDate.setDate(dueDate.getDate() + i * 14)
           break
-        case "MONTHLY":
+        case 'MONTHLY':
         default:
           dueDate.setMonth(dueDate.getMonth() + i)
           break
@@ -219,7 +216,7 @@ export async function POST(req: NextRequest) {
           },
         },
         include: {
-          schedules: { orderBy: { installmentNo: "asc" } },
+          schedules: { orderBy: { installmentNo: 'asc' } },
           patient: {
             select: { id: true, patientId: true, firstName: true, lastName: true },
           },
@@ -234,7 +231,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(plan, { status: 201 })
   } catch (err) {
-    console.error("Error creating payment plan:", err)
-    return NextResponse.json({ error: "Failed to create payment plan" }, { status: 500 })
+    console.error('Error creating payment plan:', err)
+    return NextResponse.json({ error: 'Failed to create payment plan' }, { status: 500 })
   }
 }

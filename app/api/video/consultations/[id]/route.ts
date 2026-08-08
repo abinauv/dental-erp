@@ -1,16 +1,13 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { deleteRoom } from "@/lib/services/video.service"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { deleteRoom } from '@/lib/services/video.service'
 
 /**
  * GET /api/video/consultations/[id]
  * Get a single video consultation with full details.
  */
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error) return error
 
@@ -63,7 +60,7 @@ export async function GET(
   })
 
   if (!consultation) {
-    return NextResponse.json({ error: "Consultation not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
   }
 
   return NextResponse.json(consultation)
@@ -73,11 +70,8 @@ export async function GET(
  * PUT /api/video/consultations/[id]
  * Update consultation: start, end, cancel, add notes.
  */
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR", "RECEPTIONIST"])
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error) return error
 
   const { id } = await params
@@ -89,36 +83,42 @@ export async function PUT(
   })
 
   if (!consultation) {
-    return NextResponse.json({ error: "Consultation not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
   }
 
   const data: any = {}
 
   switch (action) {
-    case "start": {
-      if (consultation.status !== "SCHEDULED") {
-        return NextResponse.json({ error: "Can only start a SCHEDULED consultation" }, { status: 400 })
+    case 'start': {
+      if (consultation.status !== 'SCHEDULED') {
+        return NextResponse.json(
+          { error: 'Can only start a SCHEDULED consultation' },
+          { status: 400 }
+        )
       }
-      data.status = "IN_PROGRESS"
+      data.status = 'IN_PROGRESS'
       data.startedAt = new Date()
 
       // Update linked appointment status
       if (consultation.appointmentId) {
         await prisma.appointment.update({
           where: { id: consultation.appointmentId },
-          data: { status: "IN_PROGRESS" },
+          data: { status: 'IN_PROGRESS' },
         })
       }
       break
     }
-    case "end": {
-      if (consultation.status !== "IN_PROGRESS") {
-        return NextResponse.json({ error: "Can only end an IN_PROGRESS consultation" }, { status: 400 })
+    case 'end': {
+      if (consultation.status !== 'IN_PROGRESS') {
+        return NextResponse.json(
+          { error: 'Can only end an IN_PROGRESS consultation' },
+          { status: 400 }
+        )
       }
       const startedAt = consultation.startedAt || new Date()
       const duration = Math.round((Date.now() - startedAt.getTime()) / 60000)
 
-      data.status = "COMPLETED"
+      data.status = 'COMPLETED'
       data.endedAt = new Date()
       data.duration = duration
       if (notes) data.notes = notes
@@ -127,7 +127,7 @@ export async function PUT(
       if (consultation.appointmentId) {
         await prisma.appointment.update({
           where: { id: consultation.appointmentId },
-          data: { status: "COMPLETED", checkedOutAt: new Date() },
+          data: { status: 'COMPLETED', checkedOutAt: new Date() },
         })
       }
 
@@ -135,45 +135,55 @@ export async function PUT(
       await deleteRoom(consultation.roomName)
       break
     }
-    case "cancel": {
-      if (consultation.status === "COMPLETED") {
-        return NextResponse.json({ error: "Cannot cancel a completed consultation" }, { status: 400 })
+    case 'cancel': {
+      if (consultation.status === 'COMPLETED') {
+        return NextResponse.json(
+          { error: 'Cannot cancel a completed consultation' },
+          { status: 400 }
+        )
       }
-      data.status = "CANCELLED"
+      data.status = 'CANCELLED'
 
       // Update linked appointment
       if (consultation.appointmentId) {
         await prisma.appointment.update({
           where: { id: consultation.appointmentId },
-          data: { status: "CANCELLED", cancelledAt: new Date(), cancellationReason: "Video consultation cancelled" },
+          data: {
+            status: 'CANCELLED',
+            cancelledAt: new Date(),
+            cancellationReason: 'Video consultation cancelled',
+          },
         })
       }
 
       await deleteRoom(consultation.roomName)
       break
     }
-    case "no_show": {
-      if (consultation.status !== "SCHEDULED") {
-        return NextResponse.json({ error: "Can only mark SCHEDULED consultation as no-show" }, { status: 400 })
+    case 'no_show': {
+      if (consultation.status !== 'SCHEDULED') {
+        return NextResponse.json(
+          { error: 'Can only mark SCHEDULED consultation as no-show' },
+          { status: 400 }
+        )
       }
-      data.status = "NO_SHOW"
+      data.status = 'NO_SHOW'
 
       if (consultation.appointmentId) {
         await prisma.appointment.update({
           where: { id: consultation.appointmentId },
-          data: { status: "NO_SHOW" },
+          data: { status: 'NO_SHOW' },
         })
       }
 
       await deleteRoom(consultation.roomName)
       break
     }
-    case "update_notes": {
+    case 'update_notes': {
       if (notes !== undefined) data.notes = notes
       break
     }
     default:
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   }
 
   const updated = await prisma.videoConsultation.update({

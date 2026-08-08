@@ -41,19 +41,13 @@ vi.mock('@/lib/services/email.service', () => ({
 
 // ── Imports ──────────────────────────────────────────────────────────────────
 
-import {
-  GET as gatewayGET,
-  PUT as gatewayPUT,
-} from '@/app/api/settings/billing/gateway/route'
+import { GET as gatewayGET, PUT as gatewayPUT } from '@/app/api/settings/billing/gateway/route'
 import {
   GET as holidaysGET,
   POST as holidaysPOST,
   DELETE as holidaysDELETE,
 } from '@/app/api/settings/holidays/route'
-import {
-  GET as proceduresGET,
-  POST as proceduresPOST,
-} from '@/app/api/settings/procedures/route'
+import { GET as proceduresGET, POST as proceduresPOST } from '@/app/api/settings/procedures/route'
 import {
   GET as procedureDetailGET,
   PUT as procedureDetailPUT,
@@ -174,13 +168,17 @@ describe('PUT /api/settings/billing/gateway', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await gatewayPUT(makeReq('/api/settings/billing/gateway', 'PUT', { provider: 'RAZORPAY' }))
+    const res = await gatewayPUT(
+      makeReq('/api/settings/billing/gateway', 'PUT', { provider: 'RAZORPAY' })
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 400 for invalid provider', async () => {
     mockAuth()
-    const res = await gatewayPUT(makeReq('/api/settings/billing/gateway', 'PUT', { provider: 'STRIPE' }))
+    const res = await gatewayPUT(
+      makeReq('/api/settings/billing/gateway', 'PUT', { provider: 'STRIPE' })
+    )
     const body = await res.json()
     expect(res.status).toBe(400)
     expect(body.error).toContain('provider')
@@ -195,12 +193,14 @@ describe('PUT /api/settings/billing/gateway', () => {
       isLiveMode: false,
     } as any)
 
-    const res = await gatewayPUT(makeReq('/api/settings/billing/gateway', 'PUT', {
-      provider: 'RAZORPAY',
-      isEnabled: true,
-      razorpayKeyId: 'rzp_test_123',
-      razorpayKeySecret: 'my_secret_key',
-    }))
+    const res = await gatewayPUT(
+      makeReq('/api/settings/billing/gateway', 'PUT', {
+        provider: 'RAZORPAY',
+        isEnabled: true,
+        razorpayKeyId: 'rzp_test_123',
+        razorpayKeySecret: 'my_secret_key',
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -220,12 +220,14 @@ describe('PUT /api/settings/billing/gateway', () => {
       isLiveMode: false,
     } as any)
 
-    const res = await gatewayPUT(makeReq('/api/settings/billing/gateway', 'PUT', {
-      provider: 'RAZORPAY',
-      isEnabled: true,
-      razorpayKeyId: 'rzp_test_123',
-      razorpayKeySecret: '****cret',
-    }))
+    const res = await gatewayPUT(
+      makeReq('/api/settings/billing/gateway', 'PUT', {
+        provider: 'RAZORPAY',
+        isEnabled: true,
+        razorpayKeyId: 'rzp_test_123',
+        razorpayKeySecret: '****cret',
+      })
+    )
 
     expect(mockEncrypt).not.toHaveBeenCalled()
     const upsertCall = vi.mocked(prisma.paymentGatewayConfig.upsert).mock.calls[0][0] as any
@@ -241,12 +243,14 @@ describe('PUT /api/settings/billing/gateway', () => {
       isLiveMode: false,
     } as any)
 
-    await gatewayPUT(makeReq('/api/settings/billing/gateway', 'PUT', {
-      provider: 'PAYTM',
-      paytmMid: 'MID123',
-      paytmMerchantKey: 'key123',
-      paytmWebsite: 'WEBSTAGING',
-    }))
+    await gatewayPUT(
+      makeReq('/api/settings/billing/gateway', 'PUT', {
+        provider: 'PAYTM',
+        paytmMid: 'MID123',
+        paytmMerchantKey: 'key123',
+        paytmWebsite: 'WEBSTAGING',
+      })
+    )
 
     const upsertCall = vi.mocked(prisma.paymentGatewayConfig.upsert).mock.calls[0][0] as any
     expect(upsertCall.update.razorpayKeyId).toBeNull()
@@ -306,22 +310,32 @@ describe('POST /api/settings/holidays', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await holidaysPOST(makeReq('/api/settings/holidays', 'POST', {
-      name: 'Test', date: '2026-01-01T00:00:00.000Z',
-    }))
+    const res = await holidaysPOST(
+      makeReq('/api/settings/holidays', 'POST', {
+        name: 'Test',
+        date: '2026-01-01T00:00:00.000Z',
+      })
+    )
     expect(res.status).toBe(401)
   })
 
   it('creates a holiday', async () => {
     mockAuth()
-    const mockHoliday = { id: 'h1', name: 'Republic Day', date: new Date('2026-01-26'), isRecurring: true }
+    const mockHoliday = {
+      id: 'h1',
+      name: 'Republic Day',
+      date: new Date('2026-01-26'),
+      isRecurring: true,
+    }
     vi.mocked(prisma.holiday.create).mockResolvedValue(mockHoliday as any)
 
-    const res = await holidaysPOST(makeReq('/api/settings/holidays', 'POST', {
-      name: 'Republic Day',
-      date: '2026-01-26T00:00:00.000Z',
-      isRecurring: true,
-    }))
+    const res = await holidaysPOST(
+      makeReq('/api/settings/holidays', 'POST', {
+        name: 'Republic Day',
+        date: '2026-01-26T00:00:00.000Z',
+        isRecurring: true,
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -330,10 +344,12 @@ describe('POST /api/settings/holidays', () => {
 
   it('returns 500 for invalid data (zod validation)', async () => {
     mockAuth()
-    const res = await holidaysPOST(makeReq('/api/settings/holidays', 'POST', {
-      name: '',
-      date: 'not-a-date',
-    }))
+    const res = await holidaysPOST(
+      makeReq('/api/settings/holidays', 'POST', {
+        name: '',
+        date: 'not-a-date',
+      })
+    )
     expect(res.status).toBe(500)
   })
 })
@@ -419,15 +435,21 @@ describe('POST /api/settings/procedures', () => {
     mockAuth()
     vi.mocked(prisma.procedure.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.procedure.create).mockResolvedValue({
-      id: 'p1', code: 'D0100', name: 'Cleaning', category: 'PREVENTIVE', basePrice: 500,
-    } as any)
-
-    const res = await proceduresPOST(makeReq('/api/settings/procedures', 'POST', {
+      id: 'p1',
       code: 'D0100',
       name: 'Cleaning',
       category: 'PREVENTIVE',
       basePrice: 500,
-    }))
+    } as any)
+
+    const res = await proceduresPOST(
+      makeReq('/api/settings/procedures', 'POST', {
+        code: 'D0100',
+        name: 'Cleaning',
+        category: 'PREVENTIVE',
+        basePrice: 500,
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -438,12 +460,14 @@ describe('POST /api/settings/procedures', () => {
     mockAuth()
     vi.mocked(prisma.procedure.findFirst).mockResolvedValue({ id: 'existing' } as any)
 
-    const res = await proceduresPOST(makeReq('/api/settings/procedures', 'POST', {
-      code: 'D0100',
-      name: 'Cleaning',
-      category: 'PREVENTIVE',
-      basePrice: 500,
-    }))
+    const res = await proceduresPOST(
+      makeReq('/api/settings/procedures', 'POST', {
+        code: 'D0100',
+        name: 'Cleaning',
+        category: 'PREVENTIVE',
+        basePrice: 500,
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -452,12 +476,14 @@ describe('POST /api/settings/procedures', () => {
 
   it('returns 500 for invalid category', async () => {
     mockAuth()
-    const res = await proceduresPOST(makeReq('/api/settings/procedures', 'POST', {
-      code: 'D0100',
-      name: 'Cleaning',
-      category: 'INVALID',
-      basePrice: 500,
-    }))
+    const res = await proceduresPOST(
+      makeReq('/api/settings/procedures', 'POST', {
+        code: 'D0100',
+        name: 'Cleaning',
+        category: 'INVALID',
+        basePrice: 500,
+      })
+    )
     expect(res.status).toBe(500)
   })
 })
@@ -472,7 +498,10 @@ describe('GET /api/settings/procedures/[id]', () => {
   it('returns 404 when procedure not found', async () => {
     mockAuth()
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue(null)
-    const res = await procedureDetailGET(makeReq('/api/settings/procedures/p1'), makeParams('p1') as any)
+    const res = await procedureDetailGET(
+      makeReq('/api/settings/procedures/p1'),
+      makeParams('p1') as any
+    )
     const body = await res.json()
     expect(res.status).toBe(404)
   })
@@ -480,10 +509,17 @@ describe('GET /api/settings/procedures/[id]', () => {
   it('returns procedure detail', async () => {
     mockAuth()
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue({
-      id: 'p1', code: 'D0100', name: 'Cleaning', category: 'PREVENTIVE', basePrice: 500,
+      id: 'p1',
+      code: 'D0100',
+      name: 'Cleaning',
+      category: 'PREVENTIVE',
+      basePrice: 500,
     } as any)
 
-    const res = await procedureDetailGET(makeReq('/api/settings/procedures/p1'), makeParams('p1') as any)
+    const res = await procedureDetailGET(
+      makeReq('/api/settings/procedures/p1'),
+      makeParams('p1') as any
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -503,7 +539,7 @@ describe('PUT /api/settings/procedures/[id]', () => {
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue(null)
     const res = await procedureDetailPUT(
       makeReq('/api/settings/procedures/p1', 'PUT', { name: 'Updated' }),
-      makeParams('p1') as any,
+      makeParams('p1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -511,15 +547,20 @@ describe('PUT /api/settings/procedures/[id]', () => {
   it('updates a procedure', async () => {
     mockAuth()
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue({
-      id: 'p1', code: 'D0100', name: 'Cleaning',
+      id: 'p1',
+      code: 'D0100',
+      name: 'Cleaning',
     } as any)
     vi.mocked(prisma.procedure.update).mockResolvedValue({
-      id: 'p1', code: 'D0100', name: 'Deep Cleaning', basePrice: 800,
+      id: 'p1',
+      code: 'D0100',
+      name: 'Deep Cleaning',
+      basePrice: 800,
     } as any)
 
     const res = await procedureDetailPUT(
       makeReq('/api/settings/procedures/p1', 'PUT', { name: 'Deep Cleaning', basePrice: 800 }),
-      makeParams('p1') as any,
+      makeParams('p1') as any
     )
     const body = await res.json()
 
@@ -530,13 +571,15 @@ describe('PUT /api/settings/procedures/[id]', () => {
   it('rejects duplicate code on code change', async () => {
     mockAuth()
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue({
-      id: 'p1', code: 'D0100', name: 'Cleaning',
+      id: 'p1',
+      code: 'D0100',
+      name: 'Cleaning',
     } as any)
     vi.mocked(prisma.procedure.findFirst).mockResolvedValue({ id: 'p2' } as any)
 
     const res = await procedureDetailPUT(
       makeReq('/api/settings/procedures/p1', 'PUT', { code: 'D0200' }),
-      makeParams('p1') as any,
+      makeParams('p1') as any
     )
     const body = await res.json()
 
@@ -557,7 +600,7 @@ describe('DELETE /api/settings/procedures/[id]', () => {
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue(null)
     const res = await procedureDetailDELETE(
       makeReq('/api/settings/procedures/p1', 'DELETE'),
-      makeParams('p1') as any,
+      makeParams('p1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -566,12 +609,13 @@ describe('DELETE /api/settings/procedures/[id]', () => {
     mockAuth()
     vi.mocked(prisma.procedure.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.procedure.update).mockResolvedValue({
-      id: 'p1', isActive: false,
+      id: 'p1',
+      isActive: false,
     } as any)
 
     const res = await procedureDetailDELETE(
       makeReq('/api/settings/procedures/p1', 'DELETE'),
-      makeParams('p1') as any,
+      makeParams('p1') as any
     )
     const body = await res.json()
 
@@ -592,7 +636,9 @@ describe('POST /api/settings/communications/test', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', { type: 'sms' }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', { type: 'sms' })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -606,7 +652,9 @@ describe('POST /api/settings/communications/test', () => {
 
   it('returns 400 for invalid type', async () => {
     mockAuth()
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', { type: 'whatsapp' }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', { type: 'whatsapp' })
+    )
     const body = await res.json()
     expect(res.status).toBe(400)
     expect(body.error).toContain("'sms' or 'email'")
@@ -614,9 +662,12 @@ describe('POST /api/settings/communications/test', () => {
 
   it('returns 400 when phone is missing for SMS test', async () => {
     mockAuth()
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', {
-      type: 'sms', testData: {},
-    }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', {
+        type: 'sms',
+        testData: {},
+      })
+    )
     const body = await res.json()
     expect(res.status).toBe(400)
     expect(body.error).toContain('Phone number')
@@ -627,9 +678,12 @@ describe('POST /api/settings/communications/test', () => {
     mockSmsService.initialize.mockResolvedValue(undefined)
     mockSmsService.sendSMS.mockResolvedValue(undefined)
 
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', {
-      type: 'sms', testData: { phone: '9876543210' },
-    }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', {
+        type: 'sms',
+        testData: { phone: '9876543210' },
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -642,9 +696,12 @@ describe('POST /api/settings/communications/test', () => {
     mockSmsService.initialize.mockResolvedValue(undefined)
     mockSmsService.sendSMS.mockRejectedValue(new Error('SMS gateway unreachable'))
 
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', {
-      type: 'sms', testData: { phone: '9876543210' },
-    }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', {
+        type: 'sms',
+        testData: { phone: '9876543210' },
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -653,9 +710,12 @@ describe('POST /api/settings/communications/test', () => {
 
   it('returns 400 when email address is missing for email test', async () => {
     mockAuth()
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', {
-      type: 'email', testData: {},
-    }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', {
+        type: 'email',
+        testData: {},
+      })
+    )
     const body = await res.json()
     expect(res.status).toBe(400)
     expect(body.error).toContain('Email address')
@@ -666,9 +726,12 @@ describe('POST /api/settings/communications/test', () => {
     mockEmailService.initialize.mockResolvedValue(undefined)
     mockEmailService.sendEmail.mockResolvedValue(undefined)
 
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', {
-      type: 'email', testData: { email: 'test@example.com' },
-    }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', {
+        type: 'email',
+        testData: { email: 'test@example.com' },
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -681,9 +744,12 @@ describe('POST /api/settings/communications/test', () => {
     mockEmailService.initialize.mockResolvedValue(undefined)
     mockEmailService.sendEmail.mockRejectedValue(new Error('SMTP error'))
 
-    const res = await commTestPOST(makeReq('/api/settings/communications/test', 'POST', {
-      type: 'email', testData: { email: 'test@example.com' },
-    }))
+    const res = await commTestPOST(
+      makeReq('/api/settings/communications/test', 'POST', {
+        type: 'email',
+        testData: { email: 'test@example.com' },
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)

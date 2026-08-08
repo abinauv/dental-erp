@@ -28,7 +28,9 @@ function makePostRequest(body: any) {
 function makeDetailRequest(method: string, body?: any) {
   return new Request('http://localhost/api/procedures/proc-1', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -48,8 +50,22 @@ describe('Procedures API', () => {
   describe('GET /api/procedures', () => {
     it('returns paginated procedures', async () => {
       const procedures = [
-        { id: 'p1', code: 'PRV001', name: 'Cleaning', category: 'PREVENTIVE', basePrice: 500, isActive: true },
-        { id: 'p2', code: 'RST001', name: 'Filling', category: 'RESTORATIVE', basePrice: 1500, isActive: true },
+        {
+          id: 'p1',
+          code: 'PRV001',
+          name: 'Cleaning',
+          category: 'PREVENTIVE',
+          basePrice: 500,
+          isActive: true,
+        },
+        {
+          id: 'p2',
+          code: 'RST001',
+          name: 'Filling',
+          category: 'RESTORATIVE',
+          basePrice: 1500,
+          isActive: true,
+        },
       ]
       ;(prisma.procedure.findMany as any).mockResolvedValue(procedures)
       ;(prisma.procedure.count as any).mockResolvedValue(2)
@@ -236,10 +252,7 @@ describe('Procedures API', () => {
         basePrice: 700,
       })
 
-      const res = await detailModule.PUT(
-        makeDetailRequest('PUT', { basePrice: 700 }),
-        detailCtx
-      )
+      const res = await detailModule.PUT(makeDetailRequest('PUT', { basePrice: 700 }), detailCtx)
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.basePrice).toBe(700)
@@ -252,20 +265,14 @@ describe('Procedures API', () => {
       })
       ;(prisma.procedure.findFirst as any).mockResolvedValue({ id: 'proc-2', name: 'Filling' })
 
-      const res = await detailModule.PUT(
-        makeDetailRequest('PUT', { name: 'Filling' }),
-        detailCtx
-      )
+      const res = await detailModule.PUT(makeDetailRequest('PUT', { name: 'Filling' }), detailCtx)
       expect(res.status).toBe(409)
     })
 
     it('returns 404 when procedure not found', async () => {
       ;(prisma.procedure.findUnique as any).mockResolvedValue(null)
 
-      const res = await detailModule.PUT(
-        makeDetailRequest('PUT', { name: 'Test' }),
-        detailCtx
-      )
+      const res = await detailModule.PUT(makeDetailRequest('PUT', { name: 'Test' }), detailCtx)
       expect(res.status).toBe(404)
     })
 
@@ -276,10 +283,7 @@ describe('Procedures API', () => {
         session: { user: { id: 'user-1', role: 'RECEPTIONIST' } },
       })
 
-      const res = await detailModule.PUT(
-        makeDetailRequest('PUT', { name: 'Test' }),
-        detailCtx
-      )
+      const res = await detailModule.PUT(makeDetailRequest('PUT', { name: 'Test' }), detailCtx)
       expect(res.status).toBe(403)
     })
   })

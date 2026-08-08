@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -18,8 +18,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
 import {
   BarChart3,
   Star,
@@ -35,7 +35,7 @@ import {
   Users,
   ThumbsUp,
   ThumbsDown,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface FeedbackData {
   period: string
@@ -66,7 +66,7 @@ function StarRating({ rating }: { rating: number }) {
         <Star
           key={i}
           className={`h-3.5 w-3.5 ${
-            i <= Math.round(rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+            i <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
           }`}
         />
       ))}
@@ -78,17 +78,17 @@ function StarRating({ rating }: { rating: number }) {
 export default function FeedbackAnalyticsPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState("30d")
+  const [period, setPeriod] = useState('30d')
   const [data, setData] = useState<FeedbackData | null>(null)
 
   const fetchData = async (p: string) => {
     setLoading(true)
     try {
       const res = await fetch(`/api/communications/feedback/analytics?period=${p}`)
-      if (!res.ok) throw new Error("Failed to fetch analytics")
+      if (!res.ok) throw new Error('Failed to fetch analytics')
       setData(await res.json())
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -99,10 +99,12 @@ export default function FeedbackAnalyticsPage() {
   }, [period])
 
   const npsColor = (score: number) =>
-    score >= 50 ? "text-green-600" : score >= 0 ? "text-yellow-600" : "text-red-600"
+    score >= 50 ? 'text-green-600' : score >= 0 ? 'text-yellow-600' : 'text-red-600'
 
   const sentimentTotal = data
-    ? data.sentimentBreakdown.positive + data.sentimentBreakdown.neutral + data.sentimentBreakdown.negative
+    ? data.sentimentBreakdown.positive +
+      data.sentimentBreakdown.neutral +
+      data.sentimentBreakdown.negative
     : 0
 
   return (
@@ -128,7 +130,7 @@ export default function FeedbackAnalyticsPage() {
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={() => fetchData(period)}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -174,15 +176,15 @@ export default function FeedbackAnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className={`text-2xl font-bold ${npsColor(data.nps.score)}`}>
-                  {data.nps.score > 0 ? "+" : ""}
+                  {data.nps.score > 0 ? '+' : ''}
                   {data.nps.score}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {data.nps.score >= 50
-                    ? "Excellent"
+                    ? 'Excellent'
                     : data.nps.score >= 0
-                      ? "Good"
-                      : "Needs improvement"}
+                      ? 'Good'
+                      : 'Needs improvement'}
                 </p>
               </CardContent>
             </Card>
@@ -204,9 +206,7 @@ export default function FeedbackAnalyticsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>NPS Breakdown</CardTitle>
-                <CardDescription>
-                  Promoters (4-5), Passives (3), Detractors (1-2)
-                </CardDescription>
+                <CardDescription>Promoters (4-5), Passives (3), Detractors (1-2)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Stacked bar */}
@@ -267,12 +267,16 @@ export default function FeedbackAnalyticsPage() {
                       {data.nps.trend.map((t) => {
                         const normalized = ((t.score + 100) / 200) * 100 // -100..100 → 0..100
                         return (
-                          <div key={t.month} className="flex flex-col items-center flex-1 group relative">
+                          <div
+                            key={t.month}
+                            className="flex flex-col items-center flex-1 group relative"
+                          >
                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-popover border rounded px-1.5 py-0.5 whitespace-nowrap z-10">
-                              {t.month}: {t.score > 0 ? "+" : ""}{t.score} ({t.responses})
+                              {t.month}: {t.score > 0 ? '+' : ''}
+                              {t.score} ({t.responses})
                             </div>
                             <div
-                              className={`w-full rounded-t-sm ${t.score >= 0 ? "bg-green-500" : "bg-red-400"}`}
+                              className={`w-full rounded-t-sm ${t.score >= 0 ? 'bg-green-500' : 'bg-red-400'}`}
                               style={{ height: `${Math.max(normalized, 4)}%` }}
                             />
                             <span className="text-[9px] text-muted-foreground mt-1">
@@ -433,21 +437,26 @@ export default function FeedbackAnalyticsPage() {
                   {data.satisfaction.byMonth.map((m) => {
                     const pct = (m.avgRating / 5) * 100
                     return (
-                      <div key={m.month} className="flex flex-col items-center flex-1 group relative">
+                      <div
+                        key={m.month}
+                        className="flex flex-col items-center flex-1 group relative"
+                      >
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-popover border rounded px-2 py-1 whitespace-nowrap z-10">
                           {m.month}: {m.avgRating}/5 ({m.count} responses)
                         </div>
                         <div
                           className={`w-full rounded-t-sm ${
                             m.avgRating >= 4
-                              ? "bg-green-500"
+                              ? 'bg-green-500'
                               : m.avgRating >= 3
-                                ? "bg-yellow-400"
-                                : "bg-red-400"
+                                ? 'bg-yellow-400'
+                                : 'bg-red-400'
                           }`}
                           style={{ height: `${Math.max(pct, 4)}%` }}
                         />
-                        <span className="text-[10px] text-muted-foreground mt-1">{m.month.slice(5)}</span>
+                        <span className="text-[10px] text-muted-foreground mt-1">
+                          {m.month.slice(5)}
+                        </span>
                       </div>
                     )
                   })}

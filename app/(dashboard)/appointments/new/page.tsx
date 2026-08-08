@@ -1,33 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Switch } from "@/components/ui/switch"
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  User,
-  Search,
-  Check,
-  Loader2,
-  Video,
-} from "lucide-react"
-import { formatTime } from "@/lib/appointment-utils"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
+import { ArrowLeft, Calendar, Clock, User, Search, Check, Loader2, Video } from 'lucide-react'
+import { formatTime } from '@/lib/appointment-utils'
 
 interface Patient {
   id: string
@@ -54,11 +45,11 @@ interface TimeSlot {
 export default function NewAppointmentPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const preselectedPatientId = searchParams.get("patientId")
+  const preselectedPatientId = searchParams.get('patientId')
 
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   // Data
   const [patients, setPatients] = useState<Patient[]>([])
@@ -67,17 +58,17 @@ export default function NewAppointmentPage() {
   const [loadingSlots, setLoadingSlots] = useState(false)
 
   // Form state
-  const [patientSearch, setPatientSearch] = useState("")
+  const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  const [selectedDoctor, setSelectedDoctor] = useState("")
-  const [selectedDate, setSelectedDate] = useState("")
-  const [selectedTime, setSelectedTime] = useState("")
-  const [duration, setDuration] = useState("30")
-  const [appointmentType, setAppointmentType] = useState("CONSULTATION")
-  const [priority, setPriority] = useState("NORMAL")
-  const [chairNumber, setChairNumber] = useState("")
-  const [chiefComplaint, setChiefComplaint] = useState("")
-  const [notes, setNotes] = useState("")
+  const [selectedDoctor, setSelectedDoctor] = useState('')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [duration, setDuration] = useState('30')
+  const [appointmentType, setAppointmentType] = useState('CONSULTATION')
+  const [priority, setPriority] = useState('NORMAL')
+  const [chairNumber, setChairNumber] = useState('')
+  const [chiefComplaint, setChiefComplaint] = useState('')
+  const [notes, setNotes] = useState('')
   const [isVirtual, setIsVirtual] = useState(false)
 
   // Fetch initial data
@@ -86,8 +77,8 @@ export default function NewAppointmentPage() {
       setLoading(true)
       try {
         const [patientsRes, doctorsRes] = await Promise.all([
-          fetch("/api/patients?all=true"),
-          fetch("/api/staff/doctors")
+          fetch('/api/patients?all=true'),
+          fetch('/api/staff/doctors'),
         ])
 
         if (patientsRes.ok) {
@@ -108,7 +99,7 @@ export default function NewAppointmentPage() {
           setDoctors(data.doctors)
         }
       } catch (err) {
-        console.error("Error fetching data:", err)
+        console.error('Error fetching data:', err)
       } finally {
         setLoading(false)
       }
@@ -137,11 +128,11 @@ export default function NewAppointmentPage() {
             setTimeSlots(data.slots)
           } else {
             setTimeSlots([])
-            setError(data.reason || "No slots available")
+            setError(data.reason || 'No slots available')
           }
         }
       } catch (err) {
-        console.error("Error fetching slots:", err)
+        console.error('Error fetching slots:', err)
       } finally {
         setLoadingSlots(false)
       }
@@ -161,34 +152,34 @@ export default function NewAppointmentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setError('')
 
     if (!selectedPatient) {
-      setError("Please select a patient")
+      setError('Please select a patient')
       return
     }
 
     if (!selectedDoctor) {
-      setError("Please select a doctor")
+      setError('Please select a doctor')
       return
     }
 
     if (!selectedDate) {
-      setError("Please select a date")
+      setError('Please select a date')
       return
     }
 
     if (!selectedTime) {
-      setError("Please select a time slot")
+      setError('Please select a time slot')
       return
     }
 
     setSubmitting(true)
 
     try {
-      const response = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
           doctorId: selectedDoctor,
@@ -206,10 +197,10 @@ export default function NewAppointmentPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to create appointment")
+        throw new Error(data.error || 'Failed to create appointment')
       }
 
-      router.push("/appointments")
+      router.push('/appointments')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -219,7 +210,7 @@ export default function NewAppointmentPage() {
 
   const getMinDate = () => {
     const today = new Date()
-    return today.toISOString().split("T")[0]
+    return today.toISOString().split('T')[0]
   }
 
   if (loading) {
@@ -250,9 +241,7 @@ export default function NewAppointmentPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">New Appointment</h1>
-          <p className="text-muted-foreground">
-            Schedule a new appointment for a patient
-          </p>
+          <p className="text-muted-foreground">Schedule a new appointment for a patient</p>
         </div>
       </div>
 
@@ -265,9 +254,7 @@ export default function NewAppointmentPage() {
                 <User className="h-5 w-5" />
                 Patient
               </CardTitle>
-              <CardDescription>
-                Select the patient for this appointment
-              </CardDescription>
+              <CardDescription>Select the patient for this appointment</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedPatient ? (
@@ -277,12 +264,8 @@ export default function NewAppointmentPage() {
                       <p className="font-medium">
                         {selectedPatient.firstName} {selectedPatient.lastName}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedPatient.patientId}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedPatient.phone}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{selectedPatient.patientId}</p>
+                      <p className="text-sm text-muted-foreground">{selectedPatient.phone}</p>
                     </div>
                     <Button
                       type="button"
@@ -322,7 +305,7 @@ export default function NewAppointmentPage() {
                           className="flex cursor-pointer items-center justify-between border-b p-3 last:border-0 hover:bg-muted/50"
                           onClick={() => {
                             setSelectedPatient(patient)
-                            setPatientSearch("")
+                            setPatientSearch('')
                           }}
                         >
                           <div>
@@ -349,9 +332,7 @@ export default function NewAppointmentPage() {
                 <Calendar className="h-5 w-5" />
                 Schedule
               </CardTitle>
-              <CardDescription>
-                Select doctor, date, and time for the appointment
-              </CardDescription>
+              <CardDescription>Select doctor, date, and time for the appointment</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -379,7 +360,7 @@ export default function NewAppointmentPage() {
                     value={selectedDate}
                     onChange={(e) => {
                       setSelectedDate(e.target.value)
-                      setSelectedTime("")
+                      setSelectedTime('')
                     }}
                     min={getMinDate()}
                   />
@@ -424,21 +405,19 @@ export default function NewAppointmentPage() {
                       <Button
                         key={slot.time}
                         type="button"
-                        variant={selectedTime === slot.time ? "default" : "outline"}
+                        variant={selectedTime === slot.time ? 'default' : 'outline'}
                         size="sm"
                         disabled={!slot.available}
                         className={
                           !slot.available
-                            ? "cursor-not-allowed opacity-50"
+                            ? 'cursor-not-allowed opacity-50'
                             : selectedTime === slot.time
-                            ? ""
-                            : "hover:bg-primary/10"
+                              ? ''
+                              : 'hover:bg-primary/10'
                         }
                         onClick={() => setSelectedTime(slot.time)}
                       >
-                        {selectedTime === slot.time && (
-                          <Check className="mr-1 h-3 w-3" />
-                        )}
+                        {selectedTime === slot.time && <Check className="mr-1 h-3 w-3" />}
                         {formatTime(slot.time)}
                       </Button>
                     ))}
@@ -455,9 +434,7 @@ export default function NewAppointmentPage() {
                 <Clock className="h-5 w-5" />
                 Appointment Details
               </CardTitle>
-              <CardDescription>
-                Additional information about the appointment
-              </CardDescription>
+              <CardDescription>Additional information about the appointment</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
@@ -518,10 +495,7 @@ export default function NewAppointmentPage() {
                       Enable to create a tele-dentistry video consultation for this appointment
                     </p>
                   </div>
-                  <Switch
-                    checked={isVirtual}
-                    onCheckedChange={setIsVirtual}
-                  />
+                  <Switch checked={isVirtual} onCheckedChange={setIsVirtual} />
                 </div>
 
                 <div className="space-y-2 md:col-span-3">

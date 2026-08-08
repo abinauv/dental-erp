@@ -1,85 +1,85 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Database, Download, FileText, Shield, HardDrive } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Database, Download, FileText, Shield, HardDrive } from 'lucide-react'
+import { format } from 'date-fns'
 
 export default function SystemSettingsPage() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [backupStats, setBackupStats] = useState<any>(null);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [backupStats, setBackupStats] = useState<any>(null)
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   useEffect(() => {
-    fetchBackupStats();
-    fetchAuditLogs();
-  }, []);
+    fetchBackupStats()
+    fetchAuditLogs()
+  }, [])
 
   const fetchBackupStats = async () => {
     try {
       const response = await fetch('/api/settings/backup', {
         method: 'POST',
-      });
-      const result = await response.json();
+      })
+      const result = await response.json()
 
       if (result.success) {
-        setBackupStats(result.data);
+        setBackupStats(result.data)
       }
     } catch (error) {
-      console.error('Failed to fetch backup stats:', error);
+      console.error('Failed to fetch backup stats:', error)
     }
-  };
+  }
 
   const fetchAuditLogs = async () => {
     try {
-      const response = await fetch('/api/settings/audit-logs?limit=20');
-      const result = await response.json();
+      const response = await fetch('/api/settings/audit-logs?limit=20')
+      const result = await response.json()
 
       if (result.success) {
-        setAuditLogs(result.data);
+        setAuditLogs(result.data)
       }
     } catch (error) {
-      console.error('Failed to fetch audit logs:', error);
+      console.error('Failed to fetch audit logs:', error)
     }
-  };
+  }
 
   const handleExportBackup = async (type: string) => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await fetch(`/api/settings/backup?type=${type}`);
+      const response = await fetch(`/api/settings/backup?type=${type}`)
 
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `dental-erp-backup-${type}-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `dental-erp-backup-${type}-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.json`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
 
         toast({
           title: 'Success',
           description: 'Backup downloaded successfully',
-        });
+        })
       } else {
-        throw new Error('Failed to export backup');
+        throw new Error('Failed to export backup')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
@@ -135,7 +135,9 @@ export default function SystemSettingsPage() {
                     <p className="text-sm text-muted-foreground">Payments</p>
                   </div>
                   <div className="text-center p-4 bg-indigo-50 rounded-lg">
-                    <p className="text-3xl font-bold text-indigo-600">{backupStats.inventoryItems}</p>
+                    <p className="text-3xl font-bold text-indigo-600">
+                      {backupStats.inventoryItems}
+                    </p>
                     <p className="text-sm text-muted-foreground">Inventory Items</p>
                   </div>
                   <div className="text-center p-4 bg-pink-50 rounded-lg">
@@ -294,17 +296,13 @@ export default function SystemSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Shield className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">{log.action}</span>
-                          <span className="text-sm text-muted-foreground">
-                            on {log.entityType}
-                          </span>
+                          <span className="text-sm text-muted-foreground">on {log.entityType}</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           By: {log.user?.name || 'System'} ({log.user?.email || 'N/A'})
                         </p>
                         {log.ipAddress && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            IP: {log.ipAddress}
-                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">IP: {log.ipAddress}</p>
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground">
@@ -319,5 +317,5 @@ export default function SystemSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

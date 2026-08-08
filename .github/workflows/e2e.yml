@@ -60,7 +60,7 @@ jobs:
       - name: Push schema to test DB
         run: npx prisma db push --accept-data-loss
         env:
-          DATABASE_URL: "mysql://test:test@localhost:3306/dental_test"
+          DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
 
       # The e2e fixtures in tests/e2e/fixtures/auth.ts log in as the users this
       # seed creates. Keep the two in sync or every authenticated spec fails at
@@ -68,7 +68,7 @@ jobs:
       - name: Seed test data
         run: npx prisma db seed
         env:
-          DATABASE_URL: "mysql://test:test@localhost:3306/dental_test"
+          DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
 
       # playwright.config.ts starts `npm run start` in CI, which needs a build.
       # A dev server recompiles each route on first request and blew the
@@ -76,9 +76,9 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: "mysql://test:test@localhost:3306/dental_test"
-          NEXTAUTH_SECRET: "ci-test-secret-at-least-32-chars-long"
-          NEXTAUTH_URL: "http://localhost:3000"
+          DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
+          NEXTAUTH_SECRET: 'ci-test-secret-at-least-32-chars-long'
+          NEXTAUTH_URL: 'http://localhost:3000'
 
       # Only chromium — playwright.config.ts narrows the project matrix in CI.
       - name: Install Playwright browsers
@@ -87,11 +87,11 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test ${{ inputs.grep && format('--grep "{0}"', inputs.grep) || '' }}
         env:
-          DATABASE_URL: "mysql://test:test@localhost:3306/dental_test"
-          NEXTAUTH_SECRET: "ci-test-secret-at-least-32-chars-long"
-          NEXTAUTH_URL: "http://localhost:3000"
-          CRON_SECRET: "ci-cron-secret"
-          ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
+          NEXTAUTH_SECRET: 'ci-test-secret-at-least-32-chars-long'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          CRON_SECRET: 'ci-cron-secret'
+          ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 
       - name: Upload Playwright report
         if: always()

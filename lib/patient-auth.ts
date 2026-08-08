@@ -1,12 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { SignJWT, jwtVerify } from "jose"
-import { prisma } from "./prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { SignJWT, jwtVerify } from 'jose'
+import { prisma } from './prisma'
 
-const COOKIE_NAME = "patient-portal-token"
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "patient-portal-secret"
-)
+const COOKIE_NAME = 'patient-portal-token'
+const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'patient-portal-secret')
 
 interface PatientTokenPayload {
   patientId: string
@@ -26,9 +24,9 @@ export function generateOTP(): string {
  */
 export async function createPatientToken(payload: PatientTokenPayload): Promise<string> {
   return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime('7d')
     .sign(JWT_SECRET)
 }
 
@@ -94,7 +92,7 @@ export async function requirePatientAuth(req?: NextRequest) {
 
   if (!patient) {
     return {
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
       patient: null,
     }
   }
@@ -108,10 +106,10 @@ export async function requirePatientAuth(req?: NextRequest) {
 export function setPatientCookie(response: NextResponse, token: string) {
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60, // 7 days
-    path: "/",
+    path: '/',
   })
   return response
 }
@@ -120,12 +118,12 @@ export function setPatientCookie(response: NextResponse, token: string) {
  * Clear patient auth cookie
  */
 export function clearPatientCookie(response: NextResponse) {
-  response.cookies.set(COOKIE_NAME, "", {
+  response.cookies.set(COOKIE_NAME, '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 0,
-    path: "/",
+    path: '/',
   })
   return response
 }

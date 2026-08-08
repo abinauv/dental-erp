@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   TrendingUp,
   TrendingDown,
@@ -13,8 +13,8 @@ import {
   Loader2,
   Sparkles,
   AlertCircle,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface PricingSuggestion {
   type: string
@@ -68,14 +68,18 @@ export default function PricingSuggestionsPage() {
   const generateSuggestions = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/ai/pricing-suggestions")
-      if (!res.ok) throw new Error("Failed to generate suggestions")
+      const res = await fetch('/api/ai/pricing-suggestions')
+      if (!res.ok) throw new Error('Failed to generate suggestions')
       const result = await res.json()
       setData(result.suggestions)
       setGeneratedAt(result.generatedAt)
-      toast({ title: "Success", description: "Pricing analysis generated" })
+      toast({ title: 'Success', description: 'Pricing analysis generated' })
     } catch {
-      toast({ title: "Error", description: "Failed to generate pricing suggestions", variant: "destructive" })
+      toast({
+        title: 'Error',
+        description: 'Failed to generate pricing suggestions',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -83,9 +87,12 @@ export default function PricingSuggestionsPage() {
 
   const priorityColor = (p: string) => {
     switch (p) {
-      case "HIGH": return "bg-red-100 text-red-700"
-      case "MEDIUM": return "bg-amber-100 text-amber-700"
-      default: return "bg-green-100 text-green-700"
+      case 'HIGH':
+        return 'bg-red-100 text-red-700'
+      case 'MEDIUM':
+        return 'bg-amber-100 text-amber-700'
+      default:
+        return 'bg-green-100 text-green-700'
     }
   }
 
@@ -104,7 +111,7 @@ export default function PricingSuggestionsPage() {
           ) : (
             <Sparkles className="h-4 w-4 mr-2" />
           )}
-          {loading ? "Analyzing..." : "Generate Analysis"}
+          {loading ? 'Analyzing...' : 'Generate Analysis'}
         </Button>
       </div>
 
@@ -128,8 +135,8 @@ export default function PricingSuggestionsPage() {
             <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-lg font-medium mb-2">No Analysis Generated</p>
             <p className="text-muted-foreground mb-4">
-              Click &quot;Generate Analysis&quot; to get AI-powered pricing recommendations
-              based on your clinic&apos;s appointment and revenue data.
+              Click &quot;Generate Analysis&quot; to get AI-powered pricing recommendations based on
+              your clinic&apos;s appointment and revenue data.
             </p>
           </CardContent>
         </Card>
@@ -156,7 +163,8 @@ export default function PricingSuggestionsPage() {
                     <p className="text-sm text-muted-foreground">Revenue Opportunity</p>
                   </div>
                   <p className="text-2xl font-bold">
-                    {"\u20B9"}{data.summary.revenueOpportunity?.toLocaleString()}/mo
+                    {'\u20B9'}
+                    {data.summary.revenueOpportunity?.toLocaleString()}/mo
                   </p>
                 </CardContent>
               </Card>
@@ -186,7 +194,9 @@ export default function PricingSuggestionsPage() {
                     <p className="text-xs text-muted-foreground mb-1">Busiest Days</p>
                     <div className="flex flex-wrap gap-1">
                       {data.peakAnalysis.busiestDays?.map((d) => (
-                        <Badge key={d} className="bg-red-100 text-red-700">{d}</Badge>
+                        <Badge key={d} className="bg-red-100 text-red-700">
+                          {d}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -194,7 +204,9 @@ export default function PricingSuggestionsPage() {
                     <p className="text-xs text-muted-foreground mb-1">Quietest Days</p>
                     <div className="flex flex-wrap gap-1">
                       {data.peakAnalysis.quietestDays?.map((d) => (
-                        <Badge key={d} className="bg-green-100 text-green-700">{d}</Badge>
+                        <Badge key={d} className="bg-green-100 text-green-700">
+                          {d}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -202,7 +214,9 @@ export default function PricingSuggestionsPage() {
                     <p className="text-xs text-muted-foreground mb-1">Peak Hours</p>
                     <div className="flex flex-wrap gap-1">
                       {data.peakAnalysis.busiestHours?.map((h) => (
-                        <Badge key={h} variant="outline">{h}</Badge>
+                        <Badge key={h} variant="outline">
+                          {h}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -210,7 +224,9 @@ export default function PricingSuggestionsPage() {
                     <p className="text-xs text-muted-foreground mb-1">Off-Peak Hours</p>
                     <div className="flex flex-wrap gap-1">
                       {data.peakAnalysis.quietestHours?.map((h) => (
-                        <Badge key={h} variant="outline">{h}</Badge>
+                        <Badge key={h} variant="outline">
+                          {h}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -243,7 +259,7 @@ export default function PricingSuggestionsPage() {
                     <div key={i} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          {s.type === "OFF_PEAK_DISCOUNT" ? (
+                          {s.type === 'OFF_PEAK_DISCOUNT' ? (
                             <TrendingDown className="h-5 w-5 text-green-500" />
                           ) : (
                             <TrendingUp className="h-5 w-5 text-blue-500" />
@@ -259,8 +275,8 @@ export default function PricingSuggestionsPage() {
                             {s.discountPercent
                               ? `-${s.discountPercent}%`
                               : s.premiumPercent
-                              ? `+${s.premiumPercent}%`
-                              : ""}
+                                ? `+${s.premiumPercent}%`
+                                : ''}
                           </Badge>
                         </div>
                       </div>
@@ -286,7 +302,10 @@ export default function PricingSuggestionsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {data.doctorUtilization.map((d, i) => (
-                    <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between border-b pb-3 last:border-0"
+                    >
                       <div>
                         <p className="font-medium">{d.doctorName}</p>
                         <p className="text-sm text-muted-foreground">{d.suggestion}</p>
@@ -296,7 +315,11 @@ export default function PricingSuggestionsPage() {
                         <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              d.utilization > 85 ? "bg-red-500" : d.utilization > 60 ? "bg-amber-500" : "bg-green-500"
+                              d.utilization > 85
+                                ? 'bg-red-500'
+                                : d.utilization > 60
+                                  ? 'bg-amber-500'
+                                  : 'bg-green-500'
                             }`}
                             style={{ width: `${d.utilization}%` }}
                           />
@@ -318,13 +341,18 @@ export default function PricingSuggestionsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {data.procedureDemand.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between border-b pb-3 last:border-0">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between border-b pb-3 last:border-0"
+                    >
                       <div>
                         <p className="font-medium">{p.procedure}</p>
                         <p className="text-sm text-muted-foreground">{p.suggestion}</p>
                       </div>
                       <div className="text-right text-sm">
-                        <p>Booking: <span className="font-medium">{p.bookingRate}%</span></p>
+                        <p>
+                          Booking: <span className="font-medium">{p.bookingRate}%</span>
+                        </p>
                         <p className="text-muted-foreground">Avg wait: {p.avgWaitDays}d</p>
                       </div>
                     </div>

@@ -93,7 +93,9 @@ describe('DELETE /api/data-import/[id]', () => {
   it('returns 404 when job not found', async () => {
     ;(prisma.dataImportJob.findFirst as any).mockResolvedValue(null)
 
-    const req = new Request('http://localhost/api/data-import/nonexistent', { method: 'DELETE' }) as any
+    const req = new Request('http://localhost/api/data-import/nonexistent', {
+      method: 'DELETE',
+    }) as any
     const res = await mod.DELETE(req, ctx)
     expect(res.status).toBe(404)
   })

@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import prisma from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
 
 // GET /api/appointments/waitlist — List waitlist entries
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get("status")
-    const doctorId = searchParams.get("doctorId")
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "20")
+    const status = searchParams.get('status')
+    const doctorId = searchParams.get('doctorId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: any = { hospitalId }
     if (status) where.status = status
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const [entries, total] = await Promise.all([
       prisma.waitlist.findMany({
         where,
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: 'asc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -71,9 +71,9 @@ export async function GET(req: NextRequest) {
 
     // Summary counts
     const [activeCount, notifiedCount, bookedCount] = await Promise.all([
-      prisma.waitlist.count({ where: { hospitalId, status: "ACTIVE" } }),
-      prisma.waitlist.count({ where: { hospitalId, status: "NOTIFIED" } }),
-      prisma.waitlist.count({ where: { hospitalId, status: "BOOKED" } }),
+      prisma.waitlist.count({ where: { hospitalId, status: 'ACTIVE' } }),
+      prisma.waitlist.count({ where: { hospitalId, status: 'NOTIFIED' } }),
+      prisma.waitlist.count({ where: { hospitalId, status: 'BOOKED' } }),
     ])
 
     return NextResponse.json({
@@ -84,8 +84,8 @@ export async function GET(req: NextRequest) {
       summary: { active: activeCount, notified: notifiedCount, booked: bookedCount },
     })
   } catch (err) {
-    console.error("Error fetching waitlist:", err)
-    return NextResponse.json({ error: "Failed to fetch waitlist" }, { status: 500 })
+    console.error('Error fetching waitlist:', err)
+    return NextResponse.json({ error: 'Failed to fetch waitlist' }, { status: 500 })
   }
 }
 
@@ -93,19 +93,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    if (!["ADMIN", "RECEPTIONIST", "DOCTOR"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+    if (!['ADMIN', 'RECEPTIONIST', 'DOCTOR'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
     const body = await req.json()
     const { patientId, doctorId, preferredDays, preferredTime, procedureId, notes } = body
 
     if (!patientId) {
-      return NextResponse.json({ error: "Patient is required" }, { status: 400 })
+      return NextResponse.json({ error: 'Patient is required' }, { status: 400 })
     }
 
     // Verify patient exists
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: "Patient not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Check if patient already has active waitlist entry
@@ -121,14 +121,11 @@ export async function POST(req: NextRequest) {
       where: {
         hospitalId,
         patientId,
-        status: "ACTIVE",
+        status: 'ACTIVE',
       },
     })
     if (existing) {
-      return NextResponse.json(
-        { error: "Patient is already on the waitlist" },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: 'Patient is already on the waitlist' }, { status: 409 })
     }
 
     const entry = await prisma.waitlist.create({
@@ -145,8 +142,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(entry, { status: 201 })
   } catch (err) {
-    console.error("Error adding to waitlist:", err)
-    return NextResponse.json({ error: "Failed to add to waitlist" }, { status: 500 })
+    console.error('Error adding to waitlist:', err)
+    return NextResponse.json({ error: 'Failed to add to waitlist' }, { status: 500 })
   }
 }
 
@@ -154,32 +151,32 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(req.url)
-    const id = searchParams.get("id")
+    const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ error: "Waitlist entry ID is required" }, { status: 400 })
+      return NextResponse.json({ error: 'Waitlist entry ID is required' }, { status: 400 })
     }
 
     const entry = await prisma.waitlist.findFirst({
       where: { id, hospitalId },
     })
     if (!entry) {
-      return NextResponse.json({ error: "Waitlist entry not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Waitlist entry not found' }, { status: 404 })
     }
 
     await prisma.waitlist.update({
       where: { id },
-      data: { status: "CANCELLED" },
+      data: { status: 'CANCELLED' },
     })
 
-    return NextResponse.json({ message: "Removed from waitlist" })
+    return NextResponse.json({ message: 'Removed from waitlist' })
   } catch (err) {
-    console.error("Error removing from waitlist:", err)
-    return NextResponse.json({ error: "Failed to remove from waitlist" }, { status: 500 })
+    console.error('Error removing from waitlist:', err)
+    return NextResponse.json({ error: 'Failed to remove from waitlist' }, { status: 500 })
   }
 }

@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -40,14 +40,14 @@ import {
   Clock,
   FileText,
   AlertCircle,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   treatmentStatusConfig,
   procedureCategoryConfig,
@@ -55,8 +55,8 @@ import {
   formatDate,
   formatToothNumbers,
   parseToothNumbers,
-} from "@/lib/treatment-utils"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from '@/lib/treatment-utils'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface Treatment {
   id: string
@@ -114,11 +114,11 @@ export default function TreatmentsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [followUpFilter, setFollowUpFilter] = useState("all")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [followUpFilter, setFollowUpFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const fetchTreatments = async () => {
     try {
@@ -128,20 +128,20 @@ export default function TreatmentsPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (followUpFilter === "required") params.append("followUpRequired", "true")
-      if (dateFrom) params.append("dateFrom", dateFrom)
-      if (dateTo) params.append("dateTo", dateTo)
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (followUpFilter === 'required') params.append('followUpRequired', 'true')
+      if (dateFrom) params.append('dateFrom', dateFrom)
+      if (dateTo) params.append('dateTo', dateTo)
 
       const response = await fetch(`/api/treatments?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch treatments")
+      if (!response.ok) throw new Error('Failed to fetch treatments')
 
       const data = await response.json()
       setTreatments(data.treatments)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching treatments:", error)
+      console.error('Error fetching treatments:', error)
     } finally {
       setLoading(false)
     }
@@ -154,47 +154,43 @@ export default function TreatmentsPage() {
   const handleStartTreatment = async (id: string) => {
     try {
       const response = await fetch(`/api/treatments/${id}/start`, {
-        method: "POST",
+        method: 'POST',
       })
-      if (!response.ok) throw new Error("Failed to start treatment")
+      if (!response.ok) throw new Error('Failed to start treatment')
       fetchTreatments()
     } catch (error) {
-      console.error("Error starting treatment:", error)
+      console.error('Error starting treatment:', error)
     }
   }
 
   const handleCompleteTreatment = async (id: string) => {
     try {
       const response = await fetch(`/api/treatments/${id}/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       })
-      if (!response.ok) throw new Error("Failed to complete treatment")
+      if (!response.ok) throw new Error('Failed to complete treatment')
       fetchTreatments()
     } catch (error) {
-      console.error("Error completing treatment:", error)
+      console.error('Error completing treatment:', error)
     }
   }
 
   const getStatusBadge = (status: string) => {
     const config = treatmentStatusConfig[status] || {
       label: status,
-      color: "text-foreground",
-      bgColor: "bg-muted",
+      color: 'text-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const getCategoryBadge = (category: string) => {
     const config = procedureCategoryConfig[category] || {
       label: category,
-      color: "text-foreground",
-      bgColor: "bg-muted/50",
+      color: 'text-foreground',
+      bgColor: 'bg-muted/50',
     }
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0`}>
@@ -209,32 +205,32 @@ export default function TreatmentsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Treatments</h1>
-          <p className="text-muted-foreground">
-            Manage patient treatments and clinical records
-          </p>
+          <p className="text-muted-foreground">Manage patient treatments and clinical records</p>
         </div>
         <div className="flex gap-2">
           <ExportMenu
             filename="treatments"
-            getData={() => treatments.map(t => ({
-              "Treatment No": t.treatmentNo,
-              "Patient": `${t.patient.firstName} ${t.patient.lastName}`,
-              "Patient ID": t.patient.patientId,
-              "Patient Phone": t.patient.phone,
-              "Doctor": `Dr. ${t.doctor.firstName} ${t.doctor.lastName}`,
-              "Specialization": t.doctor.specialization || "",
-              "Procedure": t.procedure.name,
-              "Procedure Code": t.procedure.code,
-              "Category": t.procedure.category,
-              "Diagnosis": t.diagnosis || "",
-              "Chief Complaint": t.chiefComplaint || "",
-              "Teeth": t.toothNumbers || "",
-              "Cost": Number(t.cost),
-              "Status": t.status,
-              "Follow-up Required": t.followUpRequired ? "Yes" : "No",
-              "Follow-up Date": t.followUpDate || "",
-              "Date": formatDate(t.createdAt),
-            }))}
+            getData={() =>
+              treatments.map((t) => ({
+                'Treatment No': t.treatmentNo,
+                Patient: `${t.patient.firstName} ${t.patient.lastName}`,
+                'Patient ID': t.patient.patientId,
+                'Patient Phone': t.patient.phone,
+                Doctor: `Dr. ${t.doctor.firstName} ${t.doctor.lastName}`,
+                Specialization: t.doctor.specialization || '',
+                Procedure: t.procedure.name,
+                'Procedure Code': t.procedure.code,
+                Category: t.procedure.category,
+                Diagnosis: t.diagnosis || '',
+                'Chief Complaint': t.chiefComplaint || '',
+                Teeth: t.toothNumbers || '',
+                Cost: Number(t.cost),
+                Status: t.status,
+                'Follow-up Required': t.followUpRequired ? 'Yes' : 'No',
+                'Follow-up Date': t.followUpDate || '',
+                Date: formatDate(t.createdAt),
+              }))
+            }
           />
           <Link href="/treatments/plans">
             <Button variant="outline">
@@ -325,14 +321,30 @@ export default function TreatmentsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : treatments.length === 0 ? (
@@ -377,9 +389,7 @@ export default function TreatmentsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{treatment.procedure.name}</div>
-                      <div className="mt-1">
-                        {getCategoryBadge(treatment.procedure.category)}
-                      </div>
+                      <div className="mt-1">{getCategoryBadge(treatment.procedure.category)}</div>
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">
@@ -401,9 +411,7 @@ export default function TreatmentsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">
-                        {formatCurrency(treatment.cost)}
-                      </div>
+                      <div className="font-medium">{formatCurrency(treatment.cost)}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
@@ -430,7 +438,7 @@ export default function TreatmentsPage() {
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          {treatment.status !== "COMPLETED" && treatment.status !== "CANCELLED" && (
+                          {treatment.status !== 'COMPLETED' && treatment.status !== 'CANCELLED' && (
                             <DropdownMenuItem
                               onClick={() => router.push(`/treatments/${treatment.id}/edit`)}
                             >
@@ -439,13 +447,13 @@ export default function TreatmentsPage() {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          {treatment.status === "PLANNED" && (
+                          {treatment.status === 'PLANNED' && (
                             <DropdownMenuItem onClick={() => handleStartTreatment(treatment.id)}>
                               <Play className="h-4 w-4 mr-2" />
                               Start Treatment
                             </DropdownMenuItem>
                           )}
-                          {treatment.status === "IN_PROGRESS" && (
+                          {treatment.status === 'IN_PROGRESS' && (
                             <DropdownMenuItem onClick={() => handleCompleteTreatment(treatment.id)}>
                               <CheckCircle className="h-4 w-4 mr-2" />
                               Complete Treatment
@@ -453,7 +461,9 @@ export default function TreatmentsPage() {
                           )}
                           {treatment.appointment && (
                             <DropdownMenuItem
-                              onClick={() => router.push(`/appointments/${treatment.appointment!.id}`)}
+                              onClick={() =>
+                                router.push(`/appointments/${treatment.appointment!.id}`)
+                              }
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               View Appointment
@@ -472,8 +482,8 @@ export default function TreatmentsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} treatments
               </div>
               <div className="flex items-center gap-2">

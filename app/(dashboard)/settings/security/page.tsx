@@ -1,94 +1,100 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Shield, Lock, Clock, UserX, AlertTriangle } from 'lucide-react';
-import { AuditMonitor } from "@/components/ai/audit-monitor";
-import { useToast } from '@/hooks/use-toast';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
+import { Shield, Lock, Clock, UserX, AlertTriangle } from 'lucide-react'
+import { AuditMonitor } from '@/components/ai/audit-monitor'
+import { useToast } from '@/hooks/use-toast'
+import { Textarea } from '@/components/ui/textarea'
 
 export default function SecuritySettingsPage() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   // Password Policy
-  const [passwordMinLength, setPasswordMinLength] = useState(8);
-  const [passwordRequireUppercase, setPasswordRequireUppercase] = useState(true);
-  const [passwordRequireLowercase, setPasswordRequireLowercase] = useState(true);
-  const [passwordRequireNumbers, setPasswordRequireNumbers] = useState(true);
-  const [passwordRequireSpecialChars, setPasswordRequireSpecialChars] = useState(true);
-  const [passwordExpiryDays, setPasswordExpiryDays] = useState(90);
+  const [passwordMinLength, setPasswordMinLength] = useState(8)
+  const [passwordRequireUppercase, setPasswordRequireUppercase] = useState(true)
+  const [passwordRequireLowercase, setPasswordRequireLowercase] = useState(true)
+  const [passwordRequireNumbers, setPasswordRequireNumbers] = useState(true)
+  const [passwordRequireSpecialChars, setPasswordRequireSpecialChars] = useState(true)
+  const [passwordExpiryDays, setPasswordExpiryDays] = useState(90)
 
   // Session Management
-  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(60);
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(60)
 
   // Login Security
-  const [maxLoginAttempts, setMaxLoginAttempts] = useState(5);
-  const [lockoutDurationMinutes, setLockoutDurationMinutes] = useState(30);
+  const [maxLoginAttempts, setMaxLoginAttempts] = useState(5)
+  const [lockoutDurationMinutes, setLockoutDurationMinutes] = useState(30)
 
   // Two-Factor Authentication
-  const [requireTwoFactor, setRequireTwoFactor] = useState(false);
+  const [requireTwoFactor, setRequireTwoFactor] = useState(false)
 
   // IP Management
-  const [allowedIPs, setAllowedIPs] = useState('');
-  const [blockedIPs, setBlockedIPs] = useState('');
+  const [allowedIPs, setAllowedIPs] = useState('')
+  const [blockedIPs, setBlockedIPs] = useState('')
 
   useEffect(() => {
-    loadSettings();
-  }, []);
+    loadSettings()
+  }, [])
 
   const loadSettings = async () => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/settings/security');
+      setLoading(true)
+      const response = await fetch('/api/settings/security')
 
-      if (!response.ok) throw new Error('Failed to load settings');
+      if (!response.ok) throw new Error('Failed to load settings')
 
-      const data = await response.json();
-      const settings = data.data || {};
+      const data = await response.json()
+      const settings = data.data || {}
 
       // Load password policy settings
-      if (settings.passwordMinLength !== undefined) setPasswordMinLength(settings.passwordMinLength);
-      if (settings.passwordRequireUppercase !== undefined) setPasswordRequireUppercase(settings.passwordRequireUppercase);
-      if (settings.passwordRequireLowercase !== undefined) setPasswordRequireLowercase(settings.passwordRequireLowercase);
-      if (settings.passwordRequireNumbers !== undefined) setPasswordRequireNumbers(settings.passwordRequireNumbers);
-      if (settings.passwordRequireSpecialChars !== undefined) setPasswordRequireSpecialChars(settings.passwordRequireSpecialChars);
-      if (settings.passwordExpiryDays !== undefined) setPasswordExpiryDays(settings.passwordExpiryDays);
+      if (settings.passwordMinLength !== undefined) setPasswordMinLength(settings.passwordMinLength)
+      if (settings.passwordRequireUppercase !== undefined)
+        setPasswordRequireUppercase(settings.passwordRequireUppercase)
+      if (settings.passwordRequireLowercase !== undefined)
+        setPasswordRequireLowercase(settings.passwordRequireLowercase)
+      if (settings.passwordRequireNumbers !== undefined)
+        setPasswordRequireNumbers(settings.passwordRequireNumbers)
+      if (settings.passwordRequireSpecialChars !== undefined)
+        setPasswordRequireSpecialChars(settings.passwordRequireSpecialChars)
+      if (settings.passwordExpiryDays !== undefined)
+        setPasswordExpiryDays(settings.passwordExpiryDays)
 
       // Load session settings
-      if (settings.sessionTimeoutMinutes !== undefined) setSessionTimeoutMinutes(settings.sessionTimeoutMinutes);
+      if (settings.sessionTimeoutMinutes !== undefined)
+        setSessionTimeoutMinutes(settings.sessionTimeoutMinutes)
 
       // Load login security settings
-      if (settings.maxLoginAttempts !== undefined) setMaxLoginAttempts(settings.maxLoginAttempts);
-      if (settings.lockoutDurationMinutes !== undefined) setLockoutDurationMinutes(settings.lockoutDurationMinutes);
+      if (settings.maxLoginAttempts !== undefined) setMaxLoginAttempts(settings.maxLoginAttempts)
+      if (settings.lockoutDurationMinutes !== undefined)
+        setLockoutDurationMinutes(settings.lockoutDurationMinutes)
 
       // Load 2FA settings
-      if (settings.requireTwoFactor !== undefined) setRequireTwoFactor(settings.requireTwoFactor);
+      if (settings.requireTwoFactor !== undefined) setRequireTwoFactor(settings.requireTwoFactor)
 
       // Load IP management settings
-      if (settings.allowedIPs !== undefined) setAllowedIPs(settings.allowedIPs);
-      if (settings.blockedIPs !== undefined) setBlockedIPs(settings.blockedIPs);
-
+      if (settings.allowedIPs !== undefined) setAllowedIPs(settings.allowedIPs)
+      if (settings.blockedIPs !== undefined) setBlockedIPs(settings.blockedIPs)
     } catch (error) {
-      console.error('Error loading settings:', error);
+      console.error('Error loading settings:', error)
       toast({
         title: 'Error',
         description: 'Failed to load security settings',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSaveSettings = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
       const response = await fetch('/api/settings/security', {
         method: 'POST',
@@ -107,24 +113,24 @@ export default function SecuritySettingsPage() {
           allowedIPs,
           blockedIPs,
         }),
-      });
+      })
 
-      if (!response.ok) throw new Error('Failed to save settings');
+      if (!response.ok) throw new Error('Failed to save settings')
 
       toast({
         title: 'Success',
         description: 'Security settings saved successfully',
-      });
+      })
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to save security settings',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -137,7 +143,7 @@ export default function SecuritySettingsPage() {
           <p className="text-muted-foreground">Loading settings...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -158,9 +164,7 @@ export default function SecuritySettingsPage() {
               <Lock className="w-5 h-5" />
               Password Policy
             </CardTitle>
-            <CardDescription>
-              Configure password requirements for all users
-            </CardDescription>
+            <CardDescription>Configure password requirements for all users</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -183,7 +187,9 @@ export default function SecuritySettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Require Uppercase Letters</Label>
-                  <p className="text-sm text-muted-foreground">At least one uppercase letter (A-Z)</p>
+                  <p className="text-sm text-muted-foreground">
+                    At least one uppercase letter (A-Z)
+                  </p>
                 </div>
                 <Switch
                   checked={passwordRequireUppercase}
@@ -194,7 +200,9 @@ export default function SecuritySettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Require Lowercase Letters</Label>
-                  <p className="text-sm text-muted-foreground">At least one lowercase letter (a-z)</p>
+                  <p className="text-sm text-muted-foreground">
+                    At least one lowercase letter (a-z)
+                  </p>
                 </div>
                 <Switch
                   checked={passwordRequireLowercase}
@@ -216,7 +224,9 @@ export default function SecuritySettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Require Special Characters</Label>
-                  <p className="text-sm text-muted-foreground">At least one special character (!@#$%)</p>
+                  <p className="text-sm text-muted-foreground">
+                    At least one special character (!@#$%)
+                  </p>
                 </div>
                 <Switch
                   checked={passwordRequireSpecialChars}
@@ -236,9 +246,7 @@ export default function SecuritySettingsPage() {
                 min="0"
                 max="365"
               />
-              <p className="text-sm text-muted-foreground">
-                Set to 0 to disable password expiry
-              </p>
+              <p className="text-sm text-muted-foreground">Set to 0 to disable password expiry</p>
             </div>
           </CardContent>
         </Card>
@@ -250,9 +258,7 @@ export default function SecuritySettingsPage() {
               <Clock className="w-5 h-5" />
               Session Management
             </CardTitle>
-            <CardDescription>
-              Configure user session timeout and security
-            </CardDescription>
+            <CardDescription>Configure user session timeout and security</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -278,9 +284,7 @@ export default function SecuritySettingsPage() {
               <UserX className="w-5 h-5" />
               Login Security
             </CardTitle>
-            <CardDescription>
-              Protect against brute force attacks
-            </CardDescription>
+            <CardDescription>Protect against brute force attacks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,9 +311,7 @@ export default function SecuritySettingsPage() {
                   min="1"
                   max="1440"
                 />
-                <p className="text-sm text-muted-foreground">
-                  How long the account remains locked
-                </p>
+                <p className="text-sm text-muted-foreground">How long the account remains locked</p>
               </div>
             </div>
           </CardContent>
@@ -322,9 +324,7 @@ export default function SecuritySettingsPage() {
               <Shield className="w-5 h-5" />
               Two-Factor Authentication
             </CardTitle>
-            <CardDescription>
-              Add an extra layer of security to user accounts
-            </CardDescription>
+            <CardDescription>Add an extra layer of security to user accounts</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -334,10 +334,7 @@ export default function SecuritySettingsPage() {
                   Force all users to enable 2FA for their accounts
                 </p>
               </div>
-              <Switch
-                checked={requireTwoFactor}
-                onCheckedChange={setRequireTwoFactor}
-              />
+              <Switch checked={requireTwoFactor} onCheckedChange={setRequireTwoFactor} />
             </div>
           </CardContent>
         </Card>
@@ -349,9 +346,7 @@ export default function SecuritySettingsPage() {
               <AlertTriangle className="w-5 h-5" />
               IP Address Management
             </CardTitle>
-            <CardDescription>
-              Control access based on IP addresses (optional)
-            </CardDescription>
+            <CardDescription>Control access based on IP addresses (optional)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -414,5 +409,5 @@ export default function SecuritySettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

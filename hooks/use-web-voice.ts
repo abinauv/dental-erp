@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 // ---------------------------------------------------------------------------
 // Web Speech API types (not in all TS libs)
@@ -26,14 +26,14 @@ type SpeechRecognitionInstance = EventTarget & {
 }
 
 function getSpeechRecognition(): (new () => SpeechRecognitionInstance) | null {
-  if (typeof window === "undefined") return null
+  if (typeof window === 'undefined') return null
   return (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null
 }
 
 // ---------------------------------------------------------------------------
 // Voice state
 // ---------------------------------------------------------------------------
-export type VoiceState = "idle" | "listening" | "processing" | "speaking"
+export type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking'
 
 interface UseWebVoiceOptions {
   lang?: string
@@ -43,11 +43,11 @@ interface UseWebVoiceOptions {
 }
 
 export function useWebVoice(opts: UseWebVoiceOptions = {}) {
-  const { lang = "en-IN", onFinalTranscript, onSpeakEnd } = opts
+  const { lang = 'en-IN', onFinalTranscript, onSpeakEnd } = opts
 
-  const [state, setState] = useState<VoiceState>("idle")
-  const [transcript, setTranscript] = useState("")
-  const [interimTranscript, setInterimTranscript] = useState("")
+  const [state, setState] = useState<VoiceState>('idle')
+  const [transcript, setTranscript] = useState('')
+  const [interimTranscript, setInterimTranscript] = useState('')
   const [voiceSupported, setVoiceSupported] = useState(false)
   const [ttsEnabled, setTtsEnabled] = useState(false)
   const [handsFreeMode, setHandsFreeMode] = useState(false)
@@ -64,10 +64,18 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
   const ttsEnabledRef = useRef(ttsEnabled)
 
   // Keep refs in sync
-  useEffect(() => { onFinalTranscriptRef.current = onFinalTranscript }, [onFinalTranscript])
-  useEffect(() => { onSpeakEndRef.current = onSpeakEnd }, [onSpeakEnd])
-  useEffect(() => { handsFreeRef.current = handsFreeMode }, [handsFreeMode])
-  useEffect(() => { ttsEnabledRef.current = ttsEnabled }, [ttsEnabled])
+  useEffect(() => {
+    onFinalTranscriptRef.current = onFinalTranscript
+  }, [onFinalTranscript])
+  useEffect(() => {
+    onSpeakEndRef.current = onSpeakEnd
+  }, [onSpeakEnd])
+  useEffect(() => {
+    handsFreeRef.current = handsFreeMode
+  }, [handsFreeMode])
+  useEffect(() => {
+    ttsEnabledRef.current = ttsEnabled
+  }, [ttsEnabled])
 
   // Check support on mount
   useEffect(() => {
@@ -130,7 +138,9 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
 
     // Stop any existing instance
     if (recognitionRef.current) {
-      try { recognitionRef.current.abort() } catch {}
+      try {
+        recognitionRef.current.abort()
+      } catch {}
     }
 
     const recognition = new SpeechRecognition()
@@ -139,8 +149,8 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
     recognition.lang = lang
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = ""
-      let final = ""
+      let interim = ''
+      let final = ''
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const t = event.results[i][0].transcript
         if (event.results[i].isFinal) {
@@ -151,22 +161,22 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
       }
       if (final) {
         setTranscript(final)
-        setInterimTranscript("")
+        setInterimTranscript('')
       } else {
         setInterimTranscript(interim)
       }
     }
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-      if (e.error !== "no-speech" && e.error !== "aborted") {
-        console.warn("Speech recognition error:", e.error)
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.warn('Speech recognition error:', e.error)
       }
-      setState("idle")
+      setState('idle')
       stopAudioMonitor()
     }
 
     recognition.onend = () => {
-      setState("idle")
+      setState('idle')
       stopAudioMonitor()
     }
 
@@ -178,25 +188,27 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
     }
 
     recognitionRef.current = recognition
-    setTranscript("")
-    setInterimTranscript("")
-    setState("listening")
+    setTranscript('')
+    setInterimTranscript('')
+    setState('listening')
     recognition.start()
     startAudioMonitor()
   }, [lang, startAudioMonitor, stopAudioMonitor])
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch {}
+      try {
+        recognitionRef.current.stop()
+      } catch {}
     }
-    setState("idle")
+    setState('idle')
     stopAudioMonitor()
   }, [stopAudioMonitor])
 
   // Fire onFinalTranscript when listening ends with a transcript
-  const prevStateRef = useRef<VoiceState>("idle")
+  const prevStateRef = useRef<VoiceState>('idle')
   useEffect(() => {
-    if (prevStateRef.current === "listening" && state === "idle" && transcript.trim()) {
+    if (prevStateRef.current === 'listening' && state === 'idle' && transcript.trim()) {
       onFinalTranscriptRef.current?.(transcript.trim())
     }
     prevStateRef.current = state
@@ -205,53 +217,56 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
   // -------------------------------------------------------------------------
   // Text-to-speech
   // -------------------------------------------------------------------------
-  const speakText = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return
+  const speakText = useCallback(
+    (text: string) => {
+      if (typeof window === 'undefined' || !window.speechSynthesis) return
 
-    // Strip markdown for cleaner speech
-    const clean = text
-      .replace(/[*_#`~]/g, "")
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      .replace(/\n{2,}/g, ". ")
-      .replace(/\n/g, ", ")
+      // Strip markdown for cleaner speech
+      const clean = text
+        .replace(/[*_#`~]/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/\n{2,}/g, '. ')
+        .replace(/\n/g, ', ')
 
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(clean)
-    utterance.rate = 1.05
-    utterance.pitch = 1
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(clean)
+      utterance.rate = 1.05
+      utterance.pitch = 1
 
-    const voices = window.speechSynthesis.getVoices()
-    const preferred =
-      voices.find((v) => v.lang.startsWith("en") && v.name.toLowerCase().includes("female")) ||
-      voices.find((v) => v.lang.startsWith("en"))
-    if (preferred) utterance.voice = preferred
+      const voices = window.speechSynthesis.getVoices()
+      const preferred =
+        voices.find((v) => v.lang.startsWith('en') && v.name.toLowerCase().includes('female')) ||
+        voices.find((v) => v.lang.startsWith('en'))
+      if (preferred) utterance.voice = preferred
 
-    setState("speaking")
+      setState('speaking')
 
-    utterance.onend = () => {
-      setState("idle")
-      onSpeakEndRef.current?.()
-      // In hands-free mode, auto-resume listening after speaking
-      if (handsFreeRef.current) {
-        setTimeout(() => {
-          const SR = getSpeechRecognition()
-          if (SR) startListening()
-        }, 400)
+      utterance.onend = () => {
+        setState('idle')
+        onSpeakEndRef.current?.()
+        // In hands-free mode, auto-resume listening after speaking
+        if (handsFreeRef.current) {
+          setTimeout(() => {
+            const SR = getSpeechRecognition()
+            if (SR) startListening()
+          }, 400)
+        }
       }
-    }
 
-    utterance.onerror = () => {
-      setState("idle")
-    }
+      utterance.onerror = () => {
+        setState('idle')
+      }
 
-    window.speechSynthesis.speak(utterance)
-  }, [startListening])
+      window.speechSynthesis.speak(utterance)
+    },
+    [startListening]
+  )
 
   const stopSpeaking = useCallback(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.speechSynthesis?.cancel()
     }
-    setState("idle")
+    setState('idle')
   }, [])
 
   // -------------------------------------------------------------------------
@@ -274,9 +289,9 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
 
   const toggleTts = useCallback(() => {
     setTtsEnabled((prev) => {
-      if (prev && typeof window !== "undefined") {
+      if (prev && typeof window !== 'undefined') {
         window.speechSynthesis?.cancel()
-        setState((s) => s === "speaking" ? "idle" : s)
+        setState((s) => (s === 'speaking' ? 'idle' : s))
       }
       return !prev
     })
@@ -291,9 +306,11 @@ export function useWebVoice(opts: UseWebVoiceOptions = {}) {
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
-        try { recognitionRef.current.abort() } catch {}
+        try {
+          recognitionRef.current.abort()
+        } catch {}
       }
-      if (typeof window !== "undefined") window.speechSynthesis?.cancel()
+      if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
       stopAudioMonitor()
     }
   }, [stopAudioMonitor])

@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from 'react'
 
 interface Duplicate {
   id: string
@@ -38,10 +38,17 @@ export function DuplicateDetector({
     if (!firstName || !lastName || !phone) return
     setChecking(true)
     try {
-      const res = await fetch("/api/ai/clinical", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "duplicate_check", firstName, lastName, phone, email, dateOfBirth }),
+      const res = await fetch('/api/ai/clinical', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'duplicate_check',
+          firstName,
+          lastName,
+          phone,
+          email,
+          dateOfBirth,
+        }),
       })
       const data = await res.json()
       setDuplicates(data?.data?.duplicates || [])
@@ -73,7 +80,7 @@ export function DuplicateDetector({
   return (
     <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
       <p className="text-xs font-semibold text-amber-800 mb-2">
-        ⚠ Possible duplicate patient{duplicates.length > 1 ? "s" : ""} detected
+        ⚠ Possible duplicate patient{duplicates.length > 1 ? 's' : ''} detected
       </p>
       <div className="space-y-2">
         {duplicates.map((d) => (
@@ -84,7 +91,7 @@ export function DuplicateDetector({
             <div>
               <p className="text-sm font-medium">{d.name}</p>
               <p className="text-xs text-muted-foreground">
-                {Math.round(d.confidence * 100)}% match · matched on {d.matchFields.join(", ")}
+                {Math.round(d.confidence * 100)}% match · matched on {d.matchFields.join(', ')}
               </p>
             </div>
             <button

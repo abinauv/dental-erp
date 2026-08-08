@@ -48,14 +48,8 @@ import {
   DELETE as templateDetailDELETE,
 } from '@/app/api/communications/templates/[id]/route'
 import { POST as bulkSMSPOST } from '@/app/api/communications/sms/bulk/route'
-import {
-  GET as surveysGET,
-  POST as surveysPOST,
-} from '@/app/api/communications/surveys/route'
-import {
-  POST as triggersPOST,
-  GET as triggersGET,
-} from '@/app/api/communications/triggers/route'
+import { GET as surveysGET, POST as surveysPOST } from '@/app/api/communications/surveys/route'
+import { POST as triggersPOST, GET as triggersGET } from '@/app/api/communications/triggers/route'
 import { GET as feedbackAnalyticsGET } from '@/app/api/communications/feedback/analytics/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
@@ -78,7 +72,12 @@ function mockAuthError() {
   } as any)
 }
 
-function makeReq(path: string, method = 'GET', body?: any, headers?: Record<string, string>): NextRequest {
+function makeReq(
+  path: string,
+  method = 'GET',
+  body?: any,
+  headers?: Record<string, string>
+): NextRequest {
   const url = `http://localhost${path}`
   const init: any = { method, headers: { ...headers } }
   if (body) {
@@ -101,23 +100,34 @@ describe('GET /api/communications/templates/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await templateDetailGET(makeReq('/api/communications/templates/t1'), makeParams('t1') as any)
+    const res = await templateDetailGET(
+      makeReq('/api/communications/templates/t1'),
+      makeParams('t1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when template not found', async () => {
     mockAuth()
     mockTemplateService.getTemplate.mockResolvedValue(null)
-    const res = await templateDetailGET(makeReq('/api/communications/templates/t1'), makeParams('t1') as any)
+    const res = await templateDetailGET(
+      makeReq('/api/communications/templates/t1'),
+      makeParams('t1') as any
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns template detail', async () => {
     mockAuth()
     mockTemplateService.getTemplate.mockResolvedValue({
-      id: 't1', name: 'Appointment Reminder', content: 'Hello {{patient_name}}',
+      id: 't1',
+      name: 'Appointment Reminder',
+      content: 'Hello {{patient_name}}',
     })
-    const res = await templateDetailGET(makeReq('/api/communications/templates/t1'), makeParams('t1') as any)
+    const res = await templateDetailGET(
+      makeReq('/api/communications/templates/t1'),
+      makeParams('t1') as any
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -137,7 +147,7 @@ describe('PUT /api/communications/templates/[id]', () => {
     mockAuthError()
     const res = await templateDetailPUT(
       makeReq('/api/communications/templates/t1', 'PUT', { name: 'X' }),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -146,7 +156,7 @@ describe('PUT /api/communications/templates/[id]', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'STAFF' } } })
     const res = await templateDetailPUT(
       makeReq('/api/communications/templates/t1', 'PUT', { name: 'X' }),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -160,7 +170,7 @@ describe('PUT /api/communications/templates/[id]', () => {
     })
     const res = await templateDetailPUT(
       makeReq('/api/communications/templates/t1', 'PUT', { content: 'Hello {{bad_var}}' }),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     const body = await res.json()
     expect(res.status).toBe(400)
@@ -169,9 +179,15 @@ describe('PUT /api/communications/templates/[id]', () => {
 
   it('updates template successfully', async () => {
     mockAuth()
-    mockTemplateService.validateTemplate.mockReturnValue({ isValid: true, errors: [], unknownVariables: [] })
+    mockTemplateService.validateTemplate.mockReturnValue({
+      isValid: true,
+      errors: [],
+      unknownVariables: [],
+    })
     mockTemplateService.updateTemplate.mockResolvedValue({
-      id: 't1', name: 'Updated Template', content: 'Hello {{patient_name}}',
+      id: 't1',
+      name: 'Updated Template',
+      content: 'Hello {{patient_name}}',
     })
 
     const res = await templateDetailPUT(
@@ -179,7 +195,7 @@ describe('PUT /api/communications/templates/[id]', () => {
         name: 'Updated Template',
         content: 'Hello {{patient_name}}',
       }),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     const body = await res.json()
 
@@ -199,7 +215,7 @@ describe('DELETE /api/communications/templates/[id]', () => {
     mockAuthError()
     const res = await templateDetailDELETE(
       makeReq('/api/communications/templates/t1', 'DELETE'),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -208,7 +224,7 @@ describe('DELETE /api/communications/templates/[id]', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
     const res = await templateDetailDELETE(
       makeReq('/api/communications/templates/t1', 'DELETE'),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -218,7 +234,7 @@ describe('DELETE /api/communications/templates/[id]', () => {
     mockTemplateService.deleteTemplate.mockResolvedValue(undefined)
     const res = await templateDetailDELETE(
       makeReq('/api/communications/templates/t1', 'DELETE'),
-      makeParams('t1') as any,
+      makeParams('t1') as any
     )
     const body = await res.json()
 
@@ -236,9 +252,11 @@ describe('POST /api/communications/sms/bulk', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await bulkSMSPOST(makeReq('/api/communications/sms/bulk', 'POST', {
-      recipients: [{ phone: '9876543210', message: 'Test' }],
-    }))
+    const res = await bulkSMSPOST(
+      makeReq('/api/communications/sms/bulk', 'POST', {
+        recipients: [{ phone: '9876543210', message: 'Test' }],
+      })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -246,13 +264,15 @@ describe('POST /api/communications/sms/bulk', () => {
     mockAuth()
     mockSmsService.sendBulkSMS.mockResolvedValue([true, true, false])
 
-    const res = await bulkSMSPOST(makeReq('/api/communications/sms/bulk', 'POST', {
-      recipients: [
-        { phone: '9876543210', message: 'Hello 1' },
-        { phone: '9876543211', message: 'Hello 2' },
-        { phone: '9876543212', message: 'Hello 3' },
-      ],
-    }))
+    const res = await bulkSMSPOST(
+      makeReq('/api/communications/sms/bulk', 'POST', {
+        recipients: [
+          { phone: '9876543210', message: 'Hello 1' },
+          { phone: '9876543211', message: 'Hello 2' },
+          { phone: '9876543212', message: 'Hello 3' },
+        ],
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -263,9 +283,11 @@ describe('POST /api/communications/sms/bulk', () => {
 
   it('validates recipients with zod', async () => {
     mockAuth()
-    const res = await bulkSMSPOST(makeReq('/api/communications/sms/bulk', 'POST', {
-      recipients: [], // min 1
-    }))
+    const res = await bulkSMSPOST(
+      makeReq('/api/communications/sms/bulk', 'POST', {
+        recipients: [], // min 1
+      })
+    )
     expect(res.status).toBe(500) // zod parse error caught in try/catch
   })
 })
@@ -287,7 +309,9 @@ describe('GET /api/communications/surveys', () => {
     mockAuth()
     vi.mocked(prisma.survey.findMany).mockResolvedValue([
       {
-        id: 'sv1', title: 'Patient Satisfaction', surveyType: 'SATISFACTION',
+        id: 'sv1',
+        title: 'Patient Satisfaction',
+        surveyType: 'SATISFACTION',
         questions: JSON.stringify([{ question: 'How was your visit?', type: 'rating' }]),
         _count: { responses: 42 },
       },
@@ -326,33 +350,46 @@ describe('POST /api/communications/surveys', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await surveysPOST(makeReq('/api/communications/surveys', 'POST', {
-      title: 'Test', surveyType: 'NPS', questions: [],
-    }))
+    const res = await surveysPOST(
+      makeReq('/api/communications/surveys', 'POST', {
+        title: 'Test',
+        surveyType: 'NPS',
+        questions: [],
+      })
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 401 for non-ADMIN/DOCTOR roles', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'STAFF' } } })
-    const res = await surveysPOST(makeReq('/api/communications/surveys', 'POST', {
-      title: 'Test', surveyType: 'NPS', questions: [{ question: 'Q1', type: 'rating' }],
-    }))
+    const res = await surveysPOST(
+      makeReq('/api/communications/surveys', 'POST', {
+        title: 'Test',
+        surveyType: 'NPS',
+        questions: [{ question: 'Q1', type: 'rating' }],
+      })
+    )
     expect(res.status).toBe(401)
   })
 
   it('creates survey with questions', async () => {
     mockAuth()
     vi.mocked(prisma.survey.create).mockResolvedValue({
-      id: 'sv1', title: 'NPS Survey', surveyType: 'NPS', isActive: true,
-    } as any)
-
-    const res = await surveysPOST(makeReq('/api/communications/surveys', 'POST', {
+      id: 'sv1',
       title: 'NPS Survey',
       surveyType: 'NPS',
-      questions: [
-        { question: 'How likely are you to recommend us?', type: 'rating', required: true },
-      ],
-    }))
+      isActive: true,
+    } as any)
+
+    const res = await surveysPOST(
+      makeReq('/api/communications/surveys', 'POST', {
+        title: 'NPS Survey',
+        surveyType: 'NPS',
+        questions: [
+          { question: 'How likely are you to recommend us?', type: 'rating', required: true },
+        ],
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -370,9 +407,11 @@ describe('POST /api/communications/triggers', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns 401 without valid cron secret', async () => {
-    const res = await triggersPOST(makeReq('/api/communications/triggers', 'POST', null, {
-      authorization: 'Bearer wrong-secret',
-    }))
+    const res = await triggersPOST(
+      makeReq('/api/communications/triggers', 'POST', null, {
+        authorization: 'Bearer wrong-secret',
+      })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -380,9 +419,11 @@ describe('POST /api/communications/triggers', () => {
     mockTriggersService.runAllTriggers.mockResolvedValue(undefined)
     const cronSecret = process.env.CRON_SECRET || 'your-cron-secret-key'
 
-    const res = await triggersPOST(makeReq('/api/communications/triggers', 'POST', null, {
-      authorization: `Bearer ${cronSecret}`,
-    }))
+    const res = await triggersPOST(
+      makeReq('/api/communications/triggers', 'POST', null, {
+        authorization: `Bearer ${cronSecret}`,
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)
@@ -442,10 +483,42 @@ describe('GET /api/communications/feedback/analytics', () => {
 
     const now = new Date()
     vi.mocked(prisma.surveyResponse.findMany).mockResolvedValue([
-      { id: 'r1', surveyId: 'sv1', rating: 5, sentiment: 'positive', answers: '{}', createdAt: now, isComplete: true },
-      { id: 'r2', surveyId: 'sv1', rating: 4, sentiment: 'positive', answers: '{}', createdAt: now, isComplete: true },
-      { id: 'r3', surveyId: 'sv1', rating: 2, sentiment: 'negative', answers: '{}', createdAt: now, isComplete: true },
-      { id: 'r4', surveyId: 'sv1', rating: 3, sentiment: 'neutral', answers: '{}', createdAt: now, isComplete: true },
+      {
+        id: 'r1',
+        surveyId: 'sv1',
+        rating: 5,
+        sentiment: 'positive',
+        answers: '{}',
+        createdAt: now,
+        isComplete: true,
+      },
+      {
+        id: 'r2',
+        surveyId: 'sv1',
+        rating: 4,
+        sentiment: 'positive',
+        answers: '{}',
+        createdAt: now,
+        isComplete: true,
+      },
+      {
+        id: 'r3',
+        surveyId: 'sv1',
+        rating: 2,
+        sentiment: 'negative',
+        answers: '{}',
+        createdAt: now,
+        isComplete: true,
+      },
+      {
+        id: 'r4',
+        surveyId: 'sv1',
+        rating: 3,
+        sentiment: 'neutral',
+        answers: '{}',
+        createdAt: now,
+        isComplete: true,
+      },
     ] as any)
 
     vi.mocked(prisma.surveyResponse.count).mockResolvedValue(4)
@@ -470,9 +543,17 @@ describe('GET /api/communications/feedback/analytics', () => {
     ] as any)
     vi.mocked(prisma.surveyResponse.findMany).mockResolvedValue([
       {
-        id: 'r1', surveyId: 'sv1', rating: null, sentiment: null,
-        answers: JSON.stringify({ q1: 'excellent service very professional', q2: 'excellent staff' }),
-        createdAt: new Date(), isComplete: true, patientId: null,
+        id: 'r1',
+        surveyId: 'sv1',
+        rating: null,
+        sentiment: null,
+        answers: JSON.stringify({
+          q1: 'excellent service very professional',
+          q2: 'excellent staff',
+        }),
+        createdAt: new Date(),
+        isComplete: true,
+        patientId: null,
       },
     ] as any)
     vi.mocked(prisma.surveyResponse.count).mockResolvedValue(1)

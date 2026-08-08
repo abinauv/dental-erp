@@ -1,53 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
 
 interface TimelineEvent {
-  id: string;
-  type: 'appointment' | 'treatment' | 'payment' | 'document' | 'prescription' | 'lab_order';
-  date: Date;
-  title: string;
-  description?: string;
-  status?: string;
-  metadata?: Record<string, any>;
+  id: string
+  type: 'appointment' | 'treatment' | 'payment' | 'document' | 'prescription' | 'lab_order'
+  date: Date
+  title: string
+  description?: string
+  status?: string
+  metadata?: Record<string, any>
 }
 
 // GET /api/patients/[id]/timeline - Get patient timeline events
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
     // Verify patient exists and belongs to this hospital
     const patient = await prisma.patient.findFirst({
       where: { id, hospitalId },
       select: { id: true, firstName: true, lastName: true, createdAt: true },
-    });
+    })
 
     if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    const { searchParams } = new URL(req.url);
-    const limitParam = searchParams.get('limit');
-    const offsetParam = searchParams.get('offset');
-    const typeFilter = searchParams.get('type');
+    const { searchParams } = new URL(req.url)
+    const limitParam = searchParams.get('limit')
+    const offsetParam = searchParams.get('offset')
+    const typeFilter = searchParams.get('type')
 
-    const limit = limitParam ? parseInt(limitParam) : 50;
-    const offset = offsetParam ? parseInt(offsetParam) : 0;
+    const limit = limitParam ? parseInt(limitParam) : 50
+    const offset = offsetParam ? parseInt(offsetParam) : 0
 
-    const events: TimelineEvent[] = [];
+    const events: TimelineEvent[] = []
 
     // Fetch appointments
     if (!typeFilter || typeFilter === 'appointment') {
@@ -59,9 +53,9 @@ export async function GET(
           },
         },
         orderBy: { scheduledDate: 'desc' },
-      });
+      })
 
-      appointments.forEach(apt => {
+      appointments.forEach((apt) => {
         events.push({
           id: apt.id,
           type: 'appointment',
@@ -76,8 +70,8 @@ export async function GET(
             duration: apt.duration,
             notes: apt.notes,
           },
-        });
-      });
+        })
+      })
     }
 
     // Fetch treatments
@@ -93,9 +87,9 @@ export async function GET(
           },
         },
         orderBy: { createdAt: 'desc' },
-      });
+      })
 
-      treatments.forEach(treatment => {
+      treatments.forEach((treatment) => {
         events.push({
           id: treatment.id,
           type: 'treatment',
@@ -111,8 +105,8 @@ export async function GET(
             cost: treatment.cost,
             diagnosis: treatment.diagnosis,
           },
-        });
-      });
+        })
+      })
     }
 
     // Fetch payments
@@ -128,9 +122,9 @@ export async function GET(
           payments: true,
         },
         orderBy: { createdAt: 'desc' },
-      });
+      })
 
-      invoices.forEach(invoice => {
+      invoices.forEach((invoice) => {
         // Invoice created event
         events.push({
           id: `invoice-${invoice.id}`,
@@ -143,10 +137,10 @@ export async function GET(
             invoiceNo: invoice.invoiceNo,
             totalAmount: invoice.totalAmount,
           },
-        });
+        })
 
         // Payment events
-        invoice.payments.forEach(payment => {
+        invoice.payments.forEach((payment) => {
           events.push({
             id: `payment-${payment.id}`,
             type: 'payment',
@@ -159,9 +153,9 @@ export async function GET(
               method: payment.paymentMethod,
               paymentNo: payment.paymentNo,
             },
-          });
-        });
-      });
+          })
+        })
+      })
     }
 
     // Fetch documents
@@ -169,9 +163,9 @@ export async function GET(
       const documents = await prisma.document.findMany({
         where: { patientId: id, hospitalId, isArchived: false },
         orderBy: { createdAt: 'desc' },
-      });
+      })
 
-      documents.forEach(doc => {
+      documents.forEach((doc) => {
         events.push({
           id: doc.id,
           type: 'document',
@@ -183,8 +177,8 @@ export async function GET(
             fileName: doc.originalName,
             fileSize: doc.fileSize,
           },
-        });
-      });
+        })
+      })
     }
 
     // Fetch prescriptions
@@ -197,9 +191,9 @@ export async function GET(
           },
         },
         orderBy: { createdAt: 'desc' },
-      });
+      })
 
-      prescriptions.forEach(rx => {
+      prescriptions.forEach((rx) => {
         events.push({
           id: rx.id,
           type: 'prescription',
@@ -211,8 +205,8 @@ export async function GET(
           metadata: {
             diagnosis: rx.diagnosis,
           },
-        });
-      });
+        })
+      })
     }
 
     // Fetch lab orders
@@ -225,9 +219,9 @@ export async function GET(
           },
         },
         orderBy: { createdAt: 'desc' },
-      });
+      })
 
-      labOrders.forEach(order => {
+      labOrders.forEach((order) => {
         events.push({
           id: order.id,
           type: 'lab_order',
@@ -239,8 +233,8 @@ export async function GET(
             workType: order.workType,
             estimatedCost: order.estimatedCost,
           },
-        });
-      });
+        })
+      })
     }
 
     // Add patient registration event
@@ -251,25 +245,25 @@ export async function GET(
       title: 'Patient Registered',
       description: `${patient.firstName} ${patient.lastName} registered as a patient`,
       metadata: {},
-    });
+    })
 
     // Sort all events by date (newest first)
-    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     // Apply pagination
-    const paginatedEvents = events.slice(offset, offset + limit);
+    const paginatedEvents = events.slice(offset, offset + limit)
 
     return NextResponse.json({
       success: true,
       events: paginatedEvents,
       total: events.length,
       hasMore: offset + limit < events.length,
-    });
+    })
   } catch (error: any) {
-    console.error('Error fetching patient timeline:', error);
+    console.error('Error fetching patient timeline:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to fetch timeline' },
       { status: 500 }
-    );
+    )
   }
 }

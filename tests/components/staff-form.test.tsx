@@ -36,7 +36,9 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, disabled, ...props }: any) => (
-    <button disabled={disabled} {...props}>{children}</button>
+    <button disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
@@ -89,7 +91,11 @@ vi.mock('@/components/ui/separator', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 import NewStaffPage from '@/app/(dashboard)/staff/new/page'
@@ -155,7 +161,7 @@ describe('NewStaffPage', () => {
     it('has back button linking to /staff', () => {
       render(<NewStaffPage />)
       const links = screen.getAllByRole('link')
-      const staffLink = links.find(l => l.getAttribute('href') === '/staff')
+      const staffLink = links.find((l) => l.getAttribute('href') === '/staff')
       expect(staffLink).toBeDefined()
     })
   })
@@ -217,7 +223,7 @@ describe('NewStaffPage', () => {
 
       // Find the toggle button (it's the button right after the password input)
       const toggleButtons = screen.getAllByRole('button')
-      const eyeToggle = toggleButtons.find(btn => {
+      const eyeToggle = toggleButtons.find((btn) => {
         const svg = btn.querySelector('svg')
         return svg && btn.closest('.relative')
       })
@@ -253,7 +259,9 @@ describe('NewStaffPage', () => {
     it('shows error when only some required fields are filled', async () => {
       const { container } = render(<NewStaffPage />)
 
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
       // email, phone, role, password still empty
 
@@ -273,9 +281,13 @@ describe('NewStaffPage', () => {
     it('shows error when password is less than 6 characters', async () => {
       const { container } = render(<NewStaffPage />)
 
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: '123' } })
       // Select role
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
@@ -318,9 +330,13 @@ describe('NewStaffPage', () => {
       const { container } = render(<NewStaffPage />)
 
       // Fill all required fields
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
@@ -329,10 +345,13 @@ describe('NewStaffPage', () => {
       fireEvent.submit(container.querySelector('form')!)
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/staff', expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        }))
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/staff',
+          expect.objectContaining({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
       })
 
       await waitFor(() => {
@@ -358,9 +377,13 @@ describe('NewStaffPage', () => {
       const { container } = render(<NewStaffPage />)
 
       // Required fields
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
       fireEvent.click(screen.getByTestId('select-item-ADMIN'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
@@ -393,9 +416,13 @@ describe('NewStaffPage', () => {
       const { container } = render(<NewStaffPage />)
 
       // Fill required fields
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
@@ -419,9 +446,13 @@ describe('NewStaffPage', () => {
 
       const { container } = render(<NewStaffPage />)
 
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
@@ -447,9 +478,13 @@ describe('NewStaffPage', () => {
 
       const { container } = render(<NewStaffPage />)
 
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
@@ -471,9 +506,13 @@ describe('NewStaffPage', () => {
 
       const { container } = render(<NewStaffPage />)
 
-      fireEvent.change(screen.getByPlaceholderText('Enter first name'), { target: { value: 'John' } })
+      fireEvent.change(screen.getByPlaceholderText('Enter first name'), {
+        target: { value: 'John' },
+      })
       fireEvent.change(screen.getByPlaceholderText('Enter last name'), { target: { value: 'Doe' } })
-      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), { target: { value: 'john@test.com' } })
+      fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
+        target: { value: 'john@test.com' },
+      })
       fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')

@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils'
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("bg-muted animate-pulse rounded", className)} />
+  return <div className={cn('bg-muted animate-pulse rounded', className)} />
 }
 
 export function TablePageSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {

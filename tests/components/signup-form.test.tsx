@@ -55,7 +55,11 @@ vi.mock('@/components/ui/card', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 import SignupPage from '@/app/(auth)/signup/page'
@@ -76,7 +80,8 @@ function fillForm(overrides: Record<string, string> = {}) {
   const values = { ...defaults, ...overrides }
 
   Object.entries(values).forEach(([id, value]) => {
-    const input = screen.getByPlaceholderText(getPlaceholder(id)) || screen.getByLabelText(new RegExp(id, 'i'))
+    const input =
+      screen.getByPlaceholderText(getPlaceholder(id)) || screen.getByLabelText(new RegExp(id, 'i'))
     fireEvent.change(input, { target: { value } })
   })
 }
@@ -142,7 +147,9 @@ describe('SignupPage', () => {
 
     it('shows error when hospital name is too short (1 char)', async () => {
       render(<SignupPage />)
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'A' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'A' },
+      })
       fireEvent.click(screen.getByText('Create Account'))
       await waitFor(() => {
         expect(screen.getByText('Hospital name must be at least 2 characters')).toBeInTheDocument()
@@ -173,12 +180,24 @@ describe('SignupPage', () => {
     it('does not submit with invalid email', async () => {
       render(<SignupPage />)
       // Fill all other fields to isolate email validation
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'Test Clinic' } })
-      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), { target: { value: 'Dr Test' } })
-      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), { target: { value: 'not-an-email' } })
-      fireEvent.change(screen.getByPlaceholderText('9876543210'), { target: { value: '9876543210' } })
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: 'password123' } })
-      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'Test Clinic' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), {
+        target: { value: 'Dr Test' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), {
+        target: { value: 'not-an-email' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('9876543210'), {
+        target: { value: '9876543210' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: 'password123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), {
+        target: { value: 'password123' },
+      })
 
       await act(async () => {
         fireEvent.click(screen.getByText('Create Account'))
@@ -215,7 +234,9 @@ describe('SignupPage', () => {
   describe('Validation — Password', () => {
     it('shows error when password is too short', async () => {
       render(<SignupPage />)
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: '1234567' } })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: '1234567' },
+      })
       fireEvent.click(screen.getByText('Create Account'))
       await waitFor(() => {
         expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument()
@@ -225,12 +246,24 @@ describe('SignupPage', () => {
     it('shows error when passwords do not match', async () => {
       render(<SignupPage />)
       // Fill all fields but mismatch passwords
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'Test Clinic' } })
-      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), { target: { value: 'Dr Test' } })
-      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), { target: { value: 'test@test.com' } })
-      fireEvent.change(screen.getByPlaceholderText('9876543210'), { target: { value: '9876543210' } })
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: 'password123' } })
-      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), { target: { value: 'different456' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'Test Clinic' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), {
+        target: { value: 'Dr Test' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), {
+        target: { value: 'test@test.com' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('9876543210'), {
+        target: { value: '9876543210' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: 'password123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), {
+        target: { value: 'different456' },
+      })
 
       fireEvent.click(screen.getByText('Create Account'))
       await waitFor(() => {
@@ -248,27 +281,44 @@ describe('SignupPage', () => {
 
       render(<SignupPage />)
 
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'Test Clinic' } })
-      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), { target: { value: 'Dr Test' } })
-      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), { target: { value: 'test@test.com' } })
-      fireEvent.change(screen.getByPlaceholderText('9876543210'), { target: { value: '9876543210' } })
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: 'password123' } })
-      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'Test Clinic' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), {
+        target: { value: 'Dr Test' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), {
+        target: { value: 'test@test.com' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('9876543210'), {
+        target: { value: '9876543210' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: 'password123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), {
+        target: { value: 'password123' },
+      })
 
       await act(async () => {
         fireEvent.click(screen.getByText('Create Account'))
       })
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/public/signup', expect.objectContaining({
-          method: 'POST',
-        }))
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/public/signup',
+          expect.objectContaining({
+            method: 'POST',
+          })
+        )
       })
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-          title: 'Account created!',
-        }))
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Account created!',
+          })
+        )
       })
 
       expect(mockPush).toHaveBeenCalledWith('/verify-email?email=test%40test.com')
@@ -282,23 +332,37 @@ describe('SignupPage', () => {
 
       render(<SignupPage />)
 
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'Test Clinic' } })
-      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), { target: { value: 'Dr Test' } })
-      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), { target: { value: 'test@test.com' } })
-      fireEvent.change(screen.getByPlaceholderText('9876543210'), { target: { value: '9876543210' } })
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: 'password123' } })
-      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'Test Clinic' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), {
+        target: { value: 'Dr Test' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), {
+        target: { value: 'test@test.com' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('9876543210'), {
+        target: { value: '9876543210' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: 'password123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), {
+        target: { value: 'password123' },
+      })
 
       await act(async () => {
         fireEvent.click(screen.getByText('Create Account'))
       })
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-          variant: 'destructive',
-          title: 'Signup failed',
-          description: 'Email already exists',
-        }))
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            variant: 'destructive',
+            title: 'Signup failed',
+            description: 'Email already exists',
+          })
+        )
       })
     })
 
@@ -307,22 +371,36 @@ describe('SignupPage', () => {
 
       render(<SignupPage />)
 
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'Test Clinic' } })
-      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), { target: { value: 'Dr Test' } })
-      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), { target: { value: 'test@test.com' } })
-      fireEvent.change(screen.getByPlaceholderText('9876543210'), { target: { value: '9876543210' } })
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: 'password123' } })
-      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'Test Clinic' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), {
+        target: { value: 'Dr Test' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), {
+        target: { value: 'test@test.com' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('9876543210'), {
+        target: { value: '9876543210' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: 'password123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), {
+        target: { value: 'password123' },
+      })
 
       await act(async () => {
         fireEvent.click(screen.getByText('Create Account'))
       })
 
       await waitFor(() => {
-        expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-          variant: 'destructive',
-          title: 'Error',
-        }))
+        expect(mockToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            variant: 'destructive',
+            title: 'Error',
+          })
+        )
       })
     })
 
@@ -343,12 +421,24 @@ describe('SignupPage', () => {
 
       render(<SignupPage />)
 
-      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), { target: { value: 'Test Clinic' } })
-      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), { target: { value: 'Dr Test' } })
-      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), { target: { value: 'test@test.com' } })
-      fireEvent.change(screen.getByPlaceholderText('9876543210'), { target: { value: '9876543210' } })
-      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), { target: { value: 'password123' } })
-      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByPlaceholderText("Dr. Smith's Dental Clinic"), {
+        target: { value: 'Test Clinic' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Dr. John Smith'), {
+        target: { value: 'Dr Test' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('doctor@clinic.com'), {
+        target: { value: 'test@test.com' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('9876543210'), {
+        target: { value: '9876543210' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('At least 8 characters'), {
+        target: { value: 'password123' },
+      })
+      fireEvent.change(screen.getByPlaceholderText('Confirm your password'), {
+        target: { value: 'password123' },
+      })
 
       await act(async () => {
         fireEvent.click(screen.getByText('Create Account'))

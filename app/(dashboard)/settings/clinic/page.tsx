@@ -1,73 +1,78 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
-import { Building2, Save, Upload, Trash2, Loader2, Copy } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/hooks/use-toast'
+import { Separator } from '@/components/ui/separator'
+import { Building2, Save, Upload, Trash2, Loader2, Copy } from 'lucide-react'
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 const DAY_LABELS: Record<string, string> = {
-  monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
-  thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday',
-};
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+}
 
-type DaySchedule = { open: string; close: string; closed: boolean };
-type WeekSchedule = Record<string, DaySchedule>;
+type DaySchedule = { open: string; close: string; closed: boolean }
+type WeekSchedule = Record<string, DaySchedule>
 
 const DEFAULT_SCHEDULE: WeekSchedule = {
-  monday:    { open: '09:00', close: '20:00', closed: false },
-  tuesday:   { open: '09:00', close: '20:00', closed: false },
+  monday: { open: '09:00', close: '20:00', closed: false },
+  tuesday: { open: '09:00', close: '20:00', closed: false },
   wednesday: { open: '09:00', close: '20:00', closed: false },
-  thursday:  { open: '09:00', close: '20:00', closed: false },
-  friday:    { open: '09:00', close: '20:00', closed: false },
-  saturday:  { open: '09:00', close: '14:00', closed: false },
-  sunday:    { open: '', close: '', closed: true },
-};
+  thursday: { open: '09:00', close: '20:00', closed: false },
+  friday: { open: '09:00', close: '20:00', closed: false },
+  saturday: { open: '09:00', close: '14:00', closed: false },
+  sunday: { open: '', close: '', closed: true },
+}
 
 function parseSchedule(raw: string | null | undefined): WeekSchedule {
-  if (!raw) return { ...DEFAULT_SCHEDULE };
+  if (!raw) return { ...DEFAULT_SCHEDULE }
   try {
-    const parsed = JSON.parse(raw);
-    const schedule: WeekSchedule = {};
+    const parsed = JSON.parse(raw)
+    const schedule: WeekSchedule = {}
     for (const day of DAYS) {
-      const d = parsed[day];
+      const d = parsed[day]
       if (d && d.open && d.close) {
-        schedule[day] = { open: d.open, close: d.close, closed: false };
+        schedule[day] = { open: d.open, close: d.close, closed: false }
       } else {
-        schedule[day] = { open: '', close: '', closed: true };
+        schedule[day] = { open: '', close: '', closed: true }
       }
     }
-    return schedule;
+    return schedule
   } catch {
-    return { ...DEFAULT_SCHEDULE };
+    return { ...DEFAULT_SCHEDULE }
   }
 }
 
 function serializeSchedule(schedule: WeekSchedule): string {
-  const obj: Record<string, { open: string | null; close: string | null }> = {};
+  const obj: Record<string, { open: string | null; close: string | null }> = {}
   for (const day of DAYS) {
-    const d = schedule[day];
-    obj[day] = d.closed ? { open: null, close: null } : { open: d.open, close: d.close };
+    const d = schedule[day]
+    obj[day] = d.closed ? { open: null, close: null } : { open: d.open, close: d.close }
   }
-  return JSON.stringify(obj);
+  return JSON.stringify(obj)
 }
 
 export default function ClinicSettingsPage() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [logo, setLogo] = useState<string | null>(null);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [schedule, setSchedule] = useState<WeekSchedule>({ ...DEFAULT_SCHEDULE });
-  const [patientPortalEnabled, setPatientPortalEnabled] = useState(false);
-  const [hospitalSlug, setHospitalSlug] = useState('');
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [logo, setLogo] = useState<string | null>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [schedule, setSchedule] = useState<WeekSchedule>({ ...DEFAULT_SCHEDULE })
+  const [patientPortalEnabled, setPatientPortalEnabled] = useState(false)
+  const [hospitalSlug, setHospitalSlug] = useState('')
 
   // Form state
   const [formData, setFormData] = useState({
@@ -89,23 +94,23 @@ export default function ClinicSettingsPage() {
     bankAccountNo: '',
     bankIfsc: '',
     upiId: '',
-  });
+  })
 
   useEffect(() => {
-    fetchClinicInfo();
-  }, []);
+    fetchClinicInfo()
+  }, [])
 
   const fetchClinicInfo = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await fetch('/api/settings/clinic');
-      const result = await response.json();
+      const response = await fetch('/api/settings/clinic')
+      const result = await response.json()
 
       if (result.success && result.data) {
-        setLogo(result.data.logo || null);
-        setSchedule(parseSchedule(result.data.workingHours));
-        setPatientPortalEnabled(result.data.patientPortalEnabled || false);
-        setHospitalSlug(result.data.slug || '');
+        setLogo(result.data.logo || null)
+        setSchedule(parseSchedule(result.data.workingHours))
+        setPatientPortalEnabled(result.data.patientPortalEnabled || false)
+        setHospitalSlug(result.data.slug || '')
         setFormData({
           name: result.data.name || '',
           tagline: result.data.tagline || '',
@@ -125,113 +130,120 @@ export default function ClinicSettingsPage() {
           bankAccountNo: result.data.bankAccountNo || '',
           bankIfsc: result.data.bankIfsc || '',
           upiId: result.data.upiId || '',
-        });
+        })
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: 'Failed to load clinic information',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    setUploadingLogo(true);
+    setUploadingLogo(true)
     try {
-      const fd = new FormData();
-      fd.append('file', file);
+      const fd = new FormData()
+      fd.append('file', file)
 
-      const res = await fetch('/api/settings/clinic/logo', { method: 'POST', body: fd });
-      const result = await res.json();
+      const res = await fetch('/api/settings/clinic/logo', { method: 'POST', body: fd })
+      const result = await res.json()
 
-      if (!res.ok) throw new Error(result.error || 'Upload failed');
+      if (!res.ok) throw new Error(result.error || 'Upload failed')
 
-      setLogo(result.logo);
-      toast({ title: 'Logo uploaded', description: 'Your clinic logo has been updated.' });
+      setLogo(result.logo)
+      toast({ title: 'Logo uploaded', description: 'Your clinic logo has been updated.' })
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Upload failed', description: err.message });
+      toast({ variant: 'destructive', title: 'Upload failed', description: err.message })
     } finally {
-      setUploadingLogo(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUploadingLogo(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
-  };
+  }
 
   const handleLogoRemove = async () => {
-    setUploadingLogo(true);
+    setUploadingLogo(true)
     try {
-      const res = await fetch('/api/settings/clinic/logo', { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to remove logo');
+      const res = await fetch('/api/settings/clinic/logo', { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to remove logo')
 
-      setLogo(null);
-      toast({ title: 'Logo removed' });
+      setLogo(null)
+      toast({ title: 'Logo removed' })
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message });
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
-      setUploadingLogo(false);
+      setUploadingLogo(false)
     }
-  };
+  }
 
-  const updateDay = useCallback((day: string, field: keyof DaySchedule, value: string | boolean) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: { ...prev[day], [field]: value },
-    }));
-  }, []);
+  const updateDay = useCallback(
+    (day: string, field: keyof DaySchedule, value: string | boolean) => {
+      setSchedule((prev) => ({
+        ...prev,
+        [day]: { ...prev[day], [field]: value },
+      }))
+    },
+    []
+  )
 
   const copyToAll = useCallback((sourceDay: string) => {
-    setSchedule(prev => {
-      const source = prev[sourceDay];
-      const next: WeekSchedule = {};
+    setSchedule((prev) => {
+      const source = prev[sourceDay]
+      const next: WeekSchedule = {}
       for (const day of DAYS) {
-        next[day] = { ...source };
+        next[day] = { ...source }
       }
-      return next;
-    });
-  }, []);
+      return next
+    })
+  }, [])
 
   const handleSave = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
-      const payload = { ...formData, workingHours: serializeSchedule(schedule), patientPortalEnabled };
+      const payload = {
+        ...formData,
+        workingHours: serializeSchedule(schedule),
+        patientPortalEnabled,
+      }
       const response = await fetch('/api/settings/clinic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'Clinic information saved successfully',
-        });
+        })
       } else {
-        throw new Error(result.error || 'Failed to save');
+        throw new Error(result.error || 'Failed to save')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="p-6">Loading...</div>
   }
 
   return (
@@ -249,7 +261,9 @@ export default function ClinicSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Clinic Logo</CardTitle>
-            <CardDescription>Upload your clinic logo to display in the sidebar and invoices</CardDescription>
+            <CardDescription>
+              Upload your clinic logo to display in the sidebar and invoices
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
@@ -507,7 +521,7 @@ export default function ClinicSettingsPage() {
             </div>
             <Separator />
             {DAYS.map((day) => {
-              const d = schedule[day];
+              const d = schedule[day]
               return (
                 <div
                   key={day}
@@ -545,7 +559,7 @@ export default function ClinicSettingsPage() {
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              );
+              )
             })}
           </CardContent>
         </Card>
@@ -617,17 +631,15 @@ export default function ClinicSettingsPage() {
                   Patients can access the portal via OTP login
                 </p>
               </div>
-              <Switch
-                checked={patientPortalEnabled}
-                onCheckedChange={setPatientPortalEnabled}
-              />
+              <Switch checked={patientPortalEnabled} onCheckedChange={setPatientPortalEnabled} />
             </div>
             {patientPortalEnabled && hospitalSlug && (
               <div className="p-3 rounded-lg bg-muted/50 space-y-2">
                 <p className="text-sm font-medium">Portal Login URL</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-xs bg-background p-2 rounded border break-all">
-                    {typeof window !== 'undefined' ? window.location.origin : ''}/portal/login?clinic={hospitalSlug}
+                    {typeof window !== 'undefined' ? window.location.origin : ''}
+                    /portal/login?clinic={hospitalSlug}
                   </code>
                   <Button
                     variant="outline"
@@ -635,8 +647,8 @@ export default function ClinicSettingsPage() {
                     onClick={() => {
                       navigator.clipboard.writeText(
                         `${window.location.origin}/portal/login?clinic=${hospitalSlug}`
-                      );
-                      toast({ title: 'Copied', description: 'Portal URL copied to clipboard' });
+                      )
+                      toast({ title: 'Copied', description: 'Portal URL copied to clipboard' })
                     }}
                   >
                     <Copy className="h-3 w-3" />
@@ -659,5 +671,5 @@ export default function ClinicSettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

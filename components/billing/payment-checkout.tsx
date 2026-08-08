@@ -1,15 +1,15 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { CreditCard, Loader2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react"
+} from '@/components/ui/dialog'
+import { CreditCard, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
 
 interface PaymentCheckoutProps {
   invoiceId: string
@@ -22,7 +22,7 @@ interface PaymentCheckoutProps {
   trigger?: React.ReactNode
 }
 
-type CheckoutState = "idle" | "loading" | "checkout" | "verifying" | "success" | "error"
+type CheckoutState = 'idle' | 'loading' | 'checkout' | 'verifying' | 'success' | 'error'
 
 export function PaymentCheckout({
   invoiceId,
@@ -41,57 +41,57 @@ export function PaymentCheckout({
     if (!val) onClose?.()
   }
 
-  const [state, setState] = useState<CheckoutState>("idle")
-  const [errorMsg, setErrorMsg] = useState("")
+  const [state, setState] = useState<CheckoutState>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleOpenChange = (val: boolean) => {
-    if (state === "verifying" || state === "loading") return // Prevent close during processing
+    if (state === 'verifying' || state === 'loading') return // Prevent close during processing
     setOpen(val)
     if (!val) {
-      setState("idle")
-      setErrorMsg("")
+      setState('idle')
+      setErrorMsg('')
     }
   }
 
   const initiatePayment = useCallback(async () => {
     try {
-      setState("loading")
-      setErrorMsg("")
+      setState('loading')
+      setErrorMsg('')
 
       // Step 1: Create order
-      const orderRes = await fetch("/api/payments/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const orderRes = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoiceId, amount }),
       })
 
       if (!orderRes.ok) {
         const data = await orderRes.json()
-        throw new Error(data.error || "Failed to create payment order")
+        throw new Error(data.error || 'Failed to create payment order')
       }
 
       const orderData = await orderRes.json()
       const { checkout, order, hospital, patient } = orderData
 
-      setState("checkout")
+      setState('checkout')
 
       // Step 2: Open appropriate checkout based on provider
       switch (checkout.provider) {
-        case "razorpay":
+        case 'razorpay':
           await handleRazorpayCheckout(checkout, order, hospital, patient)
           break
-        case "phonepe":
+        case 'phonepe':
           handlePhonePeCheckout(checkout)
           break
-        case "paytm":
+        case 'paytm':
           handlePaytmCheckout(checkout)
           break
         default:
           throw new Error(`Unsupported provider: ${checkout.provider}`)
       }
     } catch (err: unknown) {
-      setState("error")
-      setErrorMsg(err instanceof Error ? err.message : "Payment failed")
+      setState('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Payment failed')
     }
   }, [invoiceId, amount])
 
@@ -103,10 +103,12 @@ export function PaymentCheckout({
   ) => {
     // Load Razorpay script if not already loaded
     if (!(window as unknown as Record<string, unknown>).Razorpay) {
-      await loadScript("https://checkout.razorpay.com/v1/checkout.js")
+      await loadScript('https://checkout.razorpay.com/v1/checkout.js')
     }
 
-    const RazorpayConstructor = (window as unknown as Record<string, unknown>).Razorpay as new (options: Record<string, unknown>) => {
+    const RazorpayConstructor = (window as unknown as Record<string, unknown>).Razorpay as new (
+      options: Record<string, unknown>
+    ) => {
       open: () => void
       on: (event: string, handler: () => void) => void
     }
@@ -115,16 +117,16 @@ export function PaymentCheckout({
       const options = {
         key: checkout.key,
         amount: checkout.amount,
-        currency: checkout.currency || "INR",
+        currency: checkout.currency || 'INR',
         name: hospital.name,
         description: `Payment for ${invoiceNo}`,
         order_id: checkout.orderId,
         prefill: {
           name: patient.name,
-          email: patient.email || "",
-          contact: patient.phone || "",
+          email: patient.email || '',
+          contact: patient.phone || '',
         },
-        theme: { color: "#0f172a" },
+        theme: { color: '#0f172a' },
         handler: async (response: Record<string, string>) => {
           await verifyPayment({
             invoiceId,
@@ -136,17 +138,17 @@ export function PaymentCheckout({
         },
         modal: {
           ondismiss: () => {
-            setState("idle")
-            reject(new Error("Payment cancelled"))
+            setState('idle')
+            reject(new Error('Payment cancelled'))
           },
         },
       }
 
       const rzp = new RazorpayConstructor(options)
-      rzp.on("payment.failed", () => {
-        setState("error")
-        setErrorMsg("Payment failed. Please try again.")
-        reject(new Error("Payment failed"))
+      rzp.on('payment.failed', () => {
+        setState('error')
+        setErrorMsg('Payment failed. Please try again.')
+        reject(new Error('Payment failed'))
       })
       rzp.open()
     })
@@ -158,8 +160,8 @@ export function PaymentCheckout({
     if (redirectUrl) {
       window.location.href = redirectUrl
     } else {
-      setState("error")
-      setErrorMsg("Failed to get PhonePe redirect URL")
+      setState('error')
+      setErrorMsg('Failed to get PhonePe redirect URL')
     }
   }
 
@@ -171,19 +173,17 @@ export function PaymentCheckout({
     const paytmAmount = checkout.amount as number
 
     // Build Paytm payment page URL
-    const isProduction = !mid.includes("TEST")
-    const baseUrl = isProduction
-      ? "https://securegw.paytm.in"
-      : "https://securegw-stage.paytm.in"
+    const isProduction = !mid.includes('TEST')
+    const baseUrl = isProduction ? 'https://securegw.paytm.in' : 'https://securegw-stage.paytm.in'
 
-    const form = document.createElement("form")
-    form.method = "POST"
+    const form = document.createElement('form')
+    form.method = 'POST'
     form.action = `${baseUrl}/theia/api/v1/showPaymentPage?mid=${mid}&orderId=${orderId}`
 
     const fields = { mid: mid, orderId: orderId, txnToken: txnToken, AMOUNT: String(paytmAmount) }
     for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement("input")
-      input.type = "hidden"
+      const input = document.createElement('input')
+      input.type = 'hidden'
       input.name = key
       input.value = value
       form.appendChild(input)
@@ -194,37 +194,35 @@ export function PaymentCheckout({
   }
 
   const verifyPayment = async (params: Record<string, string>) => {
-    setState("verifying")
+    setState('verifying')
     try {
-      const res = await fetch("/api/payments/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/payments/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Verification failed")
+        throw new Error(data.error || 'Verification failed')
       }
 
-      setState("success")
+      setState('success')
       setTimeout(() => {
         setOpen(false)
-        setState("idle")
+        setState('idle')
         onSuccess?.()
       }, 2000)
     } catch (err: unknown) {
-      setState("error")
-      setErrorMsg(
-        err instanceof Error ? err.message : "Payment verification failed"
-      )
+      setState('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Payment verification failed')
     }
   }
 
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
       minimumFractionDigits: 0,
     }).format(val)
 
@@ -242,32 +240,24 @@ export function PaymentCheckout({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>
-              {state === "success" ? "Payment Successful" : "Pay Online"}
-            </DialogTitle>
+            <DialogTitle>{state === 'success' ? 'Payment Successful' : 'Pay Online'}</DialogTitle>
             <DialogDescription>
-              {state === "success"
-                ? "Your payment has been processed successfully."
+              {state === 'success'
+                ? 'Your payment has been processed successfully.'
                 : `Invoice ${invoiceNo} for ${patientName}`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
-            {state === "idle" && (
+            {state === 'idle' && (
               <div className="space-y-4">
                 <div className="rounded-lg border p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Amount</span>
-                    <span className="font-semibold text-lg">
-                      {formatCurrency(amount)}
-                    </span>
+                    <span className="font-semibold text-lg">{formatCurrency(amount)}</span>
                   </div>
                 </div>
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={initiatePayment}
-                >
+                <Button className="w-full" size="lg" onClick={initiatePayment}>
                   <CreditCard className="h-4 w-4 mr-2" />
                   Pay {formatCurrency(amount)}
                 </Button>
@@ -277,43 +267,35 @@ export function PaymentCheckout({
               </div>
             )}
 
-            {(state === "loading" || state === "checkout") && (
+            {(state === 'loading' || state === 'checkout') && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  {state === "loading"
-                    ? "Preparing payment..."
-                    : "Waiting for payment..."}
+                  {state === 'loading' ? 'Preparing payment...' : 'Waiting for payment...'}
                 </p>
               </div>
             )}
 
-            {state === "verifying" && (
+            {state === 'verifying' && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  Verifying payment...
-                </p>
+                <p className="text-sm text-muted-foreground">Verifying payment...</p>
               </div>
             )}
 
-            {state === "success" && (
+            {state === 'success' && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <CheckCircle className="h-12 w-12 text-green-500" />
                 <p className="font-medium">Payment of {formatCurrency(amount)} received</p>
-                <p className="text-sm text-muted-foreground">
-                  Invoice {invoiceNo} updated
-                </p>
+                <p className="text-sm text-muted-foreground">Invoice {invoiceNo} updated</p>
               </div>
             )}
 
-            {state === "error" && (
+            {state === 'error' && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <AlertCircle className="h-12 w-12 text-red-500" />
                 <p className="font-medium text-red-600">Payment Failed</p>
-                <p className="text-sm text-muted-foreground text-center">
-                  {errorMsg}
-                </p>
+                <p className="text-sm text-muted-foreground text-center">{errorMsg}</p>
                 <Button onClick={initiatePayment} variant="outline">
                   Try Again
                 </Button>
@@ -333,7 +315,7 @@ function loadScript(src: string): Promise<void> {
       resolve()
       return
     }
-    const script = document.createElement("script")
+    const script = document.createElement('script')
     script.src = src
     script.onload = () => resolve()
     script.onerror = () => reject(new Error(`Failed to load script: ${src}`))

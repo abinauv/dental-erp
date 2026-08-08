@@ -1,16 +1,9 @@
-"use client"
+'use client'
 
-import { useState, useRef, useCallback, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
-import {
-  X,
-  Columns2,
-  SplitSquareHorizontal,
-} from "lucide-react"
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { X, Columns2, SplitSquareHorizontal } from 'lucide-react'
 
 interface CompareImage {
   src: string
@@ -25,13 +18,8 @@ interface ImageCompareProps {
   after: CompareImage
 }
 
-export function ImageCompare({
-  open,
-  onOpenChange,
-  before,
-  after,
-}: ImageCompareProps) {
-  const [mode, setMode] = useState<"side-by-side" | "slider">("side-by-side")
+export function ImageCompare({ open, onOpenChange, before, after }: ImageCompareProps) {
+  const [mode, setMode] = useState<'side-by-side' | 'slider'>('side-by-side')
   const [sliderPos, setSliderPos] = useState(50) // percentage
   const [isDragging, setIsDragging] = useState(false)
   const sliderContainerRef = useRef<HTMLDivElement>(null)
@@ -92,30 +80,27 @@ export function ImageCompare({
     [isDragging]
   )
 
-  const handleSliderDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (!sliderContainerRef.current) return
-      setIsDragging(true)
-      const rect = sliderContainerRef.current.getBoundingClientRect()
-      const pos = ((e.clientX - rect.left) / rect.width) * 100
-      setSliderPos(Math.max(0, Math.min(100, pos)))
-    },
-    []
-  )
+  const handleSliderDown = useCallback((e: React.MouseEvent) => {
+    if (!sliderContainerRef.current) return
+    setIsDragging(true)
+    const rect = sliderContainerRef.current.getBoundingClientRect()
+    const pos = ((e.clientX - rect.left) / rect.width) * 100
+    setSliderPos(Math.max(0, Math.min(100, pos)))
+  }, [])
 
   useEffect(() => {
     const handleUp = () => setIsDragging(false)
-    window.addEventListener("mouseup", handleUp)
-    return () => window.removeEventListener("mouseup", handleUp)
+    window.addEventListener('mouseup', handleUp)
+    return () => window.removeEventListener('mouseup', handleUp)
   }, [])
 
   const imageStyle: React.CSSProperties = {
     transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-    transition: isPanning ? "none" : "transform 0.2s ease",
-    objectFit: "contain" as const,
-    width: "100%",
-    height: "100%",
-    userSelect: "none" as const,
+    transition: isPanning ? 'none' : 'transform 0.2s ease',
+    objectFit: 'contain' as const,
+    width: '100%',
+    height: '100%',
+    userSelect: 'none' as const,
   }
 
   return (
@@ -131,11 +116,11 @@ export function ImageCompare({
                   variant="ghost"
                   size="sm"
                   className={`h-7 text-xs ${
-                    mode === "side-by-side"
-                      ? "bg-white/20 text-white"
-                      : "text-zinc-400 hover:text-white"
+                    mode === 'side-by-side'
+                      ? 'bg-white/20 text-white'
+                      : 'text-zinc-400 hover:text-white'
                   }`}
-                  onClick={() => setMode("side-by-side")}
+                  onClick={() => setMode('side-by-side')}
                 >
                   <Columns2 className="h-3.5 w-3.5 mr-1" />
                   Side by Side
@@ -144,11 +129,9 @@ export function ImageCompare({
                   variant="ghost"
                   size="sm"
                   className={`h-7 text-xs ${
-                    mode === "slider"
-                      ? "bg-white/20 text-white"
-                      : "text-zinc-400 hover:text-white"
+                    mode === 'slider' ? 'bg-white/20 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
-                  onClick={() => setMode("slider")}
+                  onClick={() => setMode('slider')}
                 >
                   <SplitSquareHorizontal className="h-3.5 w-3.5 mr-1" />
                   Slider
@@ -167,7 +150,7 @@ export function ImageCompare({
 
           {/* Content */}
           <div className="flex-1 overflow-hidden">
-            {mode === "side-by-side" ? (
+            {mode === 'side-by-side' ? (
               <div
                 className="flex h-full gap-1"
                 onWheel={handleWheel}
@@ -186,12 +169,7 @@ export function ImageCompare({
                     )}
                   </div>
                   <div className="flex-1 flex items-center justify-center overflow-hidden bg-zinc-950">
-                    <img
-                      src={before.src}
-                      alt={before.title}
-                      style={imageStyle}
-                      draggable={false}
-                    />
+                    <img src={before.src} alt={before.title} style={imageStyle} draggable={false} />
                   </div>
                 </div>
 
@@ -205,12 +183,7 @@ export function ImageCompare({
                     )}
                   </div>
                   <div className="flex-1 flex items-center justify-center overflow-hidden bg-zinc-950">
-                    <img
-                      src={after.src}
-                      alt={after.title}
-                      style={imageStyle}
-                      draggable={false}
-                    />
+                    <img src={after.src} alt={after.title} style={imageStyle} draggable={false} />
                   </div>
                 </div>
               </div>

@@ -1,20 +1,17 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // POST - Process refund for a payment
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "ACCOUNTANT"].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to process refunds" },
         { status: 403 }
@@ -24,54 +21,41 @@ export async function POST(
     const { id } = await params
     const body = await request.json()
 
-    const {
-      refundAmount,
-      refundReason,
-    } = body
+    const { refundAmount, refundReason } = body
 
     // Validate refund amount
     if (!refundAmount || refundAmount <= 0) {
-      return NextResponse.json(
-        { error: "Valid refund amount is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Valid refund amount is required' }, { status: 400 })
     }
 
     // Check if payment exists
     const existingPayment = await prisma.payment.findUnique({
       where: { id, hospitalId },
       include: {
-        invoice: true
-      }
+        invoice: true,
+      },
     })
 
     if (!existingPayment) {
-      return NextResponse.json(
-        { error: "Payment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
     // Only allow refund on completed payments
-    if (existingPayment.status !== "COMPLETED") {
-      return NextResponse.json(
-        { error: "Can only refund completed payments" },
-        { status: 400 }
-      )
+    if (existingPayment.status !== 'COMPLETED') {
+      return NextResponse.json({ error: 'Can only refund completed payments' }, { status: 400 })
     }
 
     // Check if already refunded
     if (existingPayment.refundAmount && Number(existingPayment.refundAmount) > 0) {
-      return NextResponse.json(
-        { error: "Payment has already been refunded" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Payment has already been refunded' }, { status: 400 })
     }
 
     // Check if refund amount exceeds payment amount
     if (refundAmount > Number(existingPayment.amount)) {
       return NextResponse.json(
-        { error: `Refund amount (${refundAmount}) exceeds payment amount (${existingPayment.amount})` },
+        {
+          error: `Refund amount (${refundAmount}) exceeds payment amount (${existingPayment.amount})`,
+        },
         { status: 400 }
       )
     }
@@ -80,11 +64,11 @@ export async function POST(
     const payment = await prisma.payment.update({
       where: { id, hospitalId },
       data: {
-        status: "REFUNDED",
+        status: 'REFUNDED',
         refundAmount,
         refundDate: new Date(),
         refundReason,
-      }
+      },
     })
 
     // Update invoice amounts
@@ -94,9 +78,9 @@ export async function POST(
     // Determine new invoice status
     let newStatus = existingPayment.invoice.status
     if (newPaidAmount <= 0) {
-      newStatus = "REFUNDED"
+      newStatus = 'REFUNDED'
     } else if (newBalanceAmount > 0) {
-      newStatus = "PARTIALLY_PAID"
+      newStatus = 'PARTIALLY_PAID'
     }
 
     await prisma.invoice.update({
@@ -105,7 +89,7 @@ export async function POST(
         paidAmount: newPaidAmount,
         balanceAmount: newBalanceAmount,
         status: newStatus,
-      }
+      },
     })
 
     // Return updated payment with invoice
@@ -126,22 +110,19 @@ export async function POST(
                 patientId: true,
                 firstName: true,
                 lastName: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     })
 
     return NextResponse.json({
-      message: "Refund processed successfully",
-      payment: updatedPayment
+      message: 'Refund processed successfully',
+      payment: updatedPayment,
     })
   } catch (error) {
-    console.error("Error processing refund:", error)
-    return NextResponse.json(
-      { error: "Failed to process refund" },
-      { status: 500 }
-    )
+    console.error('Error processing refund:', error)
+    return NextResponse.json({ error: 'Failed to process refund' }, { status: 500 })
   }
 }

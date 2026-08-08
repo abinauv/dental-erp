@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,9 +10,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -21,7 +21,7 @@ interface ConfirmDialogProps {
   description: string
   confirmLabel?: string
   cancelLabel?: string
-  variant?: "destructive" | "default"
+  variant?: 'destructive' | 'default'
   onConfirm: () => void | Promise<void>
   loading?: boolean
 }
@@ -31,9 +31,9 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
-  variant = "destructive",
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  variant = 'destructive',
   onConfirm,
   loading = false,
 }: ConfirmDialogProps) {
@@ -66,7 +66,11 @@ export function ConfirmDialog({
               handleConfirm()
             }}
             disabled={busy}
-            className={variant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            className={
+              variant === 'destructive'
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : ''
+            }
           >
             {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {confirmLabel}
@@ -84,14 +88,14 @@ export function useConfirmDialog() {
     title: string
     description: string
     confirmLabel: string
-    variant: "destructive" | "default"
+    variant: 'destructive' | 'default'
     resolve: ((value: boolean) => void) | null
   }>({
     open: false,
-    title: "",
-    description: "",
-    confirmLabel: "Confirm",
-    variant: "destructive",
+    title: '',
+    description: '',
+    confirmLabel: 'Confirm',
+    variant: 'destructive',
     resolve: null,
   })
 
@@ -99,15 +103,15 @@ export function useConfirmDialog() {
     title: string
     description: string
     confirmLabel?: string
-    variant?: "destructive" | "default"
+    variant?: 'destructive' | 'default'
   }): Promise<boolean> => {
     return new Promise((resolve) => {
       setState({
         open: true,
         title: opts.title,
         description: opts.description,
-        confirmLabel: opts.confirmLabel || "Confirm",
-        variant: opts.variant || "destructive",
+        confirmLabel: opts.confirmLabel || 'Confirm',
+        variant: opts.variant || 'destructive',
         resolve,
       })
     })

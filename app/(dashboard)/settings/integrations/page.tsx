@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Calendar,
   Check,
@@ -14,9 +14,9 @@ import {
   RefreshCcw,
   Unplug,
   AlertCircle,
-} from "lucide-react"
-import { useSearchParams } from "next/navigation"
-import { format } from "date-fns"
+} from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { format } from 'date-fns'
 
 interface CalendarStatus {
   connected: boolean
@@ -42,21 +42,21 @@ export default function IntegrationsPage() {
 
   // Show success/error from OAuth callback
   useEffect(() => {
-    const success = searchParams.get("success")
-    const error = searchParams.get("error")
-    if (success === "connected") {
-      toast({ title: "Google Calendar connected successfully" })
+    const success = searchParams.get('success')
+    const error = searchParams.get('error')
+    if (success === 'connected') {
+      toast({ title: 'Google Calendar connected successfully' })
     } else if (error) {
       const messages: Record<string, string> = {
-        denied: "Calendar access was denied",
-        missing_params: "Missing parameters from Google",
-        invalid_state: "Invalid session state",
-        token_exchange: "Failed to exchange authentication token",
+        denied: 'Calendar access was denied',
+        missing_params: 'Missing parameters from Google',
+        invalid_state: 'Invalid session state',
+        token_exchange: 'Failed to exchange authentication token',
       }
       toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: messages[error] || "An error occurred",
+        variant: 'destructive',
+        title: 'Connection Failed',
+        description: messages[error] || 'An error occurred',
       })
     }
   }, [searchParams, toast])
@@ -68,7 +68,7 @@ export default function IntegrationsPage() {
   const fetchCalendarStatus = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/integrations/google-calendar/sync")
+      const res = await fetch('/api/integrations/google-calendar/sync')
       if (!res.ok) throw new Error()
       const data = await res.json()
       setCalendarStatus(data)
@@ -82,17 +82,17 @@ export default function IntegrationsPage() {
   const handleConnect = async () => {
     try {
       setConnecting(true)
-      const res = await fetch("/api/integrations/google-calendar/auth")
+      const res = await fetch('/api/integrations/google-calendar/auth')
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || "Failed to start connection")
+        throw new Error(err.error || 'Failed to start connection')
       }
       const data = await res.json()
       window.location.href = data.authUrl
     } catch (err: any) {
       toast({
-        variant: "destructive",
-        title: "Error",
+        variant: 'destructive',
+        title: 'Error',
         description: err.message,
       })
       setConnecting(false)
@@ -102,17 +102,17 @@ export default function IntegrationsPage() {
   const handleSync = async () => {
     try {
       setSyncing(true)
-      const res = await fetch("/api/integrations/google-calendar/sync", {
-        method: "POST",
+      const res = await fetch('/api/integrations/google-calendar/sync', {
+        method: 'POST',
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: "Sync Complete", description: data.message })
+      toast({ title: 'Sync Complete', description: data.message })
       fetchCalendarStatus()
     } catch (err: any) {
       toast({
-        variant: "destructive",
-        title: "Sync Failed",
+        variant: 'destructive',
+        title: 'Sync Failed',
         description: err.message,
       })
     } finally {
@@ -121,17 +121,22 @@ export default function IntegrationsPage() {
   }
 
   const handleDisconnect = async () => {
-    const ok = await confirm({ title: "Disconnect Google Calendar?", description: "Your synced events won't be removed from Google.", confirmLabel: "Yes, proceed" }); if (!ok) return
+    const ok = await confirm({
+      title: 'Disconnect Google Calendar?',
+      description: "Your synced events won't be removed from Google.",
+      confirmLabel: 'Yes, proceed',
+    })
+    if (!ok) return
     try {
       setDisconnecting(true)
-      const res = await fetch("/api/integrations/google-calendar/disconnect", {
-        method: "POST",
+      const res = await fetch('/api/integrations/google-calendar/disconnect', {
+        method: 'POST',
       })
-      if (!res.ok) throw new Error("Failed to disconnect")
-      toast({ title: "Google Calendar disconnected" })
+      if (!res.ok) throw new Error('Failed to disconnect')
+      toast({ title: 'Google Calendar disconnected' })
       setCalendarStatus({ connected: false, integration: null })
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error", description: err.message })
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setDisconnecting(false)
     }
@@ -141,9 +146,7 @@ export default function IntegrationsPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Integrations</h1>
-        <p className="text-muted-foreground">
-          Connect external services to enhance your workflow
-        </p>
+        <p className="text-muted-foreground">Connect external services to enhance your workflow</p>
       </div>
 
       {/* Google Calendar */}
@@ -162,8 +165,8 @@ export default function IntegrationsPage() {
               </div>
             </div>
             {!loading && (
-              <Badge variant={calendarStatus?.connected ? "default" : "secondary"}>
-                {calendarStatus?.connected ? "Connected" : "Not Connected"}
+              <Badge variant={calendarStatus?.connected ? 'default' : 'secondary'}>
+                {calendarStatus?.connected ? 'Connected' : 'Not Connected'}
               </Badge>
             )}
           </div>
@@ -179,29 +182,31 @@ export default function IntegrationsPage() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Calendar ID</p>
-                  <p className="font-medium">{calendarStatus.integration?.calendarId || "primary"}</p>
+                  <p className="font-medium">
+                    {calendarStatus.integration?.calendarId || 'primary'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Connected Since</p>
                   <p className="font-medium">
                     {calendarStatus.integration?.createdAt
-                      ? format(new Date(calendarStatus.integration.createdAt), "PPP")
-                      : "—"}
+                      ? format(new Date(calendarStatus.integration.createdAt), 'PPP')
+                      : '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Last Sync</p>
                   <p className="font-medium">
                     {calendarStatus.integration?.lastSyncAt
-                      ? format(new Date(calendarStatus.integration.lastSyncAt), "PPp")
-                      : "Never"}
+                      ? format(new Date(calendarStatus.integration.lastSyncAt), 'PPp')
+                      : 'Never'}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Status</p>
                   <p className="font-medium flex items-center gap-1">
                     <Check className="h-4 w-4 text-green-600" />
-                    {calendarStatus.integration?.syncEnabled ? "Sync Enabled" : "Sync Disabled"}
+                    {calendarStatus.integration?.syncEnabled ? 'Sync Enabled' : 'Sync Disabled'}
                   </p>
                 </div>
               </div>
@@ -233,14 +238,15 @@ export default function IntegrationsPage() {
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Connect your Google Calendar to automatically sync appointments. When you create
-                or update appointments in the system, they'll appear on your Google Calendar.
+                Connect your Google Calendar to automatically sync appointments. When you create or
+                update appointments in the system, they'll appear on your Google Calendar.
               </p>
               <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
                 <p className="text-xs text-amber-800">
                   Requires Google Calendar API credentials configured by the system administrator
-                  (GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET environment variables).
+                  (GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET environment
+                  variables).
                 </p>
               </div>
               <Button onClick={handleConnect} disabled={connecting}>

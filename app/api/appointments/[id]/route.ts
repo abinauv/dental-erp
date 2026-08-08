@@ -1,17 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { handleCancellationWaitlist } from "@/lib/services/smart-scheduler"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { handleCancellationWaitlist } from '@/lib/services/smart-scheduler'
 
 // GET - Get single appointment
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -22,8 +19,8 @@ export async function GET(
       include: {
         patient: {
           include: {
-            medicalHistory: true
-          }
+            medicalHistory: true,
+          },
         },
         doctor: {
           select: {
@@ -32,43 +29,34 @@ export async function GET(
             lastName: true,
             specialization: true,
             phone: true,
-          }
+          },
         },
         treatments: {
           include: {
-            procedure: true
-          }
+            procedure: true,
+          },
         },
-        reminders: true
-      }
+        reminders: true,
+      },
     })
 
     if (!appointment) {
-      return NextResponse.json(
-        { error: "Appointment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
     }
 
     return NextResponse.json(appointment)
   } catch (error) {
-    console.error("Error fetching appointment:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch appointment" },
-      { status: 500 }
-    )
+    console.error('Error fetching appointment:', error)
+    return NextResponse.json({ error: 'Failed to fetch appointment' }, { status: 500 })
   }
 }
 
 // PUT - Update appointment
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -89,14 +77,11 @@ export async function PUT(
 
     // Check if appointment exists and belongs to this hospital
     const existingAppointment = await prisma.appointment.findFirst({
-      where: { id, hospitalId }
+      where: { id, hospitalId },
     })
 
     if (!existingAppointment) {
-      return NextResponse.json(
-        { error: "Appointment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
     }
 
     // Build update data
@@ -116,8 +101,11 @@ export async function PUT(
     if (doctorId !== undefined) updateData.doctorId = doctorId
 
     // If rescheduling, check for conflicts
-    if ((scheduledDate || scheduledTime || doctorId) &&
-        status !== "CANCELLED" && status !== "NO_SHOW") {
+    if (
+      (scheduledDate || scheduledTime || doctorId) &&
+      status !== 'CANCELLED' &&
+      status !== 'NO_SHOW'
+    ) {
       const checkDate = scheduledDate ? new Date(scheduledDate) : existingAppointment.scheduledDate
       const checkTime = scheduledTime || existingAppointment.scheduledTime
       const checkDoctorId = doctorId || existingAppointment.doctorId
@@ -130,21 +118,21 @@ export async function PUT(
           scheduledDate: checkDate,
           scheduledTime: checkTime,
           status: {
-            notIn: ["CANCELLED", "NO_SHOW", "RESCHEDULED"]
-          }
-        }
+            notIn: ['CANCELLED', 'NO_SHOW', 'RESCHEDULED'],
+          },
+        },
       })
 
       if (conflictingAppointment) {
         return NextResponse.json(
-          { error: "Doctor already has an appointment at this time" },
+          { error: 'Doctor already has an appointment at this time' },
           { status: 409 }
         )
       }
     }
 
     // Handle cancellation
-    if (status === "CANCELLED") {
+    if (status === 'CANCELLED') {
       updateData.cancelledAt = new Date()
       if (body.cancellationReason) {
         updateData.cancellationReason = body.cancellationReason
@@ -162,20 +150,20 @@ export async function PUT(
             firstName: true,
             lastName: true,
             phone: true,
-          }
+          },
         },
         doctor: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     // Smart Scheduler: When appointment is cancelled, notify matching waitlist patients
-    if (status === "CANCELLED" && existingAppointment.status !== "CANCELLED") {
+    if (status === 'CANCELLED' && existingAppointment.status !== 'CANCELLED') {
       try {
         const waitlistResult = await handleCancellationWaitlist({
           hospitalId,
@@ -201,17 +189,14 @@ export async function PUT(
         }
       } catch (err) {
         // Don't fail the cancellation if waitlist notification fails
-        console.error("Smart scheduler error:", err)
+        console.error('Smart scheduler error:', err)
       }
     }
 
     return NextResponse.json(appointment)
   } catch (error) {
-    console.error("Error updating appointment:", error)
-    return NextResponse.json(
-      { error: "Failed to update appointment" },
-      { status: 500 }
-    )
+    console.error('Error updating appointment:', error)
+    return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 })
   }
 }
 
@@ -223,7 +208,7 @@ export async function DELETE(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -232,35 +217,29 @@ export async function DELETE(
     // Check if appointment exists and belongs to this hospital
     const appointment = await prisma.appointment.findFirst({
       where: { id, hospitalId },
-      include: { treatments: true }
+      include: { treatments: true },
     })
 
     if (!appointment) {
-      return NextResponse.json(
-        { error: "Appointment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
     }
 
     // Don't allow deletion if treatments are linked
     if (appointment.treatments.length > 0) {
       return NextResponse.json(
-        { error: "Cannot delete appointment with linked treatments. Cancel it instead." },
+        { error: 'Cannot delete appointment with linked treatments. Cancel it instead.' },
         { status: 400 }
       )
     }
 
     // Delete appointment (reminders will cascade)
     await prisma.appointment.delete({
-      where: { id }
+      where: { id },
     })
 
-    return NextResponse.json({ message: "Appointment deleted successfully" })
+    return NextResponse.json({ message: 'Appointment deleted successfully' })
   } catch (error) {
-    console.error("Error deleting appointment:", error)
-    return NextResponse.json(
-      { error: "Failed to delete appointment" },
-      { status: 500 }
-    )
+    console.error('Error deleting appointment:', error)
+    return NextResponse.json({ error: 'Failed to delete appointment' }, { status: 500 })
   }
 }

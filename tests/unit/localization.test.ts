@@ -2,22 +2,62 @@
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@prisma/client', () => ({
-  InvoiceStatus: { DRAFT: 'DRAFT', PENDING: 'PENDING', PARTIALLY_PAID: 'PARTIALLY_PAID', PAID: 'PAID', OVERDUE: 'OVERDUE', CANCELLED: 'CANCELLED', REFUNDED: 'REFUNDED' },
-  PaymentMethod: { CASH: 'CASH', CARD: 'CARD', UPI: 'UPI', BANK_TRANSFER: 'BANK_TRANSFER', CHEQUE: 'CHEQUE', INSURANCE: 'INSURANCE', WALLET: 'WALLET', ONLINE: 'ONLINE' },
-  PaymentStatus: { PENDING: 'PENDING', COMPLETED: 'COMPLETED', FAILED: 'FAILED', REFUNDED: 'REFUNDED', CANCELLED: 'CANCELLED' },
-  InsuranceClaimStatus: { DRAFT: 'DRAFT', SUBMITTED: 'SUBMITTED', UNDER_REVIEW: 'UNDER_REVIEW', APPROVED: 'APPROVED', PARTIALLY_APPROVED: 'PARTIALLY_APPROVED', REJECTED: 'REJECTED', SETTLED: 'SETTLED' },
+  InvoiceStatus: {
+    DRAFT: 'DRAFT',
+    PENDING: 'PENDING',
+    PARTIALLY_PAID: 'PARTIALLY_PAID',
+    PAID: 'PAID',
+    OVERDUE: 'OVERDUE',
+    CANCELLED: 'CANCELLED',
+    REFUNDED: 'REFUNDED',
+  },
+  PaymentMethod: {
+    CASH: 'CASH',
+    CARD: 'CARD',
+    UPI: 'UPI',
+    BANK_TRANSFER: 'BANK_TRANSFER',
+    CHEQUE: 'CHEQUE',
+    INSURANCE: 'INSURANCE',
+    WALLET: 'WALLET',
+    ONLINE: 'ONLINE',
+  },
+  PaymentStatus: {
+    PENDING: 'PENDING',
+    COMPLETED: 'COMPLETED',
+    FAILED: 'FAILED',
+    REFUNDED: 'REFUNDED',
+    CANCELLED: 'CANCELLED',
+  },
+  InsuranceClaimStatus: {
+    DRAFT: 'DRAFT',
+    SUBMITTED: 'SUBMITTED',
+    UNDER_REVIEW: 'UNDER_REVIEW',
+    APPROVED: 'APPROVED',
+    PARTIALLY_APPROVED: 'PARTIALLY_APPROVED',
+    REJECTED: 'REJECTED',
+    SETTLED: 'SETTLED',
+  },
   DiscountType: { PERCENTAGE: 'PERCENTAGE', FIXED: 'FIXED' },
 }))
 
-import { formatCurrency, formatDate, formatPhone, validateAadhar, validateIndianPhone, validateGSTIN } from '@/lib/utils'
 import {
-  gstConfig, calculateGST, discountTypeConfig,
+  formatCurrency,
+  formatDate,
+  formatPhone,
+  validateAadhar,
+  validateIndianPhone,
+  validateGSTIN,
+} from '@/lib/utils'
+import {
+  gstConfig,
+  calculateGST,
+  discountTypeConfig,
   formatCurrency as billingFormatCurrency,
-  numberToWords, formatDateTime as billingFormatDateTime
+  numberToWords,
+  formatDateTime as billingFormatDateTime,
 } from '@/lib/billing-utils'
 
 describe('Section 10.1 — Current Locale (India)', () => {
-
   // ─── Currency Display ───────────────────────────────────────────────
 
   describe('Currency Display', () => {
@@ -211,7 +251,7 @@ describe('Section 10.1 — Current Locale (India)', () => {
     })
 
     it('numberToWords(1500.50) contains "Rupees" and "Paise"', () => {
-      const result = numberToWords(1500.50)
+      const result = numberToWords(1500.5)
       expect(result).toContain('Rupees')
       expect(result).toContain('Paise')
     })

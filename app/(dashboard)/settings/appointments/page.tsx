@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, Plus, Trash2, Save } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
+import { Calendar, Clock, Plus, Trash2, Save } from 'lucide-react'
+import { format } from 'date-fns'
 
 export default function AppointmentSettingsPage() {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
-  const [holidays, setHolidays] = useState<any[]>([]);
-  const [newHoliday, setNewHoliday] = useState({ name: '', date: '' });
+  const { toast } = useToast()
+  const [saving, setSaving] = useState(false)
+  const [holidays, setHolidays] = useState<any[]>([])
+  const [newHoliday, setNewHoliday] = useState({ name: '', date: '' })
 
   const [settings, setSettings] = useState({
     slotDuration: '30',
@@ -24,79 +24,79 @@ export default function AppointmentSettingsPage() {
     lunchBreakEnd: '14:00',
     maxAdvanceBookingDays: '30',
     reminderHoursBefore: '24',
-  });
+  })
 
   useEffect(() => {
-    fetchSettings();
-    fetchHolidays();
-  }, []);
+    fetchSettings()
+    fetchHolidays()
+  }, [])
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('/api/settings?category=appointments');
-      const result = await response.json();
+      const response = await fetch('/api/settings?category=appointments')
+      const result = await response.json()
 
       if (result.success && result.data) {
-        const settingsMap: any = {};
+        const settingsMap: any = {}
         result.data.forEach((s: any) => {
-          const key = s.key.replace('appointments.', '');
-          settingsMap[key] = s.value;
-        });
+          const key = s.key.replace('appointments.', '')
+          settingsMap[key] = s.value
+        })
 
-        setSettings(prev => ({ ...prev, ...settingsMap }));
+        setSettings((prev) => ({ ...prev, ...settingsMap }))
       }
     } catch (error) {
-      console.error('Failed to fetch settings:', error);
+      console.error('Failed to fetch settings:', error)
     }
-  };
+  }
 
   const fetchHolidays = async () => {
     try {
-      const currentYear = new Date().getFullYear();
-      const response = await fetch(`/api/settings/holidays?year=${currentYear}`);
-      const result = await response.json();
+      const currentYear = new Date().getFullYear()
+      const response = await fetch(`/api/settings/holidays?year=${currentYear}`)
+      const result = await response.json()
 
       if (result.success) {
-        setHolidays(result.data);
+        setHolidays(result.data)
       }
     } catch (error) {
-      console.error('Failed to fetch holidays:', error);
+      console.error('Failed to fetch holidays:', error)
     }
-  };
+  }
 
   const handleSaveSettings = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
       const settingsArray = Object.entries(settings).map(([key, value]) => ({
         key: `appointments.${key}`,
         value: value.toString(),
         category: 'appointments',
-      }));
+      }))
 
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: settingsArray }),
-      });
+      })
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'Appointment settings saved successfully',
-        });
+        })
       } else {
-        throw new Error('Failed to save settings');
+        throw new Error('Failed to save settings')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const handleAddHoliday = async () => {
     if (!newHoliday.name || !newHoliday.date) {
@@ -104,8 +104,8 @@ export default function AppointmentSettingsPage() {
         title: 'Error',
         description: 'Please enter holiday name and date',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
     try {
@@ -116,50 +116,50 @@ export default function AppointmentSettingsPage() {
           name: newHoliday.name,
           date: new Date(newHoliday.date).toISOString(),
         }),
-      });
+      })
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'Holiday added successfully',
-        });
-        setNewHoliday({ name: '', date: '' });
-        fetchHolidays();
+        })
+        setNewHoliday({ name: '', date: '' })
+        fetchHolidays()
       } else {
-        throw new Error('Failed to add holiday');
+        throw new Error('Failed to add holiday')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     }
-  };
+  }
 
   const handleDeleteHoliday = async (id: string) => {
     try {
       const response = await fetch(`/api/settings/holidays?id=${id}`, {
         method: 'DELETE',
-      });
+      })
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'Holiday deleted successfully',
-        });
-        fetchHolidays();
+        })
+        fetchHolidays()
       } else {
-        throw new Error('Failed to delete holiday');
+        throw new Error('Failed to delete holiday')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     }
-  };
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -268,7 +268,9 @@ export default function AppointmentSettingsPage() {
                   id="maxAdvanceBookingDays"
                   type="number"
                   value={settings.maxAdvanceBookingDays}
-                  onChange={(e) => setSettings({ ...settings, maxAdvanceBookingDays: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, maxAdvanceBookingDays: e.target.value })
+                  }
                 />
                 <p className="text-sm text-muted-foreground mt-1">
                   How far in advance patients can book appointments
@@ -281,7 +283,9 @@ export default function AppointmentSettingsPage() {
                   id="reminderHoursBefore"
                   type="number"
                   value={settings.reminderHoursBefore}
-                  onChange={(e) => setSettings({ ...settings, reminderHoursBefore: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, reminderHoursBefore: e.target.value })
+                  }
                 />
                 <p className="text-sm text-muted-foreground mt-1">
                   When to send appointment reminders
@@ -367,5 +371,5 @@ export default function AppointmentSettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

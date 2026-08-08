@@ -130,7 +130,10 @@ describe('authConfig.callbacks.authorized', () => {
   })
 
   it('allows access to /invite/accept without auth', () => {
-    const result = authorizedCallback({ auth: null, request: makeReq('/invite/accept/token123') } as any)
+    const result = authorizedCallback({
+      auth: null,
+      request: makeReq('/invite/accept/token123'),
+    } as any)
     expect(result).toBe(true)
   })
 

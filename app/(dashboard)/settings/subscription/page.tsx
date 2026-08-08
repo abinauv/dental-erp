@@ -1,15 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Check, Crown, Building2, Zap, Server } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from 'react'
+import { Check, Crown, Building2, Zap, Server } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
-type Plan = "FREE" | "PROFESSIONAL" | "ENTERPRISE" | "SELF_HOSTED"
+type Plan = 'FREE' | 'PROFESSIONAL' | 'ENTERPRISE' | 'SELF_HOSTED'
 
 type HospitalData = {
   name: string
@@ -24,17 +31,17 @@ type HospitalData = {
 
 const plans = [
   {
-    id: "FREE" as Plan,
-    name: "Free",
-    price: "0",
-    description: "Perfect for getting started",
+    id: 'FREE' as Plan,
+    name: 'Free',
+    price: '0',
+    description: 'Perfect for getting started',
     icon: Building2,
     features: [
-      "Up to 100 patients",
-      "Up to 3 staff members",
-      "500 MB storage",
-      "Basic reports",
-      "Email support",
+      'Up to 100 patients',
+      'Up to 3 staff members',
+      '500 MB storage',
+      'Basic reports',
+      'Email support',
     ],
     limits: {
       patients: 100,
@@ -43,20 +50,20 @@ const plans = [
     },
   },
   {
-    id: "PROFESSIONAL" as Plan,
-    name: "Professional",
-    price: "2,999",
-    description: "For growing practices",
+    id: 'PROFESSIONAL' as Plan,
+    name: 'Professional',
+    price: '2,999',
+    description: 'For growing practices',
     icon: Zap,
     popular: true,
     features: [
-      "Unlimited patients",
-      "Unlimited staff",
-      "Unlimited storage",
-      "Advanced analytics",
-      "Priority support",
-      "Custom branding",
-      "API access",
+      'Unlimited patients',
+      'Unlimited staff',
+      'Unlimited storage',
+      'Advanced analytics',
+      'Priority support',
+      'Custom branding',
+      'API access',
     ],
     limits: {
       patients: -1,
@@ -65,18 +72,18 @@ const plans = [
     },
   },
   {
-    id: "ENTERPRISE" as Plan,
-    name: "Enterprise",
-    price: "Custom",
-    description: "For large organizations",
+    id: 'ENTERPRISE' as Plan,
+    name: 'Enterprise',
+    price: 'Custom',
+    description: 'For large organizations',
     icon: Crown,
     features: [
-      "Everything in Professional",
-      "Multi-location support",
-      "Dedicated account manager",
-      "Custom integrations",
-      "SLA guarantee",
-      "On-premise option",
+      'Everything in Professional',
+      'Multi-location support',
+      'Dedicated account manager',
+      'Custom integrations',
+      'SLA guarantee',
+      'On-premise option',
     ],
     limits: {
       patients: -1,
@@ -85,19 +92,19 @@ const plans = [
     },
   },
   {
-    id: "SELF_HOSTED" as Plan,
-    name: "Self-Hosted",
-    price: "49,999",
-    priceNote: "one-time",
-    description: "Own your data forever",
+    id: 'SELF_HOSTED' as Plan,
+    name: 'Self-Hosted',
+    price: '49,999',
+    priceNote: 'one-time',
+    description: 'Own your data forever',
     icon: Server,
     features: [
-      "Full source code access",
-      "Host on your servers",
-      "Unlimited everything",
-      "1 year of updates",
-      "Installation support",
-      "No recurring fees",
+      'Full source code access',
+      'Host on your servers',
+      'Unlimited everything',
+      '1 year of updates',
+      'Installation support',
+      'No recurring fees',
     ],
     limits: {
       patients: -1,
@@ -118,16 +125,16 @@ export default function SubscriptionPage() {
 
   const fetchHospitalData = async () => {
     try {
-      const response = await fetch("/api/settings/subscription")
+      const response = await fetch('/api/settings/subscription')
       if (response.ok) {
         const data = await response.json()
         setHospitalData(data)
       }
     } catch {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load subscription data.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load subscription data.',
       })
     } finally {
       setIsLoading(false)
@@ -137,8 +144,8 @@ export default function SubscriptionPage() {
   const handleUpgrade = async (planId: Plan) => {
     // In production, this would redirect to a payment page
     toast({
-      title: "Upgrade requested",
-      description: "Our team will contact you shortly to complete the upgrade.",
+      title: 'Upgrade requested',
+      description: 'Our team will contact you shortly to complete the upgrade.',
     })
   }
 
@@ -159,9 +166,7 @@ export default function SubscriptionPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Subscription & Billing</h1>
-        <p className="text-muted-foreground">
-          Manage your subscription and view usage
-        </p>
+        <p className="text-muted-foreground">Manage your subscription and view usage</p>
       </div>
 
       {/* Current Plan Usage */}
@@ -174,16 +179,16 @@ export default function SubscriptionPage() {
                 <CardDescription>Your current usage and limits</CardDescription>
               </div>
               <Badge
-                variant={hospitalData.plan === "FREE" ? "secondary" : "default"}
+                variant={hospitalData.plan === 'FREE' ? 'secondary' : 'default'}
                 className="text-sm"
               >
-                {hospitalData.plan === "FREE"
-                  ? "Free Plan"
-                  : hospitalData.plan === "PROFESSIONAL"
-                  ? "Professional"
-                  : hospitalData.plan === "ENTERPRISE"
-                  ? "Enterprise"
-                  : "Self-Hosted"}
+                {hospitalData.plan === 'FREE'
+                  ? 'Free Plan'
+                  : hospitalData.plan === 'PROFESSIONAL'
+                    ? 'Professional'
+                    : hospitalData.plan === 'ENTERPRISE'
+                      ? 'Enterprise'
+                      : 'Self-Hosted'}
               </Badge>
             </div>
           </CardHeader>
@@ -193,25 +198,17 @@ export default function SubscriptionPage() {
               <div className="flex justify-between text-sm">
                 <span>Patients</span>
                 <span className="text-muted-foreground">
-                  {hospitalData.currentPatients} /{" "}
-                  {hospitalData.maxPatients === -1
-                    ? "Unlimited"
-                    : hospitalData.maxPatients}
+                  {hospitalData.currentPatients} /{' '}
+                  {hospitalData.maxPatients === -1 ? 'Unlimited' : hospitalData.maxPatients}
                 </span>
               </div>
               {hospitalData.maxPatients !== -1 && (
                 <Progress
-                  value={getUsagePercentage(
-                    hospitalData.currentPatients,
-                    hospitalData.maxPatients
-                  )}
+                  value={getUsagePercentage(hospitalData.currentPatients, hospitalData.maxPatients)}
                   className={cn(
-                    getUsagePercentage(
-                      hospitalData.currentPatients,
-                      hospitalData.maxPatients
-                    ) > 80
-                      ? "[&>div]:bg-destructive"
-                      : ""
+                    getUsagePercentage(hospitalData.currentPatients, hospitalData.maxPatients) > 80
+                      ? '[&>div]:bg-destructive'
+                      : ''
                   )}
                 />
               )}
@@ -222,25 +219,17 @@ export default function SubscriptionPage() {
               <div className="flex justify-between text-sm">
                 <span>Staff Members</span>
                 <span className="text-muted-foreground">
-                  {hospitalData.currentStaff} /{" "}
-                  {hospitalData.maxStaff === -1
-                    ? "Unlimited"
-                    : hospitalData.maxStaff}
+                  {hospitalData.currentStaff} /{' '}
+                  {hospitalData.maxStaff === -1 ? 'Unlimited' : hospitalData.maxStaff}
                 </span>
               </div>
               {hospitalData.maxStaff !== -1 && (
                 <Progress
-                  value={getUsagePercentage(
-                    hospitalData.currentStaff,
-                    hospitalData.maxStaff
-                  )}
+                  value={getUsagePercentage(hospitalData.currentStaff, hospitalData.maxStaff)}
                   className={cn(
-                    getUsagePercentage(
-                      hospitalData.currentStaff,
-                      hospitalData.maxStaff
-                    ) > 80
-                      ? "[&>div]:bg-destructive"
-                      : ""
+                    getUsagePercentage(hospitalData.currentStaff, hospitalData.maxStaff) > 80
+                      ? '[&>div]:bg-destructive'
+                      : ''
                   )}
                 />
               )}
@@ -251,9 +240,9 @@ export default function SubscriptionPage() {
               <div className="flex justify-between text-sm">
                 <span>Storage</span>
                 <span className="text-muted-foreground">
-                  {hospitalData.currentStorageMB} MB /{" "}
+                  {hospitalData.currentStorageMB} MB /{' '}
                   {hospitalData.maxStorageMB === -1
-                    ? "Unlimited"
+                    ? 'Unlimited'
                     : `${hospitalData.maxStorageMB} MB`}
                 </span>
               </div>
@@ -264,12 +253,10 @@ export default function SubscriptionPage() {
                     hospitalData.maxStorageMB
                   )}
                   className={cn(
-                    getUsagePercentage(
-                      hospitalData.currentStorageMB,
-                      hospitalData.maxStorageMB
-                    ) > 80
-                      ? "[&>div]:bg-destructive"
-                      : ""
+                    getUsagePercentage(hospitalData.currentStorageMB, hospitalData.maxStorageMB) >
+                      80
+                      ? '[&>div]:bg-destructive'
+                      : ''
                   )}
                 />
               )}
@@ -290,9 +277,9 @@ export default function SubscriptionPage() {
               <Card
                 key={plan.id}
                 className={cn(
-                  "relative",
-                  plan.popular && "border-primary shadow-md",
-                  isCurrent && "bg-muted/50"
+                  'relative',
+                  plan.popular && 'border-primary shadow-md',
+                  isCurrent && 'bg-muted/50'
                 )}
               >
                 {plan.popular && (
@@ -304,10 +291,8 @@ export default function SubscriptionPage() {
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-lg",
-                        plan.popular
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                        'flex h-10 w-10 items-center justify-center rounded-lg',
+                        plan.popular ? 'bg-primary text-primary-foreground' : 'bg-muted'
                       )}
                     >
                       <Icon className="h-5 w-5" />
@@ -326,15 +311,12 @@ export default function SubscriptionPage() {
                 <CardContent>
                   <div className="mb-4">
                     <span className="text-3xl font-bold">
-                      {plan.price === "Custom" ? "" : "₹"}
+                      {plan.price === 'Custom' ? '' : '₹'}
                       {plan.price}
                     </span>
                     {plan.priceNote ? (
-                      <span className="text-muted-foreground">
-                        {" "}
-                        {plan.priceNote}
-                      </span>
-                    ) : plan.price !== "Custom" && plan.price !== "0" ? (
+                      <span className="text-muted-foreground"> {plan.priceNote}</span>
+                    ) : plan.price !== 'Custom' && plan.price !== '0' ? (
                       <span className="text-muted-foreground">/month</span>
                     ) : null}
                   </div>
@@ -350,15 +332,15 @@ export default function SubscriptionPage() {
                 <CardFooter>
                   <Button
                     className="w-full"
-                    variant={isCurrent ? "outline" : plan.popular ? "default" : "outline"}
+                    variant={isCurrent ? 'outline' : plan.popular ? 'default' : 'outline'}
                     disabled={isCurrent}
                     onClick={() => handleUpgrade(plan.id)}
                   >
                     {isCurrent
-                      ? "Current Plan"
-                      : plan.price === "Custom"
-                      ? "Contact Sales"
-                      : "Upgrade"}
+                      ? 'Current Plan'
+                      : plan.price === 'Custom'
+                        ? 'Contact Sales'
+                        : 'Upgrade'}
                   </Button>
                 </CardFooter>
               </Card>

@@ -292,7 +292,12 @@ describe('GET /api/appointments/slots', () => {
     const { GET } = await import('@/app/api/appointments/slots/route')
 
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      workingHours: JSON.stringify({ start: '09:00', end: '10:00', lunchStart: '13:00', lunchEnd: '14:00' }),
+      workingHours: JSON.stringify({
+        start: '09:00',
+        end: '10:00',
+        lunchStart: '13:00',
+        lunchEnd: '14:00',
+      }),
     } as any)
     vi.mocked(prisma.holiday.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 'd1' } as any)
@@ -353,7 +358,12 @@ describe('GET /api/appointments/slots', () => {
     const { GET } = await import('@/app/api/appointments/slots/route')
 
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      workingHours: JSON.stringify({ start: '09:00', end: '10:00', lunchStart: '13:00', lunchEnd: '14:00' }),
+      workingHours: JSON.stringify({
+        start: '09:00',
+        end: '10:00',
+        lunchStart: '13:00',
+        lunchEnd: '14:00',
+      }),
     } as any)
     vi.mocked(prisma.holiday.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 'd1' } as any)
@@ -389,10 +399,10 @@ describe('GET/POST/DELETE /api/appointments/waitlist', () => {
       { id: 'w1', patientId: 'p1', doctorId: 'd1', status: 'ACTIVE', createdAt: new Date() },
     ] as any)
     vi.mocked(prisma.waitlist.count)
-      .mockResolvedValueOnce(1)  // total
-      .mockResolvedValueOnce(5)  // active
-      .mockResolvedValueOnce(2)  // notified
-      .mockResolvedValueOnce(3)  // booked
+      .mockResolvedValueOnce(1) // total
+      .mockResolvedValueOnce(5) // active
+      .mockResolvedValueOnce(2) // notified
+      .mockResolvedValueOnce(3) // booked
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
       { id: 'p1', firstName: 'Jane', lastName: 'Doe', phone: '1234', patientId: 'PID1' },
     ] as any)
@@ -500,7 +510,9 @@ describe('GET/POST/DELETE /api/appointments/waitlist', () => {
     vi.mocked(prisma.waitlist.findFirst).mockResolvedValue({ id: 'w1', hospitalId: 'h1' } as any)
     vi.mocked(prisma.waitlist.update).mockResolvedValue({ status: 'CANCELLED' } as any)
 
-    const req = makeRequest('http://localhost/api/appointments/waitlist?id=w1', { method: 'DELETE' })
+    const req = makeRequest('http://localhost/api/appointments/waitlist?id=w1', {
+      method: 'DELETE',
+    })
     const res = await DELETE(req)
 
     expect(res.status).toBe(200)
@@ -526,7 +538,9 @@ describe('GET/POST/DELETE /api/appointments/waitlist', () => {
 
     vi.mocked(prisma.waitlist.findFirst).mockResolvedValue(null)
 
-    const req = makeRequest('http://localhost/api/appointments/waitlist?id=bad', { method: 'DELETE' })
+    const req = makeRequest('http://localhost/api/appointments/waitlist?id=bad', {
+      method: 'DELETE',
+    })
     const res = await DELETE(req)
 
     expect(res.status).toBe(404)

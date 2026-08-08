@@ -1,107 +1,115 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useToast } from '@/hooks/use-toast'
+import { Switch } from '@/components/ui/switch'
+import { Separator } from '@/components/ui/separator'
 
 export default function CommunicationSettingsPage() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [loadingSettings, setLoadingSettings] = useState(true);
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [loadingSettings, setLoadingSettings] = useState(true)
 
   // SMS Settings
-  const [smsGateway, setSmsGateway] = useState('MSG91');
-  const [smsApiKey, setSmsApiKey] = useState('');
-  const [smsSenderId, setSmsSenderId] = useState('');
-  const [smsRoute, setSmsRoute] = useState('4');
-  const [smsEnabled, setSmsEnabled] = useState(true);
+  const [smsGateway, setSmsGateway] = useState('MSG91')
+  const [smsApiKey, setSmsApiKey] = useState('')
+  const [smsSenderId, setSmsSenderId] = useState('')
+  const [smsRoute, setSmsRoute] = useState('4')
+  const [smsEnabled, setSmsEnabled] = useState(true)
 
   // Email Settings
-  const [emailHost, setEmailHost] = useState('');
-  const [emailPort, setEmailPort] = useState('587');
-  const [emailSecure, setEmailSecure] = useState(false);
-  const [emailUser, setEmailUser] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [emailFromName, setEmailFromName] = useState("Your Dental Clinic");
-  const [emailFromEmail, setEmailFromEmail] = useState('');
-  const [emailReplyTo, setEmailReplyTo] = useState('');
-  const [emailEnabled, setEmailEnabled] = useState(true);
+  const [emailHost, setEmailHost] = useState('')
+  const [emailPort, setEmailPort] = useState('587')
+  const [emailSecure, setEmailSecure] = useState(false)
+  const [emailUser, setEmailUser] = useState('')
+  const [emailPassword, setEmailPassword] = useState('')
+  const [emailFromName, setEmailFromName] = useState('Your Dental Clinic')
+  const [emailFromEmail, setEmailFromEmail] = useState('')
+  const [emailReplyTo, setEmailReplyTo] = useState('')
+  const [emailEnabled, setEmailEnabled] = useState(true)
 
   // Google Review Settings
-  const [googleReviewUrl, setGoogleReviewUrl] = useState('');
-  const [autoReviewRequests, setAutoReviewRequests] = useState(false);
-  const [reviewRequestDelay, setReviewRequestDelay] = useState('2');
+  const [googleReviewUrl, setGoogleReviewUrl] = useState('')
+  const [autoReviewRequests, setAutoReviewRequests] = useState(false)
+  const [reviewRequestDelay, setReviewRequestDelay] = useState('2')
 
   // Test fields
-  const [testPhone, setTestPhone] = useState('');
-  const [testEmail, setTestEmail] = useState('');
+  const [testPhone, setTestPhone] = useState('')
+  const [testEmail, setTestEmail] = useState('')
 
   // Load settings on mount
   useEffect(() => {
-    loadSettings();
-  }, []);
+    loadSettings()
+  }, [])
 
   const loadSettings = async () => {
     try {
-      setLoadingSettings(true);
-      const response = await fetch('/api/settings/communications');
+      setLoadingSettings(true)
+      const response = await fetch('/api/settings/communications')
 
       if (!response.ok) {
-        throw new Error('Failed to load settings');
+        throw new Error('Failed to load settings')
       }
 
-      const data = await response.json();
+      const data = await response.json()
 
       // Load SMS settings
       if (data.sms) {
-        setSmsGateway(data.sms.gateway || 'MSG91');
-        setSmsApiKey(data.sms.apiKey || '');
-        setSmsSenderId(data.sms.senderId || '');
-        setSmsRoute(data.sms.route || '4');
-        setSmsEnabled(data.sms.enabled !== 'false' && data.sms.enabled !== false);
+        setSmsGateway(data.sms.gateway || 'MSG91')
+        setSmsApiKey(data.sms.apiKey || '')
+        setSmsSenderId(data.sms.senderId || '')
+        setSmsRoute(data.sms.route || '4')
+        setSmsEnabled(data.sms.enabled !== 'false' && data.sms.enabled !== false)
       }
 
       // Load Google Review settings
       if (data.reviews) {
-        setGoogleReviewUrl(data.reviews.google_review_url || '');
-        setAutoReviewRequests(data.reviews.auto_review_requests === 'true' || data.reviews.auto_review_requests === true);
-        setReviewRequestDelay(data.reviews.review_request_delay_hours || '2');
+        setGoogleReviewUrl(data.reviews.google_review_url || '')
+        setAutoReviewRequests(
+          data.reviews.auto_review_requests === 'true' || data.reviews.auto_review_requests === true
+        )
+        setReviewRequestDelay(data.reviews.review_request_delay_hours || '2')
       }
 
       // Load Email settings
       if (data.email) {
-        setEmailHost(data.email.smtp_host || '');
-        setEmailPort(data.email.smtp_port || '587');
-        setEmailSecure(data.email.smtp_secure === 'true' || data.email.smtp_secure === true);
-        setEmailUser(data.email.smtp_user || '');
-        setEmailPassword(data.email.smtp_password || '');
-        setEmailFromName(data.email.from_name || "Your Dental Clinic");
-        setEmailFromEmail(data.email.from_email || '');
-        setEmailReplyTo(data.email.replyTo || '');
-        setEmailEnabled(data.email.enabled !== 'false' && data.email.enabled !== false);
+        setEmailHost(data.email.smtp_host || '')
+        setEmailPort(data.email.smtp_port || '587')
+        setEmailSecure(data.email.smtp_secure === 'true' || data.email.smtp_secure === true)
+        setEmailUser(data.email.smtp_user || '')
+        setEmailPassword(data.email.smtp_password || '')
+        setEmailFromName(data.email.from_name || 'Your Dental Clinic')
+        setEmailFromEmail(data.email.from_email || '')
+        setEmailReplyTo(data.email.replyTo || '')
+        setEmailEnabled(data.email.enabled !== 'false' && data.email.enabled !== false)
       }
     } catch (error: any) {
-      console.error('Error loading settings:', error);
+      console.error('Error loading settings:', error)
       toast({
         title: 'Error',
         description: 'Failed to load settings',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoadingSettings(false);
+      setLoadingSettings(false)
     }
-  };
+  }
 
   const handleSaveSMSSettings = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const settings = {
         gateway: smsGateway,
@@ -109,7 +117,7 @@ export default function CommunicationSettingsPage() {
         senderId: smsSenderId,
         route: smsRoute,
         enabled: smsEnabled,
-      };
+      }
 
       const response = await fetch('/api/settings/communications', {
         method: 'POST',
@@ -120,31 +128,31 @@ export default function CommunicationSettingsPage() {
           type: 'sms',
           settings,
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save settings');
+        throw new Error(data.error || 'Failed to save settings')
       }
 
       toast({
         title: 'Success',
         description: 'SMS settings saved successfully',
-      });
+      })
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSaveEmailSettings = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const settings = {
         smtp_host: emailHost,
@@ -156,7 +164,7 @@ export default function CommunicationSettingsPage() {
         from_email: emailFromEmail,
         replyTo: emailReplyTo,
         enabled: emailEnabled,
-      };
+      }
 
       const response = await fetch('/api/settings/communications', {
         method: 'POST',
@@ -167,28 +175,28 @@ export default function CommunicationSettingsPage() {
           type: 'email',
           settings,
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save settings');
+        throw new Error(data.error || 'Failed to save settings')
       }
 
       toast({
         title: 'Success',
         description: 'Email settings saved successfully',
-      });
+      })
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleTestSMS = async () => {
     if (!testPhone) {
@@ -196,11 +204,11 @@ export default function CommunicationSettingsPage() {
         title: 'Error',
         description: 'Please enter a phone number to test',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
-    setTesting(true);
+    setTesting(true)
     try {
       const response = await fetch('/api/settings/communications/test', {
         method: 'POST',
@@ -213,28 +221,28 @@ export default function CommunicationSettingsPage() {
             phone: testPhone,
           },
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.details || data.error || 'Failed to send test SMS');
+        throw new Error(data.details || data.error || 'Failed to send test SMS')
       }
 
       toast({
         title: 'Success',
         description: data.message || 'Test SMS sent successfully',
-      });
+      })
     } catch (error: any) {
       toast({
         title: 'Test Failed',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setTesting(false);
+      setTesting(false)
     }
-  };
+  }
 
   const handleTestEmail = async () => {
     if (!testEmail) {
@@ -242,11 +250,11 @@ export default function CommunicationSettingsPage() {
         title: 'Error',
         description: 'Please enter an email address to test',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
-    setTesting(true);
+    setTesting(true)
     try {
       const response = await fetch('/api/settings/communications/test', {
         method: 'POST',
@@ -259,54 +267,54 @@ export default function CommunicationSettingsPage() {
             email: testEmail,
           },
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.details || data.error || 'Failed to send test email');
+        throw new Error(data.details || data.error || 'Failed to send test email')
       }
 
       toast({
         title: 'Success',
         description: data.message || 'Test email sent successfully',
-      });
+      })
     } catch (error: any) {
       toast({
         title: 'Test Failed',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setTesting(false);
+      setTesting(false)
     }
-  };
+  }
 
   const handleSaveReviewSettings = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const settings = {
         google_review_url: googleReviewUrl,
         auto_review_requests: autoReviewRequests,
         review_request_delay_hours: reviewRequestDelay,
-      };
+      }
 
       const response = await fetch('/api/settings/communications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'reviews', settings }),
-      });
+      })
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to save settings');
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Failed to save settings')
 
-      toast({ title: 'Success', description: 'Review settings saved successfully' });
+      toast({ title: 'Success', description: 'Review settings saved successfully' })
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   if (loadingSettings) {
     return (
@@ -319,7 +327,7 @@ export default function CommunicationSettingsPage() {
           <p className="text-muted-foreground">Loading settings...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -341,22 +349,15 @@ export default function CommunicationSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>SMS Gateway Settings</CardTitle>
-              <CardDescription>
-                Configure your Indian SMS gateway provider
-              </CardDescription>
+              <CardDescription>Configure your Indian SMS gateway provider</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Enable SMS</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Turn on/off SMS communication
-                  </p>
+                  <p className="text-sm text-muted-foreground">Turn on/off SMS communication</p>
                 </div>
-                <Switch
-                  checked={smsEnabled}
-                  onCheckedChange={setSmsEnabled}
-                />
+                <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} />
               </div>
 
               <Separator />
@@ -385,9 +386,7 @@ export default function CommunicationSettingsPage() {
                     value={smsSenderId}
                     onChange={(e) => setSmsSenderId(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Approved sender ID from gateway
-                  </p>
+                  <p className="text-xs text-muted-foreground">Approved sender ID from gateway</p>
                 </div>
 
                 <div className="space-y-2">
@@ -469,14 +468,9 @@ export default function CommunicationSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label>Enable Email</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Turn on/off email communication
-                  </p>
+                  <p className="text-sm text-muted-foreground">Turn on/off email communication</p>
                 </div>
-                <Switch
-                  checked={emailEnabled}
-                  onCheckedChange={setEmailEnabled}
-                />
+                <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
               </div>
 
               <Separator />
@@ -527,10 +521,7 @@ export default function CommunicationSettingsPage() {
                 </div>
 
                 <div className="flex items-center space-x-2 mt-4">
-                  <Switch
-                    checked={emailSecure}
-                    onCheckedChange={setEmailSecure}
-                  />
+                  <Switch checked={emailSecure} onCheckedChange={setEmailSecure} />
                   <Label>Use SSL/TLS (for port 465)</Label>
                 </div>
               </div>
@@ -601,7 +592,9 @@ export default function CommunicationSettingsPage() {
               <Separator />
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">Recommended Settings for Hostinger</h4>
+                <h4 className="font-semibold text-green-900 mb-2">
+                  Recommended Settings for Hostinger
+                </h4>
                 <ul className="text-sm text-green-800 space-y-1">
                   <li>• SMTP Host: smtp.hostinger.com</li>
                   <li>• SMTP Port: 587 (STARTTLS) or 465 (SSL)</li>
@@ -634,7 +627,8 @@ export default function CommunicationSettingsPage() {
                   onChange={(e) => setGoogleReviewUrl(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Your Google Business review link. Find it in Google Business Profile &gt; Get more reviews.
+                  Your Google Business review link. Find it in Google Business Profile &gt; Get more
+                  reviews.
                 </p>
               </div>
 
@@ -647,10 +641,7 @@ export default function CommunicationSettingsPage() {
                     Automatically send review requests after appointments
                   </p>
                 </div>
-                <Switch
-                  checked={autoReviewRequests}
-                  onCheckedChange={setAutoReviewRequests}
-                />
+                <Switch checked={autoReviewRequests} onCheckedChange={setAutoReviewRequests} />
               </div>
 
               <div className="space-y-2">
@@ -674,10 +665,15 @@ export default function CommunicationSettingsPage() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <h4 className="font-semibold text-amber-900 mb-2">Review Gating</h4>
                 <ul className="text-sm text-amber-800 space-y-1">
-                  <li>• Review requests are only sent to patients who rated their satisfaction 4/5 or higher</li>
+                  <li>
+                    • Review requests are only sent to patients who rated their satisfaction 4/5 or
+                    higher
+                  </li>
                   <li>• Patients must have submitted a survey response within the last 30 days</li>
                   <li>• Only one review request per patient per 30 days</li>
-                  <li>• Patients who opted out of promotional messages will not receive requests</li>
+                  <li>
+                    • Patients who opted out of promotional messages will not receive requests
+                  </li>
                 </ul>
               </div>
 
@@ -689,5 +685,5 @@ export default function CommunicationSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

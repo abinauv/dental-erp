@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 /**
  * GET: Patient's prescriptions list.
@@ -27,15 +27,12 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json({ prescriptions })
   } catch (err: unknown) {
-    console.error("Patient prescriptions error:", err)
-    return NextResponse.json(
-      { error: "Failed to load prescriptions" },
-      { status: 500 }
-    )
+    console.error('Patient prescriptions error:', err)
+    return NextResponse.json({ error: 'Failed to load prescriptions' }, { status: 500 })
   }
 }

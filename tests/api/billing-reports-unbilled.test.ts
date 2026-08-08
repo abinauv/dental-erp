@@ -83,9 +83,30 @@ describe('Billing Reports & Unbilled Treatments API', () => {
       const date3 = new Date('2026-02-11T09:00:00Z')
 
       ;(prisma.invoice.findMany as any).mockResolvedValue([
-        { createdAt: date1, totalAmount: 1000, paidAmount: 800, discountAmount: 100, cgstAmount: 50, sgstAmount: 50 },
-        { createdAt: date2, totalAmount: 2000, paidAmount: 2000, discountAmount: 0, cgstAmount: 100, sgstAmount: 100 },
-        { createdAt: date3, totalAmount: 500, paidAmount: 500, discountAmount: 50, cgstAmount: 25, sgstAmount: 25 },
+        {
+          createdAt: date1,
+          totalAmount: 1000,
+          paidAmount: 800,
+          discountAmount: 100,
+          cgstAmount: 50,
+          sgstAmount: 50,
+        },
+        {
+          createdAt: date2,
+          totalAmount: 2000,
+          paidAmount: 2000,
+          discountAmount: 0,
+          cgstAmount: 100,
+          sgstAmount: 100,
+        },
+        {
+          createdAt: date3,
+          totalAmount: 500,
+          paidAmount: 500,
+          discountAmount: 50,
+          cgstAmount: 25,
+          sgstAmount: 25,
+        },
       ])
 
       const res = await reportsModule.GET(makeReportsRequest({ type: 'revenue' }))
@@ -106,10 +127,34 @@ describe('Billing Reports & Unbilled Treatments API', () => {
       }
 
       ;(prisma.invoice.findMany as any).mockResolvedValue([
-        { id: 'i1', balanceAmount: 5000, dueDate: daysAgo(0), createdAt: new Date(), patient: { id: 'p1' } },
-        { id: 'i2', balanceAmount: 3000, dueDate: daysAgo(15), createdAt: new Date(), patient: { id: 'p2' } },
-        { id: 'i3', balanceAmount: 2000, dueDate: daysAgo(45), createdAt: new Date(), patient: { id: 'p3' } },
-        { id: 'i4', balanceAmount: 1000, dueDate: daysAgo(100), createdAt: new Date(), patient: { id: 'p4' } },
+        {
+          id: 'i1',
+          balanceAmount: 5000,
+          dueDate: daysAgo(0),
+          createdAt: new Date(),
+          patient: { id: 'p1' },
+        },
+        {
+          id: 'i2',
+          balanceAmount: 3000,
+          dueDate: daysAgo(15),
+          createdAt: new Date(),
+          patient: { id: 'p2' },
+        },
+        {
+          id: 'i3',
+          balanceAmount: 2000,
+          dueDate: daysAgo(45),
+          createdAt: new Date(),
+          patient: { id: 'p3' },
+        },
+        {
+          id: 'i4',
+          balanceAmount: 1000,
+          dueDate: daysAgo(100),
+          createdAt: new Date(),
+          patient: { id: 'p4' },
+        },
       ])
 
       const res = await reportsModule.GET(makeReportsRequest({ type: 'outstanding' }))
@@ -138,9 +183,15 @@ describe('Billing Reports & Unbilled Treatments API', () => {
     })
 
     it('uses custom date range when provided', async () => {
-      ;(prisma.invoice.aggregate as any).mockResolvedValue({ _sum: { totalAmount: 0, discountAmount: 0 }, _count: 0 })
+      ;(prisma.invoice.aggregate as any).mockResolvedValue({
+        _sum: { totalAmount: 0, discountAmount: 0 },
+        _count: 0,
+      })
       ;(prisma.payment.aggregate as any).mockResolvedValue({ _sum: { amount: 0 }, _count: 0 })
-      ;(prisma.insuranceClaim.aggregate as any).mockResolvedValue({ _sum: { claimAmount: 0, settledAmount: 0 }, _count: 0 })
+      ;(prisma.insuranceClaim.aggregate as any).mockResolvedValue({
+        _sum: { claimAmount: 0, settledAmount: 0 },
+        _count: 0,
+      })
       ;(prisma.payment.groupBy as any).mockResolvedValue([])
       ;(prisma.invoice.groupBy as any).mockResolvedValue([])
 
@@ -169,7 +220,13 @@ describe('Billing Reports & Unbilled Treatments API', () => {
           cost: 3000,
           toothNumbers: '11,12',
           endTime: new Date(),
-          procedure: { id: 'proc1', code: 'RST001', name: 'Filling', category: 'RESTORATIVE', basePrice: 2500 },
+          procedure: {
+            id: 'proc1',
+            code: 'RST001',
+            name: 'Filling',
+            category: 'RESTORATIVE',
+            basePrice: 2500,
+          },
           doctor: { id: 'd1', firstName: 'Jane', lastName: 'Smith' },
         },
         {
@@ -178,7 +235,13 @@ describe('Billing Reports & Unbilled Treatments API', () => {
           cost: null,
           toothNumbers: null,
           endTime: null,
-          procedure: { id: 'proc2', code: 'END001', name: 'Root Canal', category: 'ENDODONTIC', basePrice: 5000 },
+          procedure: {
+            id: 'proc2',
+            code: 'END001',
+            name: 'Root Canal',
+            category: 'ENDODONTIC',
+            basePrice: 5000,
+          },
           doctor: null,
         },
       ])
@@ -209,7 +272,12 @@ describe('Billing Reports & Unbilled Treatments API', () => {
     })
 
     it('returns empty when no unbilled treatments', async () => {
-      ;(prisma.patient.findUnique as any).mockResolvedValue({ id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' })
+      ;(prisma.patient.findUnique as any).mockResolvedValue({
+        id: 'p1',
+        patientId: 'PAT001',
+        firstName: 'John',
+        lastName: 'Doe',
+      })
       ;(prisma.treatment.findMany as any).mockResolvedValue([])
 
       const res = await unbilledModule.GET(makeUnbilledRequest({ patientId: 'p1' }))

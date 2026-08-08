@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -19,16 +19,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
 import {
   Plus,
   Search,
@@ -41,8 +36,8 @@ import {
   XCircle,
   AlertTriangle,
   IndianRupee,
-} from "lucide-react"
-import { formatCurrency, formatDate } from "@/lib/billing-utils"
+} from 'lucide-react'
+import { formatCurrency, formatDate } from '@/lib/billing-utils'
 
 interface PreAuth {
   id: string
@@ -69,12 +64,15 @@ interface PreAuth {
   }
 }
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
-  PENDING: { label: "Pending", variant: "outline", icon: Clock },
-  SUBMITTED: { label: "Submitted", variant: "secondary", icon: FileCheck },
-  APPROVED: { label: "Approved", variant: "default", icon: CheckCircle },
-  DENIED: { label: "Denied", variant: "destructive", icon: XCircle },
-  EXPIRED: { label: "Expired", variant: "secondary", icon: AlertTriangle },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }
+> = {
+  PENDING: { label: 'Pending', variant: 'outline', icon: Clock },
+  SUBMITTED: { label: 'Submitted', variant: 'secondary', icon: FileCheck },
+  APPROVED: { label: 'Approved', variant: 'default', icon: CheckCircle },
+  DENIED: { label: 'Denied', variant: 'destructive', icon: XCircle },
+  EXPIRED: { label: 'Expired', variant: 'secondary', icon: AlertTriangle },
 }
 
 export default function PreAuthorizationsPage() {
@@ -84,17 +82,17 @@ export default function PreAuthorizationsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [viewItem, setViewItem] = useState<PreAuth | null>(null)
   const [updating, setUpdating] = useState(false)
 
   const fetchPreAuths = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ page: String(page), limit: "10" })
-      if (search) params.set("search", search)
-      if (statusFilter) params.set("status", statusFilter)
+      const params = new URLSearchParams({ page: String(page), limit: '10' })
+      if (search) params.set('search', search)
+      if (statusFilter) params.set('status', statusFilter)
       const res = await fetch(`/api/pre-authorizations?${params}`)
       if (res.ok) {
         const data = await res.json()
@@ -103,7 +101,7 @@ export default function PreAuthorizationsPage() {
         setTotal(data.pagination.total)
       }
     } catch {
-      toast({ title: "Failed to load pre-authorizations", variant: "destructive" })
+      toast({ title: 'Failed to load pre-authorizations', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -117,8 +115,8 @@ export default function PreAuthorizationsPage() {
     setUpdating(true)
     try {
       const res = await fetch(`/api/pre-authorizations/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, ...extra }),
       })
       if (res.ok) {
@@ -127,14 +125,18 @@ export default function PreAuthorizationsPage() {
         fetchPreAuths()
       }
     } catch {
-      toast({ title: "Failed to update", variant: "destructive" })
+      toast({ title: 'Failed to update', variant: 'destructive' })
     } finally {
       setUpdating(false)
     }
   }
 
   const getStatusBadge = (status: string) => {
-    const config = STATUS_CONFIG[status] || { label: status, variant: "outline" as const, icon: Clock }
+    const config = STATUS_CONFIG[status] || {
+      label: status,
+      variant: 'outline' as const,
+      icon: Clock,
+    }
     const Icon = config.icon
     return (
       <Badge variant={config.variant} className="gap-1">
@@ -164,7 +166,11 @@ export default function PreAuthorizationsPage() {
         {Object.entries(STATUS_CONFIG).map(([key, config]) => {
           const count = preAuths.filter((p) => p.status === key).length
           return (
-            <Card key={key} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setStatusFilter(statusFilter === key ? "" : key)}>
+            <Card
+              key={key}
+              className="cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => setStatusFilter(statusFilter === key ? '' : key)}
+            >
               <CardContent className="p-4">
                 <div className="text-2xl font-bold">{count}</div>
                 <div className="text-sm text-muted-foreground">{config.label}</div>
@@ -182,18 +188,29 @@ export default function PreAuthorizationsPage() {
               <Input
                 placeholder="Search by auth number or patient..."
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                }}
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v === "all" ? "" : v); setPage(1) }}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v === 'all' ? '' : v)
+                setPage(1)
+              }}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key}>
+                    {config.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -202,7 +219,9 @@ export default function PreAuthorizationsPage() {
         <CardContent>
           {loading ? (
             <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
             </div>
           ) : preAuths.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
@@ -228,28 +247,37 @@ export default function PreAuthorizationsPage() {
                 <TableBody>
                   {preAuths.map((pa) => (
                     <TableRow key={pa.id}>
-                      <TableCell className="font-mono text-sm">{pa.authNumber || "—"}</TableCell>
+                      <TableCell className="font-mono text-sm">{pa.authNumber || '—'}</TableCell>
                       <TableCell>
-                        <Link href={`/patients/${pa.patient.id}`} className="text-primary hover:underline">
+                        <Link
+                          href={`/patients/${pa.patient.id}`}
+                          className="text-primary hover:underline"
+                        >
                           {pa.patient.firstName} {pa.patient.lastName}
                         </Link>
                         <div className="text-xs text-muted-foreground">{pa.patient.patientId}</div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">{pa.policy.provider.name}</div>
-                        <div className="text-xs text-muted-foreground">{pa.policy.policyNumber}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {pa.policy.policyNumber}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="max-w-[200px] truncate text-sm">
-                          {(pa.procedures as any[]).map((p: any) => p.name).join(", ")}
+                          {(pa.procedures as any[]).map((p: any) => p.name).join(', ')}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(Number(pa.estimatedCost))}</TableCell>
                       <TableCell className="text-right">
-                        {pa.approvedAmount ? formatCurrency(Number(pa.approvedAmount)) : "—"}
+                        {formatCurrency(Number(pa.estimatedCost))}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {pa.approvedAmount ? formatCurrency(Number(pa.approvedAmount)) : '—'}
                       </TableCell>
                       <TableCell>{getStatusBadge(pa.status)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{formatDate(pa.requestDate)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDate(pa.requestDate)}
+                      </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" onClick={() => setViewItem(pa)}>
                           <Eye className="h-4 w-4" />
@@ -266,11 +294,23 @@ export default function PreAuthorizationsPage() {
                   Showing {(page - 1) * 10 + 1}–{Math.min(page * 10, total)} of {total}
                 </p>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page <= 1}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page <= 1}
+                  >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm">Page {page} of {totalPages}</span>
-                  <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>
+                  <span className="text-sm">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= totalPages}
+                  >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -291,7 +331,7 @@ export default function PreAuthorizationsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Auth Number</p>
-                  <p className="font-medium">{viewItem.authNumber || "Not assigned"}</p>
+                  <p className="font-medium">{viewItem.authNumber || 'Not assigned'}</p>
                 </div>
                 {getStatusBadge(viewItem.status)}
               </div>
@@ -299,7 +339,9 @@ export default function PreAuthorizationsPage() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Patient</p>
-                  <p className="font-medium">{viewItem.patient.firstName} {viewItem.patient.lastName}</p>
+                  <p className="font-medium">
+                    {viewItem.patient.firstName} {viewItem.patient.lastName}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Provider</p>
@@ -316,7 +358,9 @@ export default function PreAuthorizationsPage() {
                 {viewItem.approvedAmount && (
                   <div>
                     <p className="text-muted-foreground">Approved Amount</p>
-                    <p className="font-medium text-green-600">{formatCurrency(Number(viewItem.approvedAmount))}</p>
+                    <p className="font-medium text-green-600">
+                      {formatCurrency(Number(viewItem.approvedAmount))}
+                    </p>
                   </div>
                 )}
                 {viewItem.expiryDate && (
@@ -331,9 +375,17 @@ export default function PreAuthorizationsPage() {
                 <p className="text-sm text-muted-foreground mb-2">Procedures</p>
                 <div className="space-y-1">
                   {(viewItem.procedures as any[]).map((proc: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between text-sm bg-muted/50 rounded px-3 py-2">
-                      <span>{proc.name} {proc.code && <span className="text-muted-foreground">({proc.code})</span>}</span>
-                      {proc.cost && <span className="font-medium">{formatCurrency(proc.cost)}</span>}
+                    <div
+                      key={i}
+                      className="flex items-center justify-between text-sm bg-muted/50 rounded px-3 py-2"
+                    >
+                      <span>
+                        {proc.name}{' '}
+                        {proc.code && <span className="text-muted-foreground">({proc.code})</span>}
+                      </span>
+                      {proc.cost && (
+                        <span className="font-medium">{formatCurrency(proc.cost)}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -354,12 +406,12 @@ export default function PreAuthorizationsPage() {
               )}
 
               {/* Actions based on status */}
-              {(viewItem.status === "PENDING" || viewItem.status === "SUBMITTED") && (
+              {(viewItem.status === 'PENDING' || viewItem.status === 'SUBMITTED') && (
                 <div className="flex gap-2 pt-2 border-t">
-                  {viewItem.status === "PENDING" && (
+                  {viewItem.status === 'PENDING' && (
                     <Button
                       size="sm"
-                      onClick={() => handleUpdateStatus(viewItem.id, "SUBMITTED")}
+                      onClick={() => handleUpdateStatus(viewItem.id, 'SUBMITTED')}
                       disabled={updating}
                     >
                       <FileCheck className="h-4 w-4 mr-1" /> Mark Submitted
@@ -370,9 +422,9 @@ export default function PreAuthorizationsPage() {
                     variant="default"
                     className="bg-green-600 hover:bg-green-700"
                     onClick={() => {
-                      const amount = prompt("Approved amount:")
+                      const amount = prompt('Approved amount:')
                       if (amount) {
-                        handleUpdateStatus(viewItem.id, "APPROVED", {
+                        handleUpdateStatus(viewItem.id, 'APPROVED', {
                           approvedAmount: amount,
                           approvedDate: new Date().toISOString(),
                         })
@@ -386,9 +438,9 @@ export default function PreAuthorizationsPage() {
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      const reason = prompt("Denial reason:")
+                      const reason = prompt('Denial reason:')
                       if (reason) {
-                        handleUpdateStatus(viewItem.id, "DENIED", { denialReason: reason })
+                        handleUpdateStatus(viewItem.id, 'DENIED', { denialReason: reason })
                       }
                     }}
                     disabled={updating}

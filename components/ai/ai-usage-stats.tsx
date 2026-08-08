@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from 'react'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,7 +35,7 @@ export function AIUsageStats() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/ai/usage")
+    fetch('/api/ai/usage')
       .then((r) => r.json())
       .then((data) => setStats(data))
       .catch(() => {})
@@ -61,9 +61,25 @@ export function AIUsageStats() {
 
   /* ---- stat-card data ---- */
   const cards = [
-    { label: "Conversations", thisMonth: stats.thisMonth.conversations, allTime: stats.allTime.conversations, icon: "💬" },
-    { label: "Commands Run",  thisMonth: stats.thisMonth.executions,    allTime: stats.allTime.executions,    icon: "⚡" },
-    { label: "Tokens Used",   thisMonth: stats.thisMonth.tokens,        allTime: stats.allTime.tokens,        icon: "🔢", format: (n: number) => n.toLocaleString() },
+    {
+      label: 'Conversations',
+      thisMonth: stats.thisMonth.conversations,
+      allTime: stats.allTime.conversations,
+      icon: '💬',
+    },
+    {
+      label: 'Commands Run',
+      thisMonth: stats.thisMonth.executions,
+      allTime: stats.allTime.executions,
+      icon: '⚡',
+    },
+    {
+      label: 'Tokens Used',
+      thisMonth: stats.thisMonth.tokens,
+      allTime: stats.allTime.tokens,
+      icon: '🔢',
+      format: (n: number) => n.toLocaleString(),
+    },
   ]
 
   /* ---- max bar width for skill breakdown ---- */
@@ -74,7 +90,9 @@ export function AIUsageStats() {
       {/* section header */}
       <div>
         <h3 className="text-sm font-semibold">AI Usage Dashboard</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">This-month vs all-time usage statistics</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          This-month vs all-time usage statistics
+        </p>
       </div>
 
       {/* top-line cards */}
@@ -111,7 +129,9 @@ export function AIUsageStats() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">All-Time</p>
-            <p className="text-sm font-semibold text-muted-foreground">₹{stats.allTime.costINR.toFixed(2)}</p>
+            <p className="text-sm font-semibold text-muted-foreground">
+              ₹{stats.allTime.costINR.toFixed(2)}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Insights Generated</p>
@@ -123,12 +143,14 @@ export function AIUsageStats() {
       {/* skill breakdown */}
       {stats.skillBreakdown.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2">Top Skills (this month)</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">
+            Top Skills (this month)
+          </p>
           <div className="space-y-2">
             {stats.skillBreakdown.slice(0, 6).map((s) => (
               <div key={s.skill} className="flex items-center gap-3 text-xs">
                 <span className="text-muted-foreground capitalize w-36 truncate">
-                  {s.skill.replace(/[._-]/g, " ")}
+                  {s.skill.replace(/[._-]/g, ' ')}
                 </span>
                 <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
@@ -143,7 +165,9 @@ export function AIUsageStats() {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground italic">Costs are estimates based on logged token usage.</p>
+      <p className="text-xs text-muted-foreground italic">
+        Costs are estimates based on logged token usage.
+      </p>
     </div>
   )
 }

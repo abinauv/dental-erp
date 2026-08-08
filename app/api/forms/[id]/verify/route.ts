@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
-import crypto from "crypto"
+import { NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import crypto from 'crypto'
 
 /**
  * GET /api/forms/[id]/verify
@@ -9,11 +9,8 @@ import crypto from "crypto"
  * Checks: signature exists, computes hash of submission data + signature,
  * returns verification status with audit trail info.
  */
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR"])
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error) return error
 
   const { id } = await params
@@ -26,7 +23,7 @@ export async function GET(
   })
 
   if (!submission) {
-    return NextResponse.json({ error: "Form submission not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Form submission not found' }, { status: 404 })
   }
 
   // Verify signature existence
@@ -35,12 +32,13 @@ export async function GET(
   const ipAddress = submission.ipAddress
 
   // Compute integrity hash from submission data + signature
-  const dataStr = typeof submission.data === "string" ? submission.data : JSON.stringify(submission.data)
-  const hashInput = `${dataStr}|${submission.signature || ""}|${submission.signedAt?.toISOString() || ""}`
-  const integrityHash = crypto.createHash("sha256").update(hashInput).digest("hex")
+  const dataStr =
+    typeof submission.data === 'string' ? submission.data : JSON.stringify(submission.data)
+  const hashInput = `${dataStr}|${submission.signature || ''}|${submission.signedAt?.toISOString() || ''}`
+  const integrityHash = crypto.createHash('sha256').update(hashInput).digest('hex')
 
   // Get patient info for audit trail
-  let patientName = "Unknown"
+  let patientName = 'Unknown'
   if (submission.patientId) {
     const patient = await prisma.patient.findUnique({
       where: { id: submission.patientId },

@@ -60,11 +60,13 @@ npm run dev
 ## Coding Standards
 
 ### General
+
 - Write TypeScript — avoid `any` unless absolutely necessary
 - Use functional components with hooks (no class components)
 - Follow the existing code patterns and directory structure
 
 ### Naming Conventions
+
 - **Files**: `kebab-case.ts` / `kebab-case.tsx`
 - **Components**: `PascalCase`
 - **Functions/variables**: `camelCase`
@@ -72,12 +74,14 @@ npm run dev
 - **API routes**: `app/api/resource-name/route.ts`
 
 ### Code Style
+
 - ESLint config is provided — run `npm run lint` before committing
 - Use Zod for input validation on all API routes
 - Use `requireAuthAndRole()` from `lib/api-helpers.ts` for auth checks
 - All database queries should be scoped to `hospitalId` for multi-tenancy
 
 ### Testing
+
 - Place unit tests in `__tests__/unit/`
 - Place integration tests in `__tests__/integration/`
 - Place component tests in `__tests__/components/`
@@ -111,6 +115,7 @@ type(scope): description
 **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`
 
 **Examples**:
+
 ```
 feat(appointments): add drag-and-drop rescheduling
 fix(billing): correct GST calculation for exempt items

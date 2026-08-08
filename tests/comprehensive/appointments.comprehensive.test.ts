@@ -147,7 +147,9 @@ describe('Appointments API - Comprehensive Tests', () => {
       mockPrisma.appointment.findMany.mockResolvedValue([])
       mockPrisma.appointment.count.mockResolvedValue(0)
 
-      const request = new NextRequest(`http://localhost/api/appointments?patientId=${mockPatientId}`)
+      const request = new NextRequest(
+        `http://localhost/api/appointments?patientId=${mockPatientId}`
+      )
       await GET(request)
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
@@ -193,7 +195,9 @@ describe('Appointments API - Comprehensive Tests', () => {
       mockPrisma.appointment.findMany.mockResolvedValue([])
       mockPrisma.appointment.count.mockResolvedValue(0)
 
-      const request = new NextRequest('http://localhost/api/appointments?view=month&date=2025-01-29')
+      const request = new NextRequest(
+        'http://localhost/api/appointments?view=month&date=2025-01-29'
+      )
       await GET(request)
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalled()
@@ -745,7 +749,10 @@ describe('Appointments API - Comprehensive Tests', () => {
     })
 
     it('should accept max valid duration of 480 minutes', async () => {
-      mockPrisma.patient.findFirst.mockResolvedValue({ id: mockPatientId, hospitalId: mockHospitalId })
+      mockPrisma.patient.findFirst.mockResolvedValue({
+        id: mockPatientId,
+        hospitalId: mockHospitalId,
+      })
       mockPrisma.staff.findFirst.mockResolvedValue({ id: mockDoctorId, hospitalId: mockHospitalId })
       mockPrisma.appointment.findFirst.mockResolvedValue(null)
       mockPrisma.appointment.create.mockResolvedValue({ id: 'apt-1' })

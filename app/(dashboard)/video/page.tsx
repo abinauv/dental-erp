@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -12,9 +12,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
 import {
   Video,
   Play,
@@ -25,8 +25,8 @@ import {
   ChevronRight,
   Eye,
   CalendarClock,
-} from "lucide-react"
-import { format } from "date-fns"
+} from 'lucide-react'
+import { format } from 'date-fns'
 
 interface Consultation {
   id: string
@@ -67,7 +67,7 @@ export default function VideoConsultationsPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [statusFilter, setStatusFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState('')
   const [summary, setSummary] = useState<Summary>({
     scheduled: 0,
     inProgress: 0,
@@ -82,17 +82,17 @@ export default function VideoConsultationsPage() {
   const fetchConsultations = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page: String(page), limit: "20" })
-      if (statusFilter) params.set("status", statusFilter)
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      if (statusFilter) params.set('status', statusFilter)
 
       const res = await fetch(`/api/video/consultations?${params}`)
-      if (!res.ok) throw new Error("Failed to fetch")
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setConsultations(data.consultations)
       setTotalPages(data.totalPages)
       setSummary(data.summary)
     } catch {
-      toast({ variant: "destructive", title: "Failed to load video consultations" })
+      toast({ variant: 'destructive', title: 'Failed to load video consultations' })
     } finally {
       setLoading(false)
     }
@@ -100,15 +100,19 @@ export default function VideoConsultationsPage() {
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "SCHEDULED":
+      case 'SCHEDULED':
         return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Scheduled</Badge>
-      case "IN_PROGRESS":
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 animate-pulse">Live</Badge>
-      case "COMPLETED":
+      case 'IN_PROGRESS':
+        return (
+          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 animate-pulse">
+            Live
+          </Badge>
+        )
+      case 'COMPLETED':
         return <Badge className="bg-muted text-muted-foreground hover:bg-muted">Completed</Badge>
-      case "CANCELLED":
+      case 'CANCELLED':
         return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Cancelled</Badge>
-      case "NO_SHOW":
+      case 'NO_SHOW':
         return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">No Show</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -121,9 +125,7 @@ export default function VideoConsultationsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Video Consultations</h1>
-          <p className="text-muted-foreground">
-            Manage tele-dentistry video consultations
-          </p>
+          <p className="text-muted-foreground">Manage tele-dentistry video consultations</p>
         </div>
       </div>
 
@@ -186,16 +188,16 @@ export default function VideoConsultationsPage() {
       {/* Status Filters */}
       <div className="flex gap-2">
         {[
-          { value: "", label: "All" },
-          { value: "SCHEDULED", label: "Scheduled" },
-          { value: "IN_PROGRESS", label: "Live" },
-          { value: "COMPLETED", label: "Completed" },
-          { value: "CANCELLED", label: "Cancelled" },
-          { value: "NO_SHOW", label: "No Show" },
+          { value: '', label: 'All' },
+          { value: 'SCHEDULED', label: 'Scheduled' },
+          { value: 'IN_PROGRESS', label: 'Live' },
+          { value: 'COMPLETED', label: 'Completed' },
+          { value: 'CANCELLED', label: 'Cancelled' },
+          { value: 'NO_SHOW', label: 'No Show' },
         ].map((f) => (
           <Button
             key={f.value}
-            variant={statusFilter === f.value ? "default" : "outline"}
+            variant={statusFilter === f.value ? 'default' : 'outline'}
             size="sm"
             onClick={() => {
               setStatusFilter(f.value)
@@ -247,9 +249,7 @@ export default function VideoConsultationsPage() {
                         <div className="font-medium">
                           {c.patient.firstName} {c.patient.lastName}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {c.patient.patientId}
-                        </div>
+                        <div className="text-xs text-muted-foreground">{c.patient.patientId}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -277,18 +277,18 @@ export default function VideoConsultationsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {format(new Date(c.scheduledAt), "dd MMM yyyy")}
+                      {format(new Date(c.scheduledAt), 'dd MMM yyyy')}
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(c.scheduledAt), "hh:mm a")}
+                        {format(new Date(c.scheduledAt), 'hh:mm a')}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {c.duration != null ? `${c.duration} min` : "—"}
+                      {c.duration != null ? `${c.duration} min` : '—'}
                     </TableCell>
                     <TableCell>{statusBadge(c.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {(c.status === "SCHEDULED" || c.status === "IN_PROGRESS") && (
+                        {(c.status === 'SCHEDULED' || c.status === 'IN_PROGRESS') && (
                           <Link href={`/video/${c.id}`}>
                             <Button variant="ghost" size="sm" className="text-green-600">
                               <Video className="h-4 w-4" />

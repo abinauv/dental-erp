@@ -1,26 +1,26 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, useCallback } from 'react'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -28,7 +28,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Wifi,
   WifiOff,
@@ -40,8 +40,8 @@ import {
   Monitor,
   Activity,
   Cpu,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface Device {
   id: string
@@ -67,45 +67,51 @@ interface DeviceSummary {
 }
 
 const DEVICE_TYPES = [
-  { value: "DENTAL_CHAIR", label: "Dental Chair" },
-  { value: "PULSE_OXIMETER", label: "Pulse Oximeter" },
-  { value: "BP_MONITOR", label: "BP Monitor" },
-  { value: "AUTOCLAVE", label: "Autoclave" },
-  { value: "XRAY", label: "X-Ray Machine" },
-  { value: "COMPRESSOR", label: "Compressor" },
-  { value: "SENSOR", label: "Sensor" },
-  { value: "OTHER", label: "Other" },
+  { value: 'DENTAL_CHAIR', label: 'Dental Chair' },
+  { value: 'PULSE_OXIMETER', label: 'Pulse Oximeter' },
+  { value: 'BP_MONITOR', label: 'BP Monitor' },
+  { value: 'AUTOCLAVE', label: 'Autoclave' },
+  { value: 'XRAY', label: 'X-Ray Machine' },
+  { value: 'COMPRESSOR', label: 'Compressor' },
+  { value: 'SENSOR', label: 'Sensor' },
+  { value: 'OTHER', label: 'Other' },
 ]
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Wifi }> = {
-  ONLINE: { label: "Online", color: "bg-green-100 text-green-700", icon: Wifi },
-  OFFLINE: { label: "Offline", color: "bg-muted text-muted-foreground", icon: WifiOff },
-  ERROR: { label: "Error", color: "bg-red-100 text-red-700", icon: AlertTriangle },
-  MAINTENANCE: { label: "Maintenance", color: "bg-amber-100 text-amber-700", icon: Wrench },
+  ONLINE: { label: 'Online', color: 'bg-green-100 text-green-700', icon: Wifi },
+  OFFLINE: { label: 'Offline', color: 'bg-muted text-muted-foreground', icon: WifiOff },
+  ERROR: { label: 'Error', color: 'bg-red-100 text-red-700', icon: AlertTriangle },
+  MAINTENANCE: { label: 'Maintenance', color: 'bg-amber-100 text-amber-700', icon: Wrench },
 }
 
 export default function DevicesPage() {
   const [devices, setDevices] = useState<Device[]>([])
-  const [summary, setSummary] = useState<DeviceSummary>({ total: 0, online: 0, offline: 0, error: 0, maintenance: 0 })
+  const [summary, setSummary] = useState<DeviceSummary>({
+    total: 0,
+    online: 0,
+    offline: 0,
+    error: 0,
+    maintenance: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [filterType, setFilterType] = useState("all")
-  const [filterStatus, setFilterStatus] = useState("all")
+  const [filterType, setFilterType] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
 
   // Form state
-  const [formName, setFormName] = useState("")
-  const [formType, setFormType] = useState("")
-  const [formSerial, setFormSerial] = useState("")
-  const [formLocation, setFormLocation] = useState("")
-  const [formIp, setFormIp] = useState("")
+  const [formName, setFormName] = useState('')
+  const [formType, setFormType] = useState('')
+  const [formSerial, setFormSerial] = useState('')
+  const [formLocation, setFormLocation] = useState('')
+  const [formIp, setFormIp] = useState('')
 
   const fetchDevices = useCallback(async () => {
     try {
       const params = new URLSearchParams()
-      if (filterType !== "all") params.set("type", filterType)
-      if (filterStatus !== "all") params.set("status", filterStatus)
+      if (filterType !== 'all') params.set('type', filterType)
+      if (filterStatus !== 'all') params.set('status', filterStatus)
 
       const res = await fetch(`/api/devices/status?${params}`)
       if (!res.ok) throw new Error()
@@ -113,7 +119,7 @@ export default function DevicesPage() {
       setDevices(data.devices || [])
       setSummary(data.summary || { total: 0, online: 0, offline: 0, error: 0, maintenance: 0 })
     } catch {
-      toast({ title: "Error", description: "Failed to fetch devices", variant: "destructive" })
+      toast({ title: 'Error', description: 'Failed to fetch devices', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -128,13 +134,13 @@ export default function DevicesPage() {
 
   const handleRegister = async () => {
     if (!formName || !formType) {
-      toast({ title: "Error", description: "Name and type are required", variant: "destructive" })
+      toast({ title: 'Error', description: 'Name and type are required', variant: 'destructive' })
       return
     }
     try {
-      const res = await fetch("/api/devices/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/devices/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formName,
           type: formType,
@@ -147,59 +153,63 @@ export default function DevicesPage() {
         const err = await res.json()
         throw new Error(err.error)
       }
-      toast({ title: "Success", description: "Device registered successfully" })
+      toast({ title: 'Success', description: 'Device registered successfully' })
       setDialogOpen(false)
       resetForm()
       fetchDevices()
     } catch (err: unknown) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to register device",
-        variant: "destructive",
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to register device',
+        variant: 'destructive',
       })
     }
   }
 
   const handleDelete = async (id: string) => {
-    const ok = await confirm({ title: "Remove Device", description: "Remove this device? Data logs will also be deleted.", confirmLabel: "Remove" })
+    const ok = await confirm({
+      title: 'Remove Device',
+      description: 'Remove this device? Data logs will also be deleted.',
+      confirmLabel: 'Remove',
+    })
     if (!ok) return
     try {
-      const res = await fetch(`/api/devices/status?id=${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/devices/status?id=${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
-      toast({ title: "Success", description: "Device removed" })
+      toast({ title: 'Success', description: 'Device removed' })
       fetchDevices()
     } catch {
-      toast({ title: "Error", description: "Failed to remove device", variant: "destructive" })
+      toast({ title: 'Error', description: 'Failed to remove device', variant: 'destructive' })
     }
   }
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      const res = await fetch("/api/devices/status", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/devices/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       })
       if (!res.ok) throw new Error()
       fetchDevices()
     } catch {
-      toast({ title: "Error", description: "Failed to update status", variant: "destructive" })
+      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' })
     }
   }
 
   const resetForm = () => {
-    setFormName("")
-    setFormType("")
-    setFormSerial("")
-    setFormLocation("")
-    setFormIp("")
+    setFormName('')
+    setFormType('')
+    setFormSerial('')
+    setFormLocation('')
+    setFormIp('')
   }
 
   const formatLastPing = (dateStr: string | null) => {
-    if (!dateStr) return "Never"
+    if (!dateStr) return 'Never'
     const date = new Date(dateStr)
     const diff = Date.now() - date.getTime()
-    if (diff < 60000) return "Just now"
+    if (diff < 60000) return 'Just now'
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
     return date.toLocaleDateString()
@@ -229,32 +239,54 @@ export default function DevicesPage() {
               <div className="space-y-4">
                 <div>
                   <Label>Device Name *</Label>
-                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Chair Unit 1" />
+                  <Input
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="e.g. Chair Unit 1"
+                  />
                 </div>
                 <div>
                   <Label>Device Type *</Label>
                   <Select value={formType} onValueChange={setFormType}>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
                     <SelectContent>
                       {DEVICE_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label>Serial Number</Label>
-                  <Input value={formSerial} onChange={(e) => setFormSerial(e.target.value)} placeholder="Optional" />
+                  <Input
+                    value={formSerial}
+                    onChange={(e) => setFormSerial(e.target.value)}
+                    placeholder="Optional"
+                  />
                 </div>
                 <div>
                   <Label>Location</Label>
-                  <Input value={formLocation} onChange={(e) => setFormLocation(e.target.value)} placeholder="e.g. Operatory 1" />
+                  <Input
+                    value={formLocation}
+                    onChange={(e) => setFormLocation(e.target.value)}
+                    placeholder="e.g. Operatory 1"
+                  />
                 </div>
                 <div>
                   <Label>IP Address</Label>
-                  <Input value={formIp} onChange={(e) => setFormIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
+                  <Input
+                    value={formIp}
+                    onChange={(e) => setFormIp(e.target.value)}
+                    placeholder="e.g. 192.168.1.100"
+                  />
                 </div>
-                <Button className="w-full" onClick={handleRegister}>Register Device</Button>
+                <Button className="w-full" onClick={handleRegister}>
+                  Register Device
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -323,16 +355,22 @@ export default function DevicesPage() {
       {/* Filters */}
       <div className="flex items-center gap-4">
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="Filter by type" /></SelectTrigger>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {DEVICE_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+              <SelectItem key={t.value} value={t.value}>
+                {t.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="ONLINE">Online</SelectItem>
@@ -381,7 +419,9 @@ export default function DevicesPage() {
                         <div>
                           <p className="font-medium">{device.name}</p>
                           {device.serialNumber && (
-                            <p className="text-xs text-muted-foreground">S/N: {device.serialNumber}</p>
+                            <p className="text-xs text-muted-foreground">
+                              S/N: {device.serialNumber}
+                            </p>
                           )}
                         </div>
                       </TableCell>
@@ -390,7 +430,7 @@ export default function DevicesPage() {
                           {DEVICE_TYPES.find((t) => t.value === device.type)?.label || device.type}
                         </Badge>
                       </TableCell>
-                      <TableCell>{device.location || "—"}</TableCell>
+                      <TableCell>{device.location || '—'}</TableCell>
                       <TableCell>
                         <Select
                           value={device.status}
@@ -419,7 +459,7 @@ export default function DevicesPage() {
                             <div className="flex items-center gap-1">
                               <Activity className="h-3 w-3 text-blue-500" />
                               <span className="text-muted-foreground">
-                                {lastLog.eventType || "READING"}
+                                {lastLog.eventType || 'READING'}
                               </span>
                             </div>
                             <p className="text-muted-foreground truncate max-w-[150px]">
@@ -457,15 +497,25 @@ export default function DevicesPage() {
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>Connected devices can push data using these endpoints:</p>
           <div className="bg-muted/50 p-3 rounded-md font-mono text-xs space-y-1">
-            <p><span className="text-green-600 font-semibold">POST</span> /api/devices/register — Register new device</p>
-            <p><span className="text-blue-600 font-semibold">POST</span> /api/devices/data — Push sensor readings</p>
-            <p><span className="text-purple-600 font-semibold">GET</span> /api/devices/status — Get device statuses</p>
+            <p>
+              <span className="text-green-600 font-semibold">POST</span> /api/devices/register —
+              Register new device
+            </p>
+            <p>
+              <span className="text-blue-600 font-semibold">POST</span> /api/devices/data — Push
+              sensor readings
+            </p>
+            <p>
+              <span className="text-purple-600 font-semibold">GET</span> /api/devices/status — Get
+              device statuses
+            </p>
           </div>
           <p>
-            Payload example for <code className="text-xs bg-muted px-1 rounded">/api/devices/data</code>:
+            Payload example for{' '}
+            <code className="text-xs bg-muted px-1 rounded">/api/devices/data</code>:
           </p>
           <pre className="bg-muted/50 p-3 rounded-md text-xs overflow-x-auto">
-{`{
+            {`{
   "deviceId": "device_cuid_here",
   "data": {
     "heartRate": 72,

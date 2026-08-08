@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { complete, extractJSON } from "@/lib/ai/openrouter"
-import { getModelByTier } from "@/lib/ai/models"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { complete, extractJSON } from '@/lib/ai/openrouter'
+import { getModelByTier } from '@/lib/ai/models'
 
 /**
  * GET /api/ai/inventory-forecast
@@ -10,9 +10,9 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function GET(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "RECEPTIONIST"])
+    const { session, hospitalId } = await requireAuthAndRole(['ADMIN', 'RECEPTIONIST'])
     if (!hospitalId) {
-      return NextResponse.json({ error: "Hospital not found" }, { status: 401 })
+      return NextResponse.json({ error: 'Hospital not found' }, { status: 401 })
     }
 
     // Current stock levels
@@ -28,11 +28,14 @@ export async function GET(req: Request) {
         unit: true,
         purchasePrice: true,
       },
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
     })
 
     if (items.length === 0) {
-      return NextResponse.json({ forecasts: [], summary: { criticalItems: 0, reorderItems: 0, excessItems: 0, totalReorderValue: 0 } })
+      return NextResponse.json({
+        forecasts: [],
+        summary: { criticalItems: 0, reorderItems: 0, excessItems: 0, totalReorderValue: 0 },
+      })
     }
 
     // Consumption data: stock transactions over last 6 months
@@ -42,7 +45,7 @@ export async function GET(req: Request) {
     const transactions = await prisma.stockTransaction.findMany({
       where: {
         hospitalId,
-        type: { in: ["CONSUMPTION", "SALE", "ADJUSTMENT_OUT"] },
+        type: { in: ['CONSUMPTION', 'SALE', 'ADJUSTMENT_OUT'] },
         createdAt: { gte: sixMonthsAgo },
       },
       select: {
@@ -51,7 +54,7 @@ export async function GET(req: Request) {
         type: true,
         createdAt: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: 'asc' },
     })
 
     // Aggregate consumption per item per month
@@ -62,8 +65,9 @@ export async function GET(req: Request) {
       }
       const qty = Math.abs(Number(tx.quantity))
       consumptionMap[tx.itemId].total += qty
-      const monthKey = `${tx.createdAt.getFullYear()}-${String(tx.createdAt.getMonth() + 1).padStart(2, "0")}`
-      consumptionMap[tx.itemId].months[monthKey] = (consumptionMap[tx.itemId].months[monthKey] || 0) + qty
+      const monthKey = `${tx.createdAt.getFullYear()}-${String(tx.createdAt.getMonth() + 1).padStart(2, '0')}`
+      consumptionMap[tx.itemId].months[monthKey] =
+        (consumptionMap[tx.itemId].months[monthKey] || 0) + qty
     }
 
     // Build context for AI
@@ -91,11 +95,11 @@ export async function GET(req: Request) {
       }
     })
 
-    const model = getModelByTier("insights")
+    const model = getModelByTier('insights')
     const response = await complete(
       [
         {
-          role: "system",
+          role: 'system',
           content: `You are an inventory demand forecasting AI for a dental clinic. Analyze consumption data and return forecasts as JSON.
 Return format: { "forecasts": [...], "summary": { criticalItems, reorderItems, excessItems, totalReorderValue } }
 For each item: { itemId, itemName, currentStock, avgDailyUsage, trend (INCREASING/STABLE/DECREASING), projected30Days, projected60Days, projected90Days, daysUntilStockout, reorderRecommended, suggestedOrderQty, urgency (CRITICAL/SOON/NORMAL/EXCESS), notes }.
@@ -103,7 +107,7 @@ CRITICAL: stockout <=7d, SOON: <=14d, NORMAL: <=30d, EXCESS: >90d stock.
 suggestedOrderQty covers 60 days. Return ONLY valid JSON, no markdown.`,
         },
         {
-          role: "user",
+          role: 'user',
           content: `Forecast demand for these inventory items:\n${JSON.stringify(contextData, null, 2)}`,
         },
       ],
@@ -117,13 +121,16 @@ suggestedOrderQty covers 60 days. Return ONLY valid JSON, no markdown.`,
     } catch {
       // Fallback: compute simple forecast without AI
       const forecasts = contextData.map((item) => {
-        const daysUntilStockout = item.avgDailyUsage > 0
-          ? Math.round(item.currentStock / item.avgDailyUsage)
-          : 999
-        const urgency = daysUntilStockout <= 7 ? "CRITICAL"
-          : daysUntilStockout <= 14 ? "SOON"
-          : daysUntilStockout <= 30 ? "NORMAL"
-          : "EXCESS"
+        const daysUntilStockout =
+          item.avgDailyUsage > 0 ? Math.round(item.currentStock / item.avgDailyUsage) : 999
+        const urgency =
+          daysUntilStockout <= 7
+            ? 'CRITICAL'
+            : daysUntilStockout <= 14
+              ? 'SOON'
+              : daysUntilStockout <= 30
+                ? 'NORMAL'
+                : 'EXCESS'
         const reorderRecommended = daysUntilStockout <= 30
         const suggestedOrderQty = reorderRecommended ? Math.ceil(item.avgDailyUsage * 60) : 0
         return {
@@ -131,7 +138,7 @@ suggestedOrderQty covers 60 days. Return ONLY valid JSON, no markdown.`,
           itemName: item.itemName,
           currentStock: item.currentStock,
           avgDailyUsage: item.avgDailyUsage,
-          trend: "STABLE",
+          trend: 'STABLE',
           projected30Days: Math.round(item.avgDailyUsage * 30),
           projected60Days: Math.round(item.avgDailyUsage * 60),
           projected90Days: Math.round(item.avgDailyUsage * 90),
@@ -139,26 +146,32 @@ suggestedOrderQty covers 60 days. Return ONLY valid JSON, no markdown.`,
           reorderRecommended,
           suggestedOrderQty,
           urgency,
-          notes: "",
+          notes: '',
         }
       })
       result = {
         forecasts,
         summary: {
-          criticalItems: forecasts.filter((f) => f.urgency === "CRITICAL").length,
+          criticalItems: forecasts.filter((f) => f.urgency === 'CRITICAL').length,
           reorderItems: forecasts.filter((f) => f.reorderRecommended).length,
-          excessItems: forecasts.filter((f) => f.urgency === "EXCESS").length,
-          totalReorderValue: forecasts.reduce((sum, f) => sum + f.suggestedOrderQty * (contextData.find((i) => i.itemId === f.itemId)?.unitPrice || 0), 0),
+          excessItems: forecasts.filter((f) => f.urgency === 'EXCESS').length,
+          totalReorderValue: forecasts.reduce(
+            (sum, f) =>
+              sum +
+              f.suggestedOrderQty *
+                (contextData.find((i) => i.itemId === f.itemId)?.unitPrice || 0),
+            0
+          ),
         },
       }
     }
 
     return NextResponse.json({ ...result, model: response.model })
   } catch (error: any) {
-    console.error("Inventory forecast error:", error)
+    console.error('Inventory forecast error:', error)
     return NextResponse.json(
-      { error: error.message || "Failed to generate forecast" },
-      { status: error.message?.includes("Unauthorized") ? 401 : 500 }
+      { error: error.message || 'Failed to generate forecast' },
+      { status: error.message?.includes('Unauthorized') ? 401 : 500 }
     )
   }
 }

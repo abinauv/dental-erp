@@ -1,12 +1,8 @@
-"use client"
+'use client'
 
-import { useState, useRef, useCallback, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import {
   Pen,
   Minus,
@@ -21,11 +17,11 @@ import {
   X,
   Palette,
   Loader2,
-} from "lucide-react"
+} from 'lucide-react'
 
 export interface Annotation {
   id: string
-  type: "freehand" | "line" | "arrow" | "circle" | "rectangle" | "text"
+  type: 'freehand' | 'line' | 'arrow' | 'circle' | 'rectangle' | 'text'
   points: number[] // [x1,y1,x2,y2,...] normalized 0-1
   color: string
   lineWidth: number
@@ -43,22 +39,22 @@ interface ImageAnnotatorProps {
 }
 
 const TOOLS = [
-  { id: "freehand" as const, label: "Draw", icon: Pen },
-  { id: "line" as const, label: "Line", icon: Minus },
-  { id: "arrow" as const, label: "Arrow", icon: MoveRight },
-  { id: "circle" as const, label: "Circle", icon: Circle },
-  { id: "rectangle" as const, label: "Rectangle", icon: Square },
-  { id: "text" as const, label: "Text", icon: Type },
+  { id: 'freehand' as const, label: 'Draw', icon: Pen },
+  { id: 'line' as const, label: 'Line', icon: Minus },
+  { id: 'arrow' as const, label: 'Arrow', icon: MoveRight },
+  { id: 'circle' as const, label: 'Circle', icon: Circle },
+  { id: 'rectangle' as const, label: 'Rectangle', icon: Square },
+  { id: 'text' as const, label: 'Text', icon: Type },
 ]
 
 const COLORS = [
-  "#ef4444", // red
-  "#f97316", // orange
-  "#eab308", // yellow
-  "#22c55e", // green
-  "#3b82f6", // blue
-  "#8b5cf6", // violet
-  "#ffffff", // white
+  '#ef4444', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ffffff', // white
 ]
 
 function generateId() {
@@ -79,15 +75,15 @@ export function ImageAnnotator({
   const containerRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement | null>(null)
 
-  const [tool, setTool] = useState<Annotation["type"]>("freehand")
-  const [color, setColor] = useState("#ef4444")
+  const [tool, setTool] = useState<Annotation['type']>('freehand')
+  const [color, setColor] = useState('#ef4444')
   const [lineWidth, setLineWidth] = useState(3)
   const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations)
   const [undoStack, setUndoStack] = useState<Annotation[][]>([])
   const [redoStack, setRedoStack] = useState<Annotation[][]>([])
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentPoints, setCurrentPoints] = useState<number[]>([])
-  const [textInput, setTextInput] = useState("")
+  const [textInput, setTextInput] = useState('')
   const [textPosition, setTextPosition] = useState<{ x: number; y: number } | null>(null)
   const [saving, setSaving] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -97,7 +93,7 @@ export function ImageAnnotator({
   useEffect(() => {
     if (!open) return
     const img = new Image()
-    img.crossOrigin = "anonymous"
+    img.crossOrigin = 'anonymous'
     img.onload = () => {
       imgRef.current = img
       setImageLoaded(true)
@@ -136,7 +132,7 @@ export function ImageAnnotator({
   useEffect(() => {
     if (!canvasRef.current || !imgRef.current || canvasSize.w === 0) return
     const canvas = canvasRef.current
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     canvas.width = canvasSize.w
@@ -155,7 +151,7 @@ export function ImageAnnotator({
   useEffect(() => {
     if (!overlayRef.current || canvasSize.w === 0) return
     const canvas = overlayRef.current
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     canvas.width = canvasSize.w
@@ -164,7 +160,7 @@ export function ImageAnnotator({
 
     if (currentPoints.length >= 2) {
       const tempAnnotation: Annotation = {
-        id: "temp",
+        id: 'temp',
         type: tool,
         points: currentPoints,
         color,
@@ -192,7 +188,7 @@ export function ImageAnnotator({
       if (readOnly) return
       const { x, y } = getCanvasCoords(e)
 
-      if (tool === "text") {
+      if (tool === 'text') {
         setTextPosition({ x, y })
         return
       }
@@ -208,7 +204,7 @@ export function ImageAnnotator({
       if (!isDrawing || readOnly) return
       const { x, y } = getCanvasCoords(e)
 
-      if (tool === "freehand") {
+      if (tool === 'freehand') {
         setCurrentPoints((prev) => [...prev, x, y])
       } else {
         // For shapes, only keep start + current point
@@ -222,7 +218,7 @@ export function ImageAnnotator({
     if (!isDrawing || readOnly) return
     setIsDrawing(false)
 
-    if (currentPoints.length >= 4 || (tool === "freehand" && currentPoints.length >= 2)) {
+    if (currentPoints.length >= 4 || (tool === 'freehand' && currentPoints.length >= 2)) {
       const newAnnotation: Annotation = {
         id: generateId(),
         type: tool,
@@ -240,12 +236,12 @@ export function ImageAnnotator({
   const handleTextSubmit = useCallback(() => {
     if (!textPosition || !textInput.trim()) {
       setTextPosition(null)
-      setTextInput("")
+      setTextInput('')
       return
     }
     const newAnnotation: Annotation = {
       id: generateId(),
-      type: "text",
+      type: 'text',
       points: [textPosition.x, textPosition.y],
       color,
       lineWidth,
@@ -255,7 +251,7 @@ export function ImageAnnotator({
     setRedoStack([])
     setAnnotations((prev) => [...prev, newAnnotation])
     setTextPosition(null)
-    setTextInput("")
+    setTextInput('')
   }, [textPosition, textInput, color, lineWidth, annotations])
 
   const handleUndo = useCallback(() => {
@@ -297,21 +293,21 @@ export function ImageAnnotator({
   useEffect(() => {
     if (!open) return
     const handleKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "z") {
+      if (e.ctrlKey && e.key === 'z') {
         e.preventDefault()
         handleUndo()
-      } else if (e.ctrlKey && e.key === "y") {
+      } else if (e.ctrlKey && e.key === 'y') {
         e.preventDefault()
         handleRedo()
-      } else if (e.key === "Escape" && textPosition) {
+      } else if (e.key === 'Escape' && textPosition) {
         setTextPosition(null)
-        setTextInput("")
-      } else if (e.key === "Enter" && textPosition) {
+        setTextInput('')
+      } else if (e.key === 'Enter' && textPosition) {
         handleTextSubmit()
       }
     }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
   }, [open, handleUndo, handleRedo, textPosition, handleTextSubmit])
 
   return (
@@ -321,10 +317,10 @@ export function ImageAnnotator({
           {/* Top toolbar */}
           <div className="flex items-center justify-between px-4 py-2 bg-zinc-800 text-white border-b border-zinc-700">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium">{title || "Annotate Image"}</h3>
+              <h3 className="text-sm font-medium">{title || 'Annotate Image'}</h3>
               {!readOnly && (
                 <span className="text-xs text-zinc-400">
-                  ({annotations.length} annotation{annotations.length !== 1 ? "s" : ""})
+                  ({annotations.length} annotation{annotations.length !== 1 ? 's' : ''})
                 </span>
               )}
             </div>
@@ -349,8 +345,8 @@ export function ImageAnnotator({
                   size="sm"
                   className={`h-8 text-xs ${
                     tool === t.id
-                      ? "bg-white/20 text-white"
-                      : "text-zinc-400 hover:text-white hover:bg-white/10"
+                      ? 'bg-white/20 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/10'
                   }`}
                   onClick={() => setTool(t.id)}
                   title={t.label}
@@ -368,7 +364,7 @@ export function ImageAnnotator({
                 <button
                   key={c}
                   className={`w-5 h-5 rounded-full border-2 transition ${
-                    color === c ? "border-white scale-110" : "border-zinc-600"
+                    color === c ? 'border-white scale-110' : 'border-zinc-600'
                   }`}
                   style={{ backgroundColor: c }}
                   onClick={() => setColor(c)}
@@ -442,7 +438,7 @@ export function ImageAnnotator({
                   width={canvasSize.w}
                   height={canvasSize.h}
                   className="absolute top-0 left-0"
-                  style={{ cursor: readOnly ? "default" : tool === "text" ? "text" : "crosshair" }}
+                  style={{ cursor: readOnly ? 'default' : tool === 'text' ? 'text' : 'crosshair' }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -466,10 +462,10 @@ export function ImageAnnotator({
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") handleTextSubmit()
-                        if (e.key === "Escape") {
+                        if (e.key === 'Enter') handleTextSubmit()
+                        if (e.key === 'Escape') {
                           setTextPosition(null)
-                          setTextInput("")
+                          setTextInput('')
                         }
                       }}
                       onBlur={handleTextSubmit}
@@ -520,15 +516,15 @@ function drawAnnotation(
   ctx.strokeStyle = ann.color
   ctx.fillStyle = ann.color
   ctx.lineWidth = ann.lineWidth
-  ctx.lineCap = "round"
-  ctx.lineJoin = "round"
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
 
   const pts = ann.points
   const toX = (n: number) => n * canvasW
   const toY = (n: number) => n * canvasH
 
   switch (ann.type) {
-    case "freehand": {
+    case 'freehand': {
       if (pts.length < 4) break
       ctx.beginPath()
       ctx.moveTo(toX(pts[0]), toY(pts[1]))
@@ -539,7 +535,7 @@ function drawAnnotation(
       break
     }
 
-    case "line": {
+    case 'line': {
       if (pts.length < 4) break
       ctx.beginPath()
       ctx.moveTo(toX(pts[0]), toY(pts[1]))
@@ -548,10 +544,12 @@ function drawAnnotation(
       break
     }
 
-    case "arrow": {
+    case 'arrow': {
       if (pts.length < 4) break
-      const x1 = toX(pts[0]), y1 = toY(pts[1])
-      const x2 = toX(pts[2]), y2 = toY(pts[3])
+      const x1 = toX(pts[0]),
+        y1 = toY(pts[1])
+      const x2 = toX(pts[2]),
+        y2 = toY(pts[3])
 
       // Line
       ctx.beginPath()
@@ -577,7 +575,7 @@ function drawAnnotation(
       break
     }
 
-    case "circle": {
+    case 'circle': {
       if (pts.length < 4) break
       const cx = toX((pts[0] + pts[2]) / 2)
       const cy = toY((pts[1] + pts[3]) / 2)
@@ -589,29 +587,31 @@ function drawAnnotation(
       break
     }
 
-    case "rectangle": {
+    case 'rectangle': {
       if (pts.length < 4) break
-      const rx1 = toX(pts[0]), ry1 = toY(pts[1])
-      const rw = toX(pts[2]) - rx1, rh = toY(pts[3]) - ry1
+      const rx1 = toX(pts[0]),
+        ry1 = toY(pts[1])
+      const rw = toX(pts[2]) - rx1,
+        rh = toY(pts[3]) - ry1
       ctx.beginPath()
       ctx.rect(rx1, ry1, rw, rh)
       ctx.stroke()
       break
     }
 
-    case "text": {
+    case 'text': {
       if (!ann.text) break
       const fontSize = Math.max(14, ann.lineWidth * 4)
       ctx.font = `${fontSize}px sans-serif`
       ctx.fillStyle = ann.color
 
       // Text shadow for readability
-      ctx.shadowColor = "rgba(0,0,0,0.7)"
+      ctx.shadowColor = 'rgba(0,0,0,0.7)'
       ctx.shadowBlur = 3
       ctx.shadowOffsetX = 1
       ctx.shadowOffsetY = 1
       ctx.fillText(ann.text, toX(pts[0]), toY(pts[1]))
-      ctx.shadowColor = "transparent"
+      ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
       ctx.shadowOffsetX = 0
       ctx.shadowOffsetY = 0

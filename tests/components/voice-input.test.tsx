@@ -50,7 +50,7 @@ describe('VoiceInput', () => {
   })
 
   it('renders mic button when SpeechRecognition is available', () => {
-    (window as any).webkitSpeechRecognition = vi.fn().mockImplementation(() => ({
+    ;(window as any).webkitSpeechRecognition = vi.fn().mockImplementation(() => ({
       start: vi.fn(),
       stop: vi.fn(),
       lang: '',
@@ -67,7 +67,7 @@ describe('VoiceInput', () => {
   })
 
   it('shows tooltip "Start voice dictation" by default', () => {
-    (window as any).webkitSpeechRecognition = vi.fn().mockImplementation(() => ({
+    ;(window as any).webkitSpeechRecognition = vi.fn().mockImplementation(() => ({
       start: vi.fn(),
       stop: vi.fn(),
       lang: '',

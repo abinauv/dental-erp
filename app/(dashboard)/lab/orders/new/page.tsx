@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Search, User, FlaskConical, Save, Loader2 } from "lucide-react"
+} from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { ArrowLeft, Search, User, FlaskConical, Save, Loader2 } from 'lucide-react'
 
 interface Patient {
   id: string
@@ -36,51 +36,51 @@ interface LabVendor {
 }
 
 const WORK_TYPES = [
-  { value: "crown", label: "Crown" },
-  { value: "bridge", label: "Bridge" },
-  { value: "denture", label: "Denture" },
-  { value: "partial_denture", label: "Partial Denture" },
-  { value: "implant_crown", label: "Implant Crown" },
-  { value: "veneer", label: "Veneer" },
-  { value: "inlay_onlay", label: "Inlay/Onlay" },
-  { value: "night_guard", label: "Night Guard" },
-  { value: "retainer", label: "Retainer" },
-  { value: "aligner", label: "Aligner" },
-  { value: "model", label: "Model" },
-  { value: "other", label: "Other" },
+  { value: 'crown', label: 'Crown' },
+  { value: 'bridge', label: 'Bridge' },
+  { value: 'denture', label: 'Denture' },
+  { value: 'partial_denture', label: 'Partial Denture' },
+  { value: 'implant_crown', label: 'Implant Crown' },
+  { value: 'veneer', label: 'Veneer' },
+  { value: 'inlay_onlay', label: 'Inlay/Onlay' },
+  { value: 'night_guard', label: 'Night Guard' },
+  { value: 'retainer', label: 'Retainer' },
+  { value: 'aligner', label: 'Aligner' },
+  { value: 'model', label: 'Model' },
+  { value: 'other', label: 'Other' },
 ]
 
 export default function NewLabOrderPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const preselectedPatientId = searchParams.get("patientId")
+  const preselectedPatientId = searchParams.get('patientId')
   const { toast } = useToast()
 
   const [patients, setPatients] = useState<Patient[]>([])
   const [vendors, setVendors] = useState<LabVendor[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const [patientSearch, setPatientSearch] = useState("")
+  const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
   const [form, setForm] = useState({
-    patientId: preselectedPatientId || "",
-    labVendorId: "",
-    workType: "",
-    description: "",
-    toothNumbers: "",
-    shadeGuide: "",
-    orderDate: new Date().toISOString().split("T")[0],
-    expectedDate: "",
-    estimatedCost: "",
-    notes: "",
+    patientId: preselectedPatientId || '',
+    labVendorId: '',
+    workType: '',
+    description: '',
+    toothNumbers: '',
+    shadeGuide: '',
+    orderDate: new Date().toISOString().split('T')[0],
+    expectedDate: '',
+    estimatedCost: '',
+    notes: '',
   })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [patientsRes, vendorsRes] = await Promise.all([
-          fetch("/api/patients?limit=100"),
-          fetch("/api/lab-vendors?status=active"),
+          fetch('/api/patients?limit=100'),
+          fetch('/api/lab-vendors?status=active'),
         ])
 
         if (patientsRes.ok) {
@@ -99,7 +99,7 @@ export default function NewLabOrderPage() {
           setVendors(data.data || [])
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error('Error fetching data:', error)
       }
     }
 
@@ -126,23 +126,23 @@ export default function NewLabOrderPage() {
     e.preventDefault()
 
     if (!form.patientId) {
-      toast({ variant: "destructive", title: "Error", description: "Please select a patient." })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a patient.' })
       return
     }
     if (!form.labVendorId) {
-      toast({ variant: "destructive", title: "Error", description: "Please select a lab vendor." })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a lab vendor.' })
       return
     }
     if (!form.workType) {
-      toast({ variant: "destructive", title: "Error", description: "Please select a work type." })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a work type.' })
       return
     }
     if (!form.orderDate) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter an order date." })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please enter an order date.' })
       return
     }
     if (!form.estimatedCost) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter estimated cost." })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please enter estimated cost.' })
       return
     }
 
@@ -161,30 +161,30 @@ export default function NewLabOrderPage() {
         notes: form.notes || undefined,
       }
 
-      const response = await fetch("/api/lab-orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/lab-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: "Unknown error" }))
+        const data = await response.json().catch(() => ({ error: 'Unknown error' }))
         throw new Error(data.error || `Failed to create lab order (${response.status})`)
       }
 
       const result = await response.json()
 
       toast({
-        title: "Lab Order Created",
+        title: 'Lab Order Created',
         description: `Order ${result.data.orderNumber} created successfully.`,
       })
 
-      router.push("/lab")
+      router.push('/lab')
     } catch (error: any) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create lab order",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to create lab order',
       })
     } finally {
       setSubmitting(false)
@@ -237,7 +237,7 @@ export default function NewLabOrderPage() {
                   variant="outline"
                   onClick={() => {
                     setSelectedPatient(null)
-                    setForm((prev) => ({ ...prev, patientId: "" }))
+                    setForm((prev) => ({ ...prev, patientId: '' }))
                   }}
                 >
                   Change
@@ -309,7 +309,7 @@ export default function NewLabOrderPage() {
                     {vendors.map((vendor) => (
                       <SelectItem key={vendor.id} value={vendor.id}>
                         {vendor.name}
-                        {vendor.avgTurnaround ? ` (${vendor.avgTurnaround}d avg)` : ""}
+                        {vendor.avgTurnaround ? ` (${vendor.avgTurnaround}d avg)` : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>

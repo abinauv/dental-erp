@@ -1,20 +1,20 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, useCallback } from 'react'
+import { format } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -22,16 +22,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
+} from '@/components/ui/dialog'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useToast } from '@/hooks/use-toast'
+import { Loader2 } from 'lucide-react'
 
 interface DentalChartEntry {
   id: string
@@ -82,26 +77,50 @@ const LOWER_RIGHT = [48, 47, 46, 45, 44, 43, 42, 41]
 
 const TOOTH_NAMES: Record<number, string> = {
   // Upper right
-  18: 'Third Molar', 17: 'Second Molar', 16: 'First Molar', 15: 'Second Premolar',
-  14: 'First Premolar', 13: 'Canine', 12: 'Lateral Incisor', 11: 'Central Incisor',
+  18: 'Third Molar',
+  17: 'Second Molar',
+  16: 'First Molar',
+  15: 'Second Premolar',
+  14: 'First Premolar',
+  13: 'Canine',
+  12: 'Lateral Incisor',
+  11: 'Central Incisor',
   // Upper left
-  21: 'Central Incisor', 22: 'Lateral Incisor', 23: 'Canine', 24: 'First Premolar',
-  25: 'Second Premolar', 26: 'First Molar', 27: 'Second Molar', 28: 'Third Molar',
+  21: 'Central Incisor',
+  22: 'Lateral Incisor',
+  23: 'Canine',
+  24: 'First Premolar',
+  25: 'Second Premolar',
+  26: 'First Molar',
+  27: 'Second Molar',
+  28: 'Third Molar',
   // Lower left
-  31: 'Central Incisor', 32: 'Lateral Incisor', 33: 'Canine', 34: 'First Premolar',
-  35: 'Second Premolar', 36: 'First Molar', 37: 'Second Molar', 38: 'Third Molar',
+  31: 'Central Incisor',
+  32: 'Lateral Incisor',
+  33: 'Canine',
+  34: 'First Premolar',
+  35: 'Second Premolar',
+  36: 'First Molar',
+  37: 'Second Molar',
+  38: 'Third Molar',
   // Lower right
-  41: 'Central Incisor', 42: 'Lateral Incisor', 43: 'Canine', 44: 'First Premolar',
-  45: 'Second Premolar', 46: 'First Molar', 47: 'Second Molar', 48: 'Third Molar',
+  41: 'Central Incisor',
+  42: 'Lateral Incisor',
+  43: 'Canine',
+  44: 'First Premolar',
+  45: 'Second Premolar',
+  46: 'First Molar',
+  47: 'Second Molar',
+  48: 'Third Molar',
 }
 
 function getConditionColor(condition: string): string {
-  const found = TOOTH_CONDITIONS.find(c => c.value === condition)
+  const found = TOOTH_CONDITIONS.find((c) => c.value === condition)
   return found?.color || 'bg-gray-300'
 }
 
 function getConditionLabel(condition: string): string {
-  const found = TOOTH_CONDITIONS.find(c => c.value === condition)
+  const found = TOOTH_CONDITIONS.find((c) => c.value === condition)
   return found?.label || condition
 }
 
@@ -113,7 +132,7 @@ interface ToothProps {
 }
 
 function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
-  const activeEntry = entries.find(e => !e.resolvedDate)
+  const activeEntry = entries.find((e) => !e.resolvedDate)
   const condition = activeEntry?.condition || 'HEALTHY'
   const isMissing = condition === 'MISSING' || condition === 'EXTRACTION'
 
@@ -128,10 +147,14 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
             }`}
           >
             {/* Tooth body */}
-            <div className={`absolute inset-1 rounded ${getConditionColor(condition)} transition-colors`}>
+            <div
+              className={`absolute inset-1 rounded ${getConditionColor(condition)} transition-colors`}
+            >
               {/* Crown area indicator */}
               {!isMissing && (
-                <div className={`absolute ${isUpper ? 'bottom-1' : 'top-1'} left-1 right-1 h-2 rounded bg-white/30`} />
+                <div
+                  className={`absolute ${isUpper ? 'bottom-1' : 'top-1'} left-1 right-1 h-2 rounded bg-white/30`}
+                />
               )}
             </div>
             {/* Tooth number */}
@@ -139,17 +162,26 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
               {number}
             </span>
             {/* Surface indicators */}
-            {activeEntry && (activeEntry.mesial || activeEntry.distal || activeEntry.occlusal || activeEntry.buccal || activeEntry.lingual) && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-white" />
-            )}
+            {activeEntry &&
+              (activeEntry.mesial ||
+                activeEntry.distal ||
+                activeEntry.occlusal ||
+                activeEntry.buccal ||
+                activeEntry.lingual) && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-white" />
+              )}
           </button>
         </TooltipTrigger>
         <TooltipContent>
           <div className="text-sm">
-            <p className="font-semibold">{number} - {TOOTH_NAMES[number]}</p>
+            <p className="font-semibold">
+              {number} - {TOOTH_NAMES[number]}
+            </p>
             <p className={`${isMissing ? 'text-muted-foreground' : ''}`}>
               {getConditionLabel(condition)}
-              {activeEntry?.severity && activeEntry.severity !== 'MILD' && ` (${activeEntry.severity})`}
+              {activeEntry?.severity &&
+                activeEntry.severity !== 'MILD' &&
+                ` (${activeEntry.severity})`}
             </p>
             {activeEntry?.notes && (
               <p className="text-muted-foreground text-xs mt-1">{activeEntry.notes}</p>
@@ -185,16 +217,16 @@ export function DentalChart({ patientId }: DentalChartProps) {
     try {
       setLoading(true)
       const response = await fetch(`/api/dental-chart?patientId=${patientId}&isActive=true`)
-      if (!response.ok) throw new Error("Failed to fetch dental chart")
+      if (!response.ok) throw new Error('Failed to fetch dental chart')
 
       const data = await response.json()
       setChartData(data.chartData || {})
     } catch (error) {
-      console.error("Error fetching dental chart:", error)
+      console.error('Error fetching dental chart:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load dental chart",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load dental chart',
       })
     } finally {
       setLoading(false)
@@ -208,7 +240,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
   const handleToothClick = (toothNumber: number) => {
     setSelectedTooth(toothNumber)
     const entries = chartData[toothNumber] || []
-    const activeEntry = entries.find(e => !e.resolvedDate)
+    const activeEntry = entries.find((e) => !e.resolvedDate)
 
     if (activeEntry) {
       setFormCondition(activeEntry.condition)
@@ -260,11 +292,11 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to save entry")
+        throw new Error(error.error || 'Failed to save entry')
       }
 
       toast({
-        title: "Success",
+        title: 'Success',
         description: `Tooth ${selectedTooth} updated successfully`,
       })
 
@@ -272,9 +304,9 @@ export function DentalChart({ patientId }: DentalChartProps) {
       fetchChartData()
     } catch (error: any) {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to save entry",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to save entry',
       })
     } finally {
       setSaving(false)
@@ -306,7 +338,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
       <CardContent>
         {/* Legend */}
         <div className="mb-6 flex flex-wrap gap-2">
-          {TOOTH_CONDITIONS.map(condition => (
+          {TOOTH_CONDITIONS.map((condition) => (
             <div key={condition.value} className="flex items-center gap-1 text-xs">
               <div className={`w-3 h-3 rounded ${condition.color}`} />
               <span>{condition.label}</span>
@@ -324,7 +356,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
           {/* Upper teeth row */}
           <div className="flex justify-center gap-1 mb-4">
             <div className="flex gap-1">
-              {UPPER_RIGHT.map(num => (
+              {UPPER_RIGHT.map((num) => (
                 <Tooth
                   key={num}
                   number={num}
@@ -336,7 +368,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
             </div>
             <div className="w-4" /> {/* Center gap */}
             <div className="flex gap-1">
-              {UPPER_LEFT.map(num => (
+              {UPPER_LEFT.map((num) => (
                 <Tooth
                   key={num}
                   number={num}
@@ -358,7 +390,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
           {/* Lower teeth row */}
           <div className="flex justify-center gap-1 mt-4">
             <div className="flex gap-1">
-              {LOWER_RIGHT.map(num => (
+              {LOWER_RIGHT.map((num) => (
                 <Tooth
                   key={num}
                   number={num}
@@ -370,7 +402,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
             </div>
             <div className="w-4" /> {/* Center gap */}
             <div className="flex gap-1">
-              {LOWER_LEFT.map(num => (
+              {LOWER_LEFT.map((num) => (
                 <Tooth
                   key={num}
                   number={num}
@@ -399,7 +431,14 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <Card className="bg-green-50 dark:bg-green-950/20">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-green-600">
-                {32 - Object.values(chartData).flat().filter(e => !e.resolvedDate && (e.condition === 'MISSING' || e.condition === 'EXTRACTION')).length}
+                {32 -
+                  Object.values(chartData)
+                    .flat()
+                    .filter(
+                      (e) =>
+                        !e.resolvedDate &&
+                        (e.condition === 'MISSING' || e.condition === 'EXTRACTION')
+                    ).length}
               </div>
               <div className="text-sm text-muted-foreground">Present Teeth</div>
             </CardContent>
@@ -407,7 +446,11 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <Card className="bg-red-50 dark:bg-red-950/20">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-red-600">
-                {Object.values(chartData).flat().filter(e => !e.resolvedDate && e.condition === 'CARIES').length}
+                {
+                  Object.values(chartData)
+                    .flat()
+                    .filter((e) => !e.resolvedDate && e.condition === 'CARIES').length
+                }
               </div>
               <div className="text-sm text-muted-foreground">Caries</div>
             </CardContent>
@@ -415,7 +458,11 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <Card className="bg-blue-50 dark:bg-blue-950/20">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-blue-600">
-                {Object.values(chartData).flat().filter(e => !e.resolvedDate && e.condition === 'FILLED').length}
+                {
+                  Object.values(chartData)
+                    .flat()
+                    .filter((e) => !e.resolvedDate && e.condition === 'FILLED').length
+                }
               </div>
               <div className="text-sm text-muted-foreground">Filled</div>
             </CardContent>
@@ -423,7 +470,15 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <Card className="bg-muted/50">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-muted-foreground">
-                {Object.values(chartData).flat().filter(e => !e.resolvedDate && (e.condition === 'MISSING' || e.condition === 'EXTRACTION')).length}
+                {
+                  Object.values(chartData)
+                    .flat()
+                    .filter(
+                      (e) =>
+                        !e.resolvedDate &&
+                        (e.condition === 'MISSING' || e.condition === 'EXTRACTION')
+                    ).length
+                }
               </div>
               <div className="text-sm text-muted-foreground">Missing</div>
             </CardContent>
@@ -437,9 +492,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
               <DialogTitle>
                 Tooth {selectedTooth} - {selectedTooth ? TOOTH_NAMES[selectedTooth] : ''}
               </DialogTitle>
-              <DialogDescription>
-                View or update the condition of this tooth
-              </DialogDescription>
+              <DialogDescription>View or update the condition of this tooth</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
@@ -451,7 +504,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TOOTH_CONDITIONS.map(condition => (
+                    {TOOTH_CONDITIONS.map((condition) => (
                       <SelectItem key={condition.value} value={condition.value}>
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded ${condition.color}`} />
@@ -471,7 +524,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SEVERITY_LEVELS.map(level => (
+                    {SEVERITY_LEVELS.map((level) => (
                       <SelectItem key={level.value} value={level.value}>
                         {level.label}
                       </SelectItem>
@@ -490,7 +543,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                         id={surface}
                         checked={checked}
                         onCheckedChange={(value) =>
-                          setFormSurfaces(prev => ({ ...prev, [surface]: !!value }))
+                          setFormSurfaces((prev) => ({ ...prev, [surface]: !!value }))
                         }
                       />
                       <label htmlFor={surface} className="text-sm capitalize">

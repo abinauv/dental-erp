@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 export async function GET() {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -22,7 +22,7 @@ export async function GET() {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: "Hospital not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Hospital not found' }, { status: 404 })
     }
 
     // Get current usage counts
@@ -45,10 +45,7 @@ export async function GET() {
       currentStorageMB: storageUsageMB,
     })
   } catch (error) {
-    console.error("Get subscription error:", error)
-    return NextResponse.json(
-      { error: "An error occurred. Please try again." },
-      { status: 500 }
-    )
+    console.error('Get subscription error:', error)
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

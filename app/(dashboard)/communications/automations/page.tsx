@@ -1,19 +1,19 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -29,9 +29,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Zap,
   Plus,
@@ -43,21 +43,51 @@ import {
   Play,
   Pause,
   RefreshCw,
-} from "lucide-react"
+} from 'lucide-react'
 
 const TRIGGER_TYPES = [
-  { value: "NO_VISIT", label: "No visit in X days", paramLabel: "Days since last visit", defaultParam: 180 },
-  { value: "BIRTHDAY_UPCOMING", label: "Birthday in X days", paramLabel: "Days before birthday", defaultParam: 3 },
-  { value: "TREATMENT_PLAN_PENDING", label: "Treatment plan pending X days", paramLabel: "Days pending", defaultParam: 14 },
-  { value: "MEMBERSHIP_EXPIRING", label: "Membership expiring in X days", paramLabel: "Days before expiry", defaultParam: 7 },
-  { value: "POST_APPOINTMENT", label: "After appointment completion", paramLabel: null, defaultParam: 0 },
-  { value: "PAYMENT_OVERDUE", label: "Payment overdue by X days", paramLabel: "Days overdue", defaultParam: 30 },
+  {
+    value: 'NO_VISIT',
+    label: 'No visit in X days',
+    paramLabel: 'Days since last visit',
+    defaultParam: 180,
+  },
+  {
+    value: 'BIRTHDAY_UPCOMING',
+    label: 'Birthday in X days',
+    paramLabel: 'Days before birthday',
+    defaultParam: 3,
+  },
+  {
+    value: 'TREATMENT_PLAN_PENDING',
+    label: 'Treatment plan pending X days',
+    paramLabel: 'Days pending',
+    defaultParam: 14,
+  },
+  {
+    value: 'MEMBERSHIP_EXPIRING',
+    label: 'Membership expiring in X days',
+    paramLabel: 'Days before expiry',
+    defaultParam: 7,
+  },
+  {
+    value: 'POST_APPOINTMENT',
+    label: 'After appointment completion',
+    paramLabel: null,
+    defaultParam: 0,
+  },
+  {
+    value: 'PAYMENT_OVERDUE',
+    label: 'Payment overdue by X days',
+    paramLabel: 'Days overdue',
+    defaultParam: 30,
+  },
 ]
 
 const ACTION_TYPES = [
-  { value: "SEND_SMS", label: "Send SMS", needsTemplate: true },
-  { value: "SEND_EMAIL", label: "Send Email", needsTemplate: true },
-  { value: "CREATE_NOTIFICATION", label: "Create Notification", needsTemplate: false },
+  { value: 'SEND_SMS', label: 'Send SMS', needsTemplate: true },
+  { value: 'SEND_EMAIL', label: 'Send Email', needsTemplate: true },
+  { value: 'CREATE_NOTIFICATION', label: 'Create Notification', needsTemplate: false },
 ]
 
 interface Automation {
@@ -89,23 +119,23 @@ export default function AutomationsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
 
   // Form state
-  const [formName, setFormName] = useState("")
-  const [formTriggerType, setFormTriggerType] = useState("")
-  const [formTriggerDays, setFormTriggerDays] = useState("180")
-  const [formActionType, setFormActionType] = useState("")
-  const [formTemplateId, setFormTemplateId] = useState("")
-  const [formNotifTitle, setFormNotifTitle] = useState("")
-  const [formNotifMessage, setFormNotifMessage] = useState("")
+  const [formName, setFormName] = useState('')
+  const [formTriggerType, setFormTriggerType] = useState('')
+  const [formTriggerDays, setFormTriggerDays] = useState('180')
+  const [formActionType, setFormActionType] = useState('')
+  const [formTemplateId, setFormTemplateId] = useState('')
+  const [formNotifTitle, setFormNotifTitle] = useState('')
+  const [formNotifMessage, setFormNotifMessage] = useState('')
 
   const fetchAutomations = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/communications/automations")
-      if (!res.ok) throw new Error("Failed to fetch")
+      const res = await fetch('/api/communications/automations')
+      if (!res.ok) throw new Error('Failed to fetch')
       const json = await res.json()
       setAutomations(json.automations)
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -113,7 +143,7 @@ export default function AutomationsPage() {
 
   const fetchTemplates = async () => {
     try {
-      const res = await fetch("/api/communications/templates")
+      const res = await fetch('/api/communications/templates')
       if (!res.ok) return
       const json = await res.json()
       setTemplates(json.templates || [])
@@ -128,13 +158,13 @@ export default function AutomationsPage() {
   }, [])
 
   const resetForm = () => {
-    setFormName("")
-    setFormTriggerType("")
-    setFormTriggerDays("180")
-    setFormActionType("")
-    setFormTemplateId("")
-    setFormNotifTitle("")
-    setFormNotifMessage("")
+    setFormName('')
+    setFormTriggerType('')
+    setFormTriggerDays('180')
+    setFormActionType('')
+    setFormTemplateId('')
+    setFormNotifTitle('')
+    setFormNotifMessage('')
     setEditingId(null)
   }
 
@@ -147,17 +177,21 @@ export default function AutomationsPage() {
     setEditingId(auto.id)
     setFormName(auto.name)
     setFormTriggerType(auto.trigger.type)
-    setFormTriggerDays(String(auto.trigger.params.days || "0"))
+    setFormTriggerDays(String(auto.trigger.params.days || '0'))
     setFormActionType(auto.action.type)
-    setFormTemplateId(auto.action.params.templateId || "")
-    setFormNotifTitle(auto.action.params.title || "")
-    setFormNotifMessage(auto.action.params.message || "")
+    setFormTemplateId(auto.action.params.templateId || '')
+    setFormNotifTitle(auto.action.params.title || '')
+    setFormNotifMessage(auto.action.params.message || '')
     setShowDialog(true)
   }
 
   const handleSave = async () => {
     if (!formName || !formTriggerType || !formActionType) {
-      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" })
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
+      })
       return
     }
 
@@ -172,11 +206,11 @@ export default function AutomationsPage() {
     const actionParams: Record<string, string> = {}
     if (actionConfig?.needsTemplate) {
       if (!formTemplateId) {
-        toast({ title: "Error", description: "Please select a template", variant: "destructive" })
+        toast({ title: 'Error', description: 'Please select a template', variant: 'destructive' })
         return
       }
       actionParams.templateId = formTemplateId
-    } else if (formActionType === "CREATE_NOTIFICATION") {
+    } else if (formActionType === 'CREATE_NOTIFICATION') {
       actionParams.title = formNotifTitle || formName
       actionParams.message = formNotifMessage || `Automation "${formName}" triggered`
     }
@@ -190,23 +224,26 @@ export default function AutomationsPage() {
         action: { type: formActionType, params: actionParams },
       }
 
-      const res = await fetch("/api/communications/automations", {
-        method: editingId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/communications/automations', {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
       if (!res.ok) {
         const errData = await res.json()
-        throw new Error(errData.error || "Failed to save")
+        throw new Error(errData.error || 'Failed to save')
       }
 
-      toast({ title: "Success", description: editingId ? "Automation updated" : "Automation created" })
+      toast({
+        title: 'Success',
+        description: editingId ? 'Automation updated' : 'Automation created',
+      })
       setShowDialog(false)
       resetForm()
       fetchAutomations()
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -214,55 +251,60 @@ export default function AutomationsPage() {
 
   const handleToggle = async (auto: Automation) => {
     try {
-      const res = await fetch("/api/communications/automations", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/communications/automations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: auto.id, isActive: !auto.isActive }),
       })
-      if (!res.ok) throw new Error("Failed to update")
+      if (!res.ok) throw new Error('Failed to update')
       setAutomations((prev) =>
         prev.map((a) => (a.id === auto.id ? { ...a, isActive: !a.isActive } : a))
       )
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     }
   }
 
   const handleDelete = async (id: string) => {
-    const ok = await confirm({ title: "Delete automation?", description: "Are you sure you want to delete this automation?", confirmLabel: "Delete" }); if (!ok) return
+    const ok = await confirm({
+      title: 'Delete automation?',
+      description: 'Are you sure you want to delete this automation?',
+      confirmLabel: 'Delete',
+    })
+    if (!ok) return
 
     try {
-      const res = await fetch("/api/communications/automations", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/communications/automations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       })
-      if (!res.ok) throw new Error("Failed to delete")
+      if (!res.ok) throw new Error('Failed to delete')
       setAutomations((prev) => prev.filter((a) => a.id !== id))
-      toast({ title: "Success", description: "Automation deleted" })
+      toast({ title: 'Success', description: 'Automation deleted' })
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     }
   }
 
-  const getTriggerLabel = (trigger: Automation["trigger"]) => {
+  const getTriggerLabel = (trigger: Automation['trigger']) => {
     const config = TRIGGER_TYPES.find((t) => t.value === trigger.type)
     if (!config) return trigger.type
     if (trigger.params.days) {
-      return config.label.replace("X", String(trigger.params.days))
+      return config.label.replace('X', String(trigger.params.days))
     }
     return config.label
   }
 
-  const getActionLabel = (action: Automation["action"]) => {
+  const getActionLabel = (action: Automation['action']) => {
     const config = ACTION_TYPES.find((a) => a.value === action.type)
     return config?.label || action.type
   }
 
   // Filter templates based on selected action type
   const filteredTemplates = templates.filter((t) => {
-    if (formActionType === "SEND_SMS") return t.channel === "SMS"
-    if (formActionType === "SEND_EMAIL") return t.channel === "EMAIL"
+    if (formActionType === 'SEND_SMS') return t.channel === 'SMS'
+    if (formActionType === 'SEND_EMAIL') return t.channel === 'EMAIL'
     return true
   })
 
@@ -281,7 +323,7 @@ export default function AutomationsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={fetchAutomations}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button onClick={openCreateDialog}>
             <Plus className="h-4 w-4 mr-2" />
@@ -312,8 +354,12 @@ export default function AutomationsPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Active Rules ({automations.filter((a) => a.isActive).length}/{automations.length})</CardTitle>
-            <CardDescription>Automation rules are evaluated daily by the cron scheduler</CardDescription>
+            <CardTitle>
+              Active Rules ({automations.filter((a) => a.isActive).length}/{automations.length})
+            </CardTitle>
+            <CardDescription>
+              Automation rules are evaluated daily by the cron scheduler
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -343,16 +389,11 @@ export default function AutomationsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Switch
-                        checked={auto.isActive}
-                        onCheckedChange={() => handleToggle(auto)}
-                      />
+                      <Switch checked={auto.isActive} onCheckedChange={() => handleToggle(auto)} />
                     </TableCell>
                     <TableCell className="text-right">{auto.runCount}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {auto.lastRunAt
-                        ? new Date(auto.lastRunAt).toLocaleDateString()
-                        : "Never"}
+                      {auto.lastRunAt ? new Date(auto.lastRunAt).toLocaleDateString() : 'Never'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -386,7 +427,7 @@ export default function AutomationsPage() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Automation" : "New Automation"}</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Automation' : 'New Automation'}</DialogTitle>
             <DialogDescription>
               Define the trigger condition and action for this automation rule
             </DialogDescription>
@@ -406,11 +447,14 @@ export default function AutomationsPage() {
             {/* Trigger */}
             <div className="space-y-2">
               <Label>Trigger (IF)</Label>
-              <Select value={formTriggerType} onValueChange={(v) => {
-                setFormTriggerType(v)
-                const config = TRIGGER_TYPES.find((t) => t.value === v)
-                if (config) setFormTriggerDays(String(config.defaultParam))
-              }}>
+              <Select
+                value={formTriggerType}
+                onValueChange={(v) => {
+                  setFormTriggerType(v)
+                  const config = TRIGGER_TYPES.find((t) => t.value === v)
+                  if (config) setFormTriggerDays(String(config.defaultParam))
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select trigger..." />
                 </SelectTrigger>
@@ -440,10 +484,13 @@ export default function AutomationsPage() {
             {/* Action */}
             <div className="space-y-2">
               <Label>Action (THEN)</Label>
-              <Select value={formActionType} onValueChange={(v) => {
-                setFormActionType(v)
-                setFormTemplateId("")
-              }}>
+              <Select
+                value={formActionType}
+                onValueChange={(v) => {
+                  setFormActionType(v)
+                  setFormTemplateId('')
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select action..." />
                 </SelectTrigger>
@@ -483,7 +530,7 @@ export default function AutomationsPage() {
             )}
 
             {/* Notification params */}
-            {formActionType === "CREATE_NOTIFICATION" && (
+            {formActionType === 'CREATE_NOTIFICATION' && (
               <>
                 <div className="space-y-2">
                   <Label>Notification Title</Label>
@@ -511,7 +558,7 @@ export default function AutomationsPage() {
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingId ? "Update" : "Create"}
+              {editingId ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>

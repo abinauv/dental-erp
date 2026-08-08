@@ -16,7 +16,10 @@ vi.mock('@/lib/services/video.service', () => ({
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
-import { GET as consultationGET, PUT as consultationPUT } from '@/app/api/video/consultations/[id]/route'
+import {
+  GET as consultationGET,
+  PUT as consultationPUT,
+} from '@/app/api/video/consultations/[id]/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { deleteRoom } from '@/lib/services/video.service'
 import { prisma } from '@/lib/prisma'
@@ -69,17 +72,32 @@ describe('GET /api/video/consultations/[id]', () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue(null)
 
-    const res = await consultationGET(makeReq('/api/video/consultations/vc-none'), makeParams('vc-none'))
+    const res = await consultationGET(
+      makeReq('/api/video/consultations/vc-none'),
+      makeParams('vc-none')
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns consultation with full details', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'SCHEDULED', roomUrl: 'https://video.test/room',
-      patient: { id: 'p1', firstName: 'John', lastName: 'Doe', medicalHistory: { hasAllergies: true } },
+      id: 'vc1',
+      status: 'SCHEDULED',
+      roomUrl: 'https://video.test/room',
+      patient: {
+        id: 'p1',
+        firstName: 'John',
+        lastName: 'Doe',
+        medicalHistory: { hasAllergies: true },
+      },
       doctor: { id: 'd1', firstName: 'Dr', lastName: 'Smith', specialization: 'General' },
-      appointment: { id: 'a1', appointmentNo: 'APT001', scheduledDate: new Date(), scheduledTime: '10:00' },
+      appointment: {
+        id: 'a1',
+        appointmentNo: 'APT001',
+        scheduledDate: new Date(),
+        scheduledTime: '10:00',
+      },
     } as any)
 
     const res = await consultationGET(makeReq('/api/video/consultations/vc1'), makeParams('vc1'))
@@ -101,7 +119,10 @@ describe('PUT /api/video/consultations/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(401)
   })
 
@@ -109,15 +130,24 @@ describe('PUT /api/video/consultations/[id]', () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue(null)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns 400 for invalid action', async () => {
     mockAuth()
-    vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({ id: 'vc1', status: 'SCHEDULED' } as any)
+    vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
+      id: 'vc1',
+      status: 'SCHEDULED',
+    } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'explode' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'explode' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('Invalid action')
@@ -128,14 +158,21 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('starts a SCHEDULED consultation', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'SCHEDULED', appointmentId: 'a1',
+      id: 'vc1',
+      status: 'SCHEDULED',
+      appointmentId: 'a1',
     } as any)
     vi.mocked(prisma.appointment.update).mockResolvedValue({} as any)
     vi.mocked(prisma.videoConsultation.update).mockResolvedValue({
-      id: 'vc1', status: 'IN_PROGRESS', startedAt: new Date(),
+      id: 'vc1',
+      status: 'IN_PROGRESS',
+      startedAt: new Date(),
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }),
+      makeParams('vc1')
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -148,10 +185,14 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('returns 400 when trying to start non-SCHEDULED consultation', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'IN_PROGRESS',
+      id: 'vc1',
+      status: 'IN_PROGRESS',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('SCHEDULED')
@@ -163,14 +204,23 @@ describe('PUT /api/video/consultations/[id]', () => {
     mockAuth()
     const startedAt = new Date(Date.now() - 30 * 60000) // 30 min ago
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'IN_PROGRESS', startedAt, appointmentId: 'a1', roomName: 'room-abc',
+      id: 'vc1',
+      status: 'IN_PROGRESS',
+      startedAt,
+      appointmentId: 'a1',
+      roomName: 'room-abc',
     } as any)
     vi.mocked(prisma.appointment.update).mockResolvedValue({} as any)
     vi.mocked(prisma.videoConsultation.update).mockResolvedValue({
-      id: 'vc1', status: 'COMPLETED', duration: 30,
+      id: 'vc1',
+      status: 'COMPLETED',
+      duration: 30,
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'end', notes: 'Good session' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'end', notes: 'Good session' }),
+      makeParams('vc1')
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -184,10 +234,14 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('returns 400 when trying to end non-IN_PROGRESS consultation', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'SCHEDULED',
+      id: 'vc1',
+      status: 'SCHEDULED',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'end' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'end' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(400)
   })
 
@@ -196,14 +250,21 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('cancels a consultation and deletes room', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'SCHEDULED', appointmentId: 'a1', roomName: 'room-xyz',
+      id: 'vc1',
+      status: 'SCHEDULED',
+      appointmentId: 'a1',
+      roomName: 'room-xyz',
     } as any)
     vi.mocked(prisma.appointment.update).mockResolvedValue({} as any)
     vi.mocked(prisma.videoConsultation.update).mockResolvedValue({
-      id: 'vc1', status: 'CANCELLED',
+      id: 'vc1',
+      status: 'CANCELLED',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'cancel' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'cancel' }),
+      makeParams('vc1')
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -217,10 +278,14 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('returns 400 when trying to cancel a COMPLETED consultation', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'COMPLETED',
+      id: 'vc1',
+      status: 'COMPLETED',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'cancel' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'cancel' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(400)
   })
 
@@ -229,14 +294,21 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('marks SCHEDULED consultation as no-show', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'SCHEDULED', appointmentId: 'a1', roomName: 'room-ns',
+      id: 'vc1',
+      status: 'SCHEDULED',
+      appointmentId: 'a1',
+      roomName: 'room-ns',
     } as any)
     vi.mocked(prisma.appointment.update).mockResolvedValue({} as any)
     vi.mocked(prisma.videoConsultation.update).mockResolvedValue({
-      id: 'vc1', status: 'NO_SHOW',
+      id: 'vc1',
+      status: 'NO_SHOW',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'no_show' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'no_show' }),
+      makeParams('vc1')
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -247,10 +319,14 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('returns 400 when no-show for non-SCHEDULED consultation', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'IN_PROGRESS',
+      id: 'vc1',
+      status: 'IN_PROGRESS',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'no_show' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'no_show' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(400)
   })
 
@@ -259,13 +335,21 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('updates notes on consultation', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'COMPLETED',
+      id: 'vc1',
+      status: 'COMPLETED',
     } as any)
     vi.mocked(prisma.videoConsultation.update).mockResolvedValue({
-      id: 'vc1', notes: 'Updated notes',
+      id: 'vc1',
+      notes: 'Updated notes',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'update_notes', notes: 'Updated notes' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', {
+        action: 'update_notes',
+        notes: 'Updated notes',
+      }),
+      makeParams('vc1')
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -277,13 +361,19 @@ describe('PUT /api/video/consultations/[id]', () => {
   it('starts consultation without linked appointment', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findFirst).mockResolvedValue({
-      id: 'vc1', status: 'SCHEDULED', appointmentId: null,
+      id: 'vc1',
+      status: 'SCHEDULED',
+      appointmentId: null,
     } as any)
     vi.mocked(prisma.videoConsultation.update).mockResolvedValue({
-      id: 'vc1', status: 'IN_PROGRESS',
+      id: 'vc1',
+      status: 'IN_PROGRESS',
     } as any)
 
-    const res = await consultationPUT(makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }), makeParams('vc1'))
+    const res = await consultationPUT(
+      makeReq('/api/video/consultations/vc1', 'PUT', { action: 'start' }),
+      makeParams('vc1')
+    )
     expect(res.status).toBe(200)
     expect(prisma.appointment.update).not.toHaveBeenCalled()
   })

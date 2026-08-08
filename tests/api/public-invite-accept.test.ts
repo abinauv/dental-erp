@@ -3,7 +3,12 @@ import prisma from '@/tests/__mocks__/prisma'
 
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
 vi.mock('@prisma/client', () => ({
-  StaffInviteStatus: { PENDING: 'PENDING', ACCEPTED: 'ACCEPTED', EXPIRED: 'EXPIRED', CANCELLED: 'CANCELLED' },
+  StaffInviteStatus: {
+    PENDING: 'PENDING',
+    ACCEPTED: 'ACCEPTED',
+    EXPIRED: 'EXPIRED',
+    CANCELLED: 'CANCELLED',
+  },
   Role: { ADMIN: 'ADMIN', DOCTOR: 'DOCTOR', RECEPTIONIST: 'RECEPTIONIST', STAFF: 'STAFF' },
 }))
 vi.mock('bcryptjs', () => ({
@@ -51,11 +56,13 @@ describe('POST /api/public/invite/accept', () => {
     ;(prisma.user.create as any).mockResolvedValue({ id: 'user-new' })
     ;(prisma.staffInvite.update as any).mockResolvedValue({})
 
-    const res = await mod.POST(makePostRequest({
-      token: 'valid-token-123',
-      password: 'SecurePass123!',
-      phone: '9876543210',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: 'valid-token-123',
+        password: 'SecurePass123!',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.success).toBe(true)
@@ -63,11 +70,13 @@ describe('POST /api/public/invite/accept', () => {
   })
 
   it('returns 400 for Zod validation failure', async () => {
-    const res = await mod.POST(makePostRequest({
-      token: '',
-      password: 'short',
-      phone: '123',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: '',
+        password: 'short',
+        phone: '123',
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('Validation failed')
@@ -76,11 +85,13 @@ describe('POST /api/public/invite/accept', () => {
   it('returns 400 for invalid token', async () => {
     ;(prisma.staffInvite.findUnique as any).mockResolvedValue(null)
 
-    const res = await mod.POST(makePostRequest({
-      token: 'invalid-token',
-      password: 'SecurePass123!',
-      phone: '9876543210',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: 'invalid-token',
+        password: 'SecurePass123!',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('Invalid invite token')
@@ -92,11 +103,13 @@ describe('POST /api/public/invite/accept', () => {
       status: 'ACCEPTED',
     })
 
-    const res = await mod.POST(makePostRequest({
-      token: 'valid-token-123',
-      password: 'SecurePass123!',
-      phone: '9876543210',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: 'valid-token-123',
+        password: 'SecurePass123!',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('already been used')
@@ -109,11 +122,13 @@ describe('POST /api/public/invite/accept', () => {
     })
     ;(prisma.staffInvite.update as any).mockResolvedValue({})
 
-    const res = await mod.POST(makePostRequest({
-      token: 'valid-token-123',
-      password: 'SecurePass123!',
-      phone: '9876543210',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: 'valid-token-123',
+        password: 'SecurePass123!',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('expired')
@@ -128,11 +143,13 @@ describe('POST /api/public/invite/accept', () => {
       hospital: { ...validInvite.hospital, isActive: false },
     })
 
-    const res = await mod.POST(makePostRequest({
-      token: 'valid-token-123',
-      password: 'SecurePass123!',
-      phone: '9876543210',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: 'valid-token-123',
+        password: 'SecurePass123!',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('no longer active')
@@ -142,11 +159,13 @@ describe('POST /api/public/invite/accept', () => {
     ;(prisma.staffInvite.findUnique as any).mockResolvedValue(validInvite)
     ;(prisma.user.findUnique as any).mockResolvedValue({ id: 'existing-user' })
 
-    const res = await mod.POST(makePostRequest({
-      token: 'valid-token-123',
-      password: 'SecurePass123!',
-      phone: '9876543210',
-    }))
+    const res = await mod.POST(
+      makePostRequest({
+        token: 'valid-token-123',
+        password: 'SecurePass123!',
+        phone: '9876543210',
+      })
+    )
     expect(res.status).toBe(409)
   })
 })

@@ -2,233 +2,248 @@ import {
   formatCurrency as baseFormatCurrency,
   formatDate as baseFormatDate,
   formatDateTime as baseFormatDateTime,
-} from "@/lib/i18n/format"
+} from '@/lib/i18n/format'
 
 // Treatment status colors and labels
-export const treatmentStatusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+export const treatmentStatusConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string }
+> = {
   PLANNED: {
-    label: "Planned",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100"
+    label: 'Planned',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
   },
   IN_PROGRESS: {
-    label: "In Progress",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100"
+    label: 'In Progress',
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-100',
   },
   COMPLETED: {
-    label: "Completed",
-    color: "text-green-700",
-    bgColor: "bg-green-100"
+    label: 'Completed',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
   },
   CANCELLED: {
-    label: "Cancelled",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted"
-  }
+    label: 'Cancelled',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+  },
 }
 
 // Treatment Plan status colors and labels
-export const treatmentPlanStatusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+export const treatmentPlanStatusConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string }
+> = {
   DRAFT: {
-    label: "Draft",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted"
+    label: 'Draft',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
   },
   PROPOSED: {
-    label: "Proposed",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100"
+    label: 'Proposed',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
   },
   ACCEPTED: {
-    label: "Accepted",
-    color: "text-indigo-700",
-    bgColor: "bg-indigo-100"
+    label: 'Accepted',
+    color: 'text-indigo-700',
+    bgColor: 'bg-indigo-100',
   },
   IN_PROGRESS: {
-    label: "In Progress",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100"
+    label: 'In Progress',
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-100',
   },
   COMPLETED: {
-    label: "Completed",
-    color: "text-green-700",
-    bgColor: "bg-green-100"
+    label: 'Completed',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
   },
   CANCELLED: {
-    label: "Cancelled",
-    color: "text-red-700",
-    bgColor: "bg-red-100"
-  }
+    label: 'Cancelled',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
+  },
 }
 
 // Treatment Plan Item status colors and labels
-export const treatmentPlanItemStatusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+export const treatmentPlanItemStatusConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string }
+> = {
   PENDING: {
-    label: "Pending",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted"
+    label: 'Pending',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
   },
   SCHEDULED: {
-    label: "Scheduled",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100"
+    label: 'Scheduled',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
   },
   IN_PROGRESS: {
-    label: "In Progress",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100"
+    label: 'In Progress',
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-100',
   },
   COMPLETED: {
-    label: "Completed",
-    color: "text-green-700",
-    bgColor: "bg-green-100"
+    label: 'Completed',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
   },
   CANCELLED: {
-    label: "Cancelled",
-    color: "text-red-700",
-    bgColor: "bg-red-100"
-  }
+    label: 'Cancelled',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
+  },
 }
 
 // Procedure category colors and labels
-export const procedureCategoryConfig: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
+export const procedureCategoryConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string; icon: string }
+> = {
   PREVENTIVE: {
-    label: "Preventive",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-    icon: "Shield"
+    label: 'Preventive',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
+    icon: 'Shield',
   },
   RESTORATIVE: {
-    label: "Restorative",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-    icon: "Wrench"
+    label: 'Restorative',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
+    icon: 'Wrench',
   },
   ENDODONTIC: {
-    label: "Endodontic",
-    color: "text-purple-700",
-    bgColor: "bg-purple-100",
-    icon: "Target"
+    label: 'Endodontic',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-100',
+    icon: 'Target',
   },
   PERIODONTIC: {
-    label: "Periodontic",
-    color: "text-pink-700",
-    bgColor: "bg-pink-100",
-    icon: "Layers"
+    label: 'Periodontic',
+    color: 'text-pink-700',
+    bgColor: 'bg-pink-100',
+    icon: 'Layers',
   },
   PROSTHODONTIC: {
-    label: "Prosthodontic",
-    color: "text-indigo-700",
-    bgColor: "bg-indigo-100",
-    icon: "Crown"
+    label: 'Prosthodontic',
+    color: 'text-indigo-700',
+    bgColor: 'bg-indigo-100',
+    icon: 'Crown',
   },
   ORTHODONTIC: {
-    label: "Orthodontic",
-    color: "text-cyan-700",
-    bgColor: "bg-cyan-100",
-    icon: "AlignCenter"
+    label: 'Orthodontic',
+    color: 'text-cyan-700',
+    bgColor: 'bg-cyan-100',
+    icon: 'AlignCenter',
   },
   ORAL_SURGERY: {
-    label: "Oral Surgery",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-    icon: "Scissors"
+    label: 'Oral Surgery',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
+    icon: 'Scissors',
   },
   COSMETIC: {
-    label: "Cosmetic",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100",
-    icon: "Sparkles"
+    label: 'Cosmetic',
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-100',
+    icon: 'Sparkles',
   },
   DIAGNOSTIC: {
-    label: "Diagnostic",
-    color: "text-teal-700",
-    bgColor: "bg-teal-100",
-    icon: "Search"
+    label: 'Diagnostic',
+    color: 'text-teal-700',
+    bgColor: 'bg-teal-100',
+    icon: 'Search',
   },
   EMERGENCY: {
-    label: "Emergency",
-    color: "text-orange-700",
-    bgColor: "bg-orange-100",
-    icon: "AlertTriangle"
-  }
+    label: 'Emergency',
+    color: 'text-orange-700',
+    bgColor: 'bg-orange-100',
+    icon: 'AlertTriangle',
+  },
 }
 
 // Dental chart tooth condition colors and labels
-export const toothConditionConfig: Record<string, { label: string; color: string; bgColor: string; fillColor: string }> = {
+export const toothConditionConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string; fillColor: string }
+> = {
   HEALTHY: {
-    label: "Healthy",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-    fillColor: "#22c55e"
+    label: 'Healthy',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
+    fillColor: '#22c55e',
   },
   CARIES: {
-    label: "Caries",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-    fillColor: "#ef4444"
+    label: 'Caries',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
+    fillColor: '#ef4444',
   },
   FILLED: {
-    label: "Filled",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-    fillColor: "#3b82f6"
+    label: 'Filled',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
+    fillColor: '#3b82f6',
   },
   CROWN: {
-    label: "Crown",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100",
-    fillColor: "#f59e0b"
+    label: 'Crown',
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-100',
+    fillColor: '#f59e0b',
   },
   BRIDGE: {
-    label: "Bridge",
-    color: "text-purple-700",
-    bgColor: "bg-purple-100",
-    fillColor: "#a855f7"
+    label: 'Bridge',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-100',
+    fillColor: '#a855f7',
   },
   MISSING: {
-    label: "Missing",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted",
-    fillColor: "#9ca3af"
+    label: 'Missing',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+    fillColor: '#9ca3af',
   },
   IMPLANT: {
-    label: "Implant",
-    color: "text-cyan-700",
-    bgColor: "bg-cyan-100",
-    fillColor: "#06b6d4"
+    label: 'Implant',
+    color: 'text-cyan-700',
+    bgColor: 'bg-cyan-100',
+    fillColor: '#06b6d4',
   },
   ROOT_CANAL: {
-    label: "Root Canal",
-    color: "text-pink-700",
-    bgColor: "bg-pink-100",
-    fillColor: "#ec4899"
+    label: 'Root Canal',
+    color: 'text-pink-700',
+    bgColor: 'bg-pink-100',
+    fillColor: '#ec4899',
   },
   EXTRACTION_NEEDED: {
-    label: "Extraction Needed",
-    color: "text-orange-700",
-    bgColor: "bg-orange-100",
-    fillColor: "#f97316"
+    label: 'Extraction Needed',
+    color: 'text-orange-700',
+    bgColor: 'bg-orange-100',
+    fillColor: '#f97316',
   },
   VENEER: {
-    label: "Veneer",
-    color: "text-indigo-700",
-    bgColor: "bg-indigo-100",
-    fillColor: "#6366f1"
-  }
+    label: 'Veneer',
+    color: 'text-indigo-700',
+    bgColor: 'bg-indigo-100',
+    fillColor: '#6366f1',
+  },
 }
 
 // Tooth surface labels (FDI notation)
 export const toothSurfaceLabels: Record<string, string> = {
-  M: "Mesial",
-  D: "Distal",
-  O: "Occlusal",
-  B: "Buccal",
-  L: "Lingual",
-  I: "Incisal",
-  F: "Facial",
-  P: "Palatal"
+  M: 'Mesial',
+  D: 'Distal',
+  O: 'Occlusal',
+  B: 'Buccal',
+  L: 'Lingual',
+  I: 'Incisal',
+  F: 'Facial',
+  P: 'Palatal',
 }
 
 // Tooth numbering (Universal/FDI)
@@ -240,47 +255,47 @@ export const toothNumbers = {
   // Lower Left (Quadrant 3)
   lowerLeft: [38, 37, 36, 35, 34, 33, 32, 31],
   // Lower Right (Quadrant 4)
-  lowerRight: [41, 42, 43, 44, 45, 46, 47, 48]
+  lowerRight: [41, 42, 43, 44, 45, 46, 47, 48],
 }
 
 // Tooth names by number (FDI notation)
 export const toothNames: Record<number, string> = {
   // Upper Right
-  18: "Upper Right Third Molar",
-  17: "Upper Right Second Molar",
-  16: "Upper Right First Molar",
-  15: "Upper Right Second Premolar",
-  14: "Upper Right First Premolar",
-  13: "Upper Right Canine",
-  12: "Upper Right Lateral Incisor",
-  11: "Upper Right Central Incisor",
+  18: 'Upper Right Third Molar',
+  17: 'Upper Right Second Molar',
+  16: 'Upper Right First Molar',
+  15: 'Upper Right Second Premolar',
+  14: 'Upper Right First Premolar',
+  13: 'Upper Right Canine',
+  12: 'Upper Right Lateral Incisor',
+  11: 'Upper Right Central Incisor',
   // Upper Left
-  21: "Upper Left Central Incisor",
-  22: "Upper Left Lateral Incisor",
-  23: "Upper Left Canine",
-  24: "Upper Left First Premolar",
-  25: "Upper Left Second Premolar",
-  26: "Upper Left First Molar",
-  27: "Upper Left Second Molar",
-  28: "Upper Left Third Molar",
+  21: 'Upper Left Central Incisor',
+  22: 'Upper Left Lateral Incisor',
+  23: 'Upper Left Canine',
+  24: 'Upper Left First Premolar',
+  25: 'Upper Left Second Premolar',
+  26: 'Upper Left First Molar',
+  27: 'Upper Left Second Molar',
+  28: 'Upper Left Third Molar',
   // Lower Left
-  31: "Lower Left Central Incisor",
-  32: "Lower Left Lateral Incisor",
-  33: "Lower Left Canine",
-  34: "Lower Left First Premolar",
-  35: "Lower Left Second Premolar",
-  36: "Lower Left First Molar",
-  37: "Lower Left Second Molar",
-  38: "Lower Left Third Molar",
+  31: 'Lower Left Central Incisor',
+  32: 'Lower Left Lateral Incisor',
+  33: 'Lower Left Canine',
+  34: 'Lower Left First Premolar',
+  35: 'Lower Left Second Premolar',
+  36: 'Lower Left First Molar',
+  37: 'Lower Left Second Molar',
+  38: 'Lower Left Third Molar',
   // Lower Right
-  41: "Lower Right Central Incisor",
-  42: "Lower Right Lateral Incisor",
-  43: "Lower Right Canine",
-  44: "Lower Right First Premolar",
-  45: "Lower Right Second Premolar",
-  46: "Lower Right First Molar",
-  47: "Lower Right Second Molar",
-  48: "Lower Right Third Molar"
+  41: 'Lower Right Central Incisor',
+  42: 'Lower Right Lateral Incisor',
+  43: 'Lower Right Canine',
+  44: 'Lower Right First Premolar',
+  45: 'Lower Right Second Premolar',
+  46: 'Lower Right First Molar',
+  47: 'Lower Right Second Molar',
+  48: 'Lower Right Third Molar',
 }
 
 // Format treatment duration in minutes to readable string
@@ -305,7 +320,7 @@ export function parseToothNumbers(toothString: string): number[] {
   if (!toothString) return []
 
   const teeth: number[] = []
-  const parts = toothString.split(',').map(s => s.trim())
+  const parts = toothString.split(',').map((s) => s.trim())
 
   for (const part of parts) {
     if (part.includes('-')) {
@@ -381,7 +396,7 @@ export function formatDateTime(date: Date | string, locale?: string): string {
 // Calculate treatment plan progress percentage
 export function calculatePlanProgress(items: { status: string }[]): number {
   if (!items || items.length === 0) return 0
-  const completed = items.filter(item => item.status === 'COMPLETED').length
+  const completed = items.filter((item) => item.status === 'COMPLETED').length
   return Math.round((completed / items.length) * 100)
 }
 
@@ -390,6 +405,6 @@ export function getTreatmentStatusBadge(status: string): { label: string; varian
   const config = treatmentStatusConfig[status] || treatmentStatusConfig.PLANNED
   return {
     label: config.label,
-    variant: status.toLowerCase()
+    variant: status.toLowerCase(),
   }
 }

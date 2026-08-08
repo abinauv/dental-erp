@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/cron/collections
@@ -20,9 +20,9 @@ import { prisma } from "@/lib/prisma"
  *   - 3+ days overdue: overdue notification + mark installment as OVERDUE
  */
 export async function GET(req: Request) {
-  const secret = req.headers.get("Authorization")?.replace("Bearer ", "")
+  const secret = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!secret || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const now = new Date()
@@ -34,40 +34,53 @@ export async function GET(req: Request) {
     select: { id: true },
   })
 
-  const invoiceSummary: { hospitalId: string; tier1: number; tier2: number; tier3: number; tier4: number }[] = []
-  const planSummary: { hospitalId: string; reminders: number; dueToday: number; markedOverdue: number }[] = []
+  const invoiceSummary: {
+    hospitalId: string
+    tier1: number
+    tier2: number
+    tier3: number
+    tier4: number
+  }[] = []
+  const planSummary: {
+    hospitalId: string
+    reminders: number
+    dueToday: number
+    markedOverdue: number
+  }[] = []
 
   for (const hospital of hospitals) {
     // ── 1) Invoice Collection Escalation ──
     const overdueInvoices = await prisma.invoice.findMany({
-      where: { hospitalId: hospital.id, status: "OVERDUE" },
+      where: { hospitalId: hospital.id, status: 'OVERDUE' },
       include: { patient: { select: { firstName: true, lastName: true } } },
     })
 
     const tiers = { tier1: 0, tier2: 0, tier3: 0, tier4: 0 }
 
     for (const invoice of overdueInvoices) {
-      const daysOverdue = Math.floor((now.getTime() - invoice.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+      const daysOverdue = Math.floor(
+        (now.getTime() - invoice.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      )
 
       let tier: string
       let notifyRole: string
       let message: string
 
       if (daysOverdue >= 21) {
-        tier = "tier4"
-        notifyRole = "ADMIN"
-        message = `ESCALATION: Invoice ${invoice.invoiceNo} for ${invoice.patient.firstName} ${invoice.patient.lastName} is ${daysOverdue} days overdue (₹${Number(invoice.balanceAmount).toLocaleString("en-IN")}). Requires manager attention.`
+        tier = 'tier4'
+        notifyRole = 'ADMIN'
+        message = `ESCALATION: Invoice ${invoice.invoiceNo} for ${invoice.patient.firstName} ${invoice.patient.lastName} is ${daysOverdue} days overdue (₹${Number(invoice.balanceAmount).toLocaleString('en-IN')}). Requires manager attention.`
       } else if (daysOverdue >= 14) {
-        tier = "tier3"
-        notifyRole = "ACCOUNTANT"
+        tier = 'tier3'
+        notifyRole = 'ACCOUNTANT'
         message = `Collections follow-up needed: Invoice ${invoice.invoiceNo} for ${invoice.patient.firstName} ${invoice.patient.lastName} is ${daysOverdue} days overdue.`
       } else if (daysOverdue >= 7) {
-        tier = "tier2"
-        notifyRole = "ACCOUNTANT"
+        tier = 'tier2'
+        notifyRole = 'ACCOUNTANT'
         message = `Payment reminder needed: Invoice ${invoice.invoiceNo} for ${invoice.patient.firstName} ${invoice.patient.lastName} – ${daysOverdue} days overdue.`
       } else if (daysOverdue >= 3) {
-        tier = "tier1"
-        notifyRole = "RECEPTIONIST"
+        tier = 'tier1'
+        notifyRole = 'RECEPTIONIST'
         message = `Friendly reminder: Invoice ${invoice.invoiceNo} for ${invoice.patient.firstName} ${invoice.patient.lastName} is due (${daysOverdue} days).`
       } else {
         continue
@@ -87,8 +100,8 @@ export async function GET(req: Request) {
             userId: targetUser.id,
             title: `Payment Collection – Tier ${tier.slice(-1)}`,
             message,
-            type: "PAYMENT",
-            entityType: "Invoice",
+            type: 'PAYMENT',
+            entityType: 'Invoice',
             entityId: invoice.id,
           },
         })
@@ -102,11 +115,11 @@ export async function GET(req: Request) {
 
     // Find active payment plans for this hospital
     const activePlans = await prisma.paymentPlan.findMany({
-      where: { hospitalId: hospital.id, status: "ACTIVE" },
+      where: { hospitalId: hospital.id, status: 'ACTIVE' },
       include: {
         schedules: {
-          where: { status: { in: ["PENDING", "OVERDUE"] } },
-          orderBy: { dueDate: "asc" },
+          where: { status: { in: ['PENDING', 'OVERDUE'] } },
+          orderBy: { dueDate: 'asc' },
         },
         patient: { select: { firstName: true, lastName: true } },
         invoice: { select: { invoiceNo: true } },
@@ -124,7 +137,11 @@ export async function GET(req: Request) {
         if (daysDiff === -3) {
           planStats.reminders++
           const accountant = await prisma.user.findFirst({
-            where: { hospitalId: hospital.id, role: { in: ["ACCOUNTANT", "ADMIN"] as any }, isActive: true },
+            where: {
+              hospitalId: hospital.id,
+              role: { in: ['ACCOUNTANT', 'ADMIN'] as any },
+              isActive: true,
+            },
             select: { id: true },
           })
           if (accountant) {
@@ -132,10 +149,10 @@ export async function GET(req: Request) {
               data: {
                 hospitalId: hospital.id,
                 userId: accountant.id,
-                title: "Installment Due Soon",
-                message: `Payment plan installment #${schedule.installmentNo} for ${plan.patient.firstName} ${plan.patient.lastName} (Invoice ${plan.invoice.invoiceNo}) — ₹${Number(schedule.amount).toLocaleString("en-IN")} due in 3 days.`,
-                type: "PAYMENT",
-                entityType: "PaymentPlan",
+                title: 'Installment Due Soon',
+                message: `Payment plan installment #${schedule.installmentNo} for ${plan.patient.firstName} ${plan.patient.lastName} (Invoice ${plan.invoice.invoiceNo}) — ₹${Number(schedule.amount).toLocaleString('en-IN')} due in 3 days.`,
+                type: 'PAYMENT',
+                entityType: 'PaymentPlan',
                 entityId: plan.id,
               },
             })
@@ -146,7 +163,11 @@ export async function GET(req: Request) {
         if (daysDiff === 0) {
           planStats.dueToday++
           const accountant = await prisma.user.findFirst({
-            where: { hospitalId: hospital.id, role: { in: ["ACCOUNTANT", "ADMIN"] as any }, isActive: true },
+            where: {
+              hospitalId: hospital.id,
+              role: { in: ['ACCOUNTANT', 'ADMIN'] as any },
+              isActive: true,
+            },
             select: { id: true },
           })
           if (accountant) {
@@ -154,10 +175,10 @@ export async function GET(req: Request) {
               data: {
                 hospitalId: hospital.id,
                 userId: accountant.id,
-                title: "Installment Due Today",
-                message: `Payment plan installment #${schedule.installmentNo} for ${plan.patient.firstName} ${plan.patient.lastName} (Invoice ${plan.invoice.invoiceNo}) — ₹${Number(schedule.amount).toLocaleString("en-IN")} is due today.`,
-                type: "PAYMENT",
-                entityType: "PaymentPlan",
+                title: 'Installment Due Today',
+                message: `Payment plan installment #${schedule.installmentNo} for ${plan.patient.firstName} ${plan.patient.lastName} (Invoice ${plan.invoice.invoiceNo}) — ₹${Number(schedule.amount).toLocaleString('en-IN')} is due today.`,
+                type: 'PAYMENT',
+                entityType: 'PaymentPlan',
                 entityId: plan.id,
               },
             })
@@ -165,16 +186,16 @@ export async function GET(req: Request) {
         }
 
         // 3+ days overdue — mark as OVERDUE and send escalation
-        if (daysDiff >= 3 && schedule.status === "PENDING") {
+        if (daysDiff >= 3 && schedule.status === 'PENDING') {
           planStats.markedOverdue++
 
           await prisma.paymentPlanSchedule.update({
             where: { id: schedule.id },
-            data: { status: "OVERDUE" },
+            data: { status: 'OVERDUE' },
           })
 
           const admin = await prisma.user.findFirst({
-            where: { hospitalId: hospital.id, role: "ADMIN" as any, isActive: true },
+            where: { hospitalId: hospital.id, role: 'ADMIN' as any, isActive: true },
             select: { id: true },
           })
           if (admin) {
@@ -182,10 +203,10 @@ export async function GET(req: Request) {
               data: {
                 hospitalId: hospital.id,
                 userId: admin.id,
-                title: "Installment Overdue",
-                message: `Payment plan installment #${schedule.installmentNo} for ${plan.patient.firstName} ${plan.patient.lastName} (Invoice ${plan.invoice.invoiceNo}) — ₹${Number(schedule.amount).toLocaleString("en-IN")} is ${daysDiff} days overdue.`,
-                type: "PAYMENT",
-                entityType: "PaymentPlan",
+                title: 'Installment Overdue',
+                message: `Payment plan installment #${schedule.installmentNo} for ${plan.patient.firstName} ${plan.patient.lastName} (Invoice ${plan.invoice.invoiceNo}) — ₹${Number(schedule.amount).toLocaleString('en-IN')} is ${daysDiff} days overdue.`,
+                type: 'PAYMENT',
+                entityType: 'PaymentPlan',
                 entityId: plan.id,
               },
             })
@@ -195,12 +216,12 @@ export async function GET(req: Request) {
 
       // Check if plan has too many overdue installments (3+) → mark as DEFAULTED
       const overdueCount = await prisma.paymentPlanSchedule.count({
-        where: { planId: plan.id, status: "OVERDUE" },
+        where: { planId: plan.id, status: 'OVERDUE' },
       })
-      if (overdueCount >= 3 && plan.status === "ACTIVE") {
+      if (overdueCount >= 3 && plan.status === 'ACTIVE') {
         await prisma.paymentPlan.update({
           where: { id: plan.id },
-          data: { status: "DEFAULTED" },
+          data: { status: 'DEFAULTED' },
         })
       }
     }

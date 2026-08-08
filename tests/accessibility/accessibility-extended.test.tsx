@@ -36,7 +36,12 @@ vi.mock('next/navigation', () => ({
 vi.mock('lucide-react', async (importOriginal) => {
   const icon = (name: string) =>
     React.forwardRef((props: any, ref: any) =>
-      React.createElement('svg', { ...props, ref, 'data-testid': `lucide-${name}`, 'aria-hidden': 'true' })
+      React.createElement('svg', {
+        ...props,
+        ref,
+        'data-testid': `lucide-${name}`,
+        'aria-hidden': 'true',
+      })
     )
   const actual = (await importOriginal()) as any
   const handler = { get: (_: any, p: string) => actual[p] || icon(p) }
@@ -55,11 +60,15 @@ describe('Accessibility — Keyboard Navigation', () => {
           <button>Add Patient</button>
           <a href="/patients">View All</a>
           <input type="text" placeholder="Search" />
-          <select><option>Filter</option></select>
+          <select>
+            <option>Filter</option>
+          </select>
           <button>Refresh</button>
         </div>
       )
-      const interactive = container.querySelectorAll('button, a, input, select, textarea, [tabindex="0"]')
+      const interactive = container.querySelectorAll(
+        'button, a, input, select, textarea, [tabindex="0"]'
+      )
       expect(interactive.length).toBeGreaterThanOrEqual(4)
       interactive.forEach((el) => {
         expect(el.tabIndex).not.toBe(-1)
@@ -70,7 +79,9 @@ describe('Accessibility — Keyboard Navigation', () => {
       const { container } = render(
         <div>
           <button>Visible</button>
-          <button hidden tabIndex={-1}>Hidden</button>
+          <button hidden tabIndex={-1}>
+            Hidden
+          </button>
           <div style={{ display: 'none' }}>
             <button tabIndex={-1}>Also hidden</button>
           </div>
@@ -89,10 +100,18 @@ describe('Accessibility — Keyboard Navigation', () => {
       const { container } = render(
         <nav aria-label="Main navigation">
           <ul role="list">
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/patients">Patients</a></li>
-            <li><a href="/appointments">Appointments</a></li>
-            <li><a href="/billing">Billing</a></li>
+            <li>
+              <a href="/dashboard">Dashboard</a>
+            </li>
+            <li>
+              <a href="/patients">Patients</a>
+            </li>
+            <li>
+              <a href="/appointments">Appointments</a>
+            </li>
+            <li>
+              <a href="/billing">Billing</a>
+            </li>
           </ul>
         </nav>
       )
@@ -121,11 +140,15 @@ describe('Accessibility — Keyboard Navigation', () => {
 
     it('expand/collapse uses aria-expanded', () => {
       const { rerender } = render(
-        <button aria-expanded="false" aria-label="Expand section">Expand</button>
+        <button aria-expanded="false" aria-label="Expand section">
+          Expand
+        </button>
       )
       expect(screen.getByLabelText('Expand section').getAttribute('aria-expanded')).toBe('false')
       rerender(
-        <button aria-expanded="true" aria-label="Expand section">Collapse</button>
+        <button aria-expanded="true" aria-label="Expand section">
+          Collapse
+        </button>
       )
       expect(screen.getByLabelText('Expand section').getAttribute('aria-expanded')).toBe('true')
     })
@@ -139,7 +162,9 @@ describe('Accessibility — Keyboard Navigation', () => {
           <thead>
             <tr>
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-                <th key={d} scope="col">{d}</th>
+                <th key={d} scope="col">
+                  {d}
+                </th>
               ))}
             </tr>
           </thead>
@@ -207,8 +232,12 @@ describe('Accessibility — Keyboard Navigation', () => {
     it('selected tooth should have aria-pressed or aria-selected', () => {
       render(
         <div role="application" aria-label="Dental chart">
-          <button aria-label="Tooth 11" aria-pressed="true">11</button>
-          <button aria-label="Tooth 12" aria-pressed="false">12</button>
+          <button aria-label="Tooth 11" aria-pressed="true">
+            11
+          </button>
+          <button aria-label="Tooth 12" aria-pressed="false">
+            12
+          </button>
         </div>
       )
       expect(screen.getByLabelText('Tooth 11').getAttribute('aria-pressed')).toBe('true')
@@ -253,7 +282,9 @@ describe('Accessibility — Color & Contrast Patterns', () => {
       <div>
         <button className="focus:ring-2 focus:ring-offset-2 focus:ring-primary">Action</button>
         <input className="focus:ring-2 focus:ring-primary" type="text" aria-label="Input" />
-        <a href="/link" className="focus:ring-2">Link</a>
+        <a href="/link" className="focus:ring-2">
+          Link
+        </a>
       </div>
     )
     const focusable = container.querySelectorAll('[class*="focus:ring"]')
@@ -525,8 +556,12 @@ describe('Accessibility — Automated axe-core Audit', () => {
       <div>
         <nav aria-label="Main navigation">
           <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/patients">Patients</a></li>
+            <li>
+              <a href="/dashboard">Dashboard</a>
+            </li>
+            <li>
+              <a href="/patients">Patients</a>
+            </li>
           </ul>
         </nav>
         <main>
@@ -626,11 +661,15 @@ describe('Accessibility — ARIA Live Regions', () => {
 
   it('loading states announce via aria-busy', () => {
     const { rerender, container } = render(
-      <div aria-busy="true" aria-live="polite">Loading patients...</div>
+      <div aria-busy="true" aria-live="polite">
+        Loading patients...
+      </div>
     )
     expect(container.querySelector('[aria-busy="true"]')).toBeTruthy()
     rerender(
-      <div aria-busy="false" aria-live="polite">50 patients loaded</div>
+      <div aria-busy="false" aria-live="polite">
+        50 patients loaded
+      </div>
     )
     expect(container.querySelector('[aria-busy="false"]')).toBeTruthy()
   })

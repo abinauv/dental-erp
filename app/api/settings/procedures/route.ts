@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import prisma from '@/lib/prisma';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
+import { z } from 'zod'
 
 const procedureSchema = z.object({
   code: z.string().min(1).toUpperCase(),
@@ -16,7 +16,7 @@ const procedureSchema = z.object({
     'ORAL_SURGERY',
     'COSMETIC',
     'DIAGNOSTIC',
-    'EMERGENCY'
+    'EMERGENCY',
   ]),
   description: z.string().optional(),
   defaultDuration: z.number().int().positive().default(30),
@@ -25,36 +25,33 @@ const procedureSchema = z.object({
   preInstructions: z.string().optional(),
   postInstructions: z.string().optional(),
   isActive: z.boolean().default(true),
-});
+})
 
 // GET /api/settings/procedures - Get all procedures
 export async function GET(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const category = searchParams.get('category');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const searchParams = req.nextUrl.searchParams
+    const category = searchParams.get('category')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
 
-    const where: any = { hospitalId };
-    if (category) where.category = category;
+    const where: any = { hospitalId }
+    if (category) where.category = category
 
     const [procedures, total] = await Promise.all([
       prisma.procedure.findMany({
         where,
-        orderBy: [
-          { category: 'asc' },
-          { name: 'asc' }
-        ],
+        orderBy: [{ category: 'asc' }, { name: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
       }),
       prisma.procedure.count({ where }),
-    ]);
+    ])
 
     return NextResponse.json({
       success: true,
@@ -65,37 +62,34 @@ export async function GET(req: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
+    })
   } catch (error: any) {
-    console.error('Get procedures error:', error);
+    console.error('Get procedures error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to get procedures' },
       { status: 500 }
-    );
+    )
   }
 }
 
 // POST /api/settings/procedures - Create new procedure
 export async function POST(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole(['ADMIN']);
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const body = await req.json();
-    const data = procedureSchema.parse(body);
+    const body = await req.json()
+    const data = procedureSchema.parse(body)
 
     // Check if code already exists for this hospital
     const existing = await prisma.procedure.findFirst({
       where: { code: data.code, hospitalId },
-    });
+    })
 
     if (existing) {
-      return NextResponse.json(
-        { error: 'Procedure code already exists' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Procedure code already exists' }, { status: 400 })
     }
 
     const procedure = await prisma.procedure.create({
@@ -103,18 +97,18 @@ export async function POST(req: NextRequest) {
         ...data,
         hospitalId,
       },
-    });
+    })
 
     return NextResponse.json({
       success: true,
       data: procedure,
       message: 'Procedure created successfully',
-    });
+    })
   } catch (error: any) {
-    console.error('Create procedure error:', error);
+    console.error('Create procedure error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to create procedure' },
       { status: 500 }
-    );
+    )
   }
 }

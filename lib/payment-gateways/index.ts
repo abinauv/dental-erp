@@ -1,12 +1,17 @@
-import { prisma } from "@/lib/prisma"
-import { decrypt } from "@/lib/encryption"
-import { RazorpayGateway } from "./razorpay"
-import { PhonePeGateway } from "./phonepe"
-import { PaytmGateway } from "./paytm"
-import type { PaymentGateway, GatewayCredentials } from "./types"
+import { prisma } from '@/lib/prisma'
+import { decrypt } from '@/lib/encryption'
+import { RazorpayGateway } from './razorpay'
+import { PhonePeGateway } from './phonepe'
+import { PaytmGateway } from './paytm'
+import type { PaymentGateway, GatewayCredentials } from './types'
 
 export type { PaymentGateway, GatewayCredentials }
-export type { GatewayOrder, CheckoutConfig, VerifyPaymentParams, VerifyPaymentResult } from "./types"
+export type {
+  GatewayOrder,
+  CheckoutConfig,
+  VerifyPaymentParams,
+  VerifyPaymentResult,
+} from './types'
 
 /**
  * Get the payment gateway adapter for a hospital.
@@ -32,20 +37,20 @@ export async function getGateway(hospitalId: string): Promise<{
 
   // Decrypt secrets based on provider
   switch (config.provider) {
-    case "RAZORPAY":
+    case 'RAZORPAY':
       credentials.razorpayKeyId = config.razorpayKeyId || undefined
       credentials.razorpayKeySecret = config.razorpayKeySecret
         ? decrypt(config.razorpayKeySecret)
         : undefined
       break
-    case "PHONEPE":
+    case 'PHONEPE':
       credentials.phonepeMerchantId = config.phonepeMerchantId || undefined
       credentials.phonepeSaltKey = config.phonepeSaltKey
         ? decrypt(config.phonepeSaltKey)
         : undefined
       credentials.phonepeSaltIndex = config.phonepeSaltIndex || undefined
       break
-    case "PAYTM":
+    case 'PAYTM':
       credentials.paytmMid = config.paytmMid || undefined
       credentials.paytmMerchantKey = config.paytmMerchantKey
         ? decrypt(config.paytmMerchantKey)
@@ -63,11 +68,11 @@ export async function getGateway(hospitalId: string): Promise<{
  */
 function createGateway(credentials: GatewayCredentials): PaymentGateway {
   switch (credentials.provider) {
-    case "RAZORPAY":
+    case 'RAZORPAY':
       return new RazorpayGateway(credentials)
-    case "PHONEPE":
+    case 'PHONEPE':
       return new PhonePeGateway(credentials)
-    case "PAYTM":
+    case 'PAYTM':
       return new PaytmGateway(credentials)
     default:
       throw new Error(`Unsupported payment provider: ${credentials.provider}`)

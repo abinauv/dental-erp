@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/prisma"
+import { prisma } from '@/lib/prisma'
 
 // 1x1 transparent PNG pixel (68 bytes)
 const TRACKING_PIXEL = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-  "base64"
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64'
 )
 
 /**
@@ -12,10 +12,7 @@ const TRACKING_PIXEL = Buffer.from(
  * Updates EmailLog.openedAt on first load.
  * No auth required — this is loaded by email clients.
  */
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: trackingId } = await params
 
   // Update openedAt in background — don't block the pixel response
@@ -31,11 +28,11 @@ export async function GET(
   return new Response(TRACKING_PIXEL, {
     status: 200,
     headers: {
-      "Content-Type": "image/png",
-      "Content-Length": String(TRACKING_PIXEL.length),
-      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
+      'Content-Type': 'image/png',
+      'Content-Length': String(TRACKING_PIXEL.length),
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
     },
   })
 }

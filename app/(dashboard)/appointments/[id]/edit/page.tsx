@@ -1,30 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  User,
-  Check,
-  Loader2,
-  Save,
-} from "lucide-react"
-import { formatTime, formatDate } from "@/lib/appointment-utils"
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowLeft, Calendar, Clock, User, Check, Loader2, Save } from 'lucide-react'
+import { formatTime, formatDate } from '@/lib/appointment-utils'
 
 interface Doctor {
   id: string
@@ -67,17 +59,13 @@ interface Appointment {
   }
 }
 
-export default function EditAppointmentPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function EditAppointmentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   const [appointment, setAppointment] = useState<Appointment | null>(null)
   const [doctors, setDoctors] = useState<Doctor[]>([])
@@ -85,15 +73,15 @@ export default function EditAppointmentPage({
   const [loadingSlots, setLoadingSlots] = useState(false)
 
   // Form state
-  const [selectedDoctor, setSelectedDoctor] = useState("")
-  const [selectedDate, setSelectedDate] = useState("")
-  const [selectedTime, setSelectedTime] = useState("")
-  const [duration, setDuration] = useState("30")
-  const [appointmentType, setAppointmentType] = useState("CONSULTATION")
-  const [priority, setPriority] = useState("NORMAL")
-  const [chairNumber, setChairNumber] = useState("none")
-  const [chiefComplaint, setChiefComplaint] = useState("")
-  const [notes, setNotes] = useState("")
+  const [selectedDoctor, setSelectedDoctor] = useState('')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [duration, setDuration] = useState('30')
+  const [appointmentType, setAppointmentType] = useState('CONSULTATION')
+  const [priority, setPriority] = useState('NORMAL')
+  const [chairNumber, setChairNumber] = useState('none')
+  const [chiefComplaint, setChiefComplaint] = useState('')
+  const [notes, setNotes] = useState('')
 
   // Fetch initial data
   useEffect(() => {
@@ -102,7 +90,7 @@ export default function EditAppointmentPage({
       try {
         const [appointmentRes, doctorsRes] = await Promise.all([
           fetch(`/api/appointments/${id}`),
-          fetch("/api/staff/doctors")
+          fetch('/api/staff/doctors'),
         ])
 
         if (appointmentRes.ok) {
@@ -110,14 +98,14 @@ export default function EditAppointmentPage({
           setAppointment(data)
           // Set form values
           setSelectedDoctor(data.doctorId)
-          setSelectedDate(new Date(data.scheduledDate).toISOString().split("T")[0])
+          setSelectedDate(new Date(data.scheduledDate).toISOString().split('T')[0])
           setSelectedTime(data.scheduledTime)
           setDuration(data.duration.toString())
           setAppointmentType(data.appointmentType)
           setPriority(data.priority)
-          setChairNumber(data.chairNumber?.toString() || "")
-          setChiefComplaint(data.chiefComplaint || "")
-          setNotes(data.notes || "")
+          setChairNumber(data.chairNumber?.toString() || '')
+          setChiefComplaint(data.chiefComplaint || '')
+          setNotes(data.notes || '')
         }
 
         if (doctorsRes.ok) {
@@ -125,7 +113,7 @@ export default function EditAppointmentPage({
           setDoctors(data.doctors)
         }
       } catch (err) {
-        console.error("Error fetching data:", err)
+        console.error('Error fetching data:', err)
       } finally {
         setLoading(false)
       }
@@ -154,12 +142,13 @@ export default function EditAppointmentPage({
             // Mark current time as available if it matches original appointment
             const slots = data.slots.map((slot: TimeSlot) => ({
               ...slot,
-              available: slot.available || (
-                appointment &&
-                appointment.doctorId === selectedDoctor &&
-                new Date(appointment.scheduledDate).toISOString().split("T")[0] === selectedDate &&
-                slot.time === appointment.scheduledTime
-              )
+              available:
+                slot.available ||
+                (appointment &&
+                  appointment.doctorId === selectedDoctor &&
+                  new Date(appointment.scheduledDate).toISOString().split('T')[0] ===
+                    selectedDate &&
+                  slot.time === appointment.scheduledTime),
             }))
             setTimeSlots(slots)
           } else {
@@ -167,7 +156,7 @@ export default function EditAppointmentPage({
           }
         }
       } catch (err) {
-        console.error("Error fetching slots:", err)
+        console.error('Error fetching slots:', err)
       } finally {
         setLoadingSlots(false)
       }
@@ -178,20 +167,20 @@ export default function EditAppointmentPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setError('')
 
     if (!selectedDoctor) {
-      setError("Please select a doctor")
+      setError('Please select a doctor')
       return
     }
 
     if (!selectedDate) {
-      setError("Please select a date")
+      setError('Please select a date')
       return
     }
 
     if (!selectedTime) {
-      setError("Please select a time slot")
+      setError('Please select a time slot')
       return
     }
 
@@ -199,8 +188,8 @@ export default function EditAppointmentPage({
 
     try {
       const response = await fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           doctorId: selectedDoctor,
           scheduledDate: selectedDate,
@@ -208,7 +197,7 @@ export default function EditAppointmentPage({
           duration: parseInt(duration),
           appointmentType,
           priority,
-          chairNumber: chairNumber && chairNumber !== "none" ? parseInt(chairNumber) : null,
+          chairNumber: chairNumber && chairNumber !== 'none' ? parseInt(chairNumber) : null,
           chiefComplaint: chiefComplaint || null,
           notes: notes || null,
         }),
@@ -216,7 +205,7 @@ export default function EditAppointmentPage({
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to update appointment")
+        throw new Error(data.error || 'Failed to update appointment')
       }
 
       router.push(`/appointments/${id}`)
@@ -271,9 +260,7 @@ export default function EditAppointmentPage({
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Edit Appointment</h1>
-          <p className="text-muted-foreground">
-            {appointment.appointmentNo}
-          </p>
+          <p className="text-muted-foreground">{appointment.appointmentNo}</p>
         </div>
       </div>
 
@@ -295,12 +282,8 @@ export default function EditAppointmentPage({
                 <p className="font-medium">
                   {appointment.patient.firstName} {appointment.patient.lastName}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {appointment.patient.patientId}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {appointment.patient.phone}
-                </p>
+                <p className="text-sm text-muted-foreground">{appointment.patient.patientId}</p>
+                <p className="text-sm text-muted-foreground">{appointment.patient.phone}</p>
               </div>
             </CardContent>
           </Card>
@@ -312,9 +295,7 @@ export default function EditAppointmentPage({
                 <Calendar className="h-5 w-5" />
                 Schedule
               </CardTitle>
-              <CardDescription>
-                Update the doctor, date, or time
-              </CardDescription>
+              <CardDescription>Update the doctor, date, or time</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -342,7 +323,7 @@ export default function EditAppointmentPage({
                     value={selectedDate}
                     onChange={(e) => {
                       setSelectedDate(e.target.value)
-                      setSelectedTime("")
+                      setSelectedTime('')
                     }}
                   />
                 </div>
@@ -382,21 +363,19 @@ export default function EditAppointmentPage({
                       <Button
                         key={slot.time}
                         type="button"
-                        variant={selectedTime === slot.time ? "default" : "outline"}
+                        variant={selectedTime === slot.time ? 'default' : 'outline'}
                         size="sm"
                         disabled={!slot.available}
                         className={
                           !slot.available
-                            ? "cursor-not-allowed opacity-50"
+                            ? 'cursor-not-allowed opacity-50'
                             : selectedTime === slot.time
-                            ? ""
-                            : "hover:bg-primary/10"
+                              ? ''
+                              : 'hover:bg-primary/10'
                         }
                         onClick={() => setSelectedTime(slot.time)}
                       >
-                        {selectedTime === slot.time && (
-                          <Check className="mr-1 h-3 w-3" />
-                        )}
+                        {selectedTime === slot.time && <Check className="mr-1 h-3 w-3" />}
                         {formatTime(slot.time)}
                       </Button>
                     ))}

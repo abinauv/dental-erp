@@ -142,7 +142,9 @@ describe('Treatments API - Comprehensive Tests', () => {
       mockPrisma.treatment.findMany.mockResolvedValue([])
       mockPrisma.treatment.count.mockResolvedValue(0)
 
-      const request = new NextRequest(`http://localhost/api/treatments?procedureId=${mockProcedureId}`)
+      const request = new NextRequest(
+        `http://localhost/api/treatments?procedureId=${mockProcedureId}`
+      )
       await GET(request)
 
       expect(mockPrisma.treatment.findMany).toHaveBeenCalledWith(
@@ -158,7 +160,9 @@ describe('Treatments API - Comprehensive Tests', () => {
       mockPrisma.treatment.findMany.mockResolvedValue([])
       mockPrisma.treatment.count.mockResolvedValue(0)
 
-      const request = new NextRequest('http://localhost/api/treatments?dateFrom=2025-01-01&dateTo=2025-01-31')
+      const request = new NextRequest(
+        'http://localhost/api/treatments?dateFrom=2025-01-01&dateTo=2025-01-31'
+      )
       await GET(request)
 
       expect(mockPrisma.treatment.findMany).toHaveBeenCalledWith(

@@ -14,7 +14,11 @@ vi.mock('@/lib/api-helpers', () => ({
 
 import { POST as registerPOST } from '@/app/api/devices/register/route'
 import { POST as dataPOST, GET as dataGET } from '@/app/api/devices/data/route'
-import { GET as statusGET, PUT as statusPUT, DELETE as statusDELETE } from '@/app/api/devices/status/route'
+import {
+  GET as statusGET,
+  PUT as statusPUT,
+  DELETE as statusDELETE,
+} from '@/app/api/devices/status/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
@@ -69,10 +73,12 @@ describe('POST /api/devices/register', () => {
 
   it('returns 400 for invalid device type', async () => {
     mockAuth()
-    const res = await registerPOST(makeReq('/api/devices/register', 'POST', {
-      name: 'Chair 1',
-      type: 'INVALID_TYPE',
-    }))
+    const res = await registerPOST(
+      makeReq('/api/devices/register', 'POST', {
+        name: 'Chair 1',
+        type: 'INVALID_TYPE',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -83,11 +89,13 @@ describe('POST /api/devices/register', () => {
     mockAuth()
     vi.mocked(prisma.device.findFirst).mockResolvedValue({ id: 'd1' } as any)
 
-    const res = await registerPOST(makeReq('/api/devices/register', 'POST', {
-      name: 'Chair 1',
-      type: 'DENTAL_CHAIR',
-      serialNumber: 'SN-DUP',
-    }))
+    const res = await registerPOST(
+      makeReq('/api/devices/register', 'POST', {
+        name: 'Chair 1',
+        type: 'DENTAL_CHAIR',
+        serialNumber: 'SN-DUP',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(409)
@@ -98,16 +106,22 @@ describe('POST /api/devices/register', () => {
     mockAuth()
     vi.mocked(prisma.device.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.device.create).mockResolvedValue({
-      id: 'd1', name: 'Chair 1', type: 'DENTAL_CHAIR', status: 'OFFLINE',
-      serialNumber: 'SN-001', hospitalId: 'h1',
-    } as any)
-
-    const res = await registerPOST(makeReq('/api/devices/register', 'POST', {
+      id: 'd1',
       name: 'Chair 1',
       type: 'DENTAL_CHAIR',
+      status: 'OFFLINE',
       serialNumber: 'SN-001',
-      location: 'Room 1',
-    }))
+      hospitalId: 'h1',
+    } as any)
+
+    const res = await registerPOST(
+      makeReq('/api/devices/register', 'POST', {
+        name: 'Chair 1',
+        type: 'DENTAL_CHAIR',
+        serialNumber: 'SN-001',
+        location: 'Room 1',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -142,10 +156,12 @@ describe('POST /api/devices/data', () => {
   it('returns 404 when device not found', async () => {
     vi.mocked(prisma.device.findUnique).mockResolvedValue(null)
 
-    const res = await dataPOST(makeReq('/api/devices/data', 'POST', {
-      deviceId: 'd-nonexistent',
-      data: { temperature: 36.5 },
-    }))
+    const res = await dataPOST(
+      makeReq('/api/devices/data', 'POST', {
+        deviceId: 'd-nonexistent',
+        data: { temperature: 36.5 },
+      })
+    )
 
     expect(res.status).toBe(404)
   })
@@ -155,11 +171,13 @@ describe('POST /api/devices/data', () => {
     vi.mocked(prisma.deviceDataLog.create).mockResolvedValue({ id: 'log1' } as any)
     vi.mocked(prisma.device.update).mockResolvedValue({} as any)
 
-    const res = await dataPOST(makeReq('/api/devices/data', 'POST', {
-      deviceId: 'd1',
-      data: { temperature: 36.5 },
-      eventType: 'READING',
-    }))
+    const res = await dataPOST(
+      makeReq('/api/devices/data', 'POST', {
+        deviceId: 'd1',
+        data: { temperature: 36.5 },
+        eventType: 'READING',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -176,11 +194,13 @@ describe('POST /api/devices/data', () => {
     vi.mocked(prisma.deviceDataLog.create).mockResolvedValue({ id: 'log2' } as any)
     vi.mocked(prisma.device.update).mockResolvedValue({} as any)
 
-    await dataPOST(makeReq('/api/devices/data', 'POST', {
-      deviceId: 'd1',
-      data: { error: 'sensor fault' },
-      eventType: 'ERROR',
-    }))
+    await dataPOST(
+      makeReq('/api/devices/data', 'POST', {
+        deviceId: 'd1',
+        data: { error: 'sensor fault' },
+        eventType: 'ERROR',
+      })
+    )
 
     expect(prisma.device.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -305,14 +325,18 @@ describe('PUT /api/devices/status', () => {
     mockAuth()
     vi.mocked(prisma.device.findFirst).mockResolvedValue({ id: 'd1' } as any)
     vi.mocked(prisma.device.update).mockResolvedValue({
-      id: 'd1', name: 'Updated Chair', status: 'MAINTENANCE',
-    } as any)
-
-    const res = await statusPUT(makeReq('/api/devices/status', 'PUT', {
       id: 'd1',
       name: 'Updated Chair',
       status: 'MAINTENANCE',
-    }))
+    } as any)
+
+    const res = await statusPUT(
+      makeReq('/api/devices/status', 'PUT', {
+        id: 'd1',
+        name: 'Updated Chair',
+        status: 'MAINTENANCE',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)

@@ -14,7 +14,9 @@ const responsesModule = await import('@/app/api/communications/surveys/[id]/resp
 function makeDetailRequest(method: string, body?: any) {
   return new Request('http://localhost/api/communications/surveys/survey-1', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -53,9 +55,7 @@ describe('Surveys Detail & Responses API', () => {
         id: 'survey-1',
         title: 'Patient Satisfaction',
         questions: JSON.stringify([{ q: 'How was your visit?', type: 'rating' }]),
-        responses: [
-          { id: 'r1', answers: JSON.stringify({ q1: 5 }), createdAt: new Date() },
-        ],
+        responses: [{ id: 'r1', answers: JSON.stringify({ q1: 5 }), createdAt: new Date() }],
         _count: { responses: 1 },
       })
 
@@ -98,10 +98,7 @@ describe('Surveys Detail & Responses API', () => {
     it('returns 404 when survey not found', async () => {
       ;(prisma.survey.findFirst as any).mockResolvedValue(null)
 
-      const res = await surveyDetailModule.PUT(
-        makeDetailRequest('PUT', { title: 'Test' }),
-        ctx
-      )
+      const res = await surveyDetailModule.PUT(makeDetailRequest('PUT', { title: 'Test' }), ctx)
       expect(res.status).toBe(404)
     })
 
@@ -112,10 +109,7 @@ describe('Surveys Detail & Responses API', () => {
         session: { user: { id: 'user-1', role: 'RECEPTIONIST' } },
       })
 
-      const res = await surveyDetailModule.PUT(
-        makeDetailRequest('PUT', { title: 'Test' }),
-        ctx
-      )
+      const res = await surveyDetailModule.PUT(makeDetailRequest('PUT', { title: 'Test' }), ctx)
       expect(res.status).toBe(401)
     })
   })
@@ -269,10 +263,7 @@ describe('Surveys Detail & Responses API', () => {
         { id: 'r3', rating: 1, sentiment: 'negative', answers: JSON.stringify({ q1: 'Bad' }) },
       ])
 
-      const res = await responsesModule.GET(
-        makeResponseRequest('GET'),
-        ctx
-      )
+      const res = await responsesModule.GET(makeResponseRequest('GET'), ctx)
       expect(res.status).toBe(200)
       const body = await res.json()
 

@@ -16,16 +16,24 @@ vi.mock('@/lib/billing-utils', () => ({
 
 vi.mock('@prisma/client', () => ({
   InsuranceClaimStatus: {
-    DRAFT: 'DRAFT', SUBMITTED: 'SUBMITTED', UNDER_REVIEW: 'UNDER_REVIEW',
-    APPROVED: 'APPROVED', PARTIALLY_APPROVED: 'PARTIALLY_APPROVED',
-    REJECTED: 'REJECTED', SETTLED: 'SETTLED',
+    DRAFT: 'DRAFT',
+    SUBMITTED: 'SUBMITTED',
+    UNDER_REVIEW: 'UNDER_REVIEW',
+    APPROVED: 'APPROVED',
+    PARTIALLY_APPROVED: 'PARTIALLY_APPROVED',
+    REJECTED: 'REJECTED',
+    SETTLED: 'SETTLED',
   },
 }))
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { GET as claimsGET, POST as claimsPOST } from '@/app/api/insurance-claims/route'
-import { GET as claimDetailGET, PUT as claimPUT, DELETE as claimDELETE } from '@/app/api/insurance-claims/[id]/route'
+import {
+  GET as claimDetailGET,
+  PUT as claimPUT,
+  DELETE as claimDELETE,
+} from '@/app/api/insurance-claims/[id]/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
@@ -77,7 +85,12 @@ describe('GET /api/insurance-claims', () => {
   it('returns claims with pagination and summary', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findMany).mockResolvedValue([
-      { id: 'c1', claimNumber: 'CLM001', status: 'DRAFT', patient: { firstName: 'John', lastName: 'Doe' } },
+      {
+        id: 'c1',
+        claimNumber: 'CLM001',
+        status: 'DRAFT',
+        patient: { firstName: 'John', lastName: 'Doe' },
+      },
     ] as any)
     vi.mocked(prisma.insuranceClaim.count).mockResolvedValue(1)
     vi.mocked(prisma.insuranceClaim.aggregate)
@@ -150,9 +163,14 @@ describe('POST /api/insurance-claims', () => {
 
   it('returns 403 for non-ADMIN/ACCOUNTANT roles', async () => {
     mockAuth({ session: { user: { id: 'u1', name: 'Staff', role: 'STAFF' } } })
-    const res = await claimsPOST(makeReq('/api/insurance-claims', 'POST', {
-      patientId: 'p1', insuranceProvider: 'ICICI', policyNumber: 'POL001', claimAmount: 5000,
-    }))
+    const res = await claimsPOST(
+      makeReq('/api/insurance-claims', 'POST', {
+        patientId: 'p1',
+        insuranceProvider: 'ICICI',
+        policyNumber: 'POL001',
+        claimAmount: 5000,
+      })
+    )
     expect(res.status).toBe(403)
   })
 
@@ -164,9 +182,14 @@ describe('POST /api/insurance-claims', () => {
 
   it('returns 400 when claimAmount is invalid', async () => {
     mockAuth()
-    const res = await claimsPOST(makeReq('/api/insurance-claims', 'POST', {
-      patientId: 'p1', insuranceProvider: 'ICICI', policyNumber: 'POL001', claimAmount: 0,
-    }))
+    const res = await claimsPOST(
+      makeReq('/api/insurance-claims', 'POST', {
+        patientId: 'p1',
+        insuranceProvider: 'ICICI',
+        policyNumber: 'POL001',
+        claimAmount: 0,
+      })
+    )
     expect(res.status).toBe(400)
   })
 
@@ -174,9 +197,14 @@ describe('POST /api/insurance-claims', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue(null)
 
-    const res = await claimsPOST(makeReq('/api/insurance-claims', 'POST', {
-      patientId: 'p-none', insuranceProvider: 'ICICI', policyNumber: 'POL001', claimAmount: 5000,
-    }))
+    const res = await claimsPOST(
+      makeReq('/api/insurance-claims', 'POST', {
+        patientId: 'p-none',
+        insuranceProvider: 'ICICI',
+        policyNumber: 'POL001',
+        claimAmount: 5000,
+      })
+    )
     expect(res.status).toBe(404)
   })
 
@@ -185,10 +213,15 @@ describe('POST /api/insurance-claims', () => {
     vi.mocked(prisma.patient.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.invoice.findMany).mockResolvedValue([{ id: 'inv1' }] as any) // only 1 found but 2 sent
 
-    const res = await claimsPOST(makeReq('/api/insurance-claims', 'POST', {
-      patientId: 'p1', insuranceProvider: 'ICICI', policyNumber: 'POL001', claimAmount: 5000,
-      invoiceIds: ['inv1', 'inv-missing'],
-    }))
+    const res = await claimsPOST(
+      makeReq('/api/insurance-claims', 'POST', {
+        patientId: 'p1',
+        insuranceProvider: 'ICICI',
+        policyNumber: 'POL001',
+        claimAmount: 5000,
+        invoiceIds: ['inv1', 'inv-missing'],
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('invoices not found')
@@ -198,16 +231,25 @@ describe('POST /api/insurance-claims', () => {
     mockAuth()
     vi.mocked(prisma.patient.findUnique).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.insuranceClaim.create).mockResolvedValue({
-      id: 'c1', claimNumber: 'CLM2026-0001', status: 'DRAFT',
+      id: 'c1',
+      claimNumber: 'CLM2026-0001',
+      status: 'DRAFT',
     } as any)
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', claimNumber: 'CLM2026-0001', status: 'DRAFT',
+      id: 'c1',
+      claimNumber: 'CLM2026-0001',
+      status: 'DRAFT',
       patient: { id: 'p1', firstName: 'John', lastName: 'Doe' },
     } as any)
 
-    const res = await claimsPOST(makeReq('/api/insurance-claims', 'POST', {
-      patientId: 'p1', insuranceProvider: 'ICICI', policyNumber: 'POL001', claimAmount: 5000,
-    }))
+    const res = await claimsPOST(
+      makeReq('/api/insurance-claims', 'POST', {
+        patientId: 'p1',
+        insuranceProvider: 'ICICI',
+        policyNumber: 'POL001',
+        claimAmount: 5000,
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -223,10 +265,15 @@ describe('POST /api/insurance-claims', () => {
     vi.mocked(prisma.invoice.updateMany).mockResolvedValue({ count: 2 } as any)
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({ id: 'c1' } as any)
 
-    await claimsPOST(makeReq('/api/insurance-claims', 'POST', {
-      patientId: 'p1', insuranceProvider: 'ICICI', policyNumber: 'POL001', claimAmount: 5000,
-      invoiceIds: ['inv1', 'inv2'],
-    }))
+    await claimsPOST(
+      makeReq('/api/insurance-claims', 'POST', {
+        patientId: 'p1',
+        insuranceProvider: 'ICICI',
+        policyNumber: 'POL001',
+        claimAmount: 5000,
+        invoiceIds: ['inv1', 'inv2'],
+      })
+    )
 
     expect(prisma.invoice.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -261,7 +308,9 @@ describe('GET /api/insurance-claims/[id]', () => {
   it('returns claim detail with patient and invoices', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', claimNumber: 'CLM001', status: 'DRAFT',
+      id: 'c1',
+      claimNumber: 'CLM001',
+      status: 'DRAFT',
       patient: { id: 'p1', firstName: 'John', lastName: 'Doe' },
       invoices: [{ id: 'inv1', invoiceNo: 'INV001', totalAmount: 5000 }],
     } as any)
@@ -290,7 +339,10 @@ describe('PUT /api/insurance-claims/[id]', () => {
 
   it('returns 403 for non-ADMIN/ACCOUNTANT', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
-    const res = await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', { notes: 'x' }), makeParams('c1'))
+    const res = await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', { notes: 'x' }),
+      makeParams('c1')
+    )
     expect(res.status).toBe(403)
   })
 
@@ -298,17 +350,25 @@ describe('PUT /api/insurance-claims/[id]', () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue(null)
 
-    const res = await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', { notes: 'x' }), makeParams('c1'))
+    const res = await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', { notes: 'x' }),
+      makeParams('c1')
+    )
     expect(res.status).toBe(404)
   })
 
   it('validates status transitions — DRAFT can only go to SUBMITTED', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'DRAFT', hospitalId: 'h1',
+      id: 'c1',
+      status: 'DRAFT',
+      hospitalId: 'h1',
     } as any)
 
-    const res = await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', { status: 'APPROVED' }), makeParams('c1'))
+    const res = await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', { status: 'APPROVED' }),
+      makeParams('c1')
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('Cannot transition')
@@ -317,13 +377,20 @@ describe('PUT /api/insurance-claims/[id]', () => {
   it('allows DRAFT to SUBMITTED transition', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'DRAFT', hospitalId: 'h1',
+      id: 'c1',
+      status: 'DRAFT',
+      hospitalId: 'h1',
     } as any)
     vi.mocked(prisma.insuranceClaim.update).mockResolvedValue({
-      id: 'c1', status: 'SUBMITTED', submissionDate: new Date(),
+      id: 'c1',
+      status: 'SUBMITTED',
+      submissionDate: new Date(),
     } as any)
 
-    const res = await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', { status: 'SUBMITTED' }), makeParams('c1'))
+    const res = await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', { status: 'SUBMITTED' }),
+      makeParams('c1')
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -333,13 +400,19 @@ describe('PUT /api/insurance-claims/[id]', () => {
   it('sets approvalDate on APPROVED status', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'SUBMITTED', hospitalId: 'h1',
+      id: 'c1',
+      status: 'SUBMITTED',
+      hospitalId: 'h1',
     } as any)
     vi.mocked(prisma.insuranceClaim.update).mockResolvedValue({
-      id: 'c1', status: 'APPROVED',
+      id: 'c1',
+      status: 'APPROVED',
     } as any)
 
-    await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', { status: 'APPROVED', approvedAmount: 4500 }), makeParams('c1'))
+    await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', { status: 'APPROVED', approvedAmount: 4500 }),
+      makeParams('c1')
+    )
 
     expect(prisma.insuranceClaim.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -355,15 +428,22 @@ describe('PUT /api/insurance-claims/[id]', () => {
   it('sets rejectionDate and reason on REJECTED status', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'UNDER_REVIEW', hospitalId: 'h1',
+      id: 'c1',
+      status: 'UNDER_REVIEW',
+      hospitalId: 'h1',
     } as any)
     vi.mocked(prisma.insuranceClaim.update).mockResolvedValue({
-      id: 'c1', status: 'REJECTED',
+      id: 'c1',
+      status: 'REJECTED',
     } as any)
 
-    await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', {
-      status: 'REJECTED', rejectionReason: 'Incomplete docs',
-    }), makeParams('c1'))
+    await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', {
+        status: 'REJECTED',
+        rejectionReason: 'Incomplete docs',
+      }),
+      makeParams('c1')
+    )
 
     expect(prisma.insuranceClaim.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -379,17 +459,24 @@ describe('PUT /api/insurance-claims/[id]', () => {
   it('prevents transition from terminal states (REJECTED, SETTLED)', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'SETTLED', hospitalId: 'h1',
+      id: 'c1',
+      status: 'SETTLED',
+      hospitalId: 'h1',
     } as any)
 
-    const res = await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', { status: 'APPROVED' }), makeParams('c1'))
+    const res = await claimPUT(
+      makeReq('/api/insurance-claims/c1', 'PUT', { status: 'APPROVED' }),
+      makeParams('c1')
+    )
     expect(res.status).toBe(400)
   })
 
   it('returns 400 when no valid fields to update', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'APPROVED', hospitalId: 'h1',
+      id: 'c1',
+      status: 'APPROVED',
+      hospitalId: 'h1',
     } as any)
 
     const res = await claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', {}), makeParams('c1'))
@@ -422,14 +509,19 @@ describe('DELETE /api/insurance-claims/[id]', () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue(null)
 
-    const res = await claimDELETE(makeReq('/api/insurance-claims/c-none', 'DELETE'), makeParams('c-none'))
+    const res = await claimDELETE(
+      makeReq('/api/insurance-claims/c-none', 'DELETE'),
+      makeParams('c-none')
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns 400 when trying to delete non-DRAFT claim', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'SUBMITTED', hospitalId: 'h1',
+      id: 'c1',
+      status: 'SUBMITTED',
+      hospitalId: 'h1',
     } as any)
 
     const res = await claimDELETE(makeReq('/api/insurance-claims/c1', 'DELETE'), makeParams('c1'))
@@ -441,7 +533,9 @@ describe('DELETE /api/insurance-claims/[id]', () => {
   it('deletes draft claim and unlinks invoices', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
-      id: 'c1', status: 'DRAFT', hospitalId: 'h1',
+      id: 'c1',
+      status: 'DRAFT',
+      hospitalId: 'h1',
     } as any)
     vi.mocked(prisma.invoice.updateMany).mockResolvedValue({ count: 1 } as any)
     vi.mocked(prisma.insuranceClaim.delete).mockResolvedValue({} as any)

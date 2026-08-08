@@ -1,25 +1,36 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { SignaturePad } from "./signature-pad"
-import { Loader2 } from "lucide-react"
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+import { SignaturePad } from './signature-pad'
+import { Loader2 } from 'lucide-react'
 
 export interface FormField {
   id: string
-  type: "text" | "textarea" | "number" | "date" | "select" | "checkbox" | "radio" | "signature" | "file" | "heading" | "paragraph"
+  type:
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'date'
+    | 'select'
+    | 'checkbox'
+    | 'radio'
+    | 'signature'
+    | 'file'
+    | 'heading'
+    | 'paragraph'
   label: string
   placeholder?: string
   required?: boolean
@@ -56,7 +67,7 @@ export function FormRenderer({
   loading = false,
   showSignature = true,
   signatureLabel,
-  submitLabel = "Submit Form",
+  submitLabel = 'Submit Form',
 }: FormRendererProps) {
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
   const [signature, setSignature] = useState<string | null>(initialSignature)
@@ -77,11 +88,11 @@ export function FormRenderer({
     const newErrors: Record<string, string> = {}
 
     for (const field of fields) {
-      if (field.type === "heading" || field.type === "paragraph") continue
+      if (field.type === 'heading' || field.type === 'paragraph') continue
       const val = formData[field.id]
 
       if (field.required) {
-        if (val === undefined || val === null || val === "") {
+        if (val === undefined || val === null || val === '') {
           newErrors[field.id] = `${field.label} is required`
           continue
         }
@@ -95,7 +106,7 @@ export function FormRenderer({
         if (field.validation.maxLength && str.length > field.validation.maxLength) {
           newErrors[field.id] = `Maximum ${field.validation.maxLength} characters`
         }
-        if (field.type === "number") {
+        if (field.type === 'number') {
           const num = Number(val)
           if (field.validation.min !== undefined && num < field.validation.min) {
             newErrors[field.id] = `Minimum value is ${field.validation.min}`
@@ -108,9 +119,9 @@ export function FormRenderer({
     }
 
     // Check signature if form has a signature field
-    const hasSignatureField = fields.some((f) => f.type === "signature")
+    const hasSignatureField = fields.some((f) => f.type === 'signature')
     if (hasSignatureField && showSignature && !signature) {
-      newErrors["_signature"] = "Signature is required"
+      newErrors['_signature'] = 'Signature is required'
     }
 
     setErrors(newErrors)
@@ -129,7 +140,7 @@ export function FormRenderer({
     const error = errors[field.id]
 
     switch (field.type) {
-      case "heading":
+      case 'heading':
         return (
           <div key={field.id} className="pt-4 pb-2">
             <h3 className="text-lg font-semibold">{field.label}</h3>
@@ -139,14 +150,14 @@ export function FormRenderer({
           </div>
         )
 
-      case "paragraph":
+      case 'paragraph':
         return (
           <div key={field.id} className="py-2">
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{field.label}</p>
           </div>
         )
 
-      case "text":
+      case 'text':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>
@@ -159,7 +170,7 @@ export function FormRenderer({
             <Input
               id={field.id}
               placeholder={field.placeholder}
-              value={(val as string) || ""}
+              value={(val as string) || ''}
               onChange={(e) => setValue(field.id, e.target.value)}
               disabled={readOnly}
               maxLength={field.validation?.maxLength}
@@ -168,7 +179,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "textarea":
+      case 'textarea':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>
@@ -181,7 +192,7 @@ export function FormRenderer({
             <Textarea
               id={field.id}
               placeholder={field.placeholder}
-              value={(val as string) || ""}
+              value={(val as string) || ''}
               onChange={(e) => setValue(field.id, e.target.value)}
               disabled={readOnly}
               rows={4}
@@ -190,7 +201,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "number":
+      case 'number':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>
@@ -201,7 +212,7 @@ export function FormRenderer({
               id={field.id}
               type="number"
               placeholder={field.placeholder}
-              value={(val as string) || ""}
+              value={(val as string) || ''}
               onChange={(e) => setValue(field.id, e.target.value)}
               disabled={readOnly}
               min={field.validation?.min}
@@ -211,7 +222,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "date":
+      case 'date':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>
@@ -221,7 +232,7 @@ export function FormRenderer({
             <Input
               id={field.id}
               type="date"
-              value={(val as string) || ""}
+              value={(val as string) || ''}
               onChange={(e) => setValue(field.id, e.target.value)}
               disabled={readOnly}
             />
@@ -229,7 +240,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "select":
+      case 'select':
         return (
           <div key={field.id} className="space-y-2">
             <Label>
@@ -237,12 +248,12 @@ export function FormRenderer({
               {field.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Select
-              value={(val as string) || ""}
+              value={(val as string) || ''}
               onValueChange={(v: string) => setValue(field.id, v)}
               disabled={readOnly}
             >
               <SelectTrigger>
-                <SelectValue placeholder={field.placeholder || "Select..."} />
+                <SelectValue placeholder={field.placeholder || 'Select...'} />
               </SelectTrigger>
               <SelectContent>
                 {field.options?.map((opt) => (
@@ -256,7 +267,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "checkbox":
+      case 'checkbox':
         if (field.options && field.options.length > 0) {
           // Checkbox group
           const selected = (val as string[]) || []
@@ -277,7 +288,10 @@ export function FormRenderer({
                         if (checked) {
                           setValue(field.id, [...selected, opt])
                         } else {
-                          setValue(field.id, selected.filter((s) => s !== opt))
+                          setValue(
+                            field.id,
+                            selected.filter((s) => s !== opt)
+                          )
                         }
                       }}
                     />
@@ -313,7 +327,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "radio":
+      case 'radio':
         return (
           <div key={field.id} className="space-y-2">
             <Label>
@@ -321,7 +335,7 @@ export function FormRenderer({
               {field.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <RadioGroup
-              value={(val as string) || ""}
+              value={(val as string) || ''}
               onValueChange={(v: string) => setValue(field.id, v)}
               disabled={readOnly}
             >
@@ -338,7 +352,7 @@ export function FormRenderer({
           </div>
         )
 
-      case "signature":
+      case 'signature':
         return (
           <div key={field.id} className="space-y-2 pt-4">
             <Label>
@@ -349,7 +363,7 @@ export function FormRenderer({
               <SignaturePad
                 onSignatureChange={setSignature}
                 initialSignature={signature}
-                label={signatureLabel || field.description || "I agree to the terms above"}
+                label={signatureLabel || field.description || 'I agree to the terms above'}
               />
             ) : signature ? (
               <div className="border rounded-lg p-2 bg-background">
@@ -358,8 +372,8 @@ export function FormRenderer({
             ) : (
               <p className="text-sm text-muted-foreground italic">No signature</p>
             )}
-            {errors["_signature"] && (
-              <p className="text-xs text-destructive">{errors["_signature"]}</p>
+            {errors['_signature'] && (
+              <p className="text-xs text-destructive">{errors['_signature']}</p>
             )}
           </div>
         )

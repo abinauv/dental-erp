@@ -1,10 +1,10 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 import {
   formatCurrency as baseFormatCurrency,
   formatDate as baseFormatDate,
   formatDateTime as baseFormatDateTime,
-} from "@/lib/i18n/format"
+} from '@/lib/i18n/format'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

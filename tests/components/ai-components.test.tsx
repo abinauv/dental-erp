@@ -150,14 +150,26 @@ describe('AIProvider', () => {
       expect(execResult).toEqual(commandResult)
     })
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/ai/command', expect.objectContaining({
-      method: 'POST',
-    }))
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/ai/command',
+      expect.objectContaining({
+        method: 'POST',
+      })
+    )
   })
 
   it('loadInsights fetches and stores insights', async () => {
     const mockInsights = [
-      { id: '1', category: 'REVENUE', severity: 'WARNING', title: 'Low revenue', description: 'Revenue is down', dismissed: false, actionTaken: false, createdAt: '2025-01-01' },
+      {
+        id: '1',
+        category: 'REVENUE',
+        severity: 'WARNING',
+        title: 'Low revenue',
+        description: 'Revenue is down',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '2025-01-01',
+      },
     ]
     mockFetchResponse({ insights: mockInsights })
 
@@ -166,9 +178,13 @@ describe('AIProvider', () => {
       return (
         <div>
           <span data-testid="count">{insights.length}</span>
-          <button data-testid="load" onClick={loadInsights}>Load</button>
+          <button data-testid="load" onClick={loadInsights}>
+            Load
+          </button>
           {insights.map((i) => (
-            <span key={i.id} data-testid={`insight-${i.id}`}>{i.title}</span>
+            <span key={i.id} data-testid={`insight-${i.id}`}>
+              {i.title}
+            </span>
           ))}
         </div>
       )
@@ -196,8 +212,26 @@ describe('AIProvider', () => {
     // First load insights
     mockFetchResponse({
       insights: [
-        { id: '1', category: 'REVENUE', severity: 'INFO', title: 'Insight 1', description: '', dismissed: false, actionTaken: false, createdAt: '' },
-        { id: '2', category: 'CLINICAL', severity: 'WARNING', title: 'Insight 2', description: '', dismissed: false, actionTaken: false, createdAt: '' },
+        {
+          id: '1',
+          category: 'REVENUE',
+          severity: 'INFO',
+          title: 'Insight 1',
+          description: '',
+          dismissed: false,
+          actionTaken: false,
+          createdAt: '',
+        },
+        {
+          id: '2',
+          category: 'CLINICAL',
+          severity: 'WARNING',
+          title: 'Insight 2',
+          description: '',
+          dismissed: false,
+          actionTaken: false,
+          createdAt: '',
+        },
       ],
     })
     // Then dismiss
@@ -208,8 +242,12 @@ describe('AIProvider', () => {
       return (
         <div>
           <span data-testid="count">{insights.length}</span>
-          <button data-testid="load" onClick={loadInsights}>Load</button>
-          <button data-testid="dismiss" onClick={() => dismissInsight('1')}>Dismiss</button>
+          <button data-testid="load" onClick={loadInsights}>
+            Load
+          </button>
+          <button data-testid="dismiss" onClick={() => dismissInsight('1')}>
+            Dismiss
+          </button>
         </div>
       )
     }
@@ -243,7 +281,9 @@ describe('AIProvider', () => {
       return (
         <div>
           <span data-testid="count">{chatMessages.length}</span>
-          <button data-testid="clear" onClick={clearChat}>Clear</button>
+          <button data-testid="clear" onClick={clearChat}>
+            Clear
+          </button>
         </div>
       )
     }
@@ -265,7 +305,12 @@ describe('AIProvider', () => {
 
   it('loadSuggestions fetches suggestions via /api/ai/suggestions', async () => {
     const mockSuggestions = [
-      { title: 'Follow up', description: 'Follow up with patient', action: 'follow_up', urgency: 'normal' as const },
+      {
+        title: 'Follow up',
+        description: 'Follow up with patient',
+        action: 'follow_up',
+        urgency: 'normal' as const,
+      },
     ]
     mockFetchResponse({ suggestions: mockSuggestions })
 
@@ -274,7 +319,9 @@ describe('AIProvider', () => {
       return (
         <div>
           <span data-testid="count">{suggestions.length}</span>
-          <button data-testid="load" onClick={() => loadSuggestions('/dashboard')}>Load</button>
+          <button data-testid="load" onClick={() => loadSuggestions('/dashboard')}>
+            Load
+          </button>
         </div>
       )
     }
@@ -635,8 +682,26 @@ describe('InsightsPanel', () => {
 
   it('renders insight cards when data is loaded', async () => {
     const mockInsights = [
-      { id: '1', category: 'REVENUE', severity: 'WARNING', title: 'Revenue Drop', description: 'Revenue has dropped 15%', dismissed: false, actionTaken: false, createdAt: '2025-01-01' },
-      { id: '2', category: 'CLINICAL', severity: 'CRITICAL', title: 'Missing Records', description: 'Some records incomplete', dismissed: false, actionTaken: false, createdAt: '2025-01-02' },
+      {
+        id: '1',
+        category: 'REVENUE',
+        severity: 'WARNING',
+        title: 'Revenue Drop',
+        description: 'Revenue has dropped 15%',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '2025-01-01',
+      },
+      {
+        id: '2',
+        category: 'CLINICAL',
+        severity: 'CRITICAL',
+        title: 'Missing Records',
+        description: 'Some records incomplete',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '2025-01-02',
+      },
     ]
     mockFetchResponse({ insights: mockInsights })
 
@@ -655,9 +720,36 @@ describe('InsightsPanel', () => {
 
   it('shows correct severity badges', async () => {
     const mockInsights = [
-      { id: '1', category: 'REVENUE', severity: 'INFO', title: 'Info Insight', description: 'Some info', dismissed: false, actionTaken: false, createdAt: '' },
-      { id: '2', category: 'CLINICAL', severity: 'WARNING', title: 'Warning Insight', description: 'Some warning', dismissed: false, actionTaken: false, createdAt: '' },
-      { id: '3', category: 'OPERATIONAL', severity: 'CRITICAL', title: 'Critical Insight', description: 'Something critical', dismissed: false, actionTaken: false, createdAt: '' },
+      {
+        id: '1',
+        category: 'REVENUE',
+        severity: 'INFO',
+        title: 'Info Insight',
+        description: 'Some info',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
+      {
+        id: '2',
+        category: 'CLINICAL',
+        severity: 'WARNING',
+        title: 'Warning Insight',
+        description: 'Some warning',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
+      {
+        id: '3',
+        category: 'OPERATIONAL',
+        severity: 'CRITICAL',
+        title: 'Critical Insight',
+        description: 'Something critical',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
     ]
     mockFetchResponse({ insights: mockInsights })
 
@@ -677,7 +769,16 @@ describe('InsightsPanel', () => {
   it('has dismiss buttons on insight cards', async () => {
     mockFetchResponse({
       insights: [
-        { id: '1', category: 'REVENUE', severity: 'INFO', title: 'Test', description: 'Desc', dismissed: false, actionTaken: false, createdAt: '' },
+        {
+          id: '1',
+          category: 'REVENUE',
+          severity: 'INFO',
+          title: 'Test',
+          description: 'Desc',
+          dismissed: false,
+          actionTaken: false,
+          createdAt: '',
+        },
       ],
     })
 
@@ -742,8 +843,18 @@ describe('SmartSuggestions', () => {
 
   it('renders suggestion items when data is loaded', async () => {
     const mockSuggestions = [
-      { title: 'Follow up with John', description: 'Last visit was 3 months ago', action: 'follow_up_john', urgency: 'normal' },
-      { title: 'Low stock alert', description: 'Composite resin running low', action: 'restock_composite', urgency: 'warning' },
+      {
+        title: 'Follow up with John',
+        description: 'Last visit was 3 months ago',
+        action: 'follow_up_john',
+        urgency: 'normal',
+      },
+      {
+        title: 'Low stock alert',
+        description: 'Composite resin running low',
+        action: 'restock_composite',
+        urgency: 'warning',
+      },
     ]
     mockFetchResponse({ suggestions: mockSuggestions })
 
@@ -798,7 +909,11 @@ describe('SmartSuggestions', () => {
     })
 
     // Second fetch: executeCommand
-    mockFetchResponse({ intent: 'follow_up', requiresApproval: false, result: { success: true, message: 'Done!' } })
+    mockFetchResponse({
+      intent: 'follow_up',
+      requiresApproval: false,
+      result: { success: true, message: 'Done!' },
+    })
 
     await act(async () => {
       fireEvent.click(screen.getByText('Do this \u2192'))
@@ -841,7 +956,9 @@ describe('Patient360', () => {
     render(<Patient360 patientId="patient-1" />)
 
     await waitFor(() => {
-      expect(screen.getByText('Patient is a 35-year-old male with good dental health.')).toBeInTheDocument()
+      expect(
+        screen.getByText('Patient is a 35-year-old male with good dental health.')
+      ).toBeInTheDocument()
     })
 
     expect(screen.getByText('Regular checkups')).toBeInTheDocument()
@@ -891,10 +1008,17 @@ describe('Patient360', () => {
     render(<Patient360 patientId="patient-123" />)
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai/clinical', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ type: 'patient_summary', patientId: 'patient-123', refresh: false }),
-      }))
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/ai/clinical',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            type: 'patient_summary',
+            patientId: 'patient-123',
+            refresh: false,
+          }),
+        })
+      )
     })
   })
 })
@@ -906,12 +1030,7 @@ describe('DuplicateDetector', () => {
   it('renders nothing when no required props provided (empty firstName)', async () => {
     // fetch should not be called if firstName/lastName/phone are empty
     const { container } = render(
-      <DuplicateDetector
-        firstName=""
-        lastName=""
-        phone=""
-        onSelect={vi.fn()}
-      />
+      <DuplicateDetector firstName="" lastName="" phone="" onSelect={vi.fn()} />
     )
 
     // Wait for debounce timeout (1200ms)
@@ -930,12 +1049,7 @@ describe('DuplicateDetector', () => {
     vi.mocked(global.fetch).mockReturnValueOnce(new Promise(() => {}))
 
     render(
-      <DuplicateDetector
-        firstName="John"
-        lastName="Doe"
-        phone="1234567890"
-        onSelect={vi.fn()}
-      />
+      <DuplicateDetector firstName="John" lastName="Doe" phone="1234567890" onSelect={vi.fn()} />
     )
 
     // Wait for debounce to trigger
@@ -950,33 +1064,43 @@ describe('DuplicateDetector', () => {
     mockFetchResponse({
       data: {
         duplicates: [
-          { id: 'p1', patientId: 'PAT-001', name: 'John Doe', confidence: 0.95, matchFields: ['name', 'phone'] },
+          {
+            id: 'p1',
+            patientId: 'PAT-001',
+            name: 'John Doe',
+            confidence: 0.95,
+            matchFields: ['name', 'phone'],
+          },
         ],
       },
     })
 
     render(
-      <DuplicateDetector
-        firstName="John"
-        lastName="Doe"
-        phone="1234567890"
-        onSelect={vi.fn()}
-      />
+      <DuplicateDetector firstName="John" lastName="Doe" phone="1234567890" onSelect={vi.fn()} />
     )
 
-    await waitFor(() => {
-      expect(screen.getByText(/Possible duplicate patient/)).toBeInTheDocument()
-      expect(screen.getByText('John Doe')).toBeInTheDocument()
-      expect(screen.getByText(/95% match/)).toBeInTheDocument()
-      expect(screen.getByText(/name, phone/)).toBeInTheDocument()
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Possible duplicate patient/)).toBeInTheDocument()
+        expect(screen.getByText('John Doe')).toBeInTheDocument()
+        expect(screen.getByText(/95% match/)).toBeInTheDocument()
+        expect(screen.getByText(/name, phone/)).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
   })
 
   it('calls onSelect when "Use existing" button is clicked', async () => {
     mockFetchResponse({
       data: {
         duplicates: [
-          { id: 'existing-p1', patientId: 'PAT-001', name: 'John Doe', confidence: 0.9, matchFields: ['name'] },
+          {
+            id: 'existing-p1',
+            patientId: 'PAT-001',
+            name: 'John Doe',
+            confidence: 0.9,
+            matchFields: ['name'],
+          },
         ],
       },
     })
@@ -984,17 +1108,15 @@ describe('DuplicateDetector', () => {
     const onSelect = vi.fn()
 
     render(
-      <DuplicateDetector
-        firstName="John"
-        lastName="Doe"
-        phone="1234567890"
-        onSelect={onSelect}
-      />
+      <DuplicateDetector firstName="John" lastName="Doe" phone="1234567890" onSelect={onSelect} />
     )
 
-    await waitFor(() => {
-      expect(screen.getByText('Use existing')).toBeInTheDocument()
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText('Use existing')).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
 
     await act(async () => {
       fireEvent.click(screen.getByText('Use existing'))
@@ -1015,38 +1137,51 @@ describe('DuplicateDetector', () => {
       />
     )
 
-    await waitFor(() => {
-      // After check completes, no duplicates => returns null
-      expect(container.innerHTML).toBe('')
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        // After check completes, no duplicates => returns null
+        expect(container.innerHTML).toBe('')
+      },
+      { timeout: 3000 }
+    )
   })
 
   it('shows multiple duplicates when found', async () => {
     mockFetchResponse({
       data: {
         duplicates: [
-          { id: 'p1', patientId: 'PAT-001', name: 'John Doe', confidence: 0.95, matchFields: ['name', 'phone'] },
-          { id: 'p2', patientId: 'PAT-002', name: 'Jon Doe', confidence: 0.7, matchFields: ['phone'] },
+          {
+            id: 'p1',
+            patientId: 'PAT-001',
+            name: 'John Doe',
+            confidence: 0.95,
+            matchFields: ['name', 'phone'],
+          },
+          {
+            id: 'p2',
+            patientId: 'PAT-002',
+            name: 'Jon Doe',
+            confidence: 0.7,
+            matchFields: ['phone'],
+          },
         ],
       },
     })
 
     render(
-      <DuplicateDetector
-        firstName="John"
-        lastName="Doe"
-        phone="1234567890"
-        onSelect={vi.fn()}
-      />
+      <DuplicateDetector firstName="John" lastName="Doe" phone="1234567890" onSelect={vi.fn()} />
     )
 
-    await waitFor(() => {
-      expect(screen.getByText(/Possible duplicate patients detected/)).toBeInTheDocument()
-      expect(screen.getByText('John Doe')).toBeInTheDocument()
-      expect(screen.getByText('Jon Doe')).toBeInTheDocument()
-      const useExistingButtons = screen.getAllByText('Use existing')
-      expect(useExistingButtons).toHaveLength(2)
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Possible duplicate patients detected/)).toBeInTheDocument()
+        expect(screen.getByText('John Doe')).toBeInTheDocument()
+        expect(screen.getByText('Jon Doe')).toBeInTheDocument()
+        const useExistingButtons = screen.getAllByText('Use existing')
+        expect(useExistingButtons).toHaveLength(2)
+      },
+      { timeout: 3000 }
+    )
   })
 })
 
@@ -1068,9 +1203,7 @@ describe('TreatmentAssist', () => {
   })
 
   it('shows Drug Check panel by default with input and button', () => {
-    render(
-      <TreatmentAssist patientId="patient-1" />
-    )
+    render(<TreatmentAssist patientId="patient-1" />)
 
     expect(screen.getByPlaceholderText('e.g. Amoxicillin 500 mg')).toBeInTheDocument()
     expect(screen.getByText('Check')).toBeInTheDocument()
@@ -1078,9 +1211,7 @@ describe('TreatmentAssist', () => {
   })
 
   it('Check button is disabled when drug input is empty', () => {
-    render(
-      <TreatmentAssist patientId="patient-1" />
-    )
+    render(<TreatmentAssist patientId="patient-1" />)
 
     const checkBtn = screen.getByText('Check')
     expect(checkBtn).toBeDisabled()
@@ -1108,9 +1239,12 @@ describe('TreatmentAssist', () => {
 
     // Should trigger a fetch
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai/clinical', expect.objectContaining({
-        method: 'POST',
-      }))
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/ai/clinical',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      )
     })
   })
 
@@ -1145,9 +1279,7 @@ describe('TreatmentAssist', () => {
   })
 
   it('Drug Check calls API and displays safe result', async () => {
-    render(
-      <TreatmentAssist patientId="patient-1" />
-    )
+    render(<TreatmentAssist patientId="patient-1" />)
 
     const input = screen.getByPlaceholderText('e.g. Amoxicillin 500 mg')
 
@@ -1265,9 +1397,12 @@ describe('ReportBuilder', () => {
     })
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/ai/query', expect.objectContaining({
-        method: 'POST',
-      }))
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/ai/query',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      )
     })
   })
 
@@ -1402,7 +1537,9 @@ describe('AuditMonitor', () => {
     render(<AuditMonitor />)
 
     await waitFor(() => {
-      expect(screen.getByText('Found 2 suspicious patterns in the last 7 days.')).toBeInTheDocument()
+      expect(
+        screen.getByText('Found 2 suspicious patterns in the last 7 days.')
+      ).toBeInTheDocument()
       expect(screen.getByText('Unusual login times')).toBeInTheDocument()
       expect(screen.getByText('Review login activity')).toBeInTheDocument()
       expect(screen.getByText('high')).toBeInTheDocument()
@@ -1426,7 +1563,9 @@ describe('AuditMonitor', () => {
     render(<AuditMonitor />)
 
     await waitFor(() => {
-      expect(screen.getByText(/No suspicious patterns detected in the last 7 days/)).toBeInTheDocument()
+      expect(
+        screen.getByText(/No suspicious patterns detected in the last 7 days/)
+      ).toBeInTheDocument()
     })
   })
 
@@ -1492,17 +1631,17 @@ describe('AIUsageStats', () => {
         executions: 320,
         insights: 45,
         tokens: 1250000,
-        costINR: 245.50,
+        costINR: 245.5,
       },
       thisMonth: {
         conversations: 25,
         executions: 60,
         tokens: 200000,
-        costINR: 42.30,
+        costINR: 42.3,
       },
       skillBreakdown: [
-        { skill: 'patient-intake', executions: 30, cost: 5.20 },
-        { skill: 'smart-scheduler', executions: 20, cost: 3.40 },
+        { skill: 'patient-intake', executions: 30, cost: 5.2 },
+        { skill: 'smart-scheduler', executions: 20, cost: 3.4 },
       ],
     })
 
@@ -1575,22 +1714,24 @@ describe('AIUsageStats', () => {
 
   it('shows disclaimer about AI cost estimates', async () => {
     mockFetchResponse({
-      allTime: { conversations: 1, executions: 1, insights: 0, tokens: 100, costINR: 0.50 },
-      thisMonth: { conversations: 1, executions: 1, tokens: 100, costINR: 0.50 },
+      allTime: { conversations: 1, executions: 1, insights: 0, tokens: 100, costINR: 0.5 },
+      thisMonth: { conversations: 1, executions: 1, tokens: 100, costINR: 0.5 },
       skillBreakdown: [],
     })
 
     render(<AIUsageStats />)
 
     await waitFor(() => {
-      expect(screen.getByText('Costs are estimates based on logged token usage.')).toBeInTheDocument()
+      expect(
+        screen.getByText('Costs are estimates based on logged token usage.')
+      ).toBeInTheDocument()
     })
   })
 
   it('does not show skill breakdown when empty', async () => {
     mockFetchResponse({
-      allTime: { conversations: 1, executions: 1, insights: 0, tokens: 100, costINR: 0.50 },
-      thisMonth: { conversations: 1, executions: 1, tokens: 100, costINR: 0.50 },
+      allTime: { conversations: 1, executions: 1, insights: 0, tokens: 100, costINR: 0.5 },
+      thisMonth: { conversations: 1, executions: 1, tokens: 100, costINR: 0.5 },
       skillBreakdown: [],
     })
 

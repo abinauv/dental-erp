@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const claimAnalyzer: Skill = {
-  name: "claim-analyzer",
-  displayName: "Claim Analyzer",
-  description: "Analyzes denied insurance claims, suggests corrections, and drafts appeal letters",
-  allowedRoles: ["ADMIN", "ACCOUNTANT"],
-  modelTier: "billing",
-  systemPrompt: (hospitalName, contextStr) => `You are an insurance claim analysis AI for ${hospitalName}.
+  name: 'claim-analyzer',
+  displayName: 'Claim Analyzer',
+  description: 'Analyzes denied insurance claims, suggests corrections, and drafts appeal letters',
+  allowedRoles: ['ADMIN', 'ACCOUNTANT'],
+  modelTier: 'billing',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are an insurance claim analysis AI for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -35,15 +35,15 @@ import {
   FileText,
   Phone,
   Mail,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from '@/components/ui/dropdown-menu'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface Patient {
   id: string
@@ -77,9 +77,9 @@ export default function PatientsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [genderFilter, setGenderFilter] = useState("all")
-  const [bloodGroupFilter, setBloodGroupFilter] = useState("all")
+  const [search, setSearch] = useState('')
+  const [genderFilter, setGenderFilter] = useState('all')
+  const [bloodGroupFilter, setBloodGroupFilter] = useState('all')
 
   const fetchPatients = async () => {
     try {
@@ -89,18 +89,19 @@ export default function PatientsPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (genderFilter && genderFilter !== "all") params.append("gender", genderFilter)
-      if (bloodGroupFilter && bloodGroupFilter !== "all") params.append("bloodGroup", bloodGroupFilter)
+      if (search) params.append('search', search)
+      if (genderFilter && genderFilter !== 'all') params.append('gender', genderFilter)
+      if (bloodGroupFilter && bloodGroupFilter !== 'all')
+        params.append('bloodGroup', bloodGroupFilter)
 
       const response = await fetch(`/api/patients?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch patients")
+      if (!response.ok) throw new Error('Failed to fetch patients')
 
       const data = await response.json()
       setPatients(data.patients)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching patients:", error)
+      console.error('Error fetching patients:', error)
     } finally {
       setLoading(false)
     }
@@ -112,12 +113,14 @@ export default function PatientsPage() {
 
   const getGenderBadge = (gender: string) => {
     const colors = {
-      MALE: "bg-blue-100 text-blue-700",
-      FEMALE: "bg-pink-100 text-pink-700",
-      OTHER: "bg-purple-100 text-purple-700",
+      MALE: 'bg-blue-100 text-blue-700',
+      FEMALE: 'bg-pink-100 text-pink-700',
+      OTHER: 'bg-purple-100 text-purple-700',
     }
     return (
-      <Badge className={`${colors[gender as keyof typeof colors] || "bg-muted text-muted-foreground"} border-0`}>
+      <Badge
+        className={`${colors[gender as keyof typeof colors] || 'bg-muted text-muted-foreground'} border-0`}
+      >
         {gender}
       </Badge>
     )
@@ -129,24 +132,24 @@ export default function PatientsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Patients</h1>
-          <p className="text-muted-foreground">
-            Manage patient records and information
-          </p>
+          <p className="text-muted-foreground">Manage patient records and information</p>
         </div>
         <div className="flex gap-2">
           <ExportMenu
             filename="patients"
-            getData={() => patients.map(p => ({
-              "Patient ID": p.patientId,
-              "First Name": p.firstName,
-              "Last Name": p.lastName,
-              "Phone": p.phone,
-              "Email": p.email || "",
-              "Gender": p.gender,
-              "Age": p.age,
-              "Blood Group": p.bloodGroup || "",
-              "City": p.city || "",
-            }))}
+            getData={() =>
+              patients.map((p) => ({
+                'Patient ID': p.patientId,
+                'First Name': p.firstName,
+                'Last Name': p.lastName,
+                Phone: p.phone,
+                Email: p.email || '',
+                Gender: p.gender,
+                Age: p.age,
+                'Blood Group': p.bloodGroup || '',
+                City: p.city || '',
+              }))
+            }
           />
           <Link href="/patients/new">
             <Button>
@@ -223,14 +226,30 @@ export default function PatientsPage() {
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-12" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : patients.length === 0 ? (
@@ -278,21 +297,15 @@ export default function PatientsPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {getGenderBadge(patient.gender)}
-                    </TableCell>
+                    <TableCell>{getGenderBadge(patient.gender)}</TableCell>
                     <TableCell>
                       <div className="text-sm">{patient.age} years</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {patient.bloodGroup || "N/A"}
-                      </Badge>
+                      <Badge variant="outline">{patient.bloodGroup || 'N/A'}</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-muted-foreground">
-                        {patient.city || "N/A"}
-                      </div>
+                      <div className="text-sm text-muted-foreground">{patient.city || 'N/A'}</div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -302,9 +315,7 @@ export default function PatientsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/patients/${patient.id}`)}
-                          >
+                          <DropdownMenuItem onClick={() => router.push(`/patients/${patient.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
@@ -334,8 +345,8 @@ export default function PatientsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} patients
               </div>
               <div className="flex items-center gap-2">

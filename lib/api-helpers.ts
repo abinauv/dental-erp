@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server"
-import { headers } from "next/headers"
-import { jwtVerify } from "jose"
-import { auth } from "./auth"
-import { prisma } from "./prisma"
+import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
+import { jwtVerify } from 'jose'
+import { auth } from './auth'
+import { prisma } from './prisma'
 
 /**
  * Verify a mobile Bearer token (JWT signed with NEXTAUTH_SECRET via jose).
@@ -11,12 +11,12 @@ import { prisma } from "./prisma"
 async function verifyMobileToken(): Promise<any | null> {
   try {
     const headersList = await headers()
-    const authHeader = headersList.get("authorization")
-    if (!authHeader?.startsWith("Bearer ")) return null
+    const authHeader = headersList.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) return null
 
     const token = authHeader.slice(7)
     const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
-    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] })
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] })
 
     return {
       id: payload.sub,
@@ -59,7 +59,7 @@ export async function getAuthenticatedHospital() {
   }
 
   return {
-    error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
     user: null,
     hospitalId: null,
   }
@@ -71,7 +71,7 @@ export async function getAuthenticatedHospital() {
  */
 export function requireRole(userRole: string, allowedRoles: string[]) {
   if (!allowedRoles.includes(userRole)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   return null
 }
@@ -85,7 +85,7 @@ export async function requireAuthAndRole(allowedRoles?: string[]) {
 
   if (error || !user || !hospitalId) {
     return {
-      error: error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      error: error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
       user: null,
       hospitalId: null,
       session: null,
@@ -151,7 +151,9 @@ export async function getHospitalWithLimits(hospitalId: string) {
 /**
  * Check if hospital has reached patient limit
  */
-export async function checkPatientLimit(hospitalId: string): Promise<{ allowed: boolean; current: number; max: number }> {
+export async function checkPatientLimit(
+  hospitalId: string
+): Promise<{ allowed: boolean; current: number; max: number }> {
   const hospital = await getHospitalWithLimits(hospitalId)
 
   if (!hospital) {
@@ -177,7 +179,9 @@ export async function checkPatientLimit(hospitalId: string): Promise<{ allowed: 
 /**
  * Check if hospital has reached staff limit
  */
-export async function checkStaffLimit(hospitalId: string): Promise<{ allowed: boolean; current: number; max: number }> {
+export async function checkStaffLimit(
+  hospitalId: string
+): Promise<{ allowed: boolean; current: number; max: number }> {
   const hospital = await getHospitalWithLimits(hospitalId)
 
   if (!hospital) {
@@ -206,8 +210,8 @@ export async function checkStaffLimit(hospitalId: string): Promise<{ allowed: bo
 export async function generateUniqueSlug(name: string): Promise<string> {
   const baseSlug = name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 
   let slug = baseSlug
   let counter = 1
@@ -224,8 +228,8 @@ export async function generateUniqueSlug(name: string): Promise<string> {
  * Generate a random token for email verification or password reset
  */
 export function generateToken(length = 32): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  let token = ""
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let token = ''
   for (let i = 0; i < length; i++) {
     token += chars.charAt(Math.floor(Math.random() * chars.length))
   }

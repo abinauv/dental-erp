@@ -1,127 +1,135 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Check, Building2, Zap, Crown, Server, ArrowLeft } from "lucide-react"
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Check, Building2, Zap, Crown, Server, ArrowLeft } from 'lucide-react'
 
 const plans = [
   {
-    id: "FREE",
-    name: "Free",
-    price: "0",
-    description: "Perfect for getting started",
+    id: 'FREE',
+    name: 'Free',
+    price: '0',
+    description: 'Perfect for getting started',
     icon: Building2,
     features: [
-      "Up to 100 patients",
-      "Up to 3 staff members",
-      "500 MB storage",
-      "Basic reports",
-      "Email support",
-      "Patient management",
-      "Appointment scheduling",
-      "Basic billing",
+      'Up to 100 patients',
+      'Up to 3 staff members',
+      '500 MB storage',
+      'Basic reports',
+      'Email support',
+      'Patient management',
+      'Appointment scheduling',
+      'Basic billing',
     ],
-    notIncluded: [
-      "Advanced analytics",
-      "Custom branding",
-      "API access",
-      "Priority support",
-    ],
-    cta: "Get Started Free",
-    ctaVariant: "outline" as const,
+    notIncluded: ['Advanced analytics', 'Custom branding', 'API access', 'Priority support'],
+    cta: 'Get Started Free',
+    ctaVariant: 'outline' as const,
   },
   {
-    id: "PROFESSIONAL",
-    name: "Professional",
-    price: "2,999",
-    description: "For growing practices",
+    id: 'PROFESSIONAL',
+    name: 'Professional',
+    price: '2,999',
+    description: 'For growing practices',
     icon: Zap,
     popular: true,
     features: [
-      "Unlimited patients",
-      "Unlimited staff",
-      "Unlimited storage",
-      "Advanced analytics",
-      "Priority support",
-      "Custom branding",
-      "API access",
-      "SMS notifications",
-      "Insurance claims management",
-      "Lab order management",
-      "Inventory management",
-      "Multi-location support",
+      'Unlimited patients',
+      'Unlimited staff',
+      'Unlimited storage',
+      'Advanced analytics',
+      'Priority support',
+      'Custom branding',
+      'API access',
+      'SMS notifications',
+      'Insurance claims management',
+      'Lab order management',
+      'Inventory management',
+      'Multi-location support',
     ],
     notIncluded: [],
-    cta: "Start 14-Day Trial",
-    ctaVariant: "default" as const,
+    cta: 'Start 14-Day Trial',
+    ctaVariant: 'default' as const,
   },
   {
-    id: "ENTERPRISE",
-    name: "Enterprise",
-    price: "Custom",
-    description: "For large organizations",
+    id: 'ENTERPRISE',
+    name: 'Enterprise',
+    price: 'Custom',
+    description: 'For large organizations',
     icon: Crown,
     features: [
-      "Everything in Professional",
-      "Dedicated account manager",
-      "Custom integrations",
-      "SLA guarantee (99.9% uptime)",
-      "On-premise deployment option",
-      "Advanced security features",
-      "Custom training sessions",
-      "White-label options",
+      'Everything in Professional',
+      'Dedicated account manager',
+      'Custom integrations',
+      'SLA guarantee (99.9% uptime)',
+      'On-premise deployment option',
+      'Advanced security features',
+      'Custom training sessions',
+      'White-label options',
     ],
     notIncluded: [],
-    cta: "Contact Sales",
-    ctaVariant: "outline" as const,
+    cta: 'Contact Sales',
+    ctaVariant: 'outline' as const,
   },
   {
-    id: "SELF_HOSTED",
-    name: "Self-Hosted",
-    price: "49,999",
-    priceNote: "one-time",
-    description: "Own your data forever",
+    id: 'SELF_HOSTED',
+    name: 'Self-Hosted',
+    price: '49,999',
+    priceNote: 'one-time',
+    description: 'Own your data forever',
     icon: Server,
     features: [
-      "Full source code access",
-      "Host on your own servers",
-      "No recurring fees",
-      "Unlimited everything",
-      "1 year of updates included",
-      "Installation support",
-      "Documentation & guides",
-      "Community support",
+      'Full source code access',
+      'Host on your own servers',
+      'No recurring fees',
+      'Unlimited everything',
+      '1 year of updates included',
+      'Installation support',
+      'Documentation & guides',
+      'Community support',
     ],
     notIncluded: [],
-    cta: "Purchase License",
-    ctaVariant: "outline" as const,
+    cta: 'Purchase License',
+    ctaVariant: 'outline' as const,
   },
 ]
 
 const faqs = [
   {
-    question: "Can I switch plans later?",
-    answer: "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes take effect at the end of your billing cycle.",
+    question: 'Can I switch plans later?',
+    answer:
+      "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes take effect at the end of your billing cycle.",
   },
   {
-    question: "What happens when I reach my patient limit?",
-    answer: "You'll receive a notification when you're approaching your limit. Once reached, you won't be able to add new patients until you upgrade or remove inactive patient records.",
+    question: 'What happens when I reach my patient limit?',
+    answer:
+      "You'll receive a notification when you're approaching your limit. Once reached, you won't be able to add new patients until you upgrade or remove inactive patient records.",
   },
   {
-    question: "Is there a free trial for paid plans?",
-    answer: "Yes, the Professional plan comes with a 14-day free trial. No credit card required. You can explore all features before deciding to subscribe.",
+    question: 'Is there a free trial for paid plans?',
+    answer:
+      'Yes, the Professional plan comes with a 14-day free trial. No credit card required. You can explore all features before deciding to subscribe.',
   },
   {
-    question: "What payment methods do you accept?",
-    answer: "We accept all major credit/debit cards, UPI, net banking, and can arrange invoicing for Enterprise customers.",
+    question: 'What payment methods do you accept?',
+    answer:
+      'We accept all major credit/debit cards, UPI, net banking, and can arrange invoicing for Enterprise customers.',
   },
   {
-    question: "Can I get a refund?",
-    answer: "We offer a 30-day money-back guarantee for annual subscriptions. If you're not satisfied, contact us for a full refund.",
+    question: 'Can I get a refund?',
+    answer:
+      "We offer a 30-day money-back guarantee for annual subscriptions. If you're not satisfied, contact us for a full refund.",
   },
   {
     question: "What's included in the self-hosted license?",
-    answer: "You get the complete source code, Docker deployment scripts, documentation, and one year of updates. After the first year, you can optionally renew for continued updates.",
+    answer:
+      'You get the complete source code, Docker deployment scripts, documentation, and one year of updates. After the first year, you can optionally renew for continued updates.',
   },
 ]
 
@@ -178,7 +186,7 @@ export default function PricingPage() {
               <Card
                 key={plan.id}
                 className={`relative flex flex-col ${
-                  plan.popular ? "border-primary shadow-lg scale-105" : ""
+                  plan.popular ? 'border-primary shadow-lg scale-105' : ''
                 }`}
               >
                 {plan.popular && (
@@ -190,9 +198,7 @@ export default function PricingPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                        plan.popular
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                        plan.popular ? 'bg-primary text-primary-foreground' : 'bg-muted'
                       }`}
                     >
                       <Icon className="h-5 w-5" />
@@ -202,12 +208,12 @@ export default function PricingPage() {
                   <CardDescription>{plan.description}</CardDescription>
                   <div className="mt-4">
                     <span className="text-4xl font-bold">
-                      {plan.price === "Custom" ? "" : "₹"}
+                      {plan.price === 'Custom' ? '' : '₹'}
                       {plan.price}
                     </span>
                     {plan.priceNote ? (
                       <span className="text-muted-foreground"> {plan.priceNote}</span>
-                    ) : plan.price !== "0" && plan.price !== "Custom" ? (
+                    ) : plan.price !== '0' && plan.price !== 'Custom' ? (
                       <span className="text-muted-foreground">/month</span>
                     ) : null}
                   </div>
@@ -236,9 +242,7 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="mt-24 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Frequently asked questions
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Frequently asked questions</h2>
           <div className="space-y-6">
             {faqs.map((faq) => (
               <Card key={faq.question}>
@@ -257,9 +261,7 @@ export default function PricingPage() {
         <div className="mt-24 text-center">
           <Card className="bg-primary text-primary-foreground max-w-3xl mx-auto">
             <CardContent className="py-12">
-              <h2 className="text-2xl font-bold mb-4">
-                Ready to get started?
-              </h2>
+              <h2 className="text-2xl font-bold mb-4">Ready to get started?</h2>
               <p className="text-lg opacity-90 mb-8">
                 Start with our free plan and upgrade when you need more.
               </p>

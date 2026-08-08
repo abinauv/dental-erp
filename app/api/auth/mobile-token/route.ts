@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
-import { z } from "zod"
-import { SignJWT } from "jose"
+import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
+import { SignJWT } from 'jose'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -17,10 +17,7 @@ export async function POST(req: NextRequest) {
     const validated = loginSchema.safeParse(body)
 
     if (!validated.success) {
-      return NextResponse.json(
-        { error: "Invalid email or password format" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid email or password format' }, { status: 400 })
     }
 
     const { email, password } = validated.data
@@ -34,25 +31,16 @@ export async function POST(req: NextRequest) {
     })
 
     if (!user || !user.isActive) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     if (!user.hospital || !user.hospital.isActive) {
-      return NextResponse.json(
-        { error: "Your clinic account is inactive" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Your clinic account is inactive' }, { status: 401 })
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password)
     if (!passwordMatch) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     // Create JWT token using jose directly (avoids NextAuth encode() salt issues)
@@ -66,9 +54,9 @@ export async function POST(req: NextRequest) {
       hospitalId: user.hospitalId,
       isHospitalAdmin: user.isHospitalAdmin,
     })
-      .setProtectedHeader({ alg: "HS256" })
+      .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime("8h")
+      .setExpirationTime('8h')
       .sign(secret)
 
     return NextResponse.json({
@@ -85,11 +73,8 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Mobile auth error:", error)
-    return NextResponse.json(
-      { error: "Authentication failed" },
-      { status: 500 }
-    )
+    console.error('Mobile auth error:', error)
+    return NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
   }
 }
 
@@ -98,9 +83,9 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   })
 }

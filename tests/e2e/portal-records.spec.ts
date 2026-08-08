@@ -12,7 +12,9 @@ test.describe('Patient Portal — Medical Records', () => {
     test('should have records heading or login redirect', async ({ page }) => {
       await page.goto('/portal/records')
       await expect(
-        page.getByRole('heading', { name: /record|medical|treatment|login|sign in|portal/i }).first()
+        page
+          .getByRole('heading', { name: /record|medical|treatment|login|sign in|portal/i })
+          .first()
       ).toBeVisible({ timeout: 10000 })
     })
 

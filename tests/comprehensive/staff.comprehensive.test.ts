@@ -598,7 +598,8 @@ describe('Staff API - Comprehensive Tests', () => {
           phone: '9876543210',
           role: 'DOCTOR',
           password: 'SecurePass123!',
-          qualification: 'BDS, MDS (Orthodontics), PhD, Fellowship in Implantology, Diploma in Laser Dentistry',
+          qualification:
+            'BDS, MDS (Orthodontics), PhD, Fellowship in Implantology, Diploma in Laser Dentistry',
         }),
       })
       const response = await POST(request)

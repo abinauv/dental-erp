@@ -14,7 +14,11 @@ import React from 'react'
 
 function setViewport(width: number, height: number) {
   Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: width })
-  Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: height })
+  Object.defineProperty(window, 'innerHeight', {
+    writable: true,
+    configurable: true,
+    value: height,
+  })
 
   window.matchMedia = vi.fn().mockImplementation((query: string) => {
     const minWMatch = query.match(/min-width:\s*(\d+)px/)
@@ -86,7 +90,16 @@ describe('6.2 Device Resolution — Desktop (1280×800)', () => {
 
   describe('Patients page at 1280×800', () => {
     it('patient table shows all columns', () => {
-      const allColumns = ['Name', 'Phone', 'Age', 'Gender', 'Blood Group', 'Last Visit', 'Status', 'Actions']
+      const allColumns = [
+        'Name',
+        'Phone',
+        'Age',
+        'Gender',
+        'Blood Group',
+        'Last Visit',
+        'Status',
+        'Actions',
+      ]
       const visibleColumns = window.innerWidth >= 1024 ? allColumns : allColumns.slice(0, 4)
       expect(visibleColumns.length).toBe(8)
     })
@@ -172,7 +185,16 @@ describe('6.2 Device Resolution — Wide (1920×1080)', () => {
 
   describe('Patients page at 1920×1080', () => {
     it('table shows all columns with comfortable spacing', () => {
-      const allColumns = ['Name', 'Phone', 'Age', 'Gender', 'Blood Group', 'Last Visit', 'Status', 'Actions']
+      const allColumns = [
+        'Name',
+        'Phone',
+        'Age',
+        'Gender',
+        'Blood Group',
+        'Last Visit',
+        'Status',
+        'Actions',
+      ]
       expect(allColumns.length).toBe(8)
       const avgColumnWidth = (window.innerWidth - 256) / allColumns.length
       expect(avgColumnWidth).toBeGreaterThan(150)

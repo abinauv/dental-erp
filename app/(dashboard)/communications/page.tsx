@@ -1,28 +1,34 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Mail, FileText, MessageCircle, Send } from 'lucide-react';
+import { useState } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { MessageSquare, Mail, FileText, MessageCircle, Send } from 'lucide-react'
 
 export default function CommunicationsPage() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
 
   // SMS State
-  const [smsPhone, setSmsPhone] = useState('');
-  const [smsMessage, setSmsMessage] = useState('');
+  const [smsPhone, setSmsPhone] = useState('')
+  const [smsMessage, setSmsMessage] = useState('')
 
   // Email State
-  const [emailTo, setEmailTo] = useState('');
-  const [emailSubject, setEmailSubject] = useState('');
-  const [emailBody, setEmailBody] = useState('');
+  const [emailTo, setEmailTo] = useState('')
+  const [emailSubject, setEmailSubject] = useState('')
+  const [emailBody, setEmailBody] = useState('')
 
   const handleSendSMS = async () => {
     if (!smsPhone || !smsMessage) {
@@ -30,11 +36,11 @@ export default function CommunicationsPage() {
         title: 'Error',
         description: 'Please fill in all fields',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
       const response = await fetch('/api/communications/sms', {
         method: 'POST',
@@ -43,30 +49,30 @@ export default function CommunicationsPage() {
           phone: smsPhone,
           message: smsMessage,
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'SMS sent successfully',
-        });
-        setSmsPhone('');
-        setSmsMessage('');
+        })
+        setSmsPhone('')
+        setSmsMessage('')
       } else {
-        throw new Error(data.error || 'Failed to send SMS');
+        throw new Error(data.error || 'Failed to send SMS')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSendEmail = async () => {
     if (!emailTo || !emailSubject || !emailBody) {
@@ -74,11 +80,11 @@ export default function CommunicationsPage() {
         title: 'Error',
         description: 'Please fill in all fields',
         variant: 'destructive',
-      });
-      return;
+      })
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
       const response = await fetch('/api/communications/email', {
         method: 'POST',
@@ -88,31 +94,31 @@ export default function CommunicationsPage() {
           subject: emailSubject,
           body: emailBody,
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (response.ok) {
         toast({
           title: 'Success',
           description: 'Email sent successfully',
-        });
-        setEmailTo('');
-        setEmailSubject('');
-        setEmailBody('');
+        })
+        setEmailTo('')
+        setEmailSubject('')
+        setEmailBody('')
       } else {
-        throw new Error(data.error || 'Failed to send email');
+        throw new Error(data.error || 'Failed to send email')
       }
     } catch (error: any) {
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -188,9 +194,7 @@ export default function CommunicationsPage() {
                 <CardDescription>Recent SMS communications</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  SMS history will be displayed here
-                </p>
+                <p className="text-sm text-muted-foreground">SMS history will be displayed here</p>
                 {/* SMS history table/list will go here */}
               </CardContent>
             </Card>
@@ -278,9 +282,7 @@ export default function CommunicationsPage() {
                       Create and manage reusable message templates
                     </p>
                   </div>
-                  <Button>
-                    Create Template
-                  </Button>
+                  <Button>Create Template</Button>
                 </div>
 
                 <div className="border rounded-lg p-4">
@@ -298,22 +300,16 @@ export default function CommunicationsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Patient Surveys & Feedback</CardTitle>
-              <CardDescription>
-                Create and manage patient satisfaction surveys
-              </CardDescription>
+              <CardDescription>Create and manage patient satisfaction surveys</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="font-semibold">Active Surveys</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Collect feedback from patients
-                    </p>
+                    <p className="text-sm text-muted-foreground">Collect feedback from patients</p>
                   </div>
-                  <Button>
-                    Create Survey
-                  </Button>
+                  <Button>Create Survey</Button>
                 </div>
 
                 <div className="border rounded-lg p-4">
@@ -327,5 +323,5 @@ export default function CommunicationsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

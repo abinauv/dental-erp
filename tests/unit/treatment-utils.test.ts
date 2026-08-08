@@ -224,11 +224,9 @@ describe('calculatePlanProgress()', () => {
   })
 
   it('rounds to nearest integer', () => {
-    expect(calculatePlanProgress([
-      { status: 'COMPLETED' },
-      { status: 'PENDING' },
-      { status: 'PENDING' },
-    ])).toBe(33)
+    expect(
+      calculatePlanProgress([{ status: 'COMPLETED' }, { status: 'PENDING' }, { status: 'PENDING' }])
+    ).toBe(33)
   })
 })
 

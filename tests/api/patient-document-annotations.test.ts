@@ -13,7 +13,9 @@ const mod = await import('@/app/api/patients/[id]/documents/[documentId]/annotat
 function makeJsonRequest(method: string, body?: any) {
   return new Request('http://localhost/api/patients/p1/documents/doc-1/annotations', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -34,7 +36,11 @@ describe('PUT /api/patients/[id]/documents/[documentId]/annotations', () => {
       { x: 10, y: 20, text: 'Cavity observed', type: 'marker' },
       { x: 50, y: 60, text: 'Discoloration', type: 'highlight' },
     ]
-    ;(prisma.document.findFirst as any).mockResolvedValue({ id: 'doc-1', patientId: 'p1', hospitalId: 'hospital-1' })
+    ;(prisma.document.findFirst as any).mockResolvedValue({
+      id: 'doc-1',
+      patientId: 'p1',
+      hospitalId: 'hospital-1',
+    })
     ;(prisma.document.update as any).mockResolvedValue({
       annotations,
       annotatedBy: 'user-1',

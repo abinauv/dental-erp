@@ -27,7 +27,9 @@ const claimModule = await import('@/app/api/ai/claim-analysis/route')
 function makeRequest(body?: any) {
   return new Request('http://localhost/api/ai/claim-analysis', {
     method: 'POST',
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -53,7 +55,16 @@ describe('GET /api/ai/inventory-forecast', () => {
 
   it('generates forecast with AI and returns model info', async () => {
     ;(prisma.inventoryItem.findMany as any).mockResolvedValue([
-      { id: 'item-1', name: 'Gloves', sku: 'GLV001', currentStock: 100, minimumStock: 20, reorderLevel: 30, unit: 'box', purchasePrice: 500 },
+      {
+        id: 'item-1',
+        name: 'Gloves',
+        sku: 'GLV001',
+        currentStock: 100,
+        minimumStock: 20,
+        reorderLevel: 30,
+        unit: 'box',
+        purchasePrice: 500,
+      },
     ])
     ;(prisma.stockTransaction.findMany as any).mockResolvedValue([
       { itemId: 'item-1', quantity: 10, type: 'CONSUMPTION', createdAt: new Date('2026-01-15') },
@@ -61,10 +72,15 @@ describe('GET /api/ai/inventory-forecast', () => {
     ])
 
     const aiResult = {
-      forecasts: [{ itemId: 'item-1', itemName: 'Gloves', urgency: 'NORMAL', daysUntilStockout: 50 }],
+      forecasts: [
+        { itemId: 'item-1', itemName: 'Gloves', urgency: 'NORMAL', daysUntilStockout: 50 },
+      ],
       summary: { criticalItems: 0, reorderItems: 0, excessItems: 1, totalReorderValue: 0 },
     }
-    mockOpenRouter.complete.mockResolvedValue({ content: JSON.stringify(aiResult), model: 'test-model' })
+    mockOpenRouter.complete.mockResolvedValue({
+      content: JSON.stringify(aiResult),
+      model: 'test-model',
+    })
     mockOpenRouter.extractJSON.mockReturnValue(JSON.stringify(aiResult))
 
     const req = new Request('http://localhost/api/ai/inventory-forecast') as any
@@ -77,7 +93,16 @@ describe('GET /api/ai/inventory-forecast', () => {
 
   it('falls back to rule-based forecast when AI parsing fails', async () => {
     ;(prisma.inventoryItem.findMany as any).mockResolvedValue([
-      { id: 'item-1', name: 'Gloves', sku: 'GLV001', currentStock: 100, minimumStock: 20, reorderLevel: 30, unit: 'box', purchasePrice: 500 },
+      {
+        id: 'item-1',
+        name: 'Gloves',
+        sku: 'GLV001',
+        currentStock: 100,
+        minimumStock: 20,
+        reorderLevel: 30,
+        unit: 'box',
+        purchasePrice: 500,
+      },
     ])
     ;(prisma.stockTransaction.findMany as any).mockResolvedValue([])
     mockOpenRouter.complete.mockResolvedValue({ content: 'invalid json', model: 'test' })
@@ -114,9 +139,19 @@ describe('GET /api/ai/cashflow-forecast', () => {
     const aiResult = {
       dailyForecast: [{ date: '2026-02-27', projected: 5000, appointments: 3 }],
       weeklyTotals: [],
-      summary: { total30Day: 150000, avgDaily: 5000, bestDay: 'Monday', worstDay: 'Sunday', potentialShortfalls: [], trend: 'STABLE' },
+      summary: {
+        total30Day: 150000,
+        avgDaily: 5000,
+        bestDay: 'Monday',
+        worstDay: 'Sunday',
+        potentialShortfalls: [],
+        trend: 'STABLE',
+      },
     }
-    mockOpenRouter.complete.mockResolvedValue({ content: JSON.stringify(aiResult), model: 'test-model' })
+    mockOpenRouter.complete.mockResolvedValue({
+      content: JSON.stringify(aiResult),
+      model: 'test-model',
+    })
     mockOpenRouter.extractJSON.mockReturnValue(JSON.stringify(aiResult))
 
     const req = new Request('http://localhost/api/ai/cashflow-forecast') as any
@@ -166,24 +201,48 @@ describe('GET /api/ai/patient-segments', () => {
 
   it('segments patients with AI and enriches with display info', async () => {
     const patients = [
-      { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', createdAt: new Date('2025-01-01') },
+      {
+        id: 'p1',
+        patientId: 'PAT001',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '9876543210',
+        createdAt: new Date('2025-01-01'),
+      },
     ]
     ;(prisma.patient.findMany as any).mockResolvedValue(patients)
     ;(prisma.appointment.findMany as any).mockResolvedValue([
       { patientId: 'p1', scheduledDate: new Date('2026-02-01') },
     ])
-    ;(prisma.appointment.groupBy as any).mockResolvedValue([
-      { patientId: 'p1', _count: { id: 5 } },
-    ])
-    ;(prisma.invoice.findMany as any).mockResolvedValue([
-      { patientId: 'p1', paidAmount: 15000 },
-    ])
+    ;(prisma.appointment.groupBy as any).mockResolvedValue([{ patientId: 'p1', _count: { id: 5 } }])
+    ;(prisma.invoice.findMany as any).mockResolvedValue([{ patientId: 'p1', paidAmount: 15000 }])
 
     const aiResult = {
-      patients: [{ patientId: 'p1', rfm: { recency: 25, frequency: 5, monetary: 15000 }, segment: 'VIP', churnRisk: 10, churnLevel: 'LOW', recommendation: 'VIP treatment' }],
-      summary: { vip: 1, loyal: 0, regular: 0, atRisk: 0, churning: 0, new: 0, avgChurnRisk: 10, topRetentionActions: ['Send thank you'] },
+      patients: [
+        {
+          patientId: 'p1',
+          rfm: { recency: 25, frequency: 5, monetary: 15000 },
+          segment: 'VIP',
+          churnRisk: 10,
+          churnLevel: 'LOW',
+          recommendation: 'VIP treatment',
+        },
+      ],
+      summary: {
+        vip: 1,
+        loyal: 0,
+        regular: 0,
+        atRisk: 0,
+        churning: 0,
+        new: 0,
+        avgChurnRisk: 10,
+        topRetentionActions: ['Send thank you'],
+      },
     }
-    mockOpenRouter.complete.mockResolvedValue({ content: JSON.stringify(aiResult), model: 'test-model' })
+    mockOpenRouter.complete.mockResolvedValue({
+      content: JSON.stringify(aiResult),
+      model: 'test-model',
+    })
     mockOpenRouter.extractJSON.mockReturnValue(JSON.stringify(aiResult))
 
     const req = new Request('http://localhost/api/ai/patient-segments') as any
@@ -196,7 +255,14 @@ describe('GET /api/ai/patient-segments', () => {
 
   it('falls back to rule-based segmentation when AI fails', async () => {
     ;(prisma.patient.findMany as any).mockResolvedValue([
-      { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', createdAt: new Date('2025-01-01') },
+      {
+        id: 'p1',
+        patientId: 'PAT001',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '9876543210',
+        createdAt: new Date('2025-01-01'),
+      },
     ])
     ;(prisma.appointment.findMany as any).mockResolvedValue([])
     ;(prisma.appointment.groupBy as any).mockResolvedValue([])
@@ -248,18 +314,31 @@ describe('POST /api/ai/claim-analysis', () => {
       denialCode: 'DOC001',
       appealStatus: null,
       appealNotes: null,
-      patient: { firstName: 'John', lastName: 'Doe', patientId: 'PAT001', dateOfBirth: new Date('1990-01-01') },
+      patient: {
+        firstName: 'John',
+        lastName: 'Doe',
+        patientId: 'PAT001',
+        dateOfBirth: new Date('1990-01-01'),
+      },
       invoices: [{ invoiceNo: 'INV001', totalAmount: 50000, items: [] }],
     })
     ;(prisma.insuranceClaim.findMany as any).mockResolvedValue([])
 
     const aiResult = {
-      analysis: { likelyCause: 'Missing docs', denialCategory: 'DOCUMENTATION', severityOfDenial: 'RECOVERABLE' },
+      analysis: {
+        likelyCause: 'Missing docs',
+        denialCategory: 'DOCUMENTATION',
+        severityOfDenial: 'RECOVERABLE',
+      },
       suggestions: [{ action: 'Resubmit with documents', priority: 'HIGH' }],
       appealLetter: 'Dear Sir...',
       preventionTips: ['Always attach supporting docs'],
     }
-    mockOpenRouter.complete.mockResolvedValue({ content: JSON.stringify(aiResult), usage: { totalTokens: 800 }, model: 'test-model' })
+    mockOpenRouter.complete.mockResolvedValue({
+      content: JSON.stringify(aiResult),
+      usage: { totalTokens: 800 },
+      model: 'test-model',
+    })
     mockOpenRouter.extractJSON.mockReturnValue(JSON.stringify(aiResult))
     ;(prisma.aISkillExecution.create as any).mockResolvedValue({})
 
@@ -289,7 +368,11 @@ describe('POST /api/ai/claim-analysis', () => {
       invoices: [],
     })
     ;(prisma.insuranceClaim.findMany as any).mockResolvedValue([])
-    mockOpenRouter.complete.mockResolvedValue({ content: 'bad json', usage: { totalTokens: 100 }, model: 'test' })
+    mockOpenRouter.complete.mockResolvedValue({
+      content: 'bad json',
+      usage: { totalTokens: 100 },
+      model: 'test',
+    })
     mockOpenRouter.extractJSON.mockReturnValue('bad json')
     ;(prisma.aISkillExecution.create as any).mockResolvedValue({})
 

@@ -28,7 +28,9 @@ function makePostRequest(body: any) {
 function makeDetailRequest(method: string, body?: any) {
   return new Request('http://localhost/api/dental-chart/entry-1', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -50,9 +52,24 @@ describe('Dental Chart API', () => {
       ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1' })
 
       const entries = [
-        { id: 'e1', toothNumber: 16, condition: 'CAVITY', patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' } },
-        { id: 'e2', toothNumber: 16, condition: 'FILLING', patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' } },
-        { id: 'e3', toothNumber: 21, condition: 'CROWN', patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' } },
+        {
+          id: 'e1',
+          toothNumber: 16,
+          condition: 'CAVITY',
+          patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' },
+        },
+        {
+          id: 'e2',
+          toothNumber: 16,
+          condition: 'FILLING',
+          patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' },
+        },
+        {
+          id: 'e3',
+          toothNumber: 21,
+          condition: 'CROWN',
+          patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' },
+        },
       ]
       ;(prisma.dentalChartEntry.findMany as any).mockResolvedValue(entries)
 

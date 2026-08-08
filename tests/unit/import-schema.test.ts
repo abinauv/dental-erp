@@ -20,7 +20,15 @@ import type { FieldDefinition } from '@/lib/import/schema-definitions'
 // ---------------------------------------------------------------------------
 
 describe('ENTITY_SCHEMAS', () => {
-  const expectedEntities = ['patients', 'staff', 'appointments', 'treatments', 'invoices', 'payments', 'inventory']
+  const expectedEntities = [
+    'patients',
+    'staff',
+    'appointments',
+    'treatments',
+    'invoices',
+    'payments',
+    'inventory',
+  ]
 
   it('has all 7 entity types', () => {
     expect(Object.keys(ENTITY_SCHEMAS).sort()).toEqual(expectedEntities.sort())
@@ -44,18 +52,14 @@ describe('ENTITY_SCHEMAS', () => {
   })
 
   it('patients has required fields firstName, lastName, phone', () => {
-    const required = ENTITY_SCHEMAS.patients.fields
-      .filter(f => f.required)
-      .map(f => f.name)
+    const required = ENTITY_SCHEMAS.patients.fields.filter((f) => f.required).map((f) => f.name)
     expect(required).toContain('firstName')
     expect(required).toContain('lastName')
     expect(required).toContain('phone')
   })
 
   it('staff has required fields firstName, lastName, phone, email', () => {
-    const required = ENTITY_SCHEMAS.staff.fields
-      .filter(f => f.required)
-      .map(f => f.name)
+    const required = ENTITY_SCHEMAS.staff.fields.filter((f) => f.required).map((f) => f.name)
     expect(required).toContain('firstName')
     expect(required).toContain('lastName')
     expect(required).toContain('phone')
@@ -209,78 +213,143 @@ describe('parseDate', () => {
 describe('coerceValue', () => {
   // String type
   it('coerces string values', () => {
-    const field: FieldDefinition = { name: 'name', type: 'string', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'name',
+      type: 'string',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('Hello', field)).toEqual({ value: 'Hello' })
   })
 
   it('trims whitespace from strings', () => {
-    const field: FieldDefinition = { name: 'name', type: 'string', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'name',
+      type: 'string',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('  Hello  ', field)).toEqual({ value: 'Hello' })
   })
 
   it('returns error for required empty field', () => {
-    const field: FieldDefinition = { name: 'name', type: 'string', required: true, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'name',
+      type: 'string',
+      required: true,
+      description: 'test',
+    }
     const result = coerceValue('', field)
     expect(result.error).toBeTruthy()
     expect(result.value).toBeNull()
   })
 
   it('returns null for optional empty field', () => {
-    const field: FieldDefinition = { name: 'name', type: 'string', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'name',
+      type: 'string',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('', field)).toEqual({ value: null })
   })
 
   // Integer type
   it('coerces integer values', () => {
-    const field: FieldDefinition = { name: 'age', type: 'integer', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'age',
+      type: 'integer',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('25', field)).toEqual({ value: 25 })
   })
 
   it('handles comma-separated integers', () => {
-    const field: FieldDefinition = { name: 'count', type: 'integer', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'count',
+      type: 'integer',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('1,000', field)).toEqual({ value: 1000 })
   })
 
   it('returns error for non-numeric integer', () => {
-    const field: FieldDefinition = { name: 'age', type: 'integer', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'age',
+      type: 'integer',
+      required: false,
+      description: 'test',
+    }
     const result = coerceValue('abc', field)
     expect(result.error).toBeTruthy()
   })
 
   // Decimal type
   it('coerces decimal values', () => {
-    const field: FieldDefinition = { name: 'amount', type: 'decimal', required: false, description: 'test' }
-    expect(coerceValue('1500.50', field)).toEqual({ value: 1500.50 })
+    const field: FieldDefinition = {
+      name: 'amount',
+      type: 'decimal',
+      required: false,
+      description: 'test',
+    }
+    expect(coerceValue('1500.50', field)).toEqual({ value: 1500.5 })
   })
 
   it('strips currency symbols from decimals', () => {
-    const field: FieldDefinition = { name: 'amount', type: 'decimal', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'amount',
+      type: 'decimal',
+      required: false,
+      description: 'test',
+    }
     const result = coerceValue('₹1,500.50', field)
-    expect(result.value).toBe(1500.50)
+    expect(result.value).toBe(1500.5)
   })
 
   it('rounds decimals to 2 places', () => {
-    const field: FieldDefinition = { name: 'amount', type: 'decimal', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'amount',
+      type: 'decimal',
+      required: false,
+      description: 'test',
+    }
     const result = coerceValue('99.999', field)
     expect(result.value).toBe(100)
   })
 
   // Date type
   it('coerces date values', () => {
-    const field: FieldDefinition = { name: 'dob', type: 'date', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'dob',
+      type: 'date',
+      required: false,
+      description: 'test',
+    }
     const result = coerceValue('2025-02-17', field)
     expect(result.value).toBeInstanceOf(Date)
   })
 
   it('returns error for invalid date', () => {
-    const field: FieldDefinition = { name: 'dob', type: 'date', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'dob',
+      type: 'date',
+      required: false,
+      description: 'test',
+    }
     const result = coerceValue('not-a-date', field)
     expect(result.error).toBeTruthy()
   })
 
   // Boolean type
   it('coerces boolean values - truthy', () => {
-    const field: FieldDefinition = { name: 'active', type: 'boolean', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'active',
+      type: 'boolean',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('true', field)).toEqual({ value: true })
     expect(coerceValue('yes', field)).toEqual({ value: true })
     expect(coerceValue('1', field)).toEqual({ value: true })
@@ -288,7 +357,12 @@ describe('coerceValue', () => {
   })
 
   it('coerces boolean values - falsy', () => {
-    const field: FieldDefinition = { name: 'active', type: 'boolean', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'active',
+      type: 'boolean',
+      required: false,
+      description: 'test',
+    }
     expect(coerceValue('false', field)).toEqual({ value: false })
     expect(coerceValue('no', field)).toEqual({ value: false })
     expect(coerceValue('0', field)).toEqual({ value: false })
@@ -296,7 +370,12 @@ describe('coerceValue', () => {
   })
 
   it('returns error for invalid boolean', () => {
-    const field: FieldDefinition = { name: 'active', type: 'boolean', required: false, description: 'test' }
+    const field: FieldDefinition = {
+      name: 'active',
+      type: 'boolean',
+      required: false,
+      description: 'test',
+    }
     const result = coerceValue('maybe', field)
     expect(result.error).toBeTruthy()
   })
@@ -304,7 +383,10 @@ describe('coerceValue', () => {
   // Enum type
   it('coerces enum values via exact match', () => {
     const field: FieldDefinition = {
-      name: 'gender', type: 'enum', required: false, description: 'test',
+      name: 'gender',
+      type: 'enum',
+      required: false,
+      description: 'test',
       enumValues: ['MALE', 'FEMALE', 'OTHER'],
       enumAliases: GENDER_ALIASES,
     }
@@ -313,7 +395,10 @@ describe('coerceValue', () => {
 
   it('coerces enum values via alias', () => {
     const field: FieldDefinition = {
-      name: 'gender', type: 'enum', required: false, description: 'test',
+      name: 'gender',
+      type: 'enum',
+      required: false,
+      description: 'test',
       enumValues: ['MALE', 'FEMALE', 'OTHER'],
       enumAliases: GENDER_ALIASES,
     }
@@ -323,7 +408,10 @@ describe('coerceValue', () => {
 
   it('returns error for unknown enum value', () => {
     const field: FieldDefinition = {
-      name: 'gender', type: 'enum', required: false, description: 'test',
+      name: 'gender',
+      type: 'enum',
+      required: false,
+      description: 'test',
       enumValues: ['MALE', 'FEMALE', 'OTHER'],
     }
     const result = coerceValue('ALIEN', field)
@@ -333,7 +421,10 @@ describe('coerceValue', () => {
   // Pattern validation
   it('validates string against pattern', () => {
     const field: FieldDefinition = {
-      name: 'phone', type: 'string', required: false, description: 'test',
+      name: 'phone',
+      type: 'string',
+      required: false,
+      description: 'test',
       pattern: /^\d{10}$/,
     }
     const valid = coerceValue('9876543210', field)

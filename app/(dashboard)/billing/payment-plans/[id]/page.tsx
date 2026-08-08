@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -21,19 +21,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   ArrowLeft,
   Loader2,
@@ -45,8 +45,8 @@ import {
   CalendarClock,
   Ban,
   CreditCard,
-} from "lucide-react"
-import { format } from "date-fns"
+} from 'lucide-react'
+import { format } from 'date-fns'
 
 interface Schedule {
   id: string
@@ -104,11 +104,7 @@ interface PlanDetail {
   totalRemaining: number
 }
 
-export default function PaymentPlanDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const { toast } = useToast()
@@ -118,10 +114,10 @@ export default function PaymentPlanDetailPage({
 
   // Pay dialog
   const [payDialog, setPayDialog] = useState(false)
-  const [payScheduleId, setPayScheduleId] = useState("")
+  const [payScheduleId, setPayScheduleId] = useState('')
   const [payAmount, setPayAmount] = useState(0)
-  const [payMethod, setPayMethod] = useState("CASH")
-  const [payTransactionId, setPayTransactionId] = useState("")
+  const [payMethod, setPayMethod] = useState('CASH')
+  const [payTransactionId, setPayTransactionId] = useState('')
   const [paying, setPaying] = useState(false)
 
   // Cancel dialog
@@ -136,11 +132,11 @@ export default function PaymentPlanDetailPage({
     try {
       setLoading(true)
       const res = await fetch(`/api/payment-plans/${id}`)
-      if (!res.ok) throw new Error("Failed to fetch")
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setPlan(data)
     } catch {
-      toast({ variant: "destructive", title: "Failed to load payment plan" })
+      toast({ variant: 'destructive', title: 'Failed to load payment plan' })
     } finally {
       setLoading(false)
     }
@@ -150,8 +146,8 @@ export default function PaymentPlanDetailPage({
     try {
       setPaying(true)
       const res = await fetch(`/api/payment-plans/${id}/pay`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scheduleId: payScheduleId,
           amount: payAmount,
@@ -165,7 +161,7 @@ export default function PaymentPlanDetailPage({
       setPayDialog(false)
       fetchPlan()
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Payment Failed", description: err.message })
+      toast({ variant: 'destructive', title: 'Payment Failed', description: err.message })
     } finally {
       setPaying(false)
     }
@@ -175,56 +171,61 @@ export default function PaymentPlanDetailPage({
     try {
       setCancelling(true)
       const res = await fetch(`/api/payment-plans/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cancel" }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: "Payment plan cancelled" })
+      toast({ title: 'Payment plan cancelled' })
       setCancelDialog(false)
       fetchPlan()
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error", description: err.message })
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setCancelling(false)
     }
   }
 
   const handleWaive = async (scheduleId: string) => {
-    const ok = await confirm({ title: "Waive installment?", description: "Waive this installment? The patient won't need to pay it.", confirmLabel: "Yes, proceed" }); if (!ok) return
+    const ok = await confirm({
+      title: 'Waive installment?',
+      description: "Waive this installment? The patient won't need to pay it.",
+      confirmLabel: 'Yes, proceed',
+    })
+    if (!ok) return
     try {
       const res = await fetch(`/api/payment-plans/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "waive", scheduleId }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'waive', scheduleId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: "Installment waived" })
+      toast({ title: 'Installment waived' })
       fetchPlan()
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error", description: err.message })
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     }
   }
 
   const openPayDialog = (schedule: Schedule) => {
     setPayScheduleId(schedule.id)
     setPayAmount(schedule.amount)
-    setPayMethod("CASH")
-    setPayTransactionId("")
+    setPayMethod('CASH')
+    setPayTransactionId('')
     setPayDialog(true)
   }
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "ACTIVE":
+      case 'ACTIVE':
         return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Active</Badge>
-      case "COMPLETED":
+      case 'COMPLETED':
         return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Completed</Badge>
-      case "DEFAULTED":
+      case 'DEFAULTED':
         return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Defaulted</Badge>
-      case "CANCELLED":
+      case 'CANCELLED':
         return <Badge variant="secondary">Cancelled</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -233,13 +234,13 @@ export default function PaymentPlanDetailPage({
 
   const installmentStatusIcon = (status: string) => {
     switch (status) {
-      case "PAID":
+      case 'PAID':
         return <CheckCircle className="h-4 w-4 text-green-600" />
-      case "PENDING":
+      case 'PENDING':
         return <Clock className="h-4 w-4 text-yellow-600" />
-      case "OVERDUE":
+      case 'OVERDUE':
         return <AlertCircle className="h-4 w-4 text-red-600" />
-      case "WAIVED":
+      case 'WAIVED':
         return <XCircle className="h-4 w-4 text-muted-foreground" />
       default:
         return null
@@ -248,13 +249,13 @@ export default function PaymentPlanDetailPage({
 
   const installmentBadge = (status: string) => {
     switch (status) {
-      case "PAID":
+      case 'PAID':
         return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Paid</Badge>
-      case "PENDING":
+      case 'PENDING':
         return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">Pending</Badge>
-      case "OVERDUE":
+      case 'OVERDUE':
         return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Overdue</Badge>
-      case "WAIVED":
+      case 'WAIVED':
         return <Badge variant="secondary">Waived</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -263,19 +264,19 @@ export default function PaymentPlanDetailPage({
 
   const frequencyLabel = (freq: string) => {
     switch (freq) {
-      case "WEEKLY":
-        return "Weekly"
-      case "BIWEEKLY":
-        return "Bi-weekly"
-      case "MONTHLY":
-        return "Monthly"
+      case 'WEEKLY':
+        return 'Weekly'
+      case 'BIWEEKLY':
+        return 'Bi-weekly'
+      case 'MONTHLY':
+        return 'Monthly'
       default:
         return freq
     }
   }
 
   const formatCurrency = (amount: number) =>
-    `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
   if (loading) {
     return (
@@ -322,7 +323,7 @@ export default function PaymentPlanDetailPage({
               {statusBadge(plan.status)}
             </div>
             <p className="text-muted-foreground">
-              {plan.patient.firstName} {plan.patient.lastName} — Invoice{" "}
+              {plan.patient.firstName} {plan.patient.lastName} — Invoice{' '}
               <Link
                 href={`/billing/invoices/${plan.invoice.id}`}
                 className="text-blue-600 hover:underline"
@@ -332,7 +333,7 @@ export default function PaymentPlanDetailPage({
             </p>
           </div>
         </div>
-        {plan.status === "ACTIVE" && (
+        {plan.status === 'ACTIVE' && (
           <Button
             variant="outline"
             className="text-destructive"
@@ -384,7 +385,10 @@ export default function PaymentPlanDetailPage({
               {formatCurrency(plan.totalRemaining)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {plan.installments - plan.paidInstallments - (plan.schedules.filter(s => s.status === "WAIVED").length)} remaining
+              {plan.installments -
+                plan.paidInstallments -
+                plan.schedules.filter((s) => s.status === 'WAIVED').length}{' '}
+              remaining
             </p>
           </CardContent>
         </Card>
@@ -395,14 +399,10 @@ export default function PaymentPlanDetailPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {plan.nextDueDate
-                ? format(new Date(plan.nextDueDate), "dd MMM")
-                : "—"}
+              {plan.nextDueDate ? format(new Date(plan.nextDueDate), 'dd MMM') : '—'}
             </div>
             {plan.overdueInstallments > 0 && (
-              <p className="text-xs text-red-600">
-                {plan.overdueInstallments} overdue
-              </p>
+              <p className="text-xs text-red-600">{plan.overdueInstallments} overdue</p>
             )}
           </CardContent>
         </Card>
@@ -413,14 +413,12 @@ export default function PaymentPlanDetailPage({
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Payment Progress</span>
-            <span className="text-sm text-muted-foreground">
-              {Math.round(progressPercent)}%
-            </span>
+            <span className="text-sm text-muted-foreground">{Math.round(progressPercent)}%</span>
           </div>
           <div className="h-3 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                plan.overdueInstallments > 0 ? "bg-red-500" : "bg-green-500"
+                plan.overdueInstallments > 0 ? 'bg-red-500' : 'bg-green-500'
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -429,7 +427,10 @@ export default function PaymentPlanDetailPage({
             <span>
               {plan.downPayment > 0 && `Down payment: ${formatCurrency(plan.downPayment)}`}
             </span>
-            <span>{frequencyLabel(plan.frequency)} — Started {format(new Date(plan.startDate), "dd MMM yyyy")}</span>
+            <span>
+              {frequencyLabel(plan.frequency)} — Started{' '}
+              {format(new Date(plan.startDate), 'dd MMM yyyy')}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -519,7 +520,7 @@ export default function PaymentPlanDetailPage({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created</span>
-              <span>{format(new Date(plan.createdAt), "dd MMM yyyy")}</span>
+              <span>{format(new Date(plan.createdAt), 'dd MMM yyyy')}</span>
             </div>
           </CardContent>
         </Card>
@@ -541,9 +542,7 @@ export default function PaymentPlanDetailPage({
       <Card>
         <CardHeader>
           <CardTitle>Installment Schedule</CardTitle>
-          <CardDescription>
-            Track and manage each installment payment
-          </CardDescription>
+          <CardDescription>Track and manage each installment payment</CardDescription>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <Table className="min-w-[900px]">
@@ -564,11 +563,11 @@ export default function PaymentPlanDetailPage({
                 <TableRow
                   key={schedule.id}
                   className={
-                    schedule.status === "OVERDUE"
-                      ? "bg-red-50"
-                      : schedule.status === "PAID"
-                        ? "bg-green-50/50"
-                        : ""
+                    schedule.status === 'OVERDUE'
+                      ? 'bg-red-50'
+                      : schedule.status === 'PAID'
+                        ? 'bg-green-50/50'
+                        : ''
                   }
                 >
                   <TableCell>
@@ -577,34 +576,21 @@ export default function PaymentPlanDetailPage({
                       <span className="font-medium">{schedule.installmentNo}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {format(new Date(schedule.dueDate), "dd MMM yyyy")}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {formatCurrency(schedule.amount)}
-                  </TableCell>
+                  <TableCell>{format(new Date(schedule.dueDate), 'dd MMM yyyy')}</TableCell>
+                  <TableCell className="font-medium">{formatCurrency(schedule.amount)}</TableCell>
                   <TableCell>{installmentBadge(schedule.status)}</TableCell>
                   <TableCell>
-                    {schedule.paidDate
-                      ? format(new Date(schedule.paidDate), "dd MMM yyyy")
-                      : "—"}
+                    {schedule.paidDate ? format(new Date(schedule.paidDate), 'dd MMM yyyy') : '—'}
                   </TableCell>
                   <TableCell>
-                    {schedule.paidAmount
-                      ? formatCurrency(schedule.paidAmount)
-                      : "—"}
+                    {schedule.paidAmount ? formatCurrency(schedule.paidAmount) : '—'}
                   </TableCell>
+                  <TableCell>{schedule.payment?.paymentMethod || '—'}</TableCell>
                   <TableCell>
-                    {schedule.payment?.paymentMethod || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {(schedule.status === "PENDING" || schedule.status === "OVERDUE") &&
-                      plan.status === "ACTIVE" && (
+                    {(schedule.status === 'PENDING' || schedule.status === 'OVERDUE') &&
+                      plan.status === 'ACTIVE' && (
                         <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            onClick={() => openPayDialog(schedule)}
-                          >
+                          <Button size="sm" onClick={() => openPayDialog(schedule)}>
                             <CreditCard className="h-3 w-3 mr-1" />
                             Pay
                           </Button>
@@ -630,9 +616,7 @@ export default function PaymentPlanDetailPage({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Record Installment Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment for this installment
-            </DialogDescription>
+            <DialogDescription>Record a payment for this installment</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -693,8 +677,8 @@ export default function PaymentPlanDetailPage({
           <DialogHeader>
             <DialogTitle>Cancel Payment Plan</DialogTitle>
             <DialogDescription>
-              This will cancel the payment plan and waive all remaining installments.
-              Payments already made will not be refunded.
+              This will cancel the payment plan and waive all remaining installments. Payments
+              already made will not be refunded.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -708,7 +692,7 @@ export default function PaymentPlanDetailPage({
                   Cancelling...
                 </>
               ) : (
-                "Cancel Plan"
+                'Cancel Plan'
               )}
             </Button>
           </DialogFooter>

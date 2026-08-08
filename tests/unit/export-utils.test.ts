@@ -77,7 +77,7 @@ describe('downloadCSV', () => {
 
     expect(capturedBlob).toBeTruthy()
     // Blob constructor receives an array of strings
-    const blobParts = (capturedBlob as any)
+    const blobParts = capturedBlob as any
     expect(blobParts).toBeInstanceOf(Blob)
   })
 
@@ -115,7 +115,7 @@ describe('downloadCSV', () => {
   })
 
   it('handles numeric values', () => {
-    const data = [{ amount: 1500.50, count: 0 }]
+    const data = [{ amount: 1500.5, count: 0 }]
     downloadCSV(data, 'test')
     expect(URL.createObjectURL).toHaveBeenCalled()
   })

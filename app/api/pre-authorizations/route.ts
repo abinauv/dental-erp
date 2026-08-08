@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 export async function GET(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { searchParams } = new URL(req.url)
-  const page = parseInt(searchParams.get("page") || "1")
-  const limit = parseInt(searchParams.get("limit") || "10")
-  const status = searchParams.get("status") || ""
-  const search = searchParams.get("search")?.trim() || ""
-  const patientId = searchParams.get("patientId") || ""
+  const page = parseInt(searchParams.get('page') || '1')
+  const limit = parseInt(searchParams.get('limit') || '10')
+  const status = searchParams.get('status') || ''
+  const search = searchParams.get('search')?.trim() || ''
+  const patientId = searchParams.get('patientId') || ''
 
   const where: any = { hospitalId }
   if (status) where.status = status
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
     }),
@@ -58,21 +58,18 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const body = await req.json()
-    const {
-      patientId, insurancePolicyId, treatmentPlanId,
-      procedures, estimatedCost, notes,
-    } = body
+    const { patientId, insurancePolicyId, treatmentPlanId, procedures, estimatedCost, notes } = body
 
     if (!patientId || !insurancePolicyId || !procedures || !estimatedCost) {
       return NextResponse.json(
-        { error: "Patient, insurance policy, procedures, and estimated cost are required" },
+        { error: 'Patient, insurance policy, procedures, and estimated cost are required' },
         { status: 400 }
       )
     }
@@ -83,7 +80,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!policy) {
-      return NextResponse.json({ error: "Insurance policy not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Insurance policy not found' }, { status: 404 })
     }
 
     const preAuth = await prisma.preAuthorization.create({
@@ -109,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(preAuth, { status: 201 })
   } catch (err) {
-    console.error("Create pre-authorization error:", err)
-    return NextResponse.json({ error: "Failed to create pre-authorization" }, { status: 500 })
+    console.error('Create pre-authorization error:', err)
+    return NextResponse.json({ error: 'Failed to create pre-authorization' }, { status: 500 })
   }
 }

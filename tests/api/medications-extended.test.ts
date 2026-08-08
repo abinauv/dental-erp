@@ -75,8 +75,13 @@ describe('GET /api/medications/[id]', () => {
   it('returns medication detail', async () => {
     mockAuth()
     vi.mocked(prisma.medication.findFirst).mockResolvedValue({
-      id: 'm1', name: 'Amoxicillin', genericName: 'Amoxicillin', category: 'Antibiotic',
-      form: 'CAPSULE', strength: '500mg', manufacturer: 'Cipla',
+      id: 'm1',
+      name: 'Amoxicillin',
+      genericName: 'Amoxicillin',
+      category: 'Antibiotic',
+      form: 'CAPSULE',
+      strength: '500mg',
+      manufacturer: 'Cipla',
     } as any)
 
     const res = await medDetailGET(makeReq('/api/medications/m1'), makeParams('m1') as any)
@@ -96,33 +101,49 @@ describe('PUT /api/medications/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await medDetailPUT(makeReq('/api/medications/m1', 'PUT', { name: 'X' }), makeParams('m1') as any)
+    const res = await medDetailPUT(
+      makeReq('/api/medications/m1', 'PUT', { name: 'X' }),
+      makeParams('m1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when medication not found', async () => {
     mockAuth()
     vi.mocked(prisma.medication.findFirst).mockResolvedValue(null)
-    const res = await medDetailPUT(makeReq('/api/medications/m1', 'PUT', { name: 'X' }), makeParams('m1') as any)
+    const res = await medDetailPUT(
+      makeReq('/api/medications/m1', 'PUT', { name: 'X' }),
+      makeParams('m1') as any
+    )
     expect(res.status).toBe(404)
   })
 
   it('updates medication fields', async () => {
     mockAuth()
     const existing = {
-      id: 'm1', name: 'Amoxicillin', genericName: 'Amoxicillin', category: 'Antibiotic',
-      form: 'CAPSULE', strength: '500mg', manufacturer: 'Cipla',
-      defaultDosage: '1 cap', defaultFrequency: 'TID', defaultDuration: '5 days',
-      contraindications: null, sideEffects: null, isActive: true,
+      id: 'm1',
+      name: 'Amoxicillin',
+      genericName: 'Amoxicillin',
+      category: 'Antibiotic',
+      form: 'CAPSULE',
+      strength: '500mg',
+      manufacturer: 'Cipla',
+      defaultDosage: '1 cap',
+      defaultFrequency: 'TID',
+      defaultDuration: '5 days',
+      contraindications: null,
+      sideEffects: null,
+      isActive: true,
     }
     vi.mocked(prisma.medication.findFirst).mockResolvedValue(existing as any)
     vi.mocked(prisma.medication.update).mockResolvedValue({
-      ...existing, strength: '250mg',
+      ...existing,
+      strength: '250mg',
     } as any)
 
     const res = await medDetailPUT(
       makeReq('/api/medications/m1', 'PUT', { strength: '250mg' }),
-      makeParams('m1') as any,
+      makeParams('m1') as any
     )
     const body = await res.json()
 
@@ -133,17 +154,29 @@ describe('PUT /api/medications/[id]', () => {
   it('preserves existing fields on partial update', async () => {
     mockAuth()
     const existing = {
-      id: 'm1', name: 'Amoxicillin', genericName: 'Amoxicillin', category: 'Antibiotic',
-      form: 'CAPSULE', strength: '500mg', manufacturer: 'Cipla',
-      defaultDosage: '1 cap', defaultFrequency: 'TID', defaultDuration: '5 days',
-      contraindications: 'Penicillin allergy', sideEffects: 'Nausea', isActive: true,
+      id: 'm1',
+      name: 'Amoxicillin',
+      genericName: 'Amoxicillin',
+      category: 'Antibiotic',
+      form: 'CAPSULE',
+      strength: '500mg',
+      manufacturer: 'Cipla',
+      defaultDosage: '1 cap',
+      defaultFrequency: 'TID',
+      defaultDuration: '5 days',
+      contraindications: 'Penicillin allergy',
+      sideEffects: 'Nausea',
+      isActive: true,
     }
     vi.mocked(prisma.medication.findFirst).mockResolvedValue(existing as any)
-    vi.mocked(prisma.medication.update).mockResolvedValue({ ...existing, name: 'Amox Updated' } as any)
+    vi.mocked(prisma.medication.update).mockResolvedValue({
+      ...existing,
+      name: 'Amox Updated',
+    } as any)
 
     await medDetailPUT(
       makeReq('/api/medications/m1', 'PUT', { name: 'Amox Updated' }),
-      makeParams('m1') as any,
+      makeParams('m1') as any
     )
 
     const updateCall = vi.mocked(prisma.medication.update).mock.calls[0][0]
@@ -161,14 +194,20 @@ describe('DELETE /api/medications/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await medDetailDELETE(makeReq('/api/medications/m1', 'DELETE'), makeParams('m1') as any)
+    const res = await medDetailDELETE(
+      makeReq('/api/medications/m1', 'DELETE'),
+      makeParams('m1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when medication not found', async () => {
     mockAuth()
     vi.mocked(prisma.medication.findFirst).mockResolvedValue(null)
-    const res = await medDetailDELETE(makeReq('/api/medications/m1', 'DELETE'), makeParams('m1') as any)
+    const res = await medDetailDELETE(
+      makeReq('/api/medications/m1', 'DELETE'),
+      makeParams('m1') as any
+    )
     expect(res.status).toBe(404)
   })
 
@@ -177,7 +216,10 @@ describe('DELETE /api/medications/[id]', () => {
     vi.mocked(prisma.medication.findFirst).mockResolvedValue({ id: 'm1' } as any)
     vi.mocked(prisma.medication.update).mockResolvedValue({ id: 'm1', isActive: false } as any)
 
-    const res = await medDetailDELETE(makeReq('/api/medications/m1', 'DELETE'), makeParams('m1') as any)
+    const res = await medDetailDELETE(
+      makeReq('/api/medications/m1', 'DELETE'),
+      makeParams('m1') as any
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)

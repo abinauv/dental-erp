@@ -1,5 +1,5 @@
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 interface FormFieldProps {
   label: string
@@ -24,8 +24,8 @@ export function FormField({
   className,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-2", className)}>
-      <Label htmlFor={htmlFor} className={required ? "label-required" : ""}>
+    <div className={cn('space-y-2', className)}>
+      <Label htmlFor={htmlFor} className={required ? 'label-required' : ''}>
         {label}
       </Label>
       {children}

@@ -60,28 +60,38 @@ describe('GET /api/sterilization/instruments/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await instrumentGET(makeReq('/api/sterilization/instruments/ins1'), makeParams('ins1') as any)
+    const res = await instrumentGET(
+      makeReq('/api/sterilization/instruments/ins1'),
+      makeParams('ins1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when instrument not found', async () => {
     mockAuth()
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue(null)
-    const res = await instrumentGET(makeReq('/api/sterilization/instruments/ins1'), makeParams('ins1') as any)
+    const res = await instrumentGET(
+      makeReq('/api/sterilization/instruments/ins1'),
+      makeParams('ins1') as any
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns instrument with sterilization logs', async () => {
     mockAuth()
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue({
-      id: 'ins1', name: 'Forceps #7', category: 'Extraction',
-      serialNumber: 'SN001', status: 'AVAILABLE',
-      sterilizationLogs: [
-        { id: 'sl1', startedAt: new Date(), status: 'COMPLETED' },
-      ],
+      id: 'ins1',
+      name: 'Forceps #7',
+      category: 'Extraction',
+      serialNumber: 'SN001',
+      status: 'AVAILABLE',
+      sterilizationLogs: [{ id: 'sl1', startedAt: new Date(), status: 'COMPLETED' }],
     } as any)
 
-    const res = await instrumentGET(makeReq('/api/sterilization/instruments/ins1'), makeParams('ins1') as any)
+    const res = await instrumentGET(
+      makeReq('/api/sterilization/instruments/ins1'),
+      makeParams('ins1') as any
+    )
     const body = await res.json()
 
     expect(body.instrument.name).toBe('Forceps #7')
@@ -107,7 +117,7 @@ describe('PUT /api/sterilization/instruments/[id]', () => {
     mockAuthError()
     const res = await instrumentPUT(
       makeReq('/api/sterilization/instruments/ins1', 'PUT', { name: 'X' }),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -117,7 +127,7 @@ describe('PUT /api/sterilization/instruments/[id]', () => {
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue(null)
     const res = await instrumentPUT(
       makeReq('/api/sterilization/instruments/ins1', 'PUT', { name: 'X' }),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -126,7 +136,9 @@ describe('PUT /api/sterilization/instruments/[id]', () => {
     mockAuth()
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue({ id: 'ins1' } as any)
     vi.mocked(prisma.instrument.update).mockResolvedValue({
-      id: 'ins1', name: 'Updated Forceps', status: 'IN_USE',
+      id: 'ins1',
+      name: 'Updated Forceps',
+      status: 'IN_USE',
     } as any)
 
     const res = await instrumentPUT(
@@ -134,7 +146,7 @@ describe('PUT /api/sterilization/instruments/[id]', () => {
         name: 'Updated Forceps',
         status: 'IN_USE',
       }),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     const body = await res.json()
 
@@ -154,7 +166,7 @@ describe('PUT /api/sterilization/instruments/[id]', () => {
         purchaseDate: '2025-01-15',
         warrantyDate: '2027-01-15',
       }),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
 
     const updateCall = vi.mocked(prisma.instrument.update).mock.calls[0][0]
@@ -167,7 +179,7 @@ describe('PUT /api/sterilization/instruments/[id]', () => {
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue(null)
     await instrumentPUT(
       makeReq('/api/sterilization/instruments/ins1', 'PUT', { name: 'X' }),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     expect(requireAuthAndRole).toHaveBeenCalledWith(['ADMIN'])
   })
@@ -184,7 +196,7 @@ describe('DELETE /api/sterilization/instruments/[id]', () => {
     mockAuthError()
     const res = await instrumentDELETE(
       makeReq('/api/sterilization/instruments/ins1', 'DELETE'),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -194,7 +206,7 @@ describe('DELETE /api/sterilization/instruments/[id]', () => {
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue(null)
     const res = await instrumentDELETE(
       makeReq('/api/sterilization/instruments/ins1', 'DELETE'),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -206,7 +218,7 @@ describe('DELETE /api/sterilization/instruments/[id]', () => {
 
     const res = await instrumentDELETE(
       makeReq('/api/sterilization/instruments/ins1', 'DELETE'),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     const body = await res.json()
 
@@ -219,7 +231,7 @@ describe('DELETE /api/sterilization/instruments/[id]', () => {
     vi.mocked(prisma.instrument.findFirst).mockResolvedValue(null)
     await instrumentDELETE(
       makeReq('/api/sterilization/instruments/ins1', 'DELETE'),
-      makeParams('ins1') as any,
+      makeParams('ins1') as any
     )
     expect(requireAuthAndRole).toHaveBeenCalledWith(['ADMIN'])
   })

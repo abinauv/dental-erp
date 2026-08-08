@@ -36,7 +36,9 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, disabled, ...props }: any) => (
-    <button disabled={disabled} {...props}>{children}</button>
+    <button disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
@@ -77,7 +79,11 @@ vi.mock('@/components/ui/separator', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 // ---------------------------------------------------------------------------
@@ -335,7 +341,7 @@ describe('ClinicSettingsPage', () => {
       fireEvent.change(nameInput, { target: { value: 'Updated Clinic' } })
 
       // Click save
-      const saveButton = screen.getAllByRole('button').find(b => b.textContent?.includes('Save'))
+      const saveButton = screen.getAllByRole('button').find((b) => b.textContent?.includes('Save'))
       expect(saveButton).toBeDefined()
       fireEvent.click(saveButton!)
 
@@ -367,7 +373,7 @@ describe('ClinicSettingsPage', () => {
         expect(screen.getByDisplayValue('Demo Dental Clinic')).toBeInTheDocument()
       })
 
-      const saveButton = screen.getAllByRole('button').find(b => b.textContent?.includes('Save'))
+      const saveButton = screen.getAllByRole('button').find((b) => b.textContent?.includes('Save'))
       fireEvent.click(saveButton!)
 
       await waitFor(() => {
@@ -400,7 +406,7 @@ describe('ClinicSettingsPage', () => {
         expect(screen.getByDisplayValue('Demo Dental Clinic')).toBeInTheDocument()
       })
 
-      const saveButton = screen.getAllByRole('button').find(b => b.textContent?.includes('Save'))
+      const saveButton = screen.getAllByRole('button').find((b) => b.textContent?.includes('Save'))
       fireEvent.click(saveButton!)
 
       await waitFor(() => {
@@ -427,7 +433,9 @@ describe('ClinicSettingsPage', () => {
       })
 
       // Should have Upload Logo button
-      const uploadButton = screen.getAllByRole('button').find(b => b.textContent?.match(/Upload|Change/i))
+      const uploadButton = screen
+        .getAllByRole('button')
+        .find((b) => b.textContent?.match(/Upload|Change/i))
       expect(uploadButton).toBeDefined()
     })
 

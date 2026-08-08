@@ -1,11 +1,11 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const labCoordinator: Skill = {
-  name: "lab-coordinator",
-  displayName: "Lab Coordinator",
-  description: "Lab order routing, vendor selection, and delivery tracking",
-  allowedRoles: ["ADMIN", "DOCTOR", "LAB_TECH"],
-  modelTier: "chat",
+  name: 'lab-coordinator',
+  displayName: 'Lab Coordinator',
+  description: 'Lab order routing, vendor selection, and delivery tracking',
+  allowedRoles: ['ADMIN', 'DOCTOR', 'LAB_TECH'],
+  modelTier: 'chat',
   systemPrompt: (hospitalName, contextStr) => `You coordinate dental lab work for ${hospitalName}.
 
 CONTEXT:

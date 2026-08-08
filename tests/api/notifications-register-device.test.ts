@@ -34,11 +34,13 @@ describe('Push Device Registration API', () => {
     it('registers a new device token', async () => {
       ;(prisma.pushDevice.upsert as any).mockResolvedValue({})
 
-      const res = await mod.POST(makePostRequest({
-        token: 'fcm-token-abc123',
-        platform: 'web',
-        deviceName: 'Chrome Desktop',
-      }))
+      const res = await mod.POST(
+        makePostRequest({
+          token: 'fcm-token-abc123',
+          platform: 'web',
+          deviceName: 'Chrome Desktop',
+        })
+      )
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.success).toBe(true)

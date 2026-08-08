@@ -1,18 +1,15 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { StaffInviteStatus } from "@prisma/client"
-import { sendInviteEmail } from "@/lib/email-helpers"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { StaffInviteStatus } from '@prisma/client'
+import { sendInviteEmail } from '@/lib/email-helpers'
 
 // Cancel/revoke an invite
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -23,14 +20,11 @@ export async function DELETE(
     })
 
     if (!invite || invite.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: "Invite not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
     }
 
     if (invite.status !== StaffInviteStatus.PENDING) {
-      return NextResponse.json(
-        { error: "Can only cancel pending invites" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Can only cancel pending invites' }, { status: 400 })
     }
 
     await prisma.staffInvite.update({
@@ -40,26 +34,20 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Invite cancelled successfully",
+      message: 'Invite cancelled successfully',
     })
   } catch (error) {
-    console.error("Cancel invite error:", error)
-    return NextResponse.json(
-      { error: "An error occurred. Please try again." },
-      { status: 500 }
-    )
+    console.error('Cancel invite error:', error)
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }
 
 // Resend an invite
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -70,14 +58,11 @@ export async function POST(
     })
 
     if (!invite || invite.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: "Invite not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
     }
 
     if (invite.status !== StaffInviteStatus.PENDING) {
-      return NextResponse.json(
-        { error: "Can only resend pending invites" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Can only resend pending invites' }, { status: 400 })
     }
 
     // Extend expiry
@@ -99,10 +84,10 @@ export async function POST(
     // Resend invite email (non-blocking)
     const emailSent = await sendInviteEmail({
       to: invite.email,
-      inviteeName: invite.name ?? invite.email.split("@")[0],
-      hospitalName: hospital?.name || "Your Dental Clinic",
+      inviteeName: invite.name ?? invite.email.split('@')[0],
+      hospitalName: hospital?.name || 'Your Dental Clinic',
       role: invite.role,
-      inviterName: inviter?.name || "Admin",
+      inviterName: inviter?.name || 'Admin',
       token: invite.token,
     })
 
@@ -115,10 +100,7 @@ export async function POST(
       emailSent,
     })
   } catch (error) {
-    console.error("Resend invite error:", error)
-    return NextResponse.json(
-      { error: "An error occurred. Please try again." },
-      { status: 500 }
-    )
+    console.error('Resend invite error:', error)
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

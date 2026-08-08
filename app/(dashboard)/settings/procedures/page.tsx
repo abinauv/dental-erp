@@ -1,19 +1,19 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -21,10 +21,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Switch } from "@/components/ui/switch"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Plus,
   Search,
@@ -43,18 +43,15 @@ import {
   Trash2,
   Stethoscope,
   AlertCircle,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  procedureCategoryConfig,
-  formatCurrency,
-} from "@/lib/treatment-utils"
+} from '@/components/ui/dropdown-menu'
+import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
 
 interface Procedure {
   id: string
@@ -82,16 +79,16 @@ interface PaginationInfo {
 }
 
 const categories = [
-  "PREVENTIVE",
-  "RESTORATIVE",
-  "ENDODONTIC",
-  "PERIODONTIC",
-  "PROSTHODONTIC",
-  "ORTHODONTIC",
-  "ORAL_SURGERY",
-  "COSMETIC",
-  "DIAGNOSTIC",
-  "EMERGENCY",
+  'PREVENTIVE',
+  'RESTORATIVE',
+  'ENDODONTIC',
+  'PERIODONTIC',
+  'PROSTHODONTIC',
+  'ORTHODONTIC',
+  'ORAL_SURGERY',
+  'COSMETIC',
+  'DIAGNOSTIC',
+  'EMERGENCY',
 ]
 
 export default function ProceduresSettingsPage() {
@@ -106,29 +103,29 @@ export default function ProceduresSettingsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [activeFilter, setActiveFilter] = useState("all")
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [activeFilter, setActiveFilter] = useState('all')
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create")
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create')
   const [selectedProcedure, setSelectedProcedure] = useState<Procedure | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   // Form state
   const [formData, setFormData] = useState({
-    code: "",
-    name: "",
-    category: "",
-    description: "",
-    defaultDuration: "30",
-    basePrice: "",
-    materials: "",
-    preInstructions: "",
-    postInstructions: "",
+    code: '',
+    name: '',
+    category: '',
+    description: '',
+    defaultDuration: '30',
+    basePrice: '',
+    materials: '',
+    preInstructions: '',
+    postInstructions: '',
     isActive: true,
   })
 
@@ -140,22 +137,22 @@ export default function ProceduresSettingsPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (categoryFilter && categoryFilter !== "all") params.append("category", categoryFilter)
-      if (activeFilter && activeFilter !== "all") params.append("isActive", activeFilter)
+      if (search) params.append('search', search)
+      if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter)
+      if (activeFilter && activeFilter !== 'all') params.append('isActive', activeFilter)
 
       const response = await fetch(`/api/settings/procedures?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch procedures")
+      if (!response.ok) throw new Error('Failed to fetch procedures')
 
       const data = await response.json()
       setProcedures(data.data || [])
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching procedures:", error)
+      console.error('Error fetching procedures:', error)
       toast({
-        title: "Error",
-        description: "Failed to fetch procedures",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch procedures',
+        variant: 'destructive',
       })
     } finally {
       setLoading(false)
@@ -168,23 +165,23 @@ export default function ProceduresSettingsPage() {
 
   const resetForm = () => {
     setFormData({
-      code: "",
-      name: "",
-      category: "",
-      description: "",
-      defaultDuration: "30",
-      basePrice: "",
-      materials: "",
-      preInstructions: "",
-      postInstructions: "",
+      code: '',
+      name: '',
+      category: '',
+      description: '',
+      defaultDuration: '30',
+      basePrice: '',
+      materials: '',
+      preInstructions: '',
+      postInstructions: '',
       isActive: true,
     })
-    setError("")
+    setError('')
   }
 
   const openCreateDialog = () => {
     resetForm()
-    setDialogMode("create")
+    setDialogMode('create')
     setDialogOpen(true)
   }
 
@@ -194,42 +191,43 @@ export default function ProceduresSettingsPage() {
       code: procedure.code,
       name: procedure.name,
       category: procedure.category,
-      description: procedure.description || "",
+      description: procedure.description || '',
       defaultDuration: procedure.defaultDuration.toString(),
       basePrice: procedure.basePrice.toString(),
-      materials: procedure.materials || "",
-      preInstructions: procedure.preInstructions || "",
-      postInstructions: procedure.postInstructions || "",
+      materials: procedure.materials || '',
+      preInstructions: procedure.preInstructions || '',
+      postInstructions: procedure.postInstructions || '',
       isActive: procedure.isActive,
     })
-    setDialogMode("edit")
+    setDialogMode('edit')
     setDialogOpen(true)
   }
 
   const handleSubmit = async () => {
-    setError("")
+    setError('')
 
     // Validation
-    if (dialogMode === "create" && !formData.code) {
-      setError("Code is required")
+    if (dialogMode === 'create' && !formData.code) {
+      setError('Code is required')
       return
     }
 
     if (!formData.name || !formData.category || !formData.basePrice) {
-      setError("Name, category, and base price are required")
+      setError('Name, category, and base price are required')
       return
     }
 
     setActionLoading(true)
 
     try {
-      const url = dialogMode === "create"
-        ? "/api/settings/procedures"
-        : `/api/settings/procedures/${selectedProcedure?.id}`
+      const url =
+        dialogMode === 'create'
+          ? '/api/settings/procedures'
+          : `/api/settings/procedures/${selectedProcedure?.id}`
 
       const response = await fetch(url, {
-        method: dialogMode === "create" ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: dialogMode === 'create' ? 'POST' : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           code: formData.code.toUpperCase(),
@@ -241,14 +239,15 @@ export default function ProceduresSettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to save procedure")
+        throw new Error(data.error || 'Failed to save procedure')
       }
 
       toast({
-        title: "Success",
-        description: dialogMode === "create"
-          ? "Procedure created successfully"
-          : "Procedure updated successfully",
+        title: 'Success',
+        description:
+          dialogMode === 'create'
+            ? 'Procedure created successfully'
+            : 'Procedure updated successfully',
       })
 
       setDialogOpen(false)
@@ -256,9 +255,9 @@ export default function ProceduresSettingsPage() {
     } catch (error: any) {
       setError(error.message)
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       })
     } finally {
       setActionLoading(false)
@@ -272,20 +271,20 @@ export default function ProceduresSettingsPage() {
 
     try {
       const response = await fetch(`/api/settings/procedures/${selectedProcedure.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to delete procedure")
+        throw new Error(data.error || 'Failed to delete procedure')
       }
 
       toast({
-        title: "Success",
+        title: 'Success',
         description: data.deactivated
-          ? "Procedure has been deactivated as it is used in existing treatments"
-          : "Procedure deleted successfully",
+          ? 'Procedure has been deactivated as it is used in existing treatments'
+          : 'Procedure deleted successfully',
       })
 
       setDeleteDialogOpen(false)
@@ -294,9 +293,9 @@ export default function ProceduresSettingsPage() {
     } catch (error: any) {
       setError(error.message)
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       })
     } finally {
       setActionLoading(false)
@@ -306,25 +305,25 @@ export default function ProceduresSettingsPage() {
   const handleToggleActive = async (procedure: Procedure) => {
     try {
       const response = await fetch(`/api/settings/procedures/${procedure.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !procedure.isActive }),
       })
 
-      if (!response.ok) throw new Error("Failed to update procedure")
+      if (!response.ok) throw new Error('Failed to update procedure')
 
       toast({
-        title: "Success",
-        description: `Procedure ${!procedure.isActive ? "activated" : "deactivated"} successfully`,
+        title: 'Success',
+        description: `Procedure ${!procedure.isActive ? 'activated' : 'deactivated'} successfully`,
       })
 
       fetchProcedures()
     } catch (error: any) {
-      console.error("Error updating procedure:", error)
+      console.error('Error updating procedure:', error)
       toast({
-        title: "Error",
-        description: "Failed to update procedure status",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update procedure status',
+        variant: 'destructive',
       })
     }
   }
@@ -335,9 +334,7 @@ export default function ProceduresSettingsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Procedures</h1>
-          <p className="text-muted-foreground">
-            Manage dental procedures catalog
-          </p>
+          <p className="text-muted-foreground">Manage dental procedures catalog</p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
@@ -406,13 +403,27 @@ export default function ProceduresSettingsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : procedures.length === 0 ? (
@@ -430,10 +441,8 @@ export default function ProceduresSettingsPage() {
                 </TableRow>
               ) : (
                 procedures.map((procedure) => (
-                  <TableRow key={procedure.id} className={!procedure.isActive ? "opacity-50" : ""}>
-                    <TableCell className="font-mono font-medium">
-                      {procedure.code}
-                    </TableCell>
+                  <TableRow key={procedure.id} className={!procedure.isActive ? 'opacity-50' : ''}>
+                    <TableCell className="font-mono font-medium">{procedure.code}</TableCell>
                     <TableCell>
                       <div className="font-medium">{procedure.name}</div>
                       {procedure.description && (
@@ -495,8 +504,8 @@ export default function ProceduresSettingsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} procedures
               </div>
               <div className="flex items-center gap-2">
@@ -532,12 +541,12 @@ export default function ProceduresSettingsPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {dialogMode === "create" ? "Add New Procedure" : "Edit Procedure"}
+              {dialogMode === 'create' ? 'Add New Procedure' : 'Edit Procedure'}
             </DialogTitle>
             <DialogDescription>
-              {dialogMode === "create"
-                ? "Add a new procedure to your catalog"
-                : "Update procedure details"}
+              {dialogMode === 'create'
+                ? 'Add a new procedure to your catalog'
+                : 'Update procedure details'}
             </DialogDescription>
           </DialogHeader>
 
@@ -558,10 +567,10 @@ export default function ProceduresSettingsPage() {
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g., PRV001"
                   maxLength={10}
-                  disabled={dialogMode === "edit"}
+                  disabled={dialogMode === 'edit'}
                   className="uppercase"
                 />
-                {dialogMode === "edit" && (
+                {dialogMode === 'edit' && (
                   <p className="text-xs text-muted-foreground">Code cannot be changed</p>
                 )}
               </div>
@@ -677,7 +686,11 @@ export default function ProceduresSettingsPage() {
               Cancel
             </Button>
             <Button onClick={handleSubmit} disabled={actionLoading}>
-              {actionLoading ? "Saving..." : dialogMode === "create" ? "Add Procedure" : "Save Changes"}
+              {actionLoading
+                ? 'Saving...'
+                : dialogMode === 'create'
+                  ? 'Add Procedure'
+                  : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -689,20 +702,16 @@ export default function ProceduresSettingsPage() {
           <DialogHeader>
             <DialogTitle>Delete Procedure</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedProcedure?.name}"? If this
-              procedure is used in treatments, it will be deactivated instead.
+              Are you sure you want to delete "{selectedProcedure?.name}"? If this procedure is used
+              in treatments, it will be deactivated instead.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={actionLoading}
-            >
-              {actionLoading ? "Deleting..." : "Delete"}
+            <Button variant="destructive" onClick={handleDelete} disabled={actionLoading}>
+              {actionLoading ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -75,7 +75,9 @@ describe('GET /api/prescriptions/[id]', () => {
       ],
     } as any)
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      name: 'Dental Clinic', phone: '1234567890', email: 'clinic@test.com',
+      name: 'Dental Clinic',
+      phone: '1234567890',
+      email: 'clinic@test.com',
     } as any)
 
     const res = await prescriptionGET(makeReq('/api/prescriptions/p1'), makeParams('p1') as any)
@@ -107,14 +109,20 @@ describe('DELETE /api/prescriptions/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await prescriptionDELETE(makeReq('/api/prescriptions/p1', 'DELETE'), makeParams('p1') as any)
+    const res = await prescriptionDELETE(
+      makeReq('/api/prescriptions/p1', 'DELETE'),
+      makeParams('p1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when prescription not found', async () => {
     mockAuth()
     vi.mocked(prisma.prescription.findFirst).mockResolvedValue(null)
-    const res = await prescriptionDELETE(makeReq('/api/prescriptions/p1', 'DELETE'), makeParams('p1') as any)
+    const res = await prescriptionDELETE(
+      makeReq('/api/prescriptions/p1', 'DELETE'),
+      makeParams('p1') as any
+    )
     expect(res.status).toBe(404)
   })
 
@@ -123,7 +131,10 @@ describe('DELETE /api/prescriptions/[id]', () => {
     vi.mocked(prisma.prescription.findFirst).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.prescription.delete).mockResolvedValue({ id: 'p1' } as any)
 
-    const res = await prescriptionDELETE(makeReq('/api/prescriptions/p1', 'DELETE'), makeParams('p1') as any)
+    const res = await prescriptionDELETE(
+      makeReq('/api/prescriptions/p1', 'DELETE'),
+      makeParams('p1') as any
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)

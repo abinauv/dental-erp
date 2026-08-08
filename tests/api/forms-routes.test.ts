@@ -60,8 +60,18 @@ describe('GET /api/forms', () => {
   it('returns form submissions with pagination', async () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findMany).mockResolvedValue([
-      { id: 'fs1', templateId: 't1', status: 'SUBMITTED', template: { name: 'Consent', type: 'CONSENT' } },
-      { id: 'fs2', templateId: 't2', status: 'REVIEWED', template: { name: 'Intake', type: 'INTAKE' } },
+      {
+        id: 'fs1',
+        templateId: 't1',
+        status: 'SUBMITTED',
+        template: { name: 'Consent', type: 'CONSENT' },
+      },
+      {
+        id: 'fs2',
+        templateId: 't2',
+        status: 'REVIEWED',
+        template: { name: 'Intake', type: 'INTAKE' },
+      },
     ] as any)
     vi.mocked(prisma.formSubmission.count).mockResolvedValue(2)
 
@@ -139,16 +149,25 @@ describe('POST /api/forms', () => {
 
   it('creates form submission successfully', async () => {
     mockAuth()
-    vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({ id: 't1', hospitalId: 'h1' } as any)
-    vi.mocked(prisma.formSubmission.create).mockResolvedValue({
-      id: 'fs1', templateId: 't1', hospitalId: 'h1', patientId: 'p1', data: { field1: 'value1' },
+    vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({
+      id: 't1',
+      hospitalId: 'h1',
     } as any)
-
-    const res = await formsPOST(makeReq('/api/forms', 'POST', {
+    vi.mocked(prisma.formSubmission.create).mockResolvedValue({
+      id: 'fs1',
       templateId: 't1',
+      hospitalId: 'h1',
       patientId: 'p1',
       data: { field1: 'value1' },
-    }))
+    } as any)
+
+    const res = await formsPOST(
+      makeReq('/api/forms', 'POST', {
+        templateId: 't1',
+        patientId: 'p1',
+        data: { field1: 'value1' },
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -159,13 +178,17 @@ describe('POST /api/forms', () => {
     mockAuth()
     vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({ id: 't1' } as any)
     vi.mocked(prisma.formSubmission.create).mockResolvedValue({
-      id: 'fs1', signature: 'sig_data', signedAt: new Date(),
+      id: 'fs1',
+      signature: 'sig_data',
+      signedAt: new Date(),
     } as any)
 
-    await formsPOST(makeReq('/api/forms', 'POST', {
-      templateId: 't1',
-      signature: 'sig_data',
-    }))
+    await formsPOST(
+      makeReq('/api/forms', 'POST', {
+        templateId: 't1',
+        signature: 'sig_data',
+      })
+    )
 
     expect(prisma.formSubmission.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -187,7 +210,9 @@ describe('GET /api/forms/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await formByIdGET(makeReq('/api/forms/fs1'), { params: Promise.resolve({ id: 'fs1' }) })
+    const res = await formByIdGET(makeReq('/api/forms/fs1'), {
+      params: Promise.resolve({ id: 'fs1' }),
+    })
     expect(res.status).toBe(401)
   })
 
@@ -195,7 +220,9 @@ describe('GET /api/forms/[id]', () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findFirst).mockResolvedValue(null)
 
-    const res = await formByIdGET(makeReq('/api/forms/fs-none'), { params: Promise.resolve({ id: 'fs-none' }) })
+    const res = await formByIdGET(makeReq('/api/forms/fs-none'), {
+      params: Promise.resolve({ id: 'fs-none' }),
+    })
     const body = await res.json()
 
     expect(res.status).toBe(404)
@@ -205,11 +232,15 @@ describe('GET /api/forms/[id]', () => {
   it('returns submission with template', async () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findFirst).mockResolvedValue({
-      id: 'fs1', templateId: 't1', data: { field1: 'value1' },
+      id: 'fs1',
+      templateId: 't1',
+      data: { field1: 'value1' },
       template: { id: 't1', name: 'Consent Form', fields: [] },
     } as any)
 
-    const res = await formByIdGET(makeReq('/api/forms/fs1'), { params: Promise.resolve({ id: 'fs1' }) })
+    const res = await formByIdGET(makeReq('/api/forms/fs1'), {
+      params: Promise.resolve({ id: 'fs1' }),
+    })
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -222,10 +253,9 @@ describe('PUT /api/forms/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await formByIdPUT(
-      makeReq('/api/forms/fs1', 'PUT', { status: 'APPROVED' }),
-      { params: Promise.resolve({ id: 'fs1' }) }
-    )
+    const res = await formByIdPUT(makeReq('/api/forms/fs1', 'PUT', { status: 'APPROVED' }), {
+      params: Promise.resolve({ id: 'fs1' }),
+    })
     expect(res.status).toBe(401)
   })
 
@@ -233,10 +263,9 @@ describe('PUT /api/forms/[id]', () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findFirst).mockResolvedValue(null)
 
-    const res = await formByIdPUT(
-      makeReq('/api/forms/fs-none', 'PUT', { status: 'APPROVED' }),
-      { params: Promise.resolve({ id: 'fs-none' }) }
-    )
+    const res = await formByIdPUT(makeReq('/api/forms/fs-none', 'PUT', { status: 'APPROVED' }), {
+      params: Promise.resolve({ id: 'fs-none' }),
+    })
 
     expect(res.status).toBe(404)
   })
@@ -245,10 +274,9 @@ describe('PUT /api/forms/[id]', () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findFirst).mockResolvedValue({ id: 'fs1' } as any)
 
-    const res = await formByIdPUT(
-      makeReq('/api/forms/fs1', 'PUT', { status: 'INVALID' }),
-      { params: Promise.resolve({ id: 'fs1' }) }
-    )
+    const res = await formByIdPUT(makeReq('/api/forms/fs1', 'PUT', { status: 'INVALID' }), {
+      params: Promise.resolve({ id: 'fs1' }),
+    })
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -259,7 +287,10 @@ describe('PUT /api/forms/[id]', () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findFirst).mockResolvedValue({ id: 'fs1' } as any)
     vi.mocked(prisma.formSubmission.update).mockResolvedValue({
-      id: 'fs1', status: 'APPROVED', reviewedBy: 'u1', reviewedAt: new Date(),
+      id: 'fs1',
+      status: 'APPROVED',
+      reviewedBy: 'u1',
+      reviewedAt: new Date(),
     } as any)
 
     const res = await formByIdPUT(
@@ -285,7 +316,9 @@ describe('PUT /api/forms/[id]', () => {
     mockAuth()
     vi.mocked(prisma.formSubmission.findFirst).mockResolvedValue({ id: 'fs1' } as any)
     vi.mocked(prisma.formSubmission.update).mockResolvedValue({
-      id: 'fs1', status: 'REJECTED', reviewNotes: 'Missing info',
+      id: 'fs1',
+      status: 'REJECTED',
+      reviewNotes: 'Missing info',
     } as any)
 
     const res = await formByIdPUT(

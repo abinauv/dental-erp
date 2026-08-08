@@ -52,7 +52,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (err: any) {
     console.error('Error fetching medications:', err)
-    return NextResponse.json({ error: err.message || 'Failed to fetch medications' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to fetch medications' },
+      { status: 500 }
+    )
   }
 }
 
@@ -65,7 +68,19 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { name, genericName, category, form, strength, manufacturer, defaultDosage, defaultFrequency, defaultDuration, contraindications, sideEffects } = body
+    const {
+      name,
+      genericName,
+      category,
+      form,
+      strength,
+      manufacturer,
+      defaultDosage,
+      defaultFrequency,
+      defaultDuration,
+      contraindications,
+      sideEffects,
+    } = body
 
     if (!name) {
       return NextResponse.json({ error: 'Medication name is required' }, { status: 400 })
@@ -91,6 +106,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: medication }, { status: 201 })
   } catch (err: any) {
     console.error('Error creating medication:', err)
-    return NextResponse.json({ error: err.message || 'Failed to create medication' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to create medication' },
+      { status: 500 }
+    )
   }
 }

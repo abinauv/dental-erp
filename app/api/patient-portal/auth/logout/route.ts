@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { clearPatientCookie } from "@/lib/patient-auth"
+import { NextResponse } from 'next/server'
+import { clearPatientCookie } from '@/lib/patient-auth'
 
 /**
  * POST: Clear patient portal session cookie.

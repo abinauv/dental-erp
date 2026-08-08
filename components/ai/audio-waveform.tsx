@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import type { VoiceState } from "@/hooks/use-web-voice"
+import type { VoiceState } from '@/hooks/use-web-voice'
 
 interface AudioWaveformProps {
   audioLevel: number
@@ -21,20 +21,20 @@ export function AudioWaveform({
   width = 220,
   height = 36,
 }: AudioWaveformProps) {
-  if (state !== "listening" && state !== "speaking") return null
+  if (state !== 'listening' && state !== 'speaking') return null
 
   const barWidth = Math.max(2, (width / barCount) * 0.55)
   const barGap = (width - barCount * barWidth) / (barCount - 1)
   const center = (barCount - 1) / 2
 
-  const color = state === "listening" ? "#ef4444" : "#3b82f6"
+  const color = state === 'listening' ? '#ef4444' : '#3b82f6'
 
   return (
     <div
       className="flex items-center justify-center"
       style={{ width, height }}
       role="img"
-      aria-label={state === "listening" ? "Audio input level" : "Audio output level"}
+      aria-label={state === 'listening' ? 'Audio input level' : 'Audio output level'}
     >
       {Array.from({ length: barCount }, (_, i) => {
         // Center-weighted: bars near center are taller
@@ -55,7 +55,7 @@ export function AudioWaveform({
               backgroundColor: color,
               opacity: 0.5 + level * 0.5,
               marginLeft: i === 0 ? 0 : barGap,
-              transition: "height 0.08s ease, opacity 0.08s ease",
+              transition: 'height 0.08s ease, opacity 0.08s ease',
             }}
           />
         )

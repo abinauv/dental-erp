@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { id } = await params
@@ -19,30 +19,40 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         where: { isActive: true },
         take: 20,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       },
       _count: { select: { policies: true } },
     },
   })
 
   if (!provider) {
-    return NextResponse.json({ error: "Provider not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
   }
 
   return NextResponse.json(provider)
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { id } = await params
 
   try {
     const body = await req.json()
-    const { name, code, contactPhone, contactEmail, website, claimSubmissionUrl, portalUsername, portalPassword, isActive } = body
+    const {
+      name,
+      code,
+      contactPhone,
+      contactEmail,
+      website,
+      claimSubmissionUrl,
+      portalUsername,
+      portalPassword,
+      isActive,
+    } = body
 
     const provider = await prisma.insuranceProviderMaster.updateMany({
       where: { id, hospitalId },
@@ -52,7 +62,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         ...(contactPhone !== undefined && { contactPhone: contactPhone?.trim() || null }),
         ...(contactEmail !== undefined && { contactEmail: contactEmail?.trim() || null }),
         ...(website !== undefined && { website: website?.trim() || null }),
-        ...(claimSubmissionUrl !== undefined && { claimSubmissionUrl: claimSubmissionUrl?.trim() || null }),
+        ...(claimSubmissionUrl !== undefined && {
+          claimSubmissionUrl: claimSubmissionUrl?.trim() || null,
+        }),
         ...(portalUsername !== undefined && { portalUsername: portalUsername?.trim() || null }),
         ...(portalPassword !== undefined && { portalPassword: portalPassword?.trim() || null }),
         ...(isActive !== undefined && { isActive }),
@@ -60,23 +72,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (provider.count === 0) {
-      return NextResponse.json({ error: "Provider not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    if (err?.code === "P2002") {
-      return NextResponse.json({ error: "A provider with this name already exists" }, { status: 409 })
+    if (err?.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A provider with this name already exists' },
+        { status: 409 }
+      )
     }
-    console.error("Update insurance provider error:", err)
-    return NextResponse.json({ error: "Failed to update provider" }, { status: 500 })
+    console.error('Update insurance provider error:', err)
+    return NextResponse.json({ error: 'Failed to update provider' }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { id } = await params
@@ -91,12 +106,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       where: { id, hospitalId },
       data: { isActive: false },
     })
-    return NextResponse.json({ message: "Provider deactivated (has linked policies)" })
+    return NextResponse.json({ message: 'Provider deactivated (has linked policies)' })
   }
 
   await prisma.insuranceProviderMaster.deleteMany({
     where: { id, hospitalId },
   })
 
-  return NextResponse.json({ message: "Provider deleted" })
+  return NextResponse.json({ message: 'Provider deleted' })
 }

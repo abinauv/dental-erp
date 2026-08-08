@@ -232,7 +232,14 @@ describe('GET/POST /api/treatment-plans', () => {
     const { GET } = await import('@/app/api/treatment-plans/route')
 
     const plans = [
-      { id: 'tp1', planNumber: 'PLN2026010001', title: 'Root Canal Plan', patient: {}, items: [], _count: { items: 2 } },
+      {
+        id: 'tp1',
+        planNumber: 'PLN2026010001',
+        title: 'Root Canal Plan',
+        patient: {},
+        items: [],
+        _count: { items: 2 },
+      },
     ]
     vi.mocked(prisma.treatmentPlan.findMany).mockResolvedValue(plans as any)
     vi.mocked(prisma.treatmentPlan.count).mockResolvedValue(1)
@@ -252,7 +259,9 @@ describe('GET/POST /api/treatment-plans', () => {
     vi.mocked(prisma.treatmentPlan.findMany).mockResolvedValue([])
     vi.mocked(prisma.treatmentPlan.count).mockResolvedValue(0)
 
-    const req = makeRequest('http://localhost/api/treatment-plans?search=root&status=DRAFT&patientId=p1')
+    const req = makeRequest(
+      'http://localhost/api/treatment-plans?search=root&status=DRAFT&patientId=p1'
+    )
     const res = await GET(req)
 
     expect(res.status).toBe(200)

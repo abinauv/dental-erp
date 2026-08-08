@@ -72,11 +72,11 @@ jobs:
         working-directory: .
         run: npx vitest run --reporter=verbose --coverage
         env:
-          DATABASE_URL: "mysql://test:test@localhost:3306/dental_test"
-          NEXTAUTH_SECRET: "ci-test-secret-at-least-32-chars-long"
-          NEXTAUTH_URL: "http://localhost:3000"
-          CRON_SECRET: "ci-cron-secret"
-          ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
+          NEXTAUTH_SECRET: 'ci-test-secret-at-least-32-chars-long'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          CRON_SECRET: 'ci-cron-secret'
+          ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 
       - name: Upload coverage report
         if: always()
@@ -112,6 +112,6 @@ jobs:
         working-directory: .
         run: npm run build
         env:
-          DATABASE_URL: "mysql://test:test@localhost:3306/dental_test"
-          NEXTAUTH_SECRET: "ci-test-secret-at-least-32-chars-long"
-          NEXTAUTH_URL: "http://localhost:3000"
+          DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
+          NEXTAUTH_SECRET: 'ci-test-secret-at-least-32-chars-long'
+          NEXTAUTH_URL: 'http://localhost:3000'

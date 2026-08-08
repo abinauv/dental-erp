@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const clinicAnalyst: Skill = {
-  name: "clinic-analyst",
-  displayName: "Clinic Analyst",
-  description: "Business intelligence, trend detection, and executive summaries",
-  allowedRoles: ["ADMIN", "ACCOUNTANT", "DOCTOR"],
-  modelTier: "reports",
-  systemPrompt: (hospitalName, contextStr) => `You provide business intelligence for ${hospitalName}.
+  name: 'clinic-analyst',
+  displayName: 'Clinic Analyst',
+  description: 'Business intelligence, trend detection, and executive summaries',
+  allowedRoles: ['ADMIN', 'ACCOUNTANT', 'DOCTOR'],
+  modelTier: 'reports',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You provide business intelligence for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

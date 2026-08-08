@@ -75,19 +75,31 @@ describe('GET /api/crm/segments', () => {
 
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
       {
-        id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210',
+        id: 'p1',
+        patientId: 'PAT001',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '9876543210',
         createdAt: recentDate,
         appointments: [{ scheduledDate: recentDate, status: 'COMPLETED' }],
         invoices: [{ totalAmount: 5000 }],
       },
       {
-        id: 'p2', patientId: 'PAT002', firstName: 'Jane', lastName: 'Smith', phone: '9876543211',
+        id: 'p2',
+        patientId: 'PAT002',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '9876543211',
         createdAt: oldDate,
         appointments: [{ scheduledDate: oldDate, status: 'COMPLETED' }],
         invoices: [{ totalAmount: 1000 }],
       },
       {
-        id: 'p3', patientId: 'PAT003', firstName: 'Bob', lastName: 'Brown', phone: '9876543212',
+        id: 'p3',
+        patientId: 'PAT003',
+        firstName: 'Bob',
+        lastName: 'Brown',
+        phone: '9876543212',
         createdAt: oldDate,
         appointments: [],
         invoices: [],
@@ -109,7 +121,11 @@ describe('GET /api/crm/segments', () => {
     mockAuth()
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
       {
-        id: 'p1', patientId: 'PAT001', firstName: 'New', lastName: 'Patient', phone: '9876543210',
+        id: 'p1',
+        patientId: 'PAT001',
+        firstName: 'New',
+        lastName: 'Patient',
+        phone: '9876543210',
         createdAt: new Date(), // just registered
         appointments: [],
         invoices: [],
@@ -130,7 +146,11 @@ describe('GET /api/crm/segments', () => {
 
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
       {
-        id: 'p1', patientId: 'PAT001', firstName: 'Lost', lastName: 'Patient', phone: '9876543210',
+        id: 'p1',
+        patientId: 'PAT001',
+        firstName: 'Lost',
+        lastName: 'Patient',
+        phone: '9876543210',
         createdAt: veryOld,
         appointments: [], // no visits at all
         invoices: [],
@@ -153,41 +173,65 @@ describe('GET /api/memberships/plans/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await membershipPlanGET(makeReq('/api/memberships/plans/mp1'), makeParams('mp1') as any)
+    const res = await membershipPlanGET(
+      makeReq('/api/memberships/plans/mp1'),
+      makeParams('mp1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when plan not found', async () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue(null)
-    const res = await membershipPlanGET(makeReq('/api/memberships/plans/mp1'), makeParams('mp1') as any)
+    const res = await membershipPlanGET(
+      makeReq('/api/memberships/plans/mp1'),
+      makeParams('mp1') as any
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns 404 when plan belongs to different hospital', async () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', hospitalId: 'other-hospital', name: 'Gold Plan',
-      memberships: [], _count: { memberships: 0 },
+      id: 'mp1',
+      hospitalId: 'other-hospital',
+      name: 'Gold Plan',
+      memberships: [],
+      _count: { memberships: 0 },
     } as any)
-    const res = await membershipPlanGET(makeReq('/api/memberships/plans/mp1'), makeParams('mp1') as any)
+    const res = await membershipPlanGET(
+      makeReq('/api/memberships/plans/mp1'),
+      makeParams('mp1') as any
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns plan with enrolled patients', async () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', hospitalId: 'h1', name: 'Gold Plan', price: 5000,
+      id: 'mp1',
+      hospitalId: 'h1',
+      name: 'Gold Plan',
+      price: 5000,
       memberships: [
         {
           id: 'm1',
-          patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210' },
+          patient: {
+            id: 'p1',
+            patientId: 'PAT001',
+            firstName: 'John',
+            lastName: 'Doe',
+            phone: '9876543210',
+          },
         },
       ],
       _count: { memberships: 1 },
     } as any)
 
-    const res = await membershipPlanGET(makeReq('/api/memberships/plans/mp1'), makeParams('mp1') as any)
+    const res = await membershipPlanGET(
+      makeReq('/api/memberships/plans/mp1'),
+      makeParams('mp1') as any
+    )
     const body = await res.json()
 
     expect(body.name).toBe('Gold Plan')
@@ -207,7 +251,7 @@ describe('PUT /api/memberships/plans/[id]', () => {
     mockAuthError()
     const res = await membershipPlanPUT(
       makeReq('/api/memberships/plans/mp1', 'PUT', { name: 'X' }),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -216,7 +260,7 @@ describe('PUT /api/memberships/plans/[id]', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
     const res = await membershipPlanPUT(
       makeReq('/api/memberships/plans/mp1', 'PUT', { name: 'X' }),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -226,7 +270,7 @@ describe('PUT /api/memberships/plans/[id]', () => {
     vi.mocked(prisma.membershipPlan.updateMany).mockResolvedValue({ count: 0 })
     const res = await membershipPlanPUT(
       makeReq('/api/memberships/plans/mp1', 'PUT', { name: 'Updated' }),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -235,12 +279,15 @@ describe('PUT /api/memberships/plans/[id]', () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.updateMany).mockResolvedValue({ count: 1 })
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', name: 'Updated Plan', price: 7000, isActive: true,
+      id: 'mp1',
+      name: 'Updated Plan',
+      price: 7000,
+      isActive: true,
     } as any)
 
     const res = await membershipPlanPUT(
       makeReq('/api/memberships/plans/mp1', 'PUT', { name: 'Updated Plan', price: 7000 }),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     const body = await res.json()
 
@@ -259,7 +306,7 @@ describe('DELETE /api/memberships/plans/[id]', () => {
     mockAuthError()
     const res = await membershipPlanDELETE(
       makeReq('/api/memberships/plans/mp1', 'DELETE'),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -268,7 +315,7 @@ describe('DELETE /api/memberships/plans/[id]', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'STAFF' } } })
     const res = await membershipPlanDELETE(
       makeReq('/api/memberships/plans/mp1', 'DELETE'),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -278,7 +325,7 @@ describe('DELETE /api/memberships/plans/[id]', () => {
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue(null)
     const res = await membershipPlanDELETE(
       makeReq('/api/memberships/plans/mp1', 'DELETE'),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -286,13 +333,15 @@ describe('DELETE /api/memberships/plans/[id]', () => {
   it('soft deletes plan with existing memberships', async () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', hospitalId: 'h1', _count: { memberships: 3 },
+      id: 'mp1',
+      hospitalId: 'h1',
+      _count: { memberships: 3 },
     } as any)
     vi.mocked(prisma.membershipPlan.update).mockResolvedValue({ id: 'mp1', isActive: false } as any)
 
     const res = await membershipPlanDELETE(
       makeReq('/api/memberships/plans/mp1', 'DELETE'),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     const body = await res.json()
 
@@ -303,13 +352,15 @@ describe('DELETE /api/memberships/plans/[id]', () => {
   it('hard deletes plan with no memberships', async () => {
     mockAuth()
     vi.mocked(prisma.membershipPlan.findUnique).mockResolvedValue({
-      id: 'mp1', hospitalId: 'h1', _count: { memberships: 0 },
+      id: 'mp1',
+      hospitalId: 'h1',
+      _count: { memberships: 0 },
     } as any)
     vi.mocked(prisma.membershipPlan.delete).mockResolvedValue({ id: 'mp1' } as any)
 
     const res = await membershipPlanDELETE(
       makeReq('/api/memberships/plans/mp1', 'DELETE'),
-      makeParams('mp1') as any,
+      makeParams('mp1') as any
     )
     const body = await res.json()
 
@@ -329,7 +380,7 @@ describe('PUT /api/referrals/[id]', () => {
     mockAuthError()
     const res = await referralPUT(
       makeReq('/api/referrals/r1', 'PUT', { status: 'CONVERTED' }),
-      makeParams('r1') as any,
+      makeParams('r1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -338,7 +389,7 @@ describe('PUT /api/referrals/[id]', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
     const res = await referralPUT(
       makeReq('/api/referrals/r1', 'PUT', { status: 'CONVERTED' }),
-      makeParams('r1') as any,
+      makeParams('r1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -348,7 +399,7 @@ describe('PUT /api/referrals/[id]', () => {
     vi.mocked(prisma.referral.findUnique).mockResolvedValue(null)
     const res = await referralPUT(
       makeReq('/api/referrals/r1', 'PUT', { status: 'CONVERTED' }),
-      makeParams('r1') as any,
+      makeParams('r1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -356,11 +407,12 @@ describe('PUT /api/referrals/[id]', () => {
   it('returns 404 when referral belongs to different hospital', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'ADMIN' } } })
     vi.mocked(prisma.referral.findUnique).mockResolvedValue({
-      id: 'r1', hospitalId: 'other-hospital',
+      id: 'r1',
+      hospitalId: 'other-hospital',
     } as any)
     const res = await referralPUT(
       makeReq('/api/referrals/r1', 'PUT', { status: 'CONVERTED' }),
-      makeParams('r1') as any,
+      makeParams('r1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -368,15 +420,19 @@ describe('PUT /api/referrals/[id]', () => {
   it('marks referral as CONVERTED and sets convertedAt', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'ADMIN' } } })
     vi.mocked(prisma.referral.findUnique).mockResolvedValue({
-      id: 'r1', hospitalId: 'h1', status: 'PENDING',
+      id: 'r1',
+      hospitalId: 'h1',
+      status: 'PENDING',
     } as any)
     vi.mocked(prisma.referral.update).mockResolvedValue({
-      id: 'r1', status: 'CONVERTED', convertedAt: new Date(),
+      id: 'r1',
+      status: 'CONVERTED',
+      convertedAt: new Date(),
     } as any)
 
     const res = await referralPUT(
       makeReq('/api/referrals/r1', 'PUT', { status: 'CONVERTED' }),
-      makeParams('r1') as any,
+      makeParams('r1') as any
     )
     const body = await res.json()
 
@@ -388,15 +444,19 @@ describe('PUT /api/referrals/[id]', () => {
   it('marks referral as REWARDED and sets rewardGiven', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'RECEPTIONIST' } } })
     vi.mocked(prisma.referral.findUnique).mockResolvedValue({
-      id: 'r1', hospitalId: 'h1', status: 'CONVERTED',
+      id: 'r1',
+      hospitalId: 'h1',
+      status: 'CONVERTED',
     } as any)
     vi.mocked(prisma.referral.update).mockResolvedValue({
-      id: 'r1', status: 'REWARDED', rewardGiven: true,
+      id: 'r1',
+      status: 'REWARDED',
+      rewardGiven: true,
     } as any)
 
     await referralPUT(
       makeReq('/api/referrals/r1', 'PUT', { status: 'REWARDED' }),
-      makeParams('r1') as any,
+      makeParams('r1') as any
     )
 
     const updateCall = vi.mocked(prisma.referral.update).mock.calls[0][0]

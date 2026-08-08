@@ -12,10 +12,7 @@ vi.mock('@/lib/api-helpers', () => ({
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
-import {
-  GET as labOrdersGET,
-  POST as labOrdersPOST,
-} from '@/app/api/lab-orders/route'
+import { GET as labOrdersGET, POST as labOrdersPOST } from '@/app/api/lab-orders/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
@@ -67,7 +64,13 @@ describe('GET /api/lab-orders', () => {
         orderNumber: 'LAB20260001',
         workType: 'CROWN',
         labVendor: { id: 'v1', name: 'Lab A', phone: '9876543210', avgTurnaround: 5 },
-        patient: { id: 'p1', patientId: 'PT001', firstName: 'John', lastName: 'Doe', phone: '9876543211' },
+        patient: {
+          id: 'p1',
+          patientId: 'PT001',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '9876543211',
+        },
       },
     ]
     vi.mocked(prisma.labOrder.count).mockResolvedValue(1)
@@ -173,10 +176,12 @@ describe('POST /api/lab-orders', () => {
 
   it('returns 400 when required fields are missing', async () => {
     mockAuth()
-    const res = await labOrdersPOST(makeReq('/api/lab-orders', 'POST', {
-      patientId: 'p1',
-      // missing labVendorId, workType, orderDate, estimatedCost
-    }))
+    const res = await labOrdersPOST(
+      makeReq('/api/lab-orders', 'POST', {
+        patientId: 'p1',
+        // missing labVendorId, workType, orderDate, estimatedCost
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -187,13 +192,15 @@ describe('POST /api/lab-orders', () => {
     mockAuth()
     vi.mocked(prisma.patient.findFirst).mockResolvedValue(null)
 
-    const res = await labOrdersPOST(makeReq('/api/lab-orders', 'POST', {
-      patientId: 'p1',
-      labVendorId: 'v1',
-      workType: 'CROWN',
-      orderDate: '2026-01-15',
-      estimatedCost: 5000,
-    }))
+    const res = await labOrdersPOST(
+      makeReq('/api/lab-orders', 'POST', {
+        patientId: 'p1',
+        labVendorId: 'v1',
+        workType: 'CROWN',
+        orderDate: '2026-01-15',
+        estimatedCost: 5000,
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(404)
@@ -205,13 +212,15 @@ describe('POST /api/lab-orders', () => {
     vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.labVendor.findFirst).mockResolvedValue(null)
 
-    const res = await labOrdersPOST(makeReq('/api/lab-orders', 'POST', {
-      patientId: 'p1',
-      labVendorId: 'v1',
-      workType: 'CROWN',
-      orderDate: '2026-01-15',
-      estimatedCost: 5000,
-    }))
+    const res = await labOrdersPOST(
+      makeReq('/api/lab-orders', 'POST', {
+        patientId: 'p1',
+        labVendorId: 'v1',
+        workType: 'CROWN',
+        orderDate: '2026-01-15',
+        estimatedCost: 5000,
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(404)
@@ -233,15 +242,17 @@ describe('POST /api/lab-orders', () => {
     }
     vi.mocked(prisma.labOrder.create).mockResolvedValue(mockCreated as any)
 
-    const res = await labOrdersPOST(makeReq('/api/lab-orders', 'POST', {
-      patientId: 'p1',
-      labVendorId: 'v1',
-      workType: 'CROWN',
-      orderDate: '2026-01-15',
-      estimatedCost: 5000,
-      description: 'Ceramic crown for tooth 14',
-      toothNumbers: '14',
-    }))
+    const res = await labOrdersPOST(
+      makeReq('/api/lab-orders', 'POST', {
+        patientId: 'p1',
+        labVendorId: 'v1',
+        workType: 'CROWN',
+        orderDate: '2026-01-15',
+        estimatedCost: 5000,
+        description: 'Ceramic crown for tooth 14',
+        toothNumbers: '14',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -267,13 +278,15 @@ describe('POST /api/lab-orders', () => {
     } as any)
     vi.mocked(prisma.labOrder.create).mockResolvedValue({ id: 'lo2' } as any)
 
-    await labOrdersPOST(makeReq('/api/lab-orders', 'POST', {
-      patientId: 'p1',
-      labVendorId: 'v1',
-      workType: 'BRIDGE',
-      orderDate: '2026-02-01',
-      estimatedCost: 8000,
-    }))
+    await labOrdersPOST(
+      makeReq('/api/lab-orders', 'POST', {
+        patientId: 'p1',
+        labVendorId: 'v1',
+        workType: 'BRIDGE',
+        orderDate: '2026-02-01',
+        estimatedCost: 8000,
+      })
+    )
 
     expect(prisma.labOrder.create).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -23,12 +23,18 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, className, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} className={className} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} className={className} {...props}>
+      {children}
+    </button>
   ),
 }))
 
 vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, className }: any) => <span data-testid="badge" className={className}>{children}</span>,
+  Badge: ({ children, className }: any) => (
+    <span data-testid="badge" className={className}>
+      {children}
+    </span>
+  ),
 }))
 
 vi.mock('@/components/ui/textarea', () => ({
@@ -36,9 +42,21 @@ vi.mock('@/components/ui/textarea', () => ({
 }))
 
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => <div data-testid="card" className={className}>{children}</div>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
-  CardHeader: ({ children, className }: any) => <div data-testid="card-header" className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
+  CardHeader: ({ children, className }: any) => (
+    <div data-testid="card-header" className={className}>
+      {children}
+    </div>
+  ),
   CardTitle: ({ children, className }: any) => <h3 className={className}>{children}</h3>,
 }))
 
@@ -116,7 +134,9 @@ describe('VideoRoom', () => {
     })
 
     it('renders video iframe for jitsi provider', () => {
-      render(<VideoRoom {...defaultProps} provider="jitsi" roomUrl="https://meet.jit.si/room-123" />)
+      render(
+        <VideoRoom {...defaultProps} provider="jitsi" roomUrl="https://meet.jit.si/room-123" />
+      )
       const iframe = document.querySelector('iframe')
       expect(iframe.src).toContain('meet.jit.si/room-123')
     })
@@ -175,7 +195,9 @@ describe('VideoRoom', () => {
     it('shows consultation notes textarea', () => {
       render(<VideoRoom {...defaultProps} />)
       expect(screen.getByText('Consultation Notes')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('Type notes during the consultation...')).toBeInTheDocument()
+      expect(
+        screen.getByPlaceholderText('Type notes during the consultation...')
+      ).toBeInTheDocument()
     })
 
     it('does not show sidebar for non-doctors', () => {

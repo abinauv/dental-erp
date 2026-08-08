@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import prisma from '@/lib/prisma';
-import { format } from 'date-fns';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
+import { format } from 'date-fns'
 
 // GET /api/settings/backup - Export database data
 export async function GET(req: NextRequest) {
-  const { error, hospitalId, user } = await requireAuthAndRole(['ADMIN']);
+  const { error, hospitalId, user } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const type = searchParams.get('type') || 'full';
+    const searchParams = req.nextUrl.searchParams
+    const type = searchParams.get('type') || 'full'
 
-    let data: any = {};
+    let data: any = {}
 
     if (type === 'full' || type === 'patients') {
       data.patients = await prisma.patient.findMany({
@@ -22,25 +22,25 @@ export async function GET(req: NextRequest) {
         include: {
           medicalHistory: true,
         },
-      });
+      })
     }
 
     if (type === 'full' || type === 'appointments') {
       data.appointments = await prisma.appointment.findMany({
         where: { hospitalId },
-      });
+      })
     }
 
     if (type === 'full' || type === 'treatments') {
       data.treatments = await prisma.treatment.findMany({
         where: { hospitalId },
-      });
+      })
       data.treatmentPlans = await prisma.treatmentPlan.findMany({
         where: { hospitalId },
         include: {
           items: true,
         },
-      });
+      })
     }
 
     if (type === 'full' || type === 'billing') {
@@ -49,25 +49,25 @@ export async function GET(req: NextRequest) {
         include: {
           items: true,
         },
-      });
+      })
       data.payments = await prisma.payment.findMany({
         where: { hospitalId },
-      });
+      })
     }
 
     if (type === 'full' || type === 'inventory') {
       data.inventoryItems = await prisma.inventoryItem.findMany({
         where: { hospitalId },
-      });
+      })
       data.stockTransactions = await prisma.stockTransaction.findMany({
         where: { hospitalId },
-      });
+      })
     }
 
     if (type === 'full' || type === 'settings') {
       data.settings = await prisma.setting.findMany({
         where: { hospitalId },
-      });
+      })
       data.clinicInfo = await prisma.hospital.findUnique({
         where: { id: hospitalId },
         select: {
@@ -91,10 +91,10 @@ export async function GET(req: NextRequest) {
           bankIfsc: true,
           upiId: true,
         },
-      });
+      })
       data.holidays = await prisma.holiday.findMany({
         where: { hospitalId },
-      });
+      })
     }
 
     // Create backup metadata
@@ -104,31 +104,28 @@ export async function GET(req: NextRequest) {
       exportedBy: user?.email,
       type,
       data,
-    };
+    }
 
     // Return as JSON download
-    const filename = `dental-erp-backup-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.json`;
+    const filename = `dental-erp-backup-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.json`
 
     return new NextResponse(JSON.stringify(backup, null, 2), {
       headers: {
         'Content-Type': 'application/json',
         'Content-Disposition': `attachment; filename="${filename}"`,
       },
-    });
+    })
   } catch (error: any) {
-    console.error('Backup export error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to export backup' },
-      { status: 500 }
-    );
+    console.error('Backup export error:', error)
+    return NextResponse.json({ error: error.message || 'Failed to export backup' }, { status: 500 })
   }
 }
 
 // POST /api/settings/backup - Get backup statistics
 export async function POST(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole(['ADMIN']);
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -142,18 +139,18 @@ export async function POST(req: NextRequest) {
       inventoryItems: await prisma.inventoryItem.count({ where: { hospitalId } }),
       staff: await prisma.staff.count({ where: { hospitalId } }),
       labOrders: await prisma.labOrder.count({ where: { hospitalId } }),
-    };
+    }
 
     return NextResponse.json({
       success: true,
       data: stats,
       timestamp: new Date().toISOString(),
-    });
+    })
   } catch (error: any) {
-    console.error('Backup stats error:', error);
+    console.error('Backup stats error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to get backup statistics' },
       { status: 500 }
-    );
+    )
   }
 }

@@ -18,8 +18,8 @@ export function toastSuccess(message: string, description?: string) {
 export function toastError(message: string, description?: string) {
   return {
     title: message,
-    description: description || "Please try again or contact support if the issue persists.",
-    variant: "destructive" as const,
+    description: description || 'Please try again or contact support if the issue persists.',
+    variant: 'destructive' as const,
   }
 }
 
@@ -41,7 +41,7 @@ export function toastInfo(message: string, description?: string) {
  *   })
  */
 export async function withToast<T>(
-  toast: (opts: { title: string; description?: string; variant?: "destructive" }) => void,
+  toast: (opts: { title: string; description?: string; variant?: 'destructive' }) => void,
   fn: () => Promise<T>,
   messages: {
     success: string

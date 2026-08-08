@@ -83,9 +83,9 @@ describe('formatCurrency', () => {
   })
 
   it('respects fraction digit overrides', () => {
-    expect(
-      formatCurrency(500, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    ).toContain('500.00')
+    expect(formatCurrency(500, { minimumFractionDigits: 2, maximumFractionDigits: 2 })).toContain(
+      '500.00'
+    )
   })
 
   it('formats negative amounts', () => {

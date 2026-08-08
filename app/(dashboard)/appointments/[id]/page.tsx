@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Separator } from "@/components/ui/separator"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
 import {
   ArrowLeft,
   Calendar,
@@ -26,7 +26,7 @@ import {
   FileText,
   History,
   Video,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -34,9 +34,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   appointmentStatusConfig,
   appointmentTypeConfig,
@@ -45,7 +45,7 @@ import {
   formatDate,
   getPatientName,
   getDoctorName,
-} from "@/lib/appointment-utils"
+} from '@/lib/appointment-utils'
 
 interface Appointment {
   id: string
@@ -111,11 +111,7 @@ interface Appointment {
   }>
 }
 
-export default function AppointmentDetailsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function AppointmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const [appointment, setAppointment] = useState<Appointment | null>(null)
@@ -124,17 +120,17 @@ export default function AppointmentDetailsPage({
 
   // Cancel dialog
   const [showCancelDialog, setShowCancelDialog] = useState(false)
-  const [cancellationReason, setCancellationReason] = useState("")
+  const [cancellationReason, setCancellationReason] = useState('')
 
   const fetchAppointment = async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/appointments/${id}`)
-      if (!response.ok) throw new Error("Failed to fetch appointment")
+      if (!response.ok) throw new Error('Failed to fetch appointment')
       const data = await response.json()
       setAppointment(data)
     } catch (error) {
-      console.error("Error fetching appointment:", error)
+      console.error('Error fetching appointment:', error)
     } finally {
       setLoading(false)
     }
@@ -148,12 +144,12 @@ export default function AppointmentDetailsPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/appointments/${id}/check-in`, {
-        method: "POST",
+        method: 'POST',
       })
-      if (!response.ok) throw new Error("Failed to check in")
+      if (!response.ok) throw new Error('Failed to check in')
       fetchAppointment()
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     } finally {
       setActionLoading(false)
     }
@@ -163,12 +159,12 @@ export default function AppointmentDetailsPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/appointments/${id}/check-out`, {
-        method: "POST",
+        method: 'POST',
       })
-      if (!response.ok) throw new Error("Failed to check out")
+      if (!response.ok) throw new Error('Failed to check out')
       fetchAppointment()
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     } finally {
       setActionLoading(false)
     }
@@ -178,21 +174,21 @@ export default function AppointmentDetailsPage({
     try {
       setActionLoading(true)
       const body: any = { status }
-      if (status === "CANCELLED" && cancellationReason) {
+      if (status === 'CANCELLED' && cancellationReason) {
         body.cancellationReason = cancellationReason
       }
 
       const response = await fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (!response.ok) throw new Error("Failed to update status")
+      if (!response.ok) throw new Error('Failed to update status')
       fetchAppointment()
       setShowCancelDialog(false)
-      setCancellationReason("")
+      setCancellationReason('')
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     } finally {
       setActionLoading(false)
     }
@@ -201,8 +197,8 @@ export default function AppointmentDetailsPage({
   const getStatusBadge = (status: string) => {
     const config = appointmentStatusConfig[status] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
     return (
       <Badge className={`${config.bgColor} ${config.color} border-0 text-base px-3 py-1`}>
@@ -214,8 +210,8 @@ export default function AppointmentDetailsPage({
   const getTypeBadge = (type: string) => {
     const config = appointmentTypeConfig[type] || {
       label: type,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted/50",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted/50',
     }
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0`}>
@@ -227,8 +223,8 @@ export default function AppointmentDetailsPage({
   const getPriorityBadge = (priority: string) => {
     const config = priorityConfig[priority] || {
       label: priority,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0`}>
@@ -287,9 +283,7 @@ export default function AppointmentDetailsPage({
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {appointment.appointmentNo}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">{appointment.appointmentNo}</h1>
               {getStatusBadge(appointment.status)}
               {appointment.isVirtual && (
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
@@ -298,37 +292,36 @@ export default function AppointmentDetailsPage({
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground">
-              Created on {formatDate(appointment.createdAt)}
-            </p>
+            <p className="text-muted-foreground">Created on {formatDate(appointment.createdAt)}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          {appointment.isVirtual && appointment.videoConsultationId &&
-            ["SCHEDULED", "CONFIRMED", "IN_PROGRESS"].includes(appointment.status) && (
-            <Link href={`/video/${appointment.videoConsultationId}`}>
-              <Button className="bg-green-600 hover:bg-green-700">
-                <Video className="h-4 w-4 mr-2" />
-                Join Video Call
-              </Button>
-            </Link>
-          )}
-          {["SCHEDULED", "CONFIRMED"].includes(appointment.status) && (
+          {appointment.isVirtual &&
+            appointment.videoConsultationId &&
+            ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'].includes(appointment.status) && (
+              <Link href={`/video/${appointment.videoConsultationId}`}>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  <Video className="h-4 w-4 mr-2" />
+                  Join Video Call
+                </Button>
+              </Link>
+            )}
+          {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
             <Button onClick={handleCheckIn} disabled={actionLoading}>
               <LogIn className="h-4 w-4 mr-2" />
               Check In
             </Button>
           )}
-          {["CHECKED_IN", "IN_PROGRESS"].includes(appointment.status) && (
+          {['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
             <Button onClick={handleCheckOut} disabled={actionLoading}>
               <LogOut className="h-4 w-4 mr-2" />
               Check Out
             </Button>
           )}
-          {appointment.status === "SCHEDULED" && (
+          {appointment.status === 'SCHEDULED' && (
             <Button
               variant="outline"
-              onClick={() => handleStatusChange("CONFIRMED")}
+              onClick={() => handleStatusChange('CONFIRMED')}
               disabled={actionLoading}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
@@ -341,7 +334,7 @@ export default function AppointmentDetailsPage({
               Edit
             </Button>
           </Link>
-          {!["COMPLETED", "CANCELLED", "NO_SHOW"].includes(appointment.status) && (
+          {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(appointment.status) && (
             <Button
               variant="destructive"
               onClick={() => setShowCancelDialog(true)}
@@ -380,7 +373,7 @@ export default function AppointmentDetailsPage({
               <div>
                 <p className="text-sm text-muted-foreground">Chair</p>
                 <p className="font-medium">
-                  {appointment.chairNumber ? `Chair ${appointment.chairNumber}` : "Not assigned"}
+                  {appointment.chairNumber ? `Chair ${appointment.chairNumber}` : 'Not assigned'}
                 </p>
               </div>
               <div>
@@ -440,7 +433,7 @@ export default function AppointmentDetailsPage({
               </div>
             )}
 
-            {appointment.status === "CANCELLED" && (
+            {appointment.status === 'CANCELLED' && (
               <>
                 <Separator />
                 <div className="rounded-lg bg-red-50 p-4">
@@ -472,9 +465,7 @@ export default function AppointmentDetailsPage({
                 <User className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold">
-                  {getPatientName(appointment.patient)}
-                </h3>
+                <h3 className="text-xl font-semibold">{getPatientName(appointment.patient)}</h3>
                 <p className="text-muted-foreground">{appointment.patient.patientId}</p>
               </div>
             </div>
@@ -496,7 +487,7 @@ export default function AppointmentDetailsPage({
                   <span>
                     {[appointment.patient.address, appointment.patient.city]
                       .filter(Boolean)
-                      .join(", ")}
+                      .join(', ')}
                   </span>
                 </div>
               )}
@@ -566,9 +557,7 @@ export default function AppointmentDetailsPage({
                   </p>
                 )}
                 {appointment.doctor.phone && (
-                  <p className="text-sm text-muted-foreground">
-                    {appointment.doctor.phone}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{appointment.doctor.phone}</p>
                 )}
               </div>
             </div>
@@ -595,9 +584,7 @@ export default function AppointmentDetailsPage({
                   >
                     <div>
                       <p className="font-medium">{treatment.procedure.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {treatment.treatmentNo}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{treatment.treatmentNo}</p>
                     </div>
                     <Badge>{treatment.status}</Badge>
                   </div>
@@ -633,7 +620,7 @@ export default function AppointmentDetailsPage({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => handleStatusChange("CANCELLED")}
+              onClick={() => handleStatusChange('CANCELLED')}
               disabled={actionLoading}
             >
               Cancel Appointment

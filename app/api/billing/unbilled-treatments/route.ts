@@ -1,23 +1,20 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get unbilled treatments for a patient
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const patientId = searchParams.get("patientId")
+    const patientId = searchParams.get('patientId')
 
     if (!patientId) {
-      return NextResponse.json(
-        { error: "Patient ID is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 })
     }
 
     // Check if patient exists
@@ -28,14 +25,11 @@ export async function GET(request: NextRequest) {
         patientId: true,
         firstName: true,
         lastName: true,
-      }
+      },
     })
 
     if (!patient) {
-      return NextResponse.json(
-        { error: "Patient not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Find treatments that are not linked to any invoice item
@@ -43,10 +37,10 @@ export async function GET(request: NextRequest) {
       where: {
         hospitalId,
         patientId,
-        status: { in: ["COMPLETED", "IN_PROGRESS"] },
+        status: { in: ['COMPLETED', 'IN_PROGRESS'] },
         invoiceItems: {
-          none: {}
-        }
+          none: {},
+        },
       },
       include: {
         procedure: {
@@ -56,23 +50,23 @@ export async function GET(request: NextRequest) {
             name: true,
             category: true,
             basePrice: true,
-          }
+          },
         },
         doctor: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     })
 
     // Format treatments for invoice creation
-    const unbilledItems = treatments.map(treatment => ({
+    const unbilledItems = treatments.map((treatment) => ({
       treatmentId: treatment.id,
       treatmentNo: treatment.treatmentNo,
       description: treatment.procedure
@@ -90,10 +84,7 @@ export async function GET(request: NextRequest) {
     }))
 
     // Calculate total unbilled amount
-    const totalUnbilled = unbilledItems.reduce(
-      (sum, item) => sum + item.unitPrice,
-      0
-    )
+    const totalUnbilled = unbilledItems.reduce((sum, item) => sum + item.unitPrice, 0)
 
     return NextResponse.json({
       patient,
@@ -101,13 +92,10 @@ export async function GET(request: NextRequest) {
       summary: {
         totalTreatments: unbilledItems.length,
         totalUnbilled,
-      }
+      },
     })
   } catch (error) {
-    console.error("Error fetching unbilled treatments:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch unbilled treatments" },
-      { status: 500 }
-    )
+    console.error('Error fetching unbilled treatments:', error)
+    return NextResponse.json({ error: 'Failed to fetch unbilled treatments' }, { status: 500 })
   }
 }

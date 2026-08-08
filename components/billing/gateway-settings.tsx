@@ -1,35 +1,21 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
-import {
-  CreditCard,
-  Save,
-  Loader2,
-  Copy,
-  Check,
-  Shield,
-  ExternalLink,
-} from "lucide-react"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
+import { CreditCard, Save, Loader2, Copy, Check, Shield, ExternalLink } from 'lucide-react'
 
 interface GatewayConfig {
   provider: string
@@ -52,25 +38,25 @@ export function GatewaySettings() {
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const [provider, setProvider] = useState("")
+  const [provider, setProvider] = useState('')
   const [isEnabled, setIsEnabled] = useState(false)
   const [isLiveMode, setIsLiveMode] = useState(false)
 
   // Razorpay
-  const [razorpayKeyId, setRazorpayKeyId] = useState("")
-  const [razorpayKeySecret, setRazorpayKeySecret] = useState("")
+  const [razorpayKeyId, setRazorpayKeyId] = useState('')
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState('')
 
   // PhonePe
-  const [phonepeMerchantId, setPhonepeMerchantId] = useState("")
-  const [phonepeSaltKey, setPhonepeSaltKey] = useState("")
-  const [phonepeSaltIndex, setPhonepeSaltIndex] = useState("1")
+  const [phonepeMerchantId, setPhonepeMerchantId] = useState('')
+  const [phonepeSaltKey, setPhonepeSaltKey] = useState('')
+  const [phonepeSaltIndex, setPhonepeSaltIndex] = useState('1')
 
   // Paytm
-  const [paytmMid, setPaytmMid] = useState("")
-  const [paytmMerchantKey, setPaytmMerchantKey] = useState("")
-  const [paytmWebsite, setPaytmWebsite] = useState("WEBSTAGING")
+  const [paytmMid, setPaytmMid] = useState('')
+  const [paytmMerchantKey, setPaytmMerchantKey] = useState('')
+  const [paytmWebsite, setPaytmWebsite] = useState('WEBSTAGING')
 
-  const [webhookUrl, setWebhookUrl] = useState("")
+  const [webhookUrl, setWebhookUrl] = useState('')
 
   useEffect(() => {
     fetchConfig()
@@ -79,24 +65,24 @@ export function GatewaySettings() {
   const fetchConfig = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/settings/billing/gateway")
+      const res = await fetch('/api/settings/billing/gateway')
       if (!res.ok) return
       const data = await res.json()
 
       if (data.config) {
         const c = data.config as GatewayConfig
-        setProvider(c.provider || "")
+        setProvider(c.provider || '')
         setIsEnabled(c.isEnabled)
         setIsLiveMode(c.isLiveMode)
-        setRazorpayKeyId(c.razorpayKeyId || "")
-        setRazorpayKeySecret(c.razorpayKeySecret || "")
-        setPhonepeMerchantId(c.phonepeMerchantId || "")
-        setPhonepeSaltKey(c.phonepeSaltKey || "")
-        setPhonepeSaltIndex(c.phonepeSaltIndex || "1")
-        setPaytmMid(c.paytmMid || "")
-        setPaytmMerchantKey(c.paytmMerchantKey || "")
-        setPaytmWebsite(c.paytmWebsite || "WEBSTAGING")
-        setWebhookUrl(c.webhookUrl || "")
+        setRazorpayKeyId(c.razorpayKeyId || '')
+        setRazorpayKeySecret(c.razorpayKeySecret || '')
+        setPhonepeMerchantId(c.phonepeMerchantId || '')
+        setPhonepeSaltKey(c.phonepeSaltKey || '')
+        setPhonepeSaltIndex(c.phonepeSaltIndex || '1')
+        setPaytmMid(c.paytmMid || '')
+        setPaytmMerchantKey(c.paytmMerchantKey || '')
+        setPaytmWebsite(c.paytmWebsite || 'WEBSTAGING')
+        setWebhookUrl(c.webhookUrl || '')
       }
     } catch {
       // silent
@@ -108,18 +94,18 @@ export function GatewaySettings() {
   const handleSave = async () => {
     if (!provider) {
       toast({
-        title: "Error",
-        description: "Please select a payment provider",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please select a payment provider',
+        variant: 'destructive',
       })
       return
     }
 
     setSaving(true)
     try {
-      const res = await fetch("/api/settings/billing/gateway", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/settings/billing/gateway', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           provider,
           isEnabled,
@@ -137,24 +123,24 @@ export function GatewaySettings() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Failed to save")
+        throw new Error(data.error || 'Failed to save')
       }
 
       const data = await res.json()
-      setWebhookUrl(data.config?.webhookUrl || "")
+      setWebhookUrl(data.config?.webhookUrl || '')
 
       toast({
-        title: "Success",
-        description: "Payment gateway settings saved",
+        title: 'Success',
+        description: 'Payment gateway settings saved',
       })
 
       // Refresh to get masked secrets
       fetchConfig()
     } catch (err: unknown) {
       toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to save settings",
-        variant: "destructive",
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to save settings',
+        variant: 'destructive',
       })
     } finally {
       setSaving(false)
@@ -189,8 +175,8 @@ export function GatewaySettings() {
               Payment Gateway
             </CardTitle>
             <CardDescription>
-              Connect your own Razorpay, PhonePe, or Paytm merchant account to
-              accept online payments
+              Connect your own Razorpay, PhonePe, or Paytm merchant account to accept online
+              payments
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -204,9 +190,7 @@ export function GatewaySettings() {
                 Live
               </Badge>
             )}
-            {!isLiveMode && provider && (
-              <Badge variant="secondary">Test Mode</Badge>
-            )}
+            {!isLiveMode && provider && <Badge variant="secondary">Test Mode</Badge>}
           </div>
         </div>
       </CardHeader>
@@ -232,11 +216,7 @@ export function GatewaySettings() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="gateway-enabled">Enable Online Payments</Label>
-              <Switch
-                id="gateway-enabled"
-                checked={isEnabled}
-                onCheckedChange={setIsEnabled}
-              />
+              <Switch id="gateway-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="gateway-live">
@@ -245,21 +225,17 @@ export function GatewaySettings() {
                   (uncheck for test/sandbox)
                 </span>
               </Label>
-              <Switch
-                id="gateway-live"
-                checked={isLiveMode}
-                onCheckedChange={setIsLiveMode}
-              />
+              <Switch id="gateway-live" checked={isLiveMode} onCheckedChange={setIsLiveMode} />
             </div>
           </div>
         </div>
 
         {/* Razorpay Credentials */}
-        {provider === "RAZORPAY" && (
+        {provider === 'RAZORPAY' && (
           <div className="space-y-4 border-t pt-4">
             <h4 className="font-medium text-sm">Razorpay Credentials</h4>
             <p className="text-xs text-muted-foreground">
-              Get these from your{" "}
+              Get these from your{' '}
               <a
                 href="https://dashboard.razorpay.com/app/keys"
                 target="_blank"
@@ -300,11 +276,11 @@ export function GatewaySettings() {
         )}
 
         {/* PhonePe Credentials */}
-        {provider === "PHONEPE" && (
+        {provider === 'PHONEPE' && (
           <div className="space-y-4 border-t pt-4">
             <h4 className="font-medium text-sm">PhonePe PG Credentials</h4>
             <p className="text-xs text-muted-foreground">
-              Get these from your{" "}
+              Get these from your{' '}
               <a
                 href="https://business.phonepe.com"
                 target="_blank"
@@ -351,11 +327,11 @@ export function GatewaySettings() {
         )}
 
         {/* Paytm Credentials */}
-        {provider === "PAYTM" && (
+        {provider === 'PAYTM' && (
           <div className="space-y-4 border-t pt-4">
             <h4 className="font-medium text-sm">Paytm PG Credentials</h4>
             <p className="text-xs text-muted-foreground">
-              Get these from your{" "}
+              Get these from your{' '}
               <a
                 href="https://business.paytm.com"
                 target="_blank"
@@ -409,14 +385,11 @@ export function GatewaySettings() {
           <div className="border-t pt-4">
             <Label>Webhook URL</Label>
             <p className="text-xs text-muted-foreground mb-2">
-              Configure this URL in your {provider.charAt(0) + provider.slice(1).toLowerCase()} dashboard to receive payment notifications
+              Configure this URL in your {provider.charAt(0) + provider.slice(1).toLowerCase()}{' '}
+              dashboard to receive payment notifications
             </p>
             <div className="flex items-center gap-2">
-              <Input
-                value={webhookUrl}
-                readOnly
-                className="font-mono text-xs bg-muted"
-              />
+              <Input value={webhookUrl} readOnly className="font-mono text-xs bg-muted" />
               <Button variant="outline" size="icon" onClick={copyWebhookUrl}>
                 {copied ? (
                   <Check className="h-4 w-4 text-green-500" />
@@ -436,7 +409,7 @@ export function GatewaySettings() {
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            {saving ? "Saving..." : "Save Gateway Settings"}
+            {saving ? 'Saving...' : 'Save Gateway Settings'}
           </Button>
         </div>
       </CardContent>

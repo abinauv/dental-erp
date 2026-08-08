@@ -14,7 +14,9 @@ const subscriptionModule = await import('@/app/api/settings/subscription/route')
 function makeSecurityRequest(method: string, body?: any) {
   return new Request('http://localhost/api/settings/security', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 

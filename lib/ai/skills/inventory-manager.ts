@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const inventoryManager: Skill = {
-  name: "inventory-manager",
-  displayName: "Inventory Manager",
-  description: "Predictive stock monitoring and purchase-order generation",
-  allowedRoles: ["ADMIN"],
-  modelTier: "insights",
-  systemPrompt: (hospitalName, contextStr) => `You manage dental supplies inventory for ${hospitalName}.
+  name: 'inventory-manager',
+  displayName: 'Inventory Manager',
+  description: 'Predictive stock monitoring and purchase-order generation',
+  allowedRoles: ['ADMIN'],
+  modelTier: 'insights',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You manage dental supplies inventory for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

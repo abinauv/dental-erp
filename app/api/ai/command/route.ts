@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
-import { buildContext, serializeContext } from "@/lib/ai/context-builder"
-import { complete, extractJSON } from "@/lib/ai/openrouter"
-import { getModelByTier } from "@/lib/ai/models"
-import { executeIntent } from "@/lib/ai/command-executors"
+import { NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { buildContext, serializeContext } from '@/lib/ai/context-builder'
+import { complete, extractJSON } from '@/lib/ai/openrouter'
+import { getModelByTier } from '@/lib/ai/models'
+import { executeIntent } from '@/lib/ai/command-executors'
 
 // ---------------------------------------------------------------------------
 // Intent definitions — the AI outputs one of these intents
@@ -97,14 +97,14 @@ async function execGeneral(command: string, contextStr: string, hospitalName: st
   const { content } = await complete(
     [
       {
-        role: "system",
+        role: 'system',
         content: `You are the AI assistant for ${hospitalName}. Answer the user's question helpfully and concisely.\n\nCONTEXT:\n${contextStr}`,
       },
-      { role: "user", content: command },
+      { role: 'user', content: command },
     ],
-    getModelByTier("default")
+    getModelByTier('default')
   )
-  return { success: true, message: content, type: "general" }
+  return { success: true, message: content, type: 'general' }
 }
 
 // ---------------------------------------------------------------------------
@@ -112,18 +112,19 @@ async function execGeneral(command: string, contextStr: string, hospitalName: st
 // ---------------------------------------------------------------------------
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole()
-  if (error || !user || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (error || !user || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: { command: string; patientId?: string; page?: string }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   const { command, patientId, page } = body
   if (!command?.trim()) {
-    return NextResponse.json({ error: "command is required" }, { status: 400 })
+    return NextResponse.json({ error: 'command is required' }, { status: 400 })
   }
 
   const hospital = await prisma.hospital.findUnique({
@@ -134,44 +135,49 @@ export async function POST(req: Request) {
   const context = await buildContext({
     hospitalId,
     userId: user.id,
-    userName: user.name || "User",
+    userName: user.name || 'User',
     userRole: user.role,
-    hospitalName: hospital?.name || "Hospital",
-    hospitalPlan: hospital?.plan || "FREE",
+    hospitalName: hospital?.name || 'Hospital',
+    hospitalPlan: hospital?.plan || 'FREE',
     patientId,
     currentPage: page,
   })
   const contextStr = serializeContext(context)
-  const today = new Date().toISOString().split("T")[0]
+  const today = new Date().toISOString().split('T')[0]
 
   // Step 1 — parse intent
   const startTime = Date.now()
-  let parsed: { intent: string; params: Record<string, string>; summary?: string; requiresApproval?: boolean }
+  let parsed: {
+    intent: string
+    params: Record<string, string>
+    summary?: string
+    requiresApproval?: boolean
+  }
   try {
     const { content } = await complete(
       [
-        { role: "system", content: commandParserPrompt(contextStr, today) },
-        { role: "user", content: command },
+        { role: 'system', content: commandParserPrompt(contextStr, today) },
+        { role: 'user', content: command },
       ],
-      getModelByTier("command")
+      getModelByTier('command')
     )
     parsed = JSON.parse(extractJSON(content))
   } catch {
     // If parsing fails, fall back to general
-    parsed = { intent: "general", params: {} }
+    parsed = { intent: 'general', params: {} }
   }
 
   // Step 2 — execute
   let result: any
   try {
-    if (parsed.intent === "general") {
-      result = await execGeneral(command, contextStr, hospital?.name || "Hospital")
+    if (parsed.intent === 'general') {
+      result = await execGeneral(command, contextStr, hospital?.name || 'Hospital')
     } else {
       result = await executeIntent(parsed.intent, parsed.params, hospitalId)
-      if (!result) result = await execGeneral(command, contextStr, hospital?.name || "Hospital")
+      if (!result) result = await execGeneral(command, contextStr, hospital?.name || 'Hospital')
     }
   } catch (err) {
-    result = { success: false, message: err instanceof Error ? err.message : "Execution error" }
+    result = { success: false, message: err instanceof Error ? err.message : 'Execution error' }
   }
 
   const duration = Date.now() - startTime
@@ -184,7 +190,7 @@ export async function POST(req: Request) {
       skill: parsed.intent,
       input: { command, patientId, page } as any,
       output: result as any,
-      status: result?.success ? "COMPLETED" : "FAILED",
+      status: result?.success ? 'COMPLETED' : 'FAILED',
       duration,
     },
   })

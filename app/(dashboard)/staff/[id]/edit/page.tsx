@@ -1,33 +1,29 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Switch } from "@/components/ui/switch"
-import { ArrowLeft, Loader2, Eye, EyeOff, Clock } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
+import { ArrowLeft, Loader2, Eye, EyeOff, Clock } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
-const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-export default function EditStaffPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const { toast } = useToast()
@@ -37,49 +33,51 @@ export default function EditStaffPage({
 
   const [formData, setFormData] = useState({
     // Basic Info
-    firstName: "",
-    lastName: "",
-    phone: "",
-    alternatePhone: "",
-    role: "",
-    newPassword: "",
+    firstName: '',
+    lastName: '',
+    phone: '',
+    alternatePhone: '',
+    role: '',
+    newPassword: '',
 
     // Personal Details
-    dateOfBirth: "",
-    gender: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
+    dateOfBirth: '',
+    gender: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
 
     // Documents
-    aadharNumber: "",
-    panNumber: "",
+    aadharNumber: '',
+    panNumber: '',
 
     // Professional
-    qualification: "",
-    specialization: "",
-    licenseNumber: "",
+    qualification: '',
+    specialization: '',
+    licenseNumber: '',
 
     // Financial
-    salary: "",
-    bankAccountNo: "",
-    bankIfsc: "",
+    salary: '',
+    bankAccountNo: '',
+    bankIfsc: '',
 
     // Emergency
-    emergencyContact: "",
-    emergencyPhone: "",
+    emergencyContact: '',
+    emergencyPhone: '',
 
     // Status
     isActive: true,
   })
 
-  const [shifts, setShifts] = useState<Array<{
-    dayOfWeek: number
-    startTime: string
-    endTime: string
-    isActive: boolean
-  }>>([])
+  const [shifts, setShifts] = useState<
+    Array<{
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+      isActive: boolean
+    }>
+  >([])
 
   useEffect(() => {
     fetchStaff()
@@ -92,61 +90,63 @@ export default function EditStaffPage({
       if (!response.ok) {
         if (response.status === 404) {
           toast({
-            variant: "destructive",
-            title: "Not Found",
-            description: "Staff member not found",
+            variant: 'destructive',
+            title: 'Not Found',
+            description: 'Staff member not found',
           })
-          router.push("/staff")
+          router.push('/staff')
           return
         }
-        throw new Error("Failed to fetch staff")
+        throw new Error('Failed to fetch staff')
       }
 
       const data = await response.json()
 
       setFormData({
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        phone: data.phone || "",
-        alternatePhone: data.alternatePhone || "",
-        role: data.user.role || "",
-        newPassword: "",
-        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split("T")[0] : "",
-        gender: data.gender || "",
-        address: data.address || "",
-        city: data.city || "",
-        state: data.state || "",
-        pincode: data.pincode || "",
-        aadharNumber: data.aadharNumber || "",
-        panNumber: data.panNumber || "",
-        qualification: data.qualification || "",
-        specialization: data.specialization || "",
-        licenseNumber: data.licenseNumber || "",
-        salary: data.salary ? data.salary.toString() : "",
-        bankAccountNo: data.bankAccountNo || "",
-        bankIfsc: data.bankIfsc || "",
-        emergencyContact: data.emergencyContact || "",
-        emergencyPhone: data.emergencyPhone || "",
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        phone: data.phone || '',
+        alternatePhone: data.alternatePhone || '',
+        role: data.user.role || '',
+        newPassword: '',
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '',
+        gender: data.gender || '',
+        address: data.address || '',
+        city: data.city || '',
+        state: data.state || '',
+        pincode: data.pincode || '',
+        aadharNumber: data.aadharNumber || '',
+        panNumber: data.panNumber || '',
+        qualification: data.qualification || '',
+        specialization: data.specialization || '',
+        licenseNumber: data.licenseNumber || '',
+        salary: data.salary ? data.salary.toString() : '',
+        bankAccountNo: data.bankAccountNo || '',
+        bankIfsc: data.bankIfsc || '',
+        emergencyContact: data.emergencyContact || '',
+        emergencyPhone: data.emergencyPhone || '',
         isActive: data.isActive,
       })
 
       // Initialize shifts for all 7 days
       const initialShifts = dayNames.map((_, index) => {
         const existingShift = data.shifts?.find((s: any) => s.dayOfWeek === index)
-        return existingShift || {
-          dayOfWeek: index,
-          startTime: "09:00",
-          endTime: "18:00",
-          isActive: false,
-        }
+        return (
+          existingShift || {
+            dayOfWeek: index,
+            startTime: '09:00',
+            endTime: '18:00',
+            isActive: false,
+          }
+        )
       })
       setShifts(initialShifts)
     } catch (error) {
-      console.error("Error fetching staff:", error)
+      console.error('Error fetching staff:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch staff details",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch staff details',
       })
     } finally {
       setLoading(false)
@@ -159,9 +159,7 @@ export default function EditStaffPage({
 
   const handleShiftChange = (dayOfWeek: number, field: string, value: string | boolean) => {
     setShifts((prev) =>
-      prev.map((shift) =>
-        shift.dayOfWeek === dayOfWeek ? { ...shift, [field]: value } : shift
-      )
+      prev.map((shift) => (shift.dayOfWeek === dayOfWeek ? { ...shift, [field]: value } : shift))
     )
   }
 
@@ -170,9 +168,9 @@ export default function EditStaffPage({
 
     if (!formData.firstName || !formData.lastName || !formData.phone) {
       toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
       })
       return
     }
@@ -182,44 +180,44 @@ export default function EditStaffPage({
 
       // Update staff profile
       const response = await fetch(`/api/staff/${resolvedParams.id}`, {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to update staff member")
+        throw new Error(error.error || 'Failed to update staff member')
       }
 
       // Update shifts
       const activeShifts = shifts.filter((s) => s.isActive)
       const shiftsResponse = await fetch(`/api/staff/${resolvedParams.id}/shifts`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ shifts: activeShifts }),
       })
 
       if (!shiftsResponse.ok) {
-        console.error("Failed to update shifts")
+        console.error('Failed to update shifts')
       }
 
       toast({
-        title: "Success",
-        description: "Staff member updated successfully",
+        title: 'Success',
+        description: 'Staff member updated successfully',
       })
 
       router.push(`/staff/${resolvedParams.id}`)
     } catch (error: any) {
-      console.error("Error updating staff:", error)
+      console.error('Error updating staff:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update staff member",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to update staff member',
       })
     } finally {
       setSaving(false)
@@ -263,9 +261,7 @@ export default function EditStaffPage({
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Edit Staff</h1>
-          <p className="text-muted-foreground">
-            Update staff member details
-          </p>
+          <p className="text-muted-foreground">Update staff member details</p>
         </div>
       </div>
 
@@ -284,7 +280,7 @@ export default function EditStaffPage({
                   <Input
                     id="firstName"
                     value={formData.firstName}
-                    onChange={(e) => handleChange("firstName", e.target.value)}
+                    onChange={(e) => handleChange('firstName', e.target.value)}
                     required
                   />
                 </div>
@@ -293,7 +289,7 @@ export default function EditStaffPage({
                   <Input
                     id="lastName"
                     value={formData.lastName}
-                    onChange={(e) => handleChange("lastName", e.target.value)}
+                    onChange={(e) => handleChange('lastName', e.target.value)}
                     required
                   />
                 </div>
@@ -303,7 +299,7 @@ export default function EditStaffPage({
                 <Label htmlFor="role">Role *</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value) => handleChange("role", value)}
+                  onValueChange={(value) => handleChange('role', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -325,9 +321,9 @@ export default function EditStaffPage({
                 <div className="relative">
                   <Input
                     id="newPassword"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={formData.newPassword}
-                    onChange={(e) => handleChange("newPassword", e.target.value)}
+                    onChange={(e) => handleChange('newPassword', e.target.value)}
                     placeholder="Enter new password"
                   />
                   <Button
@@ -337,11 +333,7 @@ export default function EditStaffPage({
                     className="absolute right-0 top-0 h-full px-3"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
@@ -350,12 +342,12 @@ export default function EditStaffPage({
                 <div className="space-y-0.5">
                   <Label>Account Status</Label>
                   <p className="text-sm text-muted-foreground">
-                    {formData.isActive ? "Active - Can log in" : "Inactive - Cannot log in"}
+                    {formData.isActive ? 'Active - Can log in' : 'Inactive - Cannot log in'}
                   </p>
                 </div>
                 <Switch
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => handleChange("isActive", checked)}
+                  onCheckedChange={(checked) => handleChange('isActive', checked)}
                 />
               </div>
             </CardContent>
@@ -374,7 +366,7 @@ export default function EditStaffPage({
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
+                    onChange={(e) => handleChange('phone', e.target.value)}
                     required
                   />
                 </div>
@@ -383,7 +375,7 @@ export default function EditStaffPage({
                   <Input
                     id="alternatePhone"
                     value={formData.alternatePhone}
-                    onChange={(e) => handleChange("alternatePhone", e.target.value)}
+                    onChange={(e) => handleChange('alternatePhone', e.target.value)}
                   />
                 </div>
               </div>
@@ -393,7 +385,7 @@ export default function EditStaffPage({
                 <Textarea
                   id="address"
                   value={formData.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
+                  onChange={(e) => handleChange('address', e.target.value)}
                   rows={2}
                 />
               </div>
@@ -404,7 +396,7 @@ export default function EditStaffPage({
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
+                    onChange={(e) => handleChange('city', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -412,7 +404,7 @@ export default function EditStaffPage({
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
+                    onChange={(e) => handleChange('state', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -420,7 +412,7 @@ export default function EditStaffPage({
                   <Input
                     id="pincode"
                     value={formData.pincode}
-                    onChange={(e) => handleChange("pincode", e.target.value)}
+                    onChange={(e) => handleChange('pincode', e.target.value)}
                   />
                 </div>
               </div>
@@ -441,14 +433,14 @@ export default function EditStaffPage({
                     id="dateOfBirth"
                     type="date"
                     value={formData.dateOfBirth}
-                    onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                    onChange={(e) => handleChange('dateOfBirth', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender</Label>
                   <Select
                     value={formData.gender}
-                    onValueChange={(value) => handleChange("gender", value)}
+                    onValueChange={(value) => handleChange('gender', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
@@ -468,7 +460,7 @@ export default function EditStaffPage({
                   <Input
                     id="aadharNumber"
                     value={formData.aadharNumber}
-                    onChange={(e) => handleChange("aadharNumber", e.target.value)}
+                    onChange={(e) => handleChange('aadharNumber', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -476,7 +468,7 @@ export default function EditStaffPage({
                   <Input
                     id="panNumber"
                     value={formData.panNumber}
-                    onChange={(e) => handleChange("panNumber", e.target.value)}
+                    onChange={(e) => handleChange('panNumber', e.target.value)}
                   />
                 </div>
               </div>
@@ -489,7 +481,7 @@ export default function EditStaffPage({
                   <Input
                     id="emergencyContact"
                     value={formData.emergencyContact}
-                    onChange={(e) => handleChange("emergencyContact", e.target.value)}
+                    onChange={(e) => handleChange('emergencyContact', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -497,7 +489,7 @@ export default function EditStaffPage({
                   <Input
                     id="emergencyPhone"
                     value={formData.emergencyPhone}
-                    onChange={(e) => handleChange("emergencyPhone", e.target.value)}
+                    onChange={(e) => handleChange('emergencyPhone', e.target.value)}
                   />
                 </div>
               </div>
@@ -517,7 +509,7 @@ export default function EditStaffPage({
                   <Input
                     id="qualification"
                     value={formData.qualification}
-                    onChange={(e) => handleChange("qualification", e.target.value)}
+                    onChange={(e) => handleChange('qualification', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -525,7 +517,7 @@ export default function EditStaffPage({
                   <Input
                     id="specialization"
                     value={formData.specialization}
-                    onChange={(e) => handleChange("specialization", e.target.value)}
+                    onChange={(e) => handleChange('specialization', e.target.value)}
                   />
                 </div>
               </div>
@@ -535,7 +527,7 @@ export default function EditStaffPage({
                 <Input
                   id="licenseNumber"
                   value={formData.licenseNumber}
-                  onChange={(e) => handleChange("licenseNumber", e.target.value)}
+                  onChange={(e) => handleChange('licenseNumber', e.target.value)}
                 />
               </div>
 
@@ -547,7 +539,7 @@ export default function EditStaffPage({
                   id="salary"
                   type="number"
                   value={formData.salary}
-                  onChange={(e) => handleChange("salary", e.target.value)}
+                  onChange={(e) => handleChange('salary', e.target.value)}
                 />
               </div>
 
@@ -557,7 +549,7 @@ export default function EditStaffPage({
                   <Input
                     id="bankAccountNo"
                     value={formData.bankAccountNo}
-                    onChange={(e) => handleChange("bankAccountNo", e.target.value)}
+                    onChange={(e) => handleChange('bankAccountNo', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -565,7 +557,7 @@ export default function EditStaffPage({
                   <Input
                     id="bankIfsc"
                     value={formData.bankIfsc}
-                    onChange={(e) => handleChange("bankIfsc", e.target.value)}
+                    onChange={(e) => handleChange('bankIfsc', e.target.value)}
                   />
                 </div>
               </div>
@@ -587,7 +579,7 @@ export default function EditStaffPage({
                   <div
                     key={shift.dayOfWeek}
                     className={`p-4 rounded-lg border ${
-                      shift.isActive ? "border-primary bg-primary/5" : "border-gray-200"
+                      shift.isActive ? 'border-primary bg-primary/5' : 'border-gray-200'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
@@ -595,7 +587,7 @@ export default function EditStaffPage({
                       <Switch
                         checked={shift.isActive}
                         onCheckedChange={(checked) =>
-                          handleShiftChange(shift.dayOfWeek, "isActive", checked)
+                          handleShiftChange(shift.dayOfWeek, 'isActive', checked)
                         }
                       />
                     </div>
@@ -607,7 +599,7 @@ export default function EditStaffPage({
                             type="time"
                             value={shift.startTime}
                             onChange={(e) =>
-                              handleShiftChange(shift.dayOfWeek, "startTime", e.target.value)
+                              handleShiftChange(shift.dayOfWeek, 'startTime', e.target.value)
                             }
                             className="h-8"
                           />
@@ -618,7 +610,7 @@ export default function EditStaffPage({
                             type="time"
                             value={shift.endTime}
                             onChange={(e) =>
-                              handleShiftChange(shift.dayOfWeek, "endTime", e.target.value)
+                              handleShiftChange(shift.dayOfWeek, 'endTime', e.target.value)
                             }
                             className="h-8"
                           />

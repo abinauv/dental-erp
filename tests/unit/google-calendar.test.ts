@@ -38,7 +38,9 @@ describe('Google Calendar Service', () => {
 
     it('includes redirect URI based on NEXTAUTH_URL', () => {
       const url = getAuthUrl('state')
-      expect(url).toContain(encodeURIComponent('http://localhost:3000/api/integrations/google-calendar/callback'))
+      expect(url).toContain(
+        encodeURIComponent('http://localhost:3000/api/integrations/google-calendar/callback')
+      )
     })
   })
 
@@ -46,11 +48,12 @@ describe('Google Calendar Service', () => {
     it('exchanges auth code for tokens', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'access-123',
-          refresh_token: 'refresh-456',
-          expires_in: 3600,
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'access-123',
+            refresh_token: 'refresh-456',
+            expires_in: 3600,
+          }),
       })
 
       const tokens = await exchangeCodeForTokens('auth-code-xyz')
@@ -98,9 +101,10 @@ describe('Google Calendar Service', () => {
     it('returns calendar list', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          items: [{ id: 'primary', summary: 'My Calendar' }],
-        }),
+        json: () =>
+          Promise.resolve({
+            items: [{ id: 'primary', summary: 'My Calendar' }],
+          }),
       })
 
       const calendars = await listCalendars('access-token')

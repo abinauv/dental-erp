@@ -1,12 +1,16 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const cashflowForecaster: Skill = {
-  name: "cashflow-forecaster",
-  displayName: "Cash Flow Forecaster",
-  description: "Projects daily/weekly cash flow based on revenue patterns, appointments, and pending payments",
-  allowedRoles: ["ADMIN", "ACCOUNTANT"],
-  modelTier: "billing",
-  systemPrompt: (hospitalName, contextStr) => `You are a cash flow forecasting AI for ${hospitalName}.
+  name: 'cashflow-forecaster',
+  displayName: 'Cash Flow Forecaster',
+  description:
+    'Projects daily/weekly cash flow based on revenue patterns, appointments, and pending payments',
+  allowedRoles: ['ADMIN', 'ACCOUNTANT'],
+  modelTier: 'billing',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are a cash flow forecasting AI for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

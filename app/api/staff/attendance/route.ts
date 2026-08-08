@@ -1,26 +1,28 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get attendance records with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     const { searchParams } = new URL(request.url)
-    const staffId = searchParams.get("staffId")
-    const date = searchParams.get("date")
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
-    const status = searchParams.get("status")
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "50")
+    const staffId = searchParams.get('staffId')
+    const date = searchParams.get('date')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+    const status = searchParams.get('status')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
 
     const skip = (page - 1) * limit
 
     const where: any = {
-      staff: { hospitalId }
+      staff: { hospitalId },
     }
 
     if (staffId) {
@@ -32,19 +34,19 @@ export async function GET(request: NextRequest) {
     } else if (startDate && endDate) {
       where.date = {
         gte: new Date(startDate),
-        lte: new Date(endDate)
+        lte: new Date(endDate),
       }
     } else if (startDate) {
       where.date = {
-        gte: new Date(startDate)
+        gte: new Date(startDate),
       }
     } else if (endDate) {
       where.date = {
-        lte: new Date(endDate)
+        lte: new Date(endDate),
       }
     }
 
-    if (status && status !== "all") {
+    if (status && status !== 'all') {
       where.status = status
     }
 
@@ -60,20 +62,17 @@ export async function GET(request: NextRequest) {
               lastName: true,
               user: {
                 select: {
-                  role: true
-                }
-              }
-            }
-          }
+                  role: true,
+                },
+              },
+            },
+          },
         },
-        orderBy: [
-          { date: 'desc' },
-          { clockIn: 'desc' }
-        ],
+        orderBy: [{ date: 'desc' }, { clockIn: 'desc' }],
         skip,
-        take: limit
+        take: limit,
       }),
-      prisma.attendance.count({ where })
+      prisma.attendance.count({ where }),
     ])
 
     return NextResponse.json({
@@ -82,22 +81,21 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching attendance:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch attendance records" },
-      { status: 500 }
-    )
+    console.error('Error fetching attendance:', error)
+    return NextResponse.json({ error: 'Failed to fetch attendance records' }, { status: 500 })
   }
 }
 
 // POST - Mark attendance for a staff member
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     const body = await request.json()
@@ -105,17 +103,17 @@ export async function POST(request: NextRequest) {
 
     if (!staffId || !date || !status) {
       return NextResponse.json(
-        { error: "Missing required fields: staffId, date, status" },
+        { error: 'Missing required fields: staffId, date, status' },
         { status: 400 }
       )
     }
 
     // Verify staff belongs to the same hospital
     const staffMember = await prisma.staff.findFirst({
-      where: { id: staffId, hospitalId }
+      where: { id: staffId, hospitalId },
     })
     if (!staffMember) {
-      return NextResponse.json({ error: "Staff not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
     }
 
     // Check if attendance already exists for this date
@@ -126,9 +124,9 @@ export async function POST(request: NextRequest) {
       where: {
         staffId_date: {
           staffId,
-          date: attendanceDate
-        }
-      }
+          date: attendanceDate,
+        },
+      },
     })
 
     if (existingAttendance) {
@@ -139,17 +137,17 @@ export async function POST(request: NextRequest) {
           status,
           clockIn: clockIn ? new Date(clockIn) : existingAttendance.clockIn,
           clockOut: clockOut ? new Date(clockOut) : existingAttendance.clockOut,
-          notes
+          notes,
         },
         include: {
           staff: {
             select: {
               employeeId: true,
               firstName: true,
-              lastName: true
-            }
-          }
-        }
+              lastName: true,
+            },
+          },
+        },
       })
       return NextResponse.json(updated)
     }
@@ -163,25 +161,22 @@ export async function POST(request: NextRequest) {
         status,
         clockIn: clockIn ? new Date(clockIn) : null,
         clockOut: clockOut ? new Date(clockOut) : null,
-        notes
+        notes,
       },
       include: {
         staff: {
           select: {
             employeeId: true,
             firstName: true,
-            lastName: true
-          }
-        }
-      }
+            lastName: true,
+          },
+        },
+      },
     })
 
     return NextResponse.json(attendance, { status: 201 })
   } catch (error) {
-    console.error("Error marking attendance:", error)
-    return NextResponse.json(
-      { error: "Failed to mark attendance" },
-      { status: 500 }
-    )
+    console.error('Error marking attendance:', error)
+    return NextResponse.json({ error: 'Failed to mark attendance' }, { status: 500 })
   }
 }

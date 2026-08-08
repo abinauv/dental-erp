@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/cron/inventory
@@ -8,9 +8,9 @@ import { prisma } from "@/lib/prisma"
  * compares with current stock, and creates alerts for items that will run out.
  */
 export async function GET(req: Request) {
-  const secret = req.headers.get("Authorization")?.replace("Bearer ", "")
+  const secret = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!secret || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const now = new Date()
@@ -28,7 +28,14 @@ export async function GET(req: Request) {
     // Current stock snapshot
     const items = await prisma.inventoryItem.findMany({
       where: { hospitalId: hospital.id, isActive: true },
-      select: { id: true, name: true, currentStock: true, reorderLevel: true, minimumStock: true, unit: true },
+      select: {
+        id: true,
+        name: true,
+        currentStock: true,
+        reorderLevel: true,
+        minimumStock: true,
+        unit: true,
+      },
     })
 
     // Items at or below reorder level
@@ -56,10 +63,10 @@ export async function GET(req: Request) {
       await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
-          category: "INVENTORY",
-          severity: "CRITICAL",
-          title: "Critical Stock Levels",
-          description: `${criticalItems.length} item(s) at or below minimum stock: ${criticalItems.map((i) => `${i.name} (${i.currentStock} ${i.unit})`).join(", ")}`,
+          category: 'INVENTORY',
+          severity: 'CRITICAL',
+          title: 'Critical Stock Levels',
+          description: `${criticalItems.length} item(s) at or below minimum stock: ${criticalItems.map((i) => `${i.name} (${i.currentStock} ${i.unit})`).join(', ')}`,
           data: criticalItems as any,
           expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
         },
@@ -73,10 +80,10 @@ export async function GET(req: Request) {
       await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
-          category: "INVENTORY",
-          severity: "WARNING",
-          title: "Reorder Level Reached",
-          description: `${approachingItems.length} item(s) at reorder level: ${approachingItems.map((i) => `${i.name} (${i.currentStock} ${i.unit})`).join(", ")}. Consider placing purchase orders.`,
+          category: 'INVENTORY',
+          severity: 'WARNING',
+          title: 'Reorder Level Reached',
+          description: `${approachingItems.length} item(s) at reorder level: ${approachingItems.map((i) => `${i.name} (${i.currentStock} ${i.unit})`).join(', ')}. Consider placing purchase orders.`,
           data: approachingItems as any,
           expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
         },
@@ -89,13 +96,13 @@ export async function GET(req: Request) {
       await prisma.aIInsight.create({
         data: {
           hospitalId: hospital.id,
-          category: "INVENTORY",
-          severity: "WARNING",
-          title: "Batches Expiring Soon",
-          description: `${expiringBatches.length} batch(es) expiring within 30 days: ${expiringBatches.map((b) => `${b.item.name} (exp: ${b.expiryDate?.toISOString().split("T")[0]})`).join(", ")}. Use FEFO priority.`,
+          category: 'INVENTORY',
+          severity: 'WARNING',
+          title: 'Batches Expiring Soon',
+          description: `${expiringBatches.length} batch(es) expiring within 30 days: ${expiringBatches.map((b) => `${b.item.name} (exp: ${b.expiryDate?.toISOString().split('T')[0]})`).join(', ')}. Use FEFO priority.`,
           data: expiringBatches.map((b) => ({
             item: b.item.name,
-            expiryDate: b.expiryDate?.toISOString().split("T")[0],
+            expiryDate: b.expiryDate?.toISOString().split('T')[0],
             remainingQty: b.remainingQty,
           })) as any,
           expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
@@ -110,10 +117,10 @@ export async function GET(req: Request) {
       const thirtyDaysAgo = new Date(now)
       thirtyDaysAgo.setDate(now.getDate() - 30)
       const consumptionStats = await prisma.stockTransaction.groupBy({
-        by: ["itemId"],
+        by: ['itemId'],
         where: {
           hospitalId: hospital.id,
-          type: { in: ["CONSUMPTION", "SALE"] },
+          type: { in: ['CONSUMPTION', 'SALE'] },
           createdAt: { gte: thirtyDaysAgo },
         },
         _sum: { quantity: true },
@@ -133,17 +140,18 @@ export async function GET(req: Request) {
 
         const topItems = highUsageItems.map((h) => {
           const item = nameMap[h.itemId]
-          const daysLeft = item && h.consumed > 0 ? Math.round(Number(item.currentStock) / (h.consumed / 30)) : 999
-          return `${item?.name || "Unknown"}: ${h.consumed} used/month, ~${daysLeft} days left`
+          const daysLeft =
+            item && h.consumed > 0 ? Math.round(Number(item.currentStock) / (h.consumed / 30)) : 999
+          return `${item?.name || 'Unknown'}: ${h.consumed} used/month, ~${daysLeft} days left`
         })
 
         await prisma.aIInsight.create({
           data: {
             hospitalId: hospital.id,
-            category: "INVENTORY",
-            severity: "INFO",
-            title: "Weekly Inventory Forecast",
-            description: `Top consumed items this month:\n${topItems.join("\n")}`,
+            category: 'INVENTORY',
+            severity: 'INFO',
+            title: 'Weekly Inventory Forecast',
+            description: `Top consumed items this month:\n${topItems.join('\n')}`,
             data: highUsageItems as any,
             expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
           },

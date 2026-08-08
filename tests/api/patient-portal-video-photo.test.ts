@@ -18,11 +18,11 @@ vi.mock('fs/promises', () => {
   return { ...m, default: m }
 })
 vi.mock('path', async (importOriginal) => {
-  const actual = await importOriginal() as any
+  const actual = (await importOriginal()) as any
   return { ...actual, default: actual }
 })
 vi.mock('crypto', async (importOriginal) => {
-  const actual = await importOriginal() as any
+  const actual = (await importOriginal()) as any
   return { ...actual, randomUUID: () => 'mock-uuid-1234' }
 })
 
@@ -51,7 +51,12 @@ describe('GET /api/patient-portal/video/[id]', () => {
       roomName: 'room-abc',
       roomUrl: 'https://daily.co/room-abc',
       doctor: { firstName: 'Jane', lastName: 'Smith', specialization: 'Orthodontics' },
-      appointment: { appointmentNo: 'APT001', scheduledDate: new Date(), scheduledTime: '10:00', chiefComplaint: 'Checkup' },
+      appointment: {
+        appointmentNo: 'APT001',
+        scheduledDate: new Date(),
+        scheduledTime: '10:00',
+        chiefComplaint: 'Checkup',
+      },
     })
     mockVideoService.getVideoProvider.mockReturnValue('daily')
     mockVideoService.getRoomToken.mockResolvedValue('token-xyz')
@@ -73,7 +78,12 @@ describe('GET /api/patient-portal/video/[id]', () => {
       roomName: 'room-abc',
       roomUrl: 'https://meet.jit.si/room-abc',
       doctor: { firstName: 'Jane', lastName: 'Smith', specialization: 'General' },
-      appointment: { appointmentNo: 'APT001', scheduledDate: new Date(), scheduledTime: '10:00', chiefComplaint: null },
+      appointment: {
+        appointmentNo: 'APT001',
+        scheduledDate: new Date(),
+        scheduledTime: '10:00',
+        chiefComplaint: null,
+      },
     })
     mockVideoService.getVideoProvider.mockReturnValue('jitsi')
 
@@ -108,7 +118,15 @@ describe('GET /api/patient-portal/video/[id]', () => {
   })
 })
 
-function makeMockFileRequest(file: { name: string; type: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> } | null, extras?: Record<string, string>) {
+function makeMockFileRequest(
+  file: {
+    name: string
+    type: string
+    size: number
+    arrayBuffer: () => Promise<ArrayBuffer>
+  } | null,
+  extras?: Record<string, string>
+) {
   const formData = new Map<string, any>()
   if (file) formData.set('file', file)
   if (extras) {

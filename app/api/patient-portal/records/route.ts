@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 /**
  * GET: Patient's treatment records, dental chart entries, and documents.
@@ -11,9 +11,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const tab = searchParams.get("tab") || "treatments" // treatments | chart | documents
+    const tab = searchParams.get('tab') || 'treatments' // treatments | chart | documents
 
-    if (tab === "treatments") {
+    if (tab === 'treatments') {
       const treatments = await prisma.treatment.findMany({
         where: {
           patientId: patient!.id,
@@ -23,23 +23,23 @@ export async function GET(req: NextRequest) {
           procedure: { select: { name: true, code: true, category: true } },
           doctor: { select: { firstName: true, lastName: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       })
       return NextResponse.json({ treatments })
     }
 
-    if (tab === "chart") {
+    if (tab === 'chart') {
       const chartEntries = await prisma.dentalChartEntry.findMany({
         where: {
           patientId: patient!.id,
           hospitalId: patient!.hospitalId,
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       })
       return NextResponse.json({ chartEntries })
     }
 
-    if (tab === "documents") {
+    if (tab === 'documents') {
       const documents = await prisma.document.findMany({
         where: {
           patientId: patient!.id,
@@ -54,17 +54,14 @@ export async function GET(req: NextRequest) {
           fileSize: true,
           createdAt: true,
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       })
       return NextResponse.json({ documents })
     }
 
-    return NextResponse.json({ error: "Invalid tab" }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid tab' }, { status: 400 })
   } catch (err: unknown) {
-    console.error("Patient records error:", err)
-    return NextResponse.json(
-      { error: "Failed to load records" },
-      { status: 500 }
-    )
+    console.error('Patient records error:', err)
+    return NextResponse.json({ error: 'Failed to load records' }, { status: 500 })
   }
 }

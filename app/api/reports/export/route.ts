@@ -4,7 +4,12 @@ import { prisma } from '@/lib/prisma'
 import ExcelJS from 'exceljs'
 import { format } from 'date-fns'
 
-async function generateExcelReport(type: string, data: any, dateRange: string, hospitalName: string) {
+async function generateExcelReport(
+  type: string,
+  data: any,
+  dateRange: string,
+  hospitalName: string
+) {
   const workbook = new ExcelJS.Workbook()
   const worksheet = workbook.addWorksheet(`${type} Analytics`)
 
@@ -17,8 +22,8 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
       top: { style: 'thin' as const },
       left: { style: 'thin' as const },
       bottom: { style: 'thin' as const },
-      right: { style: 'thin' as const }
-    }
+      right: { style: 'thin' as const },
+    },
   }
 
   // Add title
@@ -40,7 +45,7 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
   // Generate content based on type
   switch (type) {
     case 'patient':
-      worksheet.addRow(['Metric', 'Value']).eachCell(cell => {
+      worksheet.addRow(['Metric', 'Value']).eachCell((cell) => {
         cell.style = headerStyle
       })
       worksheet.addRow(['New Patients', data.newPatients])
@@ -49,7 +54,7 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
       worksheet.addRow(['Retention Rate', `${data.retentionRate.toFixed(2)}%`])
 
       worksheet.addRow([]) // Empty row
-      worksheet.addRow(['Gender Distribution']).eachCell(cell => {
+      worksheet.addRow(['Gender Distribution']).eachCell((cell) => {
         cell.font = { bold: true }
       })
       worksheet.addRow(['Male', data.demographics.male])
@@ -58,7 +63,7 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
 
       if (data.acquisitionSources.length > 0) {
         worksheet.addRow([]) // Empty row
-        worksheet.addRow(['Acquisition Source', 'Count', 'Percentage']).eachCell(cell => {
+        worksheet.addRow(['Acquisition Source', 'Count', 'Percentage']).eachCell((cell) => {
           cell.style = headerStyle
         })
         data.acquisitionSources.forEach((source: any) => {
@@ -68,7 +73,7 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
       break
 
     case 'clinical':
-      worksheet.addRow(['Metric', 'Value']).eachCell(cell => {
+      worksheet.addRow(['Metric', 'Value']).eachCell((cell) => {
         cell.style = headerStyle
       })
       worksheet.addRow(['Total Treatments', data.totalTreatments])
@@ -79,7 +84,7 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
 
       if (data.commonProcedures.length > 0) {
         worksheet.addRow([]) // Empty row
-        worksheet.addRow(['Procedure', 'Code', 'Count', 'Success Rate']).eachCell(cell => {
+        worksheet.addRow(['Procedure', 'Code', 'Count', 'Success Rate']).eachCell((cell) => {
           cell.style = headerStyle
         })
         data.commonProcedures.forEach((proc: any) => {
@@ -89,7 +94,7 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
       break
 
     case 'financial':
-      worksheet.addRow(['Metric', 'Value (INR)']).eachCell(cell => {
+      worksheet.addRow(['Metric', 'Value (INR)']).eachCell((cell) => {
         cell.style = headerStyle
       })
       worksheet.addRow(['Total Revenue', data.totalRevenue.toFixed(2)])
@@ -101,17 +106,21 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
 
       if (data.paymentMethodBreakdown.length > 0) {
         worksheet.addRow([]) // Empty row
-        worksheet.addRow(['Payment Method', 'Amount (INR)', 'Percentage']).eachCell(cell => {
+        worksheet.addRow(['Payment Method', 'Amount (INR)', 'Percentage']).eachCell((cell) => {
           cell.style = headerStyle
         })
         data.paymentMethodBreakdown.forEach((method: any) => {
-          worksheet.addRow([method.method, method.amount.toFixed(2), `${method.percentage.toFixed(2)}%`])
+          worksheet.addRow([
+            method.method,
+            method.amount.toFixed(2),
+            `${method.percentage.toFixed(2)}%`,
+          ])
         })
       }
 
       if (data.revenueByMonth.length > 0) {
         worksheet.addRow([]) // Empty row
-        worksheet.addRow(['Month', 'Revenue', 'Expenses', 'Profit']).eachCell(cell => {
+        worksheet.addRow(['Month', 'Revenue', 'Expenses', 'Profit']).eachCell((cell) => {
           cell.style = headerStyle
         })
         data.revenueByMonth.forEach((month: any) => {
@@ -119,14 +128,14 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
             month.month,
             month.revenue.toFixed(2),
             month.expenses.toFixed(2),
-            month.profit.toFixed(2)
+            month.profit.toFixed(2),
           ])
         })
       }
       break
 
     case 'operational':
-      worksheet.addRow(['Metric', 'Value']).eachCell(cell => {
+      worksheet.addRow(['Metric', 'Value']).eachCell((cell) => {
         cell.style = headerStyle
       })
       worksheet.addRow(['Total Appointments', data.totalAppointments])
@@ -141,16 +150,18 @@ async function generateExcelReport(type: string, data: any, dateRange: string, h
 
       if (data.staffProductivity.length > 0) {
         worksheet.addRow([]) // Empty row
-        worksheet.addRow(['Staff Member', 'Role', 'Appointments', 'Treatments', 'Revenue (INR)']).eachCell(cell => {
-          cell.style = headerStyle
-        })
+        worksheet
+          .addRow(['Staff Member', 'Role', 'Appointments', 'Treatments', 'Revenue (INR)'])
+          .eachCell((cell) => {
+            cell.style = headerStyle
+          })
         data.staffProductivity.forEach((staff: any) => {
           worksheet.addRow([
             staff.name,
             staff.role,
             staff.appointmentsHandled,
             staff.treatmentsCompleted,
-            staff.revenue.toFixed(2)
+            staff.revenue.toFixed(2),
           ])
         })
       }
@@ -192,7 +203,9 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
   <p style="text-align: center; color: #666;">Period: ${dateRange}</p>
   <p style="text-align: center; color: #666;">Generated on: ${format(new Date(), 'PPpp')}</p>
 
-  ${type === 'patient' ? `
+  ${
+    type === 'patient'
+      ? `
     <h2>Patient Overview</h2>
     <table>
       <tr><td class="metric">New Patients</td><td class="value">${data.newPatients}</td></tr>
@@ -208,18 +221,30 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
       <tr><td class="metric">Other</td><td class="value">${data.demographics.other}</td></tr>
     </table>
 
-    ${data.acquisitionSources.length > 0 ? `
+    ${
+      data.acquisitionSources.length > 0
+        ? `
       <h2>Acquisition Sources</h2>
       <table>
         <tr><th>Source</th><th>Count</th><th>Percentage</th></tr>
-        ${data.acquisitionSources.map((s: any) => `
+        ${data.acquisitionSources
+          .map(
+            (s: any) => `
           <tr><td>${s.source}</td><td>${s.count}</td><td>${s.percentage.toFixed(2)}%</td></tr>
-        `).join('')}
+        `
+          )
+          .join('')}
       </table>
-    ` : ''}
-  ` : ''}
+    `
+        : ''
+    }
+  `
+      : ''
+  }
 
-  ${type === 'clinical' ? `
+  ${
+    type === 'clinical'
+      ? `
     <h2>Clinical Overview</h2>
     <table>
       <tr><td class="metric">Total Treatments</td><td class="value">${data.totalTreatments}</td></tr>
@@ -229,18 +254,30 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
       <tr><td class="metric">Avg. Duration (mins)</td><td class="value">${data.avgTreatmentDuration}</td></tr>
     </table>
 
-    ${data.commonProcedures.length > 0 ? `
+    ${
+      data.commonProcedures.length > 0
+        ? `
       <h2>Common Procedures</h2>
       <table>
         <tr><th>Procedure</th><th>Code</th><th>Count</th><th>Success Rate</th></tr>
-        ${data.commonProcedures.map((p: any) => `
+        ${data.commonProcedures
+          .map(
+            (p: any) => `
           <tr><td>${p.name}</td><td>${p.code}</td><td>${p.count}</td><td>${p.successRate.toFixed(2)}%</td></tr>
-        `).join('')}
+        `
+          )
+          .join('')}
       </table>
-    ` : ''}
-  ` : ''}
+    `
+        : ''
+    }
+  `
+      : ''
+  }
 
-  ${type === 'financial' ? `
+  ${
+    type === 'financial'
+      ? `
     <h2>Financial Overview</h2>
     <table>
       <tr><td class="metric">Total Revenue</td><td class="value">₹${data.totalRevenue.toFixed(2)}</td></tr>
@@ -251,18 +288,30 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
       <tr><td class="metric">Outstanding Amount</td><td class="value">₹${data.outstandingAmount.toFixed(2)}</td></tr>
     </table>
 
-    ${data.paymentMethodBreakdown.length > 0 ? `
+    ${
+      data.paymentMethodBreakdown.length > 0
+        ? `
       <h2>Payment Methods</h2>
       <table>
         <tr><th>Method</th><th>Amount (₹)</th><th>Percentage</th></tr>
-        ${data.paymentMethodBreakdown.map((m: any) => `
+        ${data.paymentMethodBreakdown
+          .map(
+            (m: any) => `
           <tr><td>${m.method}</td><td>₹${m.amount.toFixed(2)}</td><td>${m.percentage.toFixed(2)}%</td></tr>
-        `).join('')}
+        `
+          )
+          .join('')}
       </table>
-    ` : ''}
-  ` : ''}
+    `
+        : ''
+    }
+  `
+      : ''
+  }
 
-  ${type === 'operational' ? `
+  ${
+    type === 'operational'
+      ? `
     <h2>Operational Overview</h2>
     <table>
       <tr><td class="metric">Total Appointments</td><td class="value">${data.totalAppointments}</td></tr>
@@ -276,16 +325,26 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
       <tr><td class="metric">Low Stock Items</td><td class="value">${data.lowStockItems}</td></tr>
     </table>
 
-    ${data.staffProductivity.length > 0 ? `
+    ${
+      data.staffProductivity.length > 0
+        ? `
       <h2>Staff Productivity</h2>
       <table>
         <tr><th>Staff</th><th>Role</th><th>Appointments</th><th>Treatments</th><th>Revenue (₹)</th></tr>
-        ${data.staffProductivity.map((s: any) => `
+        ${data.staffProductivity
+          .map(
+            (s: any) => `
           <tr><td>${s.name}</td><td>${s.role}</td><td>${s.appointmentsHandled}</td><td>${s.treatmentsCompleted}</td><td>₹${s.revenue.toFixed(2)}</td></tr>
-        `).join('')}
+        `
+          )
+          .join('')}
       </table>
-    ` : ''}
-  ` : ''}
+    `
+        : ''
+    }
+  `
+      : ''
+  }
 
   <div class="footer">
     <p>${hospitalName}</p>
@@ -309,7 +368,7 @@ export async function GET(request: NextRequest) {
     // Get hospital info for the report header
     const hospital = await prisma.hospital.findUnique({
       where: { id: hospitalId },
-      select: { name: true }
+      select: { name: true },
     })
 
     const hospitalName = hospital?.name || 'Dental Hospital'
@@ -340,9 +399,10 @@ export async function GET(request: NextRequest) {
 
     const data = await analyticsResponse.json()
 
-    const dateRange = dateFromParam && dateToParam
-      ? `${format(new Date(dateFromParam), 'PP')} - ${format(new Date(dateToParam), 'PP')}`
-      : preset.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    const dateRange =
+      dateFromParam && dateToParam
+        ? `${format(new Date(dateFromParam), 'PP')} - ${format(new Date(dateToParam), 'PP')}`
+        : preset.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 
     if (exportFormat === 'excel') {
       const workbook = await generateExcelReport(type, data, dateRange, hospitalName)
@@ -368,9 +428,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid format' }, { status: 400 })
   } catch (error) {
     console.error('Export API error:', error)
-    return NextResponse.json(
-      { error: 'Failed to export report' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to export report' }, { status: 500 })
   }
 }

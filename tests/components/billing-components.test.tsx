@@ -23,14 +23,24 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children, onOpenChange }: any) =>
-    open ? <div data-testid="dialog" data-open={open}>{children}</div> : null,
-  DialogContent: ({ children, className }: any) => <div data-testid="dialog-content" className={className}>{children}</div>,
+    open ? (
+      <div data-testid="dialog" data-open={open}>
+        {children}
+      </div>
+    ) : null,
+  DialogContent: ({ children, className }: any) => (
+    <div data-testid="dialog-content" className={className}>
+      {children}
+    </div>
+  ),
   DialogHeader: ({ children }: any) => <div data-testid="dialog-header">{children}</div>,
   DialogTitle: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
   DialogDescription: ({ children }: any) => <p data-testid="dialog-description">{children}</p>,
@@ -75,12 +85,7 @@ describe('PaymentCheckout', () => {
     })
 
     it('renders custom trigger', () => {
-      render(
-        <PaymentCheckout
-          {...defaultProps}
-          trigger={<span>Custom Pay</span>}
-        />
-      )
+      render(<PaymentCheckout {...defaultProps} trigger={<span>Custom Pay</span>} />)
       expect(screen.getByText('Custom Pay')).toBeInTheDocument()
     })
 
@@ -143,14 +148,19 @@ describe('PaymentCheckout', () => {
 
       // Find and click the "Pay ₹5,000" button (the main CTA)
       const payButtons = screen.getAllByText(/Pay/)
-      const mainPayBtn = payButtons.find((btn) => btn.closest('button')?.textContent?.includes('5,000'))
+      const mainPayBtn = payButtons.find((btn) =>
+        btn.closest('button')?.textContent?.includes('5,000')
+      )
       fireEvent.click(mainPayBtn || payButtons[payButtons.length - 1])
 
       await waitFor(() => {
-        expect(fetchMock).toHaveBeenCalledWith('/api/payments/create-order', expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ invoiceId: 'inv-001', amount: 5000 }),
-        }))
+        expect(fetchMock).toHaveBeenCalledWith(
+          '/api/payments/create-order',
+          expect.objectContaining({
+            method: 'POST',
+            body: JSON.stringify({ invoiceId: 'inv-001', amount: 5000 }),
+          })
+        )
       })
     })
 

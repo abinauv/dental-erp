@@ -3,7 +3,11 @@ import { createHmac, createHash } from 'crypto'
 import { RazorpayGateway } from '@/lib/payment-gateways/razorpay'
 import { PhonePeGateway } from '@/lib/payment-gateways/phonepe'
 import { PaytmGateway } from '@/lib/payment-gateways/paytm'
-import type { CreateOrderParams, GatewayCredentials, GatewayOrder } from '@/lib/payment-gateways/types'
+import type {
+  CreateOrderParams,
+  GatewayCredentials,
+  GatewayOrder,
+} from '@/lib/payment-gateways/types'
 
 // ---- Shared test fixtures ----
 
@@ -86,7 +90,9 @@ describe('RazorpayGateway', () => {
 
       const [url, opts] = mockFetch.mock.calls[0]
       expect(url).toContain('https://api.razorpay.com/v1/orders')
-      const expectedAuth = Buffer.from(`${creds.razorpayKeyId}:${creds.razorpayKeySecret}`).toString('base64')
+      const expectedAuth = Buffer.from(
+        `${creds.razorpayKeyId}:${creds.razorpayKeySecret}`
+      ).toString('base64')
       expect(opts.headers.Authorization).toBe(`Basic ${expectedAuth}`)
     })
 
@@ -284,7 +290,9 @@ describe('PhonePeGateway', () => {
         ok: true,
         json: async () => ({
           success: true,
-          data: { instrumentResponse: { redirectInfo: { url: 'https://sandbox.phonepe.com/pay' } } },
+          data: {
+            instrumentResponse: { redirectInfo: { url: 'https://sandbox.phonepe.com/pay' } },
+          },
         }),
       })
 
@@ -486,9 +494,7 @@ describe('PaytmGateway', () => {
     })
 
     it('throws when mid is missing', () => {
-      expect(() => new PaytmGateway({ ...creds, paytmMid: undefined })).toThrow(
-        'Paytm credentials'
-      )
+      expect(() => new PaytmGateway({ ...creds, paytmMid: undefined })).toThrow('Paytm credentials')
     })
 
     it('throws when merchantKey is missing', () => {
@@ -663,7 +669,11 @@ describe('PaytmGateway', () => {
       })
 
       const gw = new PaytmGateway(creds)
-      const result = await gw.initiateRefund({ paymentId: 'txn_001', amount: 500, reason: 'Overcharge' })
+      const result = await gw.initiateRefund({
+        paymentId: 'txn_001',
+        amount: 500,
+        reason: 'Overcharge',
+      })
 
       expect(result.success).toBe(true)
       expect(result.refundId).toContain('REFUND_txn_001')
@@ -693,19 +703,31 @@ describe('PaytmGateway', () => {
 
 describe('Gateway Types', () => {
   it('all gateways implement the PaymentGateway interface', () => {
-    const methods = ['createOrder', 'verifyPayment', 'verifyWebhook', 'getCheckoutConfig', 'initiateRefund']
+    const methods = [
+      'createOrder',
+      'verifyPayment',
+      'verifyWebhook',
+      'getCheckoutConfig',
+      'initiateRefund',
+    ]
 
     const razorpay = new RazorpayGateway({
-      provider: 'RAZORPAY', isLiveMode: false,
-      razorpayKeyId: 'k', razorpayKeySecret: 's',
+      provider: 'RAZORPAY',
+      isLiveMode: false,
+      razorpayKeyId: 'k',
+      razorpayKeySecret: 's',
     })
     const phonepe = new PhonePeGateway({
-      provider: 'PHONEPE', isLiveMode: false,
-      phonepeMerchantId: 'm', phonepeSaltKey: 's',
+      provider: 'PHONEPE',
+      isLiveMode: false,
+      phonepeMerchantId: 'm',
+      phonepeSaltKey: 's',
     })
     const paytm = new PaytmGateway({
-      provider: 'PAYTM', isLiveMode: false,
-      paytmMid: 'm', paytmMerchantKey: 'k',
+      provider: 'PAYTM',
+      isLiveMode: false,
+      paytmMid: 'm',
+      paytmMerchantKey: 'k',
     })
 
     for (const method of methods) {

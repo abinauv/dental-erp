@@ -1,17 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { generatePaymentNo } from "@/lib/billing-utils"
-import { PaymentMethod, PaymentStatus } from "@prisma/client"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { generatePaymentNo } from '@/lib/billing-utils'
+import { PaymentMethod, PaymentStatus } from '@prisma/client'
 
 // GET - Get payments for an invoice
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -26,49 +23,40 @@ export async function GET(
         totalAmount: true,
         paidAmount: true,
         balanceAmount: true,
-      }
+      },
     })
 
     if (!invoice) {
-      return NextResponse.json(
-        { error: "Invoice not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
     const payments = await prisma.payment.findMany({
       where: { invoiceId: id, hospitalId },
       orderBy: {
-        paymentDate: 'desc'
-      }
+        paymentDate: 'desc',
+      },
     })
 
     return NextResponse.json({
       invoice,
-      payments
+      payments,
     })
   } catch (error) {
-    console.error("Error fetching payments:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch payments" },
-      { status: 500 }
-    )
+    console.error('Error fetching payments:', error)
+    return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
   }
 }
 
 // POST - Record a payment for an invoice
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "ACCOUNTANT", "RECEPTIONIST"].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to record payments" },
         { status: 403 }
@@ -92,44 +80,32 @@ export async function POST(
 
     // Validate required fields
     if (!amount || amount <= 0) {
-      return NextResponse.json(
-        { error: "Valid payment amount is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Valid payment amount is required' }, { status: 400 })
     }
 
     if (!paymentMethod) {
-      return NextResponse.json(
-        { error: "Payment method is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Payment method is required' }, { status: 400 })
     }
 
     // Check if invoice exists
     const invoice = await prisma.invoice.findUnique({
-      where: { id, hospitalId }
+      where: { id, hospitalId },
     })
 
     if (!invoice) {
-      return NextResponse.json(
-        { error: "Invoice not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
     // Check if invoice can accept payments
-    if (invoice.status === "CANCELLED" || invoice.status === "REFUNDED") {
+    if (invoice.status === 'CANCELLED' || invoice.status === 'REFUNDED') {
       return NextResponse.json(
-        { error: "Cannot add payment to a cancelled or refunded invoice" },
+        { error: 'Cannot add payment to a cancelled or refunded invoice' },
         { status: 400 }
       )
     }
 
-    if (invoice.status === "PAID") {
-      return NextResponse.json(
-        { error: "Invoice is already fully paid" },
-        { status: 400 }
-      )
+    if (invoice.status === 'PAID') {
+      return NextResponse.json({ error: 'Invoice is already fully paid' }, { status: 400 })
     }
 
     // Check if payment amount exceeds balance
@@ -153,14 +129,14 @@ export async function POST(
         amount,
         paymentMethod: paymentMethod as PaymentMethod,
         paymentDate: new Date(paymentDate),
-        status: "COMPLETED",
+        status: 'COMPLETED',
         transactionId,
         bankName,
         chequeNumber,
         chequeDate: chequeDate ? new Date(chequeDate) : null,
         upiId,
         notes,
-      }
+      },
     })
 
     // Update invoice amounts
@@ -168,16 +144,18 @@ export async function POST(
     const newBalanceAmount = Number(invoice.totalAmount) - newPaidAmount
 
     // Determine new invoice status
-    let newStatus: "DRAFT" | "PENDING" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED" | "REFUNDED" = invoice.status
+    let newStatus:
+      'DRAFT' | 'PENDING' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED' =
+      invoice.status
     if (newBalanceAmount <= 0) {
-      newStatus = "PAID"
+      newStatus = 'PAID'
     } else if (newPaidAmount > 0) {
-      newStatus = "PARTIALLY_PAID"
+      newStatus = 'PARTIALLY_PAID'
     }
 
     // Update the invoice status to PENDING if it's still DRAFT
-    if (invoice.status === "DRAFT") {
-      newStatus = newBalanceAmount <= 0 ? "PAID" : "PARTIALLY_PAID"
+    if (invoice.status === 'DRAFT') {
+      newStatus = newBalanceAmount <= 0 ? 'PAID' : 'PARTIALLY_PAID'
     }
 
     await prisma.invoice.update({
@@ -186,7 +164,7 @@ export async function POST(
         paidAmount: newPaidAmount,
         balanceAmount: newBalanceAmount,
         status: newStatus,
-      }
+      },
     })
 
     // Return updated invoice with payment
@@ -199,25 +177,25 @@ export async function POST(
             patientId: true,
             firstName: true,
             lastName: true,
-          }
+          },
         },
         payments: {
           orderBy: {
-            paymentDate: 'desc'
-          }
-        }
-      }
+            paymentDate: 'desc',
+          },
+        },
+      },
     })
 
-    return NextResponse.json({
-      payment,
-      invoice: updatedInvoice
-    }, { status: 201 })
-  } catch (error) {
-    console.error("Error recording payment:", error)
     return NextResponse.json(
-      { error: "Failed to record payment" },
-      { status: 500 }
+      {
+        payment,
+        invoice: updatedInvoice,
+      },
+      { status: 201 }
     )
+  } catch (error) {
+    console.error('Error recording payment:', error)
+    return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
   }
 }

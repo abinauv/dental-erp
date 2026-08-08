@@ -24,7 +24,9 @@ function makeRoomRequest(method: string, params: Record<string, string> = {}, bo
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
   return new Request(url.toString(), {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -73,9 +75,7 @@ describe('Video Room & Token API', () => {
         hospitalId: null,
       })
 
-      const res = await roomModule.POST(
-        makeRoomRequest('POST', {}, { consultationId: 'c1' })
-      )
+      const res = await roomModule.POST(makeRoomRequest('POST', {}, { consultationId: 'c1' }))
       expect(res.status).toBe(403)
     })
   })
@@ -85,9 +85,7 @@ describe('Video Room & Token API', () => {
     it('deletes a video room', async () => {
       mockVideoService.deleteRoom.mockResolvedValue(undefined)
 
-      const res = await roomModule.DELETE(
-        makeRoomRequest('DELETE', { roomName: 'room-abc' })
-      )
+      const res = await roomModule.DELETE(makeRoomRequest('DELETE', { roomName: 'room-abc' }))
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.success).toBe(true)
@@ -119,11 +117,7 @@ describe('Video Room & Token API', () => {
       expect(body.token).toBe('daily-token-abc')
       expect(body.provider).toBe('daily')
       expect(body.isDoctor).toBe(true)
-      expect(mockVideoService.getRoomToken).toHaveBeenCalledWith(
-        'room-xyz',
-        'Dr. John Smith',
-        true
-      )
+      expect(mockVideoService.getRoomToken).toHaveBeenCalledWith('room-xyz', 'Dr. John Smith', true)
     })
 
     it('returns Jitsi response (no token needed)', async () => {

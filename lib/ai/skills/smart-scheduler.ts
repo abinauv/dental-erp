@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const smartScheduler: Skill = {
-  name: "smart-scheduler",
-  displayName: "Smart Scheduler",
-  description: "Natural-language appointment scheduling and slot optimization",
-  allowedRoles: ["ADMIN", "RECEPTIONIST"],
-  modelTier: "chat",
-  systemPrompt: (hospitalName, contextStr) => `You manage appointment scheduling for ${hospitalName}.
+  name: 'smart-scheduler',
+  displayName: 'Smart Scheduler',
+  description: 'Natural-language appointment scheduling and slot optimization',
+  allowedRoles: ['ADMIN', 'RECEPTIONIST'],
+  modelTier: 'chat',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You manage appointment scheduling for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

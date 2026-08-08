@@ -273,9 +273,7 @@ describe('Forms API', () => {
       ;(prisma.formTemplate.findFirst as any).mockResolvedValue({
         id: 't1',
         name: 'Consent',
-        submissions: [
-          { id: 's1', status: 'SIGNED', createdAt: new Date() },
-        ],
+        submissions: [{ id: 's1', status: 'SIGNED', createdAt: new Date() }],
         _count: { submissions: 1 },
       })
 
@@ -378,7 +376,9 @@ describe('Forms API', () => {
     it('returns 404 when template not found', async () => {
       ;(prisma.formTemplate.findFirst as any).mockResolvedValue(null)
 
-      const req = new Request('http://localhost/api/settings/forms/missing', { method: 'DELETE' }) as any
+      const req = new Request('http://localhost/api/settings/forms/missing', {
+        method: 'DELETE',
+      }) as any
       const res = await settingsDetailModule.DELETE(req, makeCtx('missing'))
       expect(res.status).toBe(404)
     })

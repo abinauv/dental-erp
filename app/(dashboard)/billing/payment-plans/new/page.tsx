@@ -1,19 +1,19 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -21,11 +21,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Loader2, Calculator, Search } from "lucide-react"
-import { format, addDays, addWeeks, addMonths } from "date-fns"
-import Link from "next/link"
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
+import { ArrowLeft, Loader2, Calculator, Search } from 'lucide-react'
+import { format, addDays, addWeeks, addMonths } from 'date-fns'
+import Link from 'next/link'
 
 interface Invoice {
   id: string
@@ -52,19 +52,19 @@ export default function NewPaymentPlanPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const preselectedInvoiceId = searchParams.get("invoiceId")
+  const preselectedInvoiceId = searchParams.get('invoiceId')
 
-  const [invoiceSearch, setInvoiceSearch] = useState("")
+  const [invoiceSearch, setInvoiceSearch] = useState('')
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
 
   const [installments, setInstallments] = useState(3)
-  const [frequency, setFrequency] = useState("MONTHLY")
+  const [frequency, setFrequency] = useState('MONTHLY')
   const [downPayment, setDownPayment] = useState(0)
   const [interestRate, setInterestRate] = useState(0)
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"))
-  const [notes, setNotes] = useState("")
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [notes, setNotes] = useState('')
 
   const [schedule, setSchedule] = useState<SchedulePreview[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -99,14 +99,12 @@ export default function NewPaymentPlanPage() {
     if (invoiceSearch.length < 2) return
     try {
       setSearchLoading(true)
-      const res = await fetch(
-        `/api/invoices?search=${encodeURIComponent(invoiceSearch)}&limit=10`
-      )
+      const res = await fetch(`/api/invoices?search=${encodeURIComponent(invoiceSearch)}&limit=10`)
       if (!res.ok) return
       const data = await res.json()
       setInvoices(
         (data.invoices || [])
-          .filter((inv: any) => inv.status !== "PAID" && inv.status !== "CANCELLED")
+          .filter((inv: any) => inv.status !== 'PAID' && inv.status !== 'CANCELLED')
           .map((inv: any) => ({
             id: inv.id,
             invoiceNo: inv.invoiceNo,
@@ -151,13 +149,13 @@ export default function NewPaymentPlanPage() {
     for (let i = 0; i < installments; i++) {
       let dueDate: Date
       switch (frequency) {
-        case "WEEKLY":
+        case 'WEEKLY':
           dueDate = addWeeks(planStart, i)
           break
-        case "BIWEEKLY":
+        case 'BIWEEKLY':
           dueDate = addDays(planStart, i * 14)
           break
-        case "MONTHLY":
+        case 'MONTHLY':
         default:
           dueDate = addMonths(planStart, i)
           break
@@ -197,15 +195,15 @@ export default function NewPaymentPlanPage() {
 
   const handleSubmit = async () => {
     if (!selectedInvoice) {
-      toast({ variant: "destructive", title: "Please select an invoice" })
+      toast({ variant: 'destructive', title: 'Please select an invoice' })
       return
     }
 
     try {
       setSubmitting(true)
-      const res = await fetch("/api/payment-plans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/payment-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           invoiceId: selectedInvoice.id,
           installments,
@@ -218,14 +216,14 @@ export default function NewPaymentPlanPage() {
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Failed to create plan")
+      if (!res.ok) throw new Error(data.error || 'Failed to create plan')
 
-      toast({ title: "Payment plan created successfully" })
+      toast({ title: 'Payment plan created successfully' })
       router.push(`/billing/payment-plans/${data.id}`)
     } catch (err: any) {
       toast({
-        variant: "destructive",
-        title: "Error",
+        variant: 'destructive',
+        title: 'Error',
         description: err.message,
       })
     } finally {
@@ -234,7 +232,7 @@ export default function NewPaymentPlanPage() {
   }
 
   const formatCurrency = (amount: number) =>
-    `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
   return (
     <div className="space-y-6">
@@ -260,9 +258,7 @@ export default function NewPaymentPlanPage() {
           <Card>
             <CardHeader>
               <CardTitle>Select Invoice</CardTitle>
-              <CardDescription>
-                Choose an unpaid or partially paid invoice
-              </CardDescription>
+              <CardDescription>Choose an unpaid or partially paid invoice</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!selectedInvoice ? (
@@ -291,14 +287,15 @@ export default function NewPaymentPlanPage() {
                           onClick={() => {
                             setSelectedInvoice(inv)
                             setInvoices([])
-                            setInvoiceSearch("")
+                            setInvoiceSearch('')
                           }}
                         >
                           <div className="flex justify-between items-start">
                             <div>
                               <div className="font-medium">{inv.invoiceNo}</div>
                               <div className="text-sm text-muted-foreground">
-                                {inv.patient.firstName} {inv.patient.lastName} ({inv.patient.patientId})
+                                {inv.patient.firstName} {inv.patient.lastName} (
+                                {inv.patient.patientId})
                               </div>
                             </div>
                             <div className="text-right">
@@ -324,18 +321,16 @@ export default function NewPaymentPlanPage() {
                         {selectedInvoice.patient.firstName} {selectedInvoice.patient.lastName}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedInvoice(null)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedInvoice(null)}>
                       Change
                     </Button>
                   </div>
                   <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
                     <div>
                       <div className="text-muted-foreground">Total</div>
-                      <div className="font-medium">{formatCurrency(selectedInvoice.totalAmount)}</div>
+                      <div className="font-medium">
+                        {formatCurrency(selectedInvoice.totalAmount)}
+                      </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">Paid</div>
@@ -359,9 +354,7 @@ export default function NewPaymentPlanPage() {
           <Card>
             <CardHeader>
               <CardTitle>Plan Configuration</CardTitle>
-              <CardDescription>
-                Configure installment frequency, count, and terms
-              </CardDescription>
+              <CardDescription>Configure installment frequency, count, and terms</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -462,9 +455,7 @@ export default function NewPaymentPlanPage() {
                   </div>
                   <div>
                     <div className="text-muted-foreground">Interest Amount</div>
-                    <div className="font-medium text-lg">
-                      {formatCurrency(interestAmount())}
-                    </div>
+                    <div className="font-medium text-lg">{formatCurrency(interestAmount())}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">Total Plan Amount</div>
@@ -475,15 +466,15 @@ export default function NewPaymentPlanPage() {
                   <div>
                     <div className="text-muted-foreground">EMI Amount</div>
                     <div className="font-bold text-xl text-green-600">
-                      {schedule.length > 0 ? formatCurrency(schedule[0].amount) : "—"}
+                      {schedule.length > 0 ? formatCurrency(schedule[0].amount) : '—'}
                     </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">Last Payment Date</div>
                     <div className="font-medium">
                       {schedule.length > 0
-                        ? format(schedule[schedule.length - 1].dueDate, "dd MMM yyyy")
-                        : "—"}
+                        ? format(schedule[schedule.length - 1].dueDate, 'dd MMM yyyy')
+                        : '—'}
                     </div>
                   </div>
                 </div>
@@ -496,9 +487,7 @@ export default function NewPaymentPlanPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Installment Schedule</CardTitle>
-                <CardDescription>
-                  Preview of {installments} installments
-                </CardDescription>
+                <CardDescription>Preview of {installments} installments</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-[400px] overflow-y-auto">
@@ -513,12 +502,8 @@ export default function NewPaymentPlanPage() {
                     <TableBody>
                       {schedule.map((item) => (
                         <TableRow key={item.installmentNo}>
-                          <TableCell className="font-medium">
-                            {item.installmentNo}
-                          </TableCell>
-                          <TableCell>
-                            {format(item.dueDate, "dd MMM yyyy")}
-                          </TableCell>
+                          <TableCell className="font-medium">{item.installmentNo}</TableCell>
+                          <TableCell>{format(item.dueDate, 'dd MMM yyyy')}</TableCell>
                           <TableCell className="text-right font-medium">
                             {formatCurrency(item.amount)}
                           </TableCell>
@@ -544,7 +529,7 @@ export default function NewPaymentPlanPage() {
                 Creating Plan...
               </>
             ) : (
-              "Create Payment Plan"
+              'Create Payment Plan'
             )}
           </Button>
         </div>

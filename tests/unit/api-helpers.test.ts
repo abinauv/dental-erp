@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  requireRole,
-  generateToken,
-  PLAN_LIMITS,
-} from '@/lib/api-helpers'
+import { requireRole, generateToken, PLAN_LIMITS } from '@/lib/api-helpers'
 import { NextResponse } from 'next/server'
 
 // Mock the auth module
@@ -126,7 +122,7 @@ describe('API Helpers - Role Authorization Matrix', () => {
       ['ADMIN', 'DOCTOR', 'RECEPTIONIST'],
       ['ADMIN', 'ACCOUNTANT'],
     ]
-    adminFeatures.forEach(allowedRoles => {
+    adminFeatures.forEach((allowedRoles) => {
       expect(requireRole('ADMIN', allowedRoles)).toBeNull()
     })
   })

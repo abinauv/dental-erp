@@ -1,96 +1,102 @@
 // Appointment status colors and labels
-export const appointmentStatusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+export const appointmentStatusConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string }
+> = {
   SCHEDULED: {
-    label: "Scheduled",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100"
+    label: 'Scheduled',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
   },
   CONFIRMED: {
-    label: "Confirmed",
-    color: "text-indigo-700",
-    bgColor: "bg-indigo-100"
+    label: 'Confirmed',
+    color: 'text-indigo-700',
+    bgColor: 'bg-indigo-100',
   },
   CHECKED_IN: {
-    label: "Checked In",
-    color: "text-amber-700",
-    bgColor: "bg-amber-100"
+    label: 'Checked In',
+    color: 'text-amber-700',
+    bgColor: 'bg-amber-100',
   },
   IN_PROGRESS: {
-    label: "In Progress",
-    color: "text-purple-700",
-    bgColor: "bg-purple-100"
+    label: 'In Progress',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-100',
   },
   COMPLETED: {
-    label: "Completed",
-    color: "text-green-700",
-    bgColor: "bg-green-100"
+    label: 'Completed',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
   },
   CANCELLED: {
-    label: "Cancelled",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted"
+    label: 'Cancelled',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
   },
   NO_SHOW: {
-    label: "No Show",
-    color: "text-red-700",
-    bgColor: "bg-red-100"
+    label: 'No Show',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
   },
   RESCHEDULED: {
-    label: "Rescheduled",
-    color: "text-orange-700",
-    bgColor: "bg-orange-100"
-  }
+    label: 'Rescheduled',
+    color: 'text-orange-700',
+    bgColor: 'bg-orange-100',
+  },
 }
 
-export const appointmentTypeConfig: Record<string, { label: string; color: string; bgColor: string }> = {
+export const appointmentTypeConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string }
+> = {
   CONSULTATION: {
-    label: "Consultation",
-    color: "text-blue-700",
-    bgColor: "bg-blue-50"
+    label: 'Consultation',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-50',
   },
   PROCEDURE: {
-    label: "Procedure",
-    color: "text-purple-700",
-    bgColor: "bg-purple-50"
+    label: 'Procedure',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-50',
   },
   FOLLOW_UP: {
-    label: "Follow Up",
-    color: "text-teal-700",
-    bgColor: "bg-teal-50"
+    label: 'Follow Up',
+    color: 'text-teal-700',
+    bgColor: 'bg-teal-50',
   },
   EMERGENCY: {
-    label: "Emergency",
-    color: "text-red-700",
-    bgColor: "bg-red-50"
+    label: 'Emergency',
+    color: 'text-red-700',
+    bgColor: 'bg-red-50',
   },
   CHECK_UP: {
-    label: "Check Up",
-    color: "text-green-700",
-    bgColor: "bg-green-50"
-  }
+    label: 'Check Up',
+    color: 'text-green-700',
+    bgColor: 'bg-green-50',
+  },
 }
 
 export const priorityConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   LOW: {
-    label: "Low",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted"
+    label: 'Low',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
   },
   NORMAL: {
-    label: "Normal",
-    color: "text-blue-600",
-    bgColor: "bg-blue-100"
+    label: 'Normal',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
   },
   HIGH: {
-    label: "High",
-    color: "text-orange-600",
-    bgColor: "bg-orange-100"
+    label: 'High',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
   },
   URGENT: {
-    label: "Urgent",
-    color: "text-red-600",
-    bgColor: "bg-red-100"
-  }
+    label: 'Urgent',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
+  },
 }
 
 // Format time string (24h to 12h format)
@@ -107,7 +113,7 @@ export function formatDate(date: Date | string): string {
   return d.toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
   })
 }
 

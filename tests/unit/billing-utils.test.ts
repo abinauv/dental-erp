@@ -115,9 +115,7 @@ describe('Billing Utils - calculateInvoiceTotals', () => {
   })
 
   it('should apply discount before tax calculation', () => {
-    const items = [
-      { quantity: 1, unitPrice: 1000, taxable: true },
-    ]
+    const items = [{ quantity: 1, unitPrice: 1000, taxable: true }]
     const result = calculateInvoiceTotals(items, 'FIXED', 100)
 
     expect(result.subtotal).toBe(1000)
@@ -337,7 +335,7 @@ describe('Billing Utils - numberToWords', () => {
   })
 
   it('should handle decimal amounts (paise)', () => {
-    const result = numberToWords(100.50)
+    const result = numberToWords(100.5)
     expect(result).toContain('One Hundred Rupees')
     expect(result).toContain('Fifty Paise')
   })

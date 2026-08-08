@@ -25,10 +25,7 @@ import {
   POST as settingsPOST,
   PUT as settingsPUT,
 } from '@/app/api/settings/route'
-import {
-  GET as clinicGET,
-  POST as clinicPOST,
-} from '@/app/api/settings/clinic/route'
+import { GET as clinicGET, POST as clinicPOST } from '@/app/api/settings/clinic/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
@@ -134,10 +131,12 @@ describe('POST /api/settings', () => {
     const mockSetting = { id: 's1', key: 'test.key', value: 'test-value', category: 'general' }
     vi.mocked(prisma.setting.upsert).mockResolvedValue(mockSetting as any)
 
-    const res = await settingsPOST(makeReq('/api/settings', 'POST', {
-      key: 'test.key',
-      value: 'test-value',
-    }))
+    const res = await settingsPOST(
+      makeReq('/api/settings', 'POST', {
+        key: 'test.key',
+        value: 'test-value',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -154,10 +153,12 @@ describe('POST /api/settings', () => {
     mockAuth()
     vi.mocked(prisma.setting.upsert).mockResolvedValue({ id: 's1' } as any)
 
-    await settingsPOST(makeReq('/api/settings', 'POST', {
-      key: 'my.key',
-      value: 'v',
-    }))
+    await settingsPOST(
+      makeReq('/api/settings', 'POST', {
+        key: 'my.key',
+        value: 'v',
+      })
+    )
 
     expect(prisma.setting.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -201,12 +202,14 @@ describe('PUT /api/settings', () => {
       .mockResolvedValueOnce({ id: 's1', key: 'a' } as any)
       .mockResolvedValueOnce({ id: 's2', key: 'b' } as any)
 
-    const res = await settingsPUT(makeReq('/api/settings', 'PUT', {
-      settings: [
-        { key: 'a', value: '1' },
-        { key: 'b', value: '2' },
-      ],
-    }))
+    const res = await settingsPUT(
+      makeReq('/api/settings', 'PUT', {
+        settings: [
+          { key: 'a', value: '1' },
+          { key: 'b', value: '2' },
+        ],
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -312,13 +315,15 @@ describe('POST /api/settings/clinic', () => {
 
   it('returns 500 for validation error (missing name)', async () => {
     mockAuth()
-    const res = await clinicPOST(makeReq('/api/settings/clinic', 'POST', {
-      phone: '9876543210',
-      address: '456 New Rd',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
-    }))
+    const res = await clinicPOST(
+      makeReq('/api/settings/clinic', 'POST', {
+        phone: '9876543210',
+        address: '456 New Rd',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400001',
+      })
+    )
     // Zod validation error goes to catch block → 500
     expect(res.status).toBe(500)
   })
@@ -327,16 +332,18 @@ describe('POST /api/settings/clinic', () => {
     mockAuth()
     vi.mocked(prisma.hospital.update).mockResolvedValue({ id: 'h1' } as any)
 
-    await clinicPOST(makeReq('/api/settings/clinic', 'POST', {
-      name: 'Clinic',
-      phone: '9876543210',
-      address: 'Addr',
-      city: 'City',
-      state: 'State',
-      pincode: '110001',
-      tagline: '',
-      website: '',
-    }))
+    await clinicPOST(
+      makeReq('/api/settings/clinic', 'POST', {
+        name: 'Clinic',
+        phone: '9876543210',
+        address: 'Addr',
+        city: 'City',
+        state: 'State',
+        pincode: '110001',
+        tagline: '',
+        website: '',
+      })
+    )
 
     expect(prisma.hospital.update).toHaveBeenCalledWith({
       where: { id: 'h1' },

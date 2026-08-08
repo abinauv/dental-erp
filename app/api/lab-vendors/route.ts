@@ -91,10 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Validation
     if (!name || !phone) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, phone' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing required fields: name, phone' }, { status: 400 })
     }
 
     // Create lab vendor
@@ -113,11 +110,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      data: vendor,
-      message: 'Lab vendor created successfully',
-    }, { status: 201 })
+    return NextResponse.json(
+      {
+        success: true,
+        data: vendor,
+        message: 'Lab vendor created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
     console.error('Error creating lab vendor:', error)
     return NextResponse.json(

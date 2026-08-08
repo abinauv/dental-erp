@@ -4,30 +4,30 @@
  */
 
 export interface GatewayOrder {
-  orderId: string          // Gateway's order/transaction ID
-  amount: number           // Amount in smallest currency unit (paise)
+  orderId: string // Gateway's order/transaction ID
+  amount: number // Amount in smallest currency unit (paise)
   currency: string
-  receipt: string          // Our invoice reference
-  provider: string         // razorpay / phonepe / paytm
+  receipt: string // Our invoice reference
+  provider: string // razorpay / phonepe / paytm
   status: string
   metadata?: Record<string, unknown>
 }
 
 export interface CreateOrderParams {
-  amount: number           // Amount in INR (rupees, not paise)
+  amount: number // Amount in INR (rupees, not paise)
   currency: string
   invoiceId: string
-  receipt: string          // Invoice number
+  receipt: string // Invoice number
   customerName?: string
   customerEmail?: string
   customerPhone?: string
 }
 
 export interface VerifyPaymentParams {
-  orderId: string          // Gateway order ID
-  paymentId: string        // Gateway payment ID
-  signature: string        // Signature for verification
-  [key: string]: unknown   // Provider-specific extra fields
+  orderId: string // Gateway order ID
+  paymentId: string // Gateway payment ID
+  signature: string // Signature for verification
+  [key: string]: unknown // Provider-specific extra fields
 }
 
 export interface VerifyPaymentResult {
@@ -40,12 +40,12 @@ export interface VerifyPaymentResult {
 
 export interface CheckoutConfig {
   provider: string
-  [key: string]: unknown   // Provider-specific config
+  [key: string]: unknown // Provider-specific config
 }
 
 export interface RefundParams {
   paymentId: string
-  amount: number           // Amount in INR (rupees)
+  amount: number // Amount in INR (rupees)
   reason?: string
 }
 

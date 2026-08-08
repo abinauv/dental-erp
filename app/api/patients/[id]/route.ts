@@ -1,21 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 // GET /api/patients/[id] - Get a specific patient with all details
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
     const patient = await prisma.patient.findFirst({
       where: { id, hospitalId },
@@ -73,53 +70,41 @@ export async function GET(
           },
         },
       },
-    });
+    })
 
     if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     return NextResponse.json({
       success: true,
       patient,
-    });
+    })
   } catch (error: any) {
-    console.error('Error fetching patient:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch patient' },
-      { status: 500 }
-    );
+    console.error('Error fetching patient:', error)
+    return NextResponse.json({ error: error.message || 'Failed to fetch patient' }, { status: 500 })
   }
 }
 
 // PUT /api/patients/[id] - Update a patient
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
-    const body = await req.json();
+    const { id } = await params
+    const body = await req.json()
 
     // Check if patient exists and belongs to this hospital
     const existingPatient = await prisma.patient.findFirst({
       where: { id, hospitalId },
-    });
+    })
 
     if (!existingPatient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     const {
@@ -139,7 +124,7 @@ export async function PUT(
       emergencyContactName,
       emergencyContactPhone,
       emergencyContactRelation,
-    } = body;
+    } = body
 
     const patient = await prisma.patient.update({
       where: { id },
@@ -164,44 +149,38 @@ export async function PUT(
         aiSummary: Prisma.JsonNull,
         aiSummaryAt: null,
       },
-    });
+    })
 
     return NextResponse.json({
       success: true,
       patient,
-    });
+    })
   } catch (error: any) {
-    console.error('Error updating patient:', error);
+    console.error('Error updating patient:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to update patient' },
       { status: 500 }
-    );
+    )
   }
 }
 
 // DELETE /api/patients/[id] - Soft delete a patient
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole();
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { id } = await params;
+    const { id } = await params
 
     const patient = await prisma.patient.findFirst({
       where: { id, hospitalId },
-    });
+    })
 
     if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Cancel any pending/scheduled appointments for this patient
@@ -215,23 +194,23 @@ export async function DELETE(
         status: 'CANCELLED',
         notes: 'Auto-cancelled: Patient deactivated',
       },
-    });
+    })
 
     // Soft delete
     await prisma.patient.update({
       where: { id },
       data: { isActive: false },
-    });
+    })
 
     return NextResponse.json({
       success: true,
       message: 'Patient deactivated successfully',
-    });
+    })
   } catch (error: any) {
-    console.error('Error deleting patient:', error);
+    console.error('Error deleting patient:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to delete patient' },
       { status: 500 }
-    );
+    )
   }
 }

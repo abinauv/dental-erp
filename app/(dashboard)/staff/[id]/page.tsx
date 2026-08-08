@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Separator } from '@/components/ui/separator'
 import {
   ArrowLeft,
   Edit,
@@ -23,8 +23,8 @@ import {
   Clock,
   FileText,
   AlertCircle,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface StaffDetail {
   id: string
@@ -75,28 +75,24 @@ interface StaffDetail {
 }
 
 const roleColors: Record<string, string> = {
-  ADMIN: "bg-purple-100 text-purple-700",
-  DOCTOR: "bg-blue-100 text-blue-700",
-  RECEPTIONIST: "bg-green-100 text-green-700",
-  LAB_TECH: "bg-orange-100 text-orange-700",
-  ACCOUNTANT: "bg-yellow-100 text-yellow-700",
+  ADMIN: 'bg-purple-100 text-purple-700',
+  DOCTOR: 'bg-blue-100 text-blue-700',
+  RECEPTIONIST: 'bg-green-100 text-green-700',
+  LAB_TECH: 'bg-orange-100 text-orange-700',
+  ACCOUNTANT: 'bg-yellow-100 text-yellow-700',
 }
 
 const roleLabels: Record<string, string> = {
-  ADMIN: "Administrator",
-  DOCTOR: "Doctor",
-  RECEPTIONIST: "Receptionist",
-  LAB_TECH: "Lab Technician",
-  ACCOUNTANT: "Accountant",
+  ADMIN: 'Administrator',
+  DOCTOR: 'Doctor',
+  RECEPTIONIST: 'Receptionist',
+  LAB_TECH: 'Lab Technician',
+  ACCOUNTANT: 'Accountant',
 }
 
-const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-export default function StaffDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function StaffDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const { toast } = useToast()
@@ -114,24 +110,24 @@ export default function StaffDetailPage({
       if (!response.ok) {
         if (response.status === 404) {
           toast({
-            variant: "destructive",
-            title: "Not Found",
-            description: "Staff member not found",
+            variant: 'destructive',
+            title: 'Not Found',
+            description: 'Staff member not found',
           })
-          router.push("/staff")
+          router.push('/staff')
           return
         }
-        throw new Error("Failed to fetch staff")
+        throw new Error('Failed to fetch staff')
       }
 
       const data = await response.json()
       setStaff(data)
     } catch (error) {
-      console.error("Error fetching staff:", error)
+      console.error('Error fetching staff:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch staff details",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch staff details',
       })
     } finally {
       setLoading(false)
@@ -139,19 +135,19 @@ export default function StaffDetailPage({
   }
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-"
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     })
   }
 
   const formatCurrency = (amount: number | null) => {
-    if (amount === null) return "-"
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    if (amount === null) return '-'
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount)
   }
@@ -213,8 +209,8 @@ export default function StaffDetailPage({
                 <h1 className="text-3xl font-bold tracking-tight">
                   {staff.firstName} {staff.lastName}
                 </h1>
-                <Badge variant={staff.isActive ? "default" : "secondary"}>
-                  {staff.isActive ? "Active" : "Inactive"}
+                <Badge variant={staff.isActive ? 'default' : 'secondary'}>
+                  {staff.isActive ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
               <div className="flex items-center gap-4 mt-1 text-muted-foreground">
@@ -261,7 +257,7 @@ export default function StaffDetailPage({
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Alternate Phone</p>
-                    <p className="font-medium">{staff.alternatePhone || "-"}</p>
+                    <p className="font-medium">{staff.alternatePhone || '-'}</p>
                   </div>
                 </div>
                 <div>
@@ -283,7 +279,7 @@ export default function StaffDetailPage({
                         {staff.pincode && ` - ${staff.pincode}`}
                       </>
                     ) : (
-                      "-"
+                      '-'
                     )}
                   </p>
                 </div>
@@ -306,18 +302,18 @@ export default function StaffDetailPage({
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Gender</p>
-                    <p className="font-medium">{staff.gender || "-"}</p>
+                    <p className="font-medium">{staff.gender || '-'}</p>
                   </div>
                 </div>
                 <Separator />
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Aadhar Number</p>
-                    <p className="font-medium">{staff.aadharNumber || "-"}</p>
+                    <p className="font-medium">{staff.aadharNumber || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">PAN Number</p>
-                    <p className="font-medium">{staff.panNumber || "-"}</p>
+                    <p className="font-medium">{staff.panNumber || '-'}</p>
                   </div>
                 </div>
                 <Separator />
@@ -325,8 +321,8 @@ export default function StaffDetailPage({
                   <p className="text-sm text-muted-foreground">Emergency Contact</p>
                   <p className="font-medium">
                     {staff.emergencyContact
-                      ? `${staff.emergencyContact} (${staff.emergencyPhone || "No phone"})`
-                      : "-"}
+                      ? `${staff.emergencyContact} (${staff.emergencyPhone || 'No phone'})`
+                      : '-'}
                   </p>
                 </div>
               </CardContent>
@@ -344,24 +340,24 @@ export default function StaffDetailPage({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Qualification</p>
-                    <p className="font-medium">{staff.qualification || "-"}</p>
+                    <p className="font-medium">{staff.qualification || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Specialization</p>
-                    <p className="font-medium">{staff.specialization || "-"}</p>
+                    <p className="font-medium">{staff.specialization || '-'}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">License Number</p>
-                    <p className="font-medium">{staff.licenseNumber || "-"}</p>
+                    <p className="font-medium">{staff.licenseNumber || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Joining Date</p>
                     <p className="font-medium">{formatDate(staff.joiningDate)}</p>
                   </div>
                 </div>
-                {staff.user.role === "DOCTOR" && (
+                {staff.user.role === 'DOCTOR' && (
                   <>
                     <Separator />
                     <div className="grid grid-cols-3 gap-4">
@@ -408,11 +404,11 @@ export default function StaffDetailPage({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Bank Account No.</p>
-                    <p className="font-medium">{staff.bankAccountNo || "-"}</p>
+                    <p className="font-medium">{staff.bankAccountNo || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">IFSC Code</p>
-                    <p className="font-medium">{staff.bankIfsc || "-"}</p>
+                    <p className="font-medium">{staff.bankIfsc || '-'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -427,9 +423,7 @@ export default function StaffDetailPage({
                 <Clock className="h-4 w-4" />
                 Work Schedule
               </CardTitle>
-              <CardDescription>
-                Weekly work schedule for {staff.firstName}
-              </CardDescription>
+              <CardDescription>Weekly work schedule for {staff.firstName}</CardDescription>
             </CardHeader>
             <CardContent>
               {staff.shifts.length === 0 ? (
@@ -450,22 +444,18 @@ export default function StaffDetailPage({
                       <div
                         key={day}
                         className={`flex items-center justify-between p-3 rounded-lg ${
-                          shift && shift.isActive
-                            ? "bg-green-50"
-                            : "bg-muted/50"
+                          shift && shift.isActive ? 'bg-green-50' : 'bg-muted/50'
                         }`}
                       >
                         <span className="font-medium">{day}</span>
                         <span
                           className={
-                            shift && shift.isActive
-                              ? "text-green-700"
-                              : "text-muted-foreground"
+                            shift && shift.isActive ? 'text-green-700' : 'text-muted-foreground'
                           }
                         >
                           {shift && shift.isActive
                             ? `${shift.startTime} - ${shift.endTime}`
-                            : "Off"}
+                            : 'Off'}
                         </span>
                       </div>
                     )
@@ -483,9 +473,7 @@ export default function StaffDetailPage({
                 <FileText className="h-4 w-4" />
                 Documents
               </CardTitle>
-              <CardDescription>
-                Staff documents and certifications
-              </CardDescription>
+              <CardDescription>Staff documents and certifications</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">

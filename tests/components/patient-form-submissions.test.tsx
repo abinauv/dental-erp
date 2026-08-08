@@ -23,25 +23,39 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/card', () => ({
   Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
 }))
 
 vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, className }: any) => <span data-testid="badge" className={className}>{children}</span>,
+  Badge: ({ children, className }: any) => (
+    <span data-testid="badge" className={className}>
+      {children}
+    </span>
+  ),
 }))
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children, onOpenChange }: any) =>
     open ? <div data-testid="dialog">{children}</div> : null,
-  DialogContent: ({ children, className }: any) => <div data-testid="dialog-content" className={className}>{children}</div>,
+  DialogContent: ({ children, className }: any) => (
+    <div data-testid="dialog-content" className={className}>
+      {children}
+    </div>
+  ),
   DialogHeader: ({ children }: any) => <div data-testid="dialog-header">{children}</div>,
   DialogTitle: ({ children }: any) => <h2>{children}</h2>,
 }))
@@ -50,7 +64,9 @@ vi.mock('@/components/ui/select', () => ({
   Select: ({ children, value, onValueChange }: any) => (
     <div data-testid="select-root">
       {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as any, { onValueChange, value }) : child
+        React.isValidElement(child)
+          ? React.cloneElement(child as any, { onValueChange, value })
+          : child
       )}
     </div>
   ),
@@ -228,7 +244,10 @@ describe('PatientFormSubmissions', () => {
         json: async () => ({
           submission: {
             ...mockSubmissions[0],
-            template: { ...mockSubmissions[0].template, fields: [{ id: 'name', type: 'text', label: 'Name' }] },
+            template: {
+              ...mockSubmissions[0].template,
+              fields: [{ id: 'name', type: 'text', label: 'Name' }],
+            },
           },
         }),
       })
