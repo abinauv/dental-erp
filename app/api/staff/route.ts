@@ -1,29 +1,31 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole, checkStaffLimit } from "@/lib/api-helpers"
-import bcrypt from "bcryptjs"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole, checkStaffLimit } from '@/lib/api-helpers'
+import bcrypt from 'bcryptjs'
 
 // GET - List staff members
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
-    const search = searchParams.get("search") || ""
-    const role = searchParams.get("role") || ""
-    const status = searchParams.get("status") || ""
-    const all = searchParams.get("all") === "true"
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const role = searchParams.get('role') || ''
+    const status = searchParams.get('status') || ''
+    const all = searchParams.get('all') === 'true'
 
     const skip = (page - 1) * limit
 
     const where: any = { hospitalId }
 
-    if (status === "active") {
+    if (status === 'active') {
       where.isActive = true
-    } else if (status === "inactive") {
+    } else if (status === 'inactive') {
       where.isActive = false
     }
 
@@ -37,9 +39,9 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    if (role && role !== "all") {
+    if (role && role !== 'all') {
       where.user = {
-        role: role
+        role: role,
       }
     }
 
@@ -52,15 +54,15 @@ export async function GET(request: NextRequest) {
               id: true,
               role: true,
               isActive: true,
-              email: true
-            }
-          }
+              email: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: all ? undefined : skip,
         take: all ? undefined : limit,
       }),
-      prisma.staff.count({ where })
+      prisma.staff.count({ where }),
     ])
 
     return NextResponse.json({
@@ -69,15 +71,12 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching staff:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch staff" },
-      { status: 500 }
-    )
+    console.error('Error fetching staff:', error)
+    return NextResponse.json({ error: 'Failed to fetch staff' }, { status: 500 })
   }
 }
 
@@ -88,10 +87,10 @@ async function generateEmployeeId(hospitalId: string): Promise<string> {
     where: {
       hospitalId,
       employeeId: {
-        startsWith: `EMP${year}`
-      }
+        startsWith: `EMP${year}`,
+      },
     },
-    orderBy: { employeeId: 'desc' }
+    orderBy: { employeeId: 'desc' },
   })
 
   let nextNum = 1
@@ -106,19 +105,23 @@ async function generateEmployeeId(hospitalId: string): Promise<string> {
 // POST - Create new staff member
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     // Only admin can create staff
-    if (session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Check staff limit
     const limitCheck = await checkStaffLimit(hospitalId)
     if (!limitCheck.allowed) {
       return NextResponse.json(
-        { error: `Staff limit reached. Your plan allows ${limitCheck.max} staff members. Current: ${limitCheck.current}.` },
+        {
+          error: `Staff limit reached. Your plan allows ${limitCheck.max} staff members. Current: ${limitCheck.current}.`,
+        },
         { status: 403 }
       )
     }
@@ -148,27 +151,24 @@ export async function POST(request: NextRequest) {
       bankAccountNo,
       bankIfsc,
       emergencyContact,
-      emergencyPhone
+      emergencyPhone,
     } = body
 
     // Validate required fields
     if (!firstName || !lastName || !email || !phone || !role || !password) {
       return NextResponse.json(
-        { error: "Missing required fields: firstName, lastName, email, phone, role, password" },
+        { error: 'Missing required fields: firstName, lastName, email, phone, role, password' },
         { status: 400 }
       )
     }
 
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email already registered' }, { status: 400 })
     }
 
     // Generate employee ID
@@ -188,8 +188,8 @@ export async function POST(request: NextRequest) {
           phone,
           role,
           isActive: true,
-          hospitalId
-        }
+          hospitalId,
+        },
       })
 
       // Create staff profile
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
           bankIfsc,
           emergencyContact,
           emergencyPhone,
-          isActive: true
+          isActive: true,
         },
         include: {
           user: {
@@ -228,10 +228,10 @@ export async function POST(request: NextRequest) {
               id: true,
               role: true,
               isActive: true,
-              email: true
-            }
-          }
-        }
+              email: true,
+            },
+          },
+        },
       })
 
       return staff
@@ -239,10 +239,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
-    console.error("Error creating staff:", error)
-    return NextResponse.json(
-      { error: "Failed to create staff member" },
-      { status: 500 }
-    )
+    console.error('Error creating staff:', error)
+    return NextResponse.json({ error: 'Failed to create staff member' }, { status: 500 })
   }
 }

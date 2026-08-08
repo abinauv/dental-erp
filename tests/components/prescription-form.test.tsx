@@ -37,7 +37,9 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, disabled, ...props }: any) => (
-    <button disabled={disabled} {...props}>{children}</button>
+    <button disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
@@ -86,7 +88,11 @@ vi.mock('@/components/ui/select', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 import NewPrescriptionPage from '@/app/(dashboard)/prescriptions/new/page'
@@ -248,9 +254,7 @@ describe('NewPrescriptionPage', () => {
       })
 
       // fetch should not have been called for POST (only for possible patient lookup)
-      const postCalls = (global.fetch as any).mock.calls.filter(
-        (c: any) => c[1]?.method === 'POST'
-      )
+      const postCalls = (global.fetch as any).mock.calls.filter((c: any) => c[1]?.method === 'POST')
       expect(postCalls.length).toBe(0)
     })
 
@@ -297,11 +301,20 @@ describe('NewPrescriptionPage', () => {
         if (url.includes('/api/patients')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({
-              data: [
-                { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', dateOfBirth: null, allergies: null },
-              ],
-            }),
+            json: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: 'p1',
+                    patientId: 'PAT001',
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    phone: '9876543210',
+                    dateOfBirth: null,
+                    allergies: null,
+                  },
+                ],
+              }),
           })
         }
         return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
@@ -312,11 +325,14 @@ describe('NewPrescriptionPage', () => {
       const searchInput = screen.getByPlaceholderText(/Search patient by name/i)
       fireEvent.change(searchInput, { target: { value: 'Jo' } })
 
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/patients?search=Jo')
-        )
-      }, { timeout: 1000 })
+      await waitFor(
+        () => {
+          expect(global.fetch).toHaveBeenCalledWith(
+            expect.stringContaining('/api/patients?search=Jo')
+          )
+        },
+        { timeout: 1000 }
+      )
     })
 
     it('shows selected patient info after selection', async () => {
@@ -324,11 +340,20 @@ describe('NewPrescriptionPage', () => {
         if (url.includes('/api/patients')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({
-              data: [
-                { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', dateOfBirth: null, allergies: null },
-              ],
-            }),
+            json: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: 'p1',
+                    patientId: 'PAT001',
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    phone: '9876543210',
+                    dateOfBirth: null,
+                    allergies: null,
+                  },
+                ],
+              }),
           })
         }
         return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
@@ -339,10 +364,13 @@ describe('NewPrescriptionPage', () => {
       const searchInput = screen.getByPlaceholderText(/Search patient by name/i)
       fireEvent.change(searchInput, { target: { value: 'John' } })
 
-      await waitFor(() => {
-        const patientButton = screen.getByText('John Doe')
-        fireEvent.click(patientButton)
-      }, { timeout: 1000 })
+      await waitFor(
+        () => {
+          const patientButton = screen.getByText('John Doe')
+          fireEvent.click(patientButton)
+        },
+        { timeout: 1000 }
+      )
 
       await waitFor(() => {
         expect(screen.getByText('Change')).toBeInTheDocument()
@@ -357,11 +385,20 @@ describe('NewPrescriptionPage', () => {
         if (url.includes('/api/patients') && !opts?.method) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({
-              data: [
-                { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', dateOfBirth: null, allergies: null },
-              ],
-            }),
+            json: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: 'p1',
+                    patientId: 'PAT001',
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    phone: '9876543210',
+                    dateOfBirth: null,
+                    allergies: null,
+                  },
+                ],
+              }),
           })
         }
         if (opts?.method === 'POST') {
@@ -379,9 +416,12 @@ describe('NewPrescriptionPage', () => {
       const searchInput = screen.getByPlaceholderText(/Search patient by name/i)
       fireEvent.change(searchInput, { target: { value: 'John' } })
 
-      await waitFor(() => {
-        fireEvent.click(screen.getByText('John Doe'))
-      }, { timeout: 1000 })
+      await waitFor(
+        () => {
+          fireEvent.click(screen.getByText('John Doe'))
+        },
+        { timeout: 1000 }
+      )
 
       // Fill medication
       fireEvent.change(screen.getByPlaceholderText('Search from catalog or type name...'), {
@@ -421,11 +461,20 @@ describe('NewPrescriptionPage', () => {
         if (url.includes('/api/patients') && !opts?.method) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({
-              data: [
-                { id: 'p1', patientId: 'PAT001', firstName: 'Jane', lastName: 'Smith', phone: '9876543211', dateOfBirth: null, allergies: null },
-              ],
-            }),
+            json: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: 'p1',
+                    patientId: 'PAT001',
+                    firstName: 'Jane',
+                    lastName: 'Smith',
+                    phone: '9876543211',
+                    dateOfBirth: null,
+                    allergies: null,
+                  },
+                ],
+              }),
           })
         }
         if (opts?.method === 'POST') {
@@ -443,9 +492,12 @@ describe('NewPrescriptionPage', () => {
       const searchInput = screen.getByPlaceholderText(/Search patient by name/i)
       fireEvent.change(searchInput, { target: { value: 'Jane' } })
 
-      await waitFor(() => {
-        fireEvent.click(screen.getByText('Jane Smith'))
-      }, { timeout: 1000 })
+      await waitFor(
+        () => {
+          fireEvent.click(screen.getByText('Jane Smith'))
+        },
+        { timeout: 1000 }
+      )
 
       // Fill medication
       fireEvent.change(screen.getByPlaceholderText('Search from catalog or type name...'), {

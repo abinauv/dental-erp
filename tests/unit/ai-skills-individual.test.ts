@@ -219,11 +219,20 @@ describe('AI Skills — Individual Prompt Generation', () => {
 
   describe('all skills produce non-empty prompts', () => {
     const skillNames = [
-      'patient-intake', 'smart-scheduler', 'treatment-advisor',
-      'billing-agent', 'inventory-manager', 'lab-coordinator',
-      'clinic-analyst', 'no-show-predictor', 'inventory-forecaster',
-      'cashflow-forecaster', 'patient-segmentation', 'claim-analyzer',
-      'consent-generator', 'dynamic-pricing',
+      'patient-intake',
+      'smart-scheduler',
+      'treatment-advisor',
+      'billing-agent',
+      'inventory-manager',
+      'lab-coordinator',
+      'clinic-analyst',
+      'no-show-predictor',
+      'inventory-forecaster',
+      'cashflow-forecaster',
+      'patient-segmentation',
+      'claim-analyzer',
+      'consent-generator',
+      'dynamic-pricing',
     ]
 
     it.each(skillNames)('%s produces valid prompt', (name) => {

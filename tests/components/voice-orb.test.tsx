@@ -82,14 +82,18 @@ describe('VoiceOrb', () => {
   })
 
   it('renders waveform bars when listening', () => {
-    const { container } = render(<VoiceOrb state="listening" audioLevel={0.5} onPress={mockOnPress} />)
+    const { container } = render(
+      <VoiceOrb state="listening" audioLevel={0.5} onPress={mockOnPress} />
+    )
     // 5 waveform bars rendered as spans with rounded-full class
     const bars = container.querySelectorAll('span.bg-white.rounded-full')
     expect(bars.length).toBe(5)
   })
 
   it('renders ripple rings when listening', () => {
-    const { container } = render(<VoiceOrb state="listening" audioLevel={0.5} onPress={mockOnPress} />)
+    const { container } = render(
+      <VoiceOrb state="listening" audioLevel={0.5} onPress={mockOnPress} />
+    )
     // 3 ripple rings with animation
     const ripples = container.querySelectorAll('span[style*="orb-ripple"]')
     expect(ripples.length).toBe(3)
@@ -102,7 +106,9 @@ describe('VoiceOrb', () => {
   })
 
   it('renders processing spinner when processing', () => {
-    const { container } = render(<VoiceOrb state="processing" audioLevel={0} onPress={mockOnPress} />)
+    const { container } = render(
+      <VoiceOrb state="processing" audioLevel={0} onPress={mockOnPress} />
+    )
     const spinner = container.querySelector('span[style*="orb-spin"]')
     expect(spinner).toBeInTheDocument()
   })
@@ -121,7 +127,9 @@ describe('VoiceOrb', () => {
   })
 
   it('scales dynamically based on audioLevel when listening', () => {
-    const { container } = render(<VoiceOrb state="listening" audioLevel={0.8} onPress={mockOnPress} />)
+    const { container } = render(
+      <VoiceOrb state="listening" audioLevel={0.8} onPress={mockOnPress} />
+    )
     // Main orb should have transform with scale > 1
     const orbSpan = container.querySelector('span[style*="scale"]')
     expect(orbSpan).toBeInTheDocument()

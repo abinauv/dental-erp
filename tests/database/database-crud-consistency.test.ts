@@ -109,10 +109,7 @@ function mockSession(hospitalId = HOSPITAL_A, role = 'ADMIN') {
 
 // ─── Imports (after mocks) ───────────────────────────────────────────────────
 
-import {
-  GET as getPatients,
-  POST as createPatient,
-} from '@/app/api/patients/route'
+import { GET as getPatients, POST as createPatient } from '@/app/api/patients/route'
 
 import {
   GET as getPatientById,
@@ -120,15 +117,9 @@ import {
   DELETE as deletePatient,
 } from '@/app/api/patients/[id]/route'
 
-import {
-  GET as getAppointments,
-  POST as createAppointment,
-} from '@/app/api/appointments/route'
+import { GET as getAppointments, POST as createAppointment } from '@/app/api/appointments/route'
 
-import {
-  GET as getInvoices,
-  POST as createInvoice,
-} from '@/app/api/invoices/route'
+import { GET as getInvoices, POST as createInvoice } from '@/app/api/invoices/route'
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -949,11 +940,13 @@ describe('8.2 Data Consistency', () => {
 
       if (res.status < 400) {
         const items = prismaMock.invoice.create.mock.calls[0]?.[0]?.data?.items?.create
-        expect(items[0]).toEqual(expect.objectContaining({
-          description: 'Filling',
-          unitPrice: 800,
-          quantity: 2,
-        }))
+        expect(items[0]).toEqual(
+          expect.objectContaining({
+            description: 'Filling',
+            unitPrice: 800,
+            quantity: 2,
+          })
+        )
       }
     })
 

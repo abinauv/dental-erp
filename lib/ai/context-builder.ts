@@ -2,7 +2,7 @@
  * Assembles runtime context for AI prompts by querying the database.
  */
 
-import { prisma } from "@/lib/prisma"
+import { prisma } from '@/lib/prisma'
 
 export interface AIContext {
   hospital: { id: string; name: string; plan: string }
@@ -44,14 +44,14 @@ export async function buildContext(params: {
       where: { id: params.patientId, hospitalId: params.hospitalId },
       include: {
         medicalHistory: true,
-        treatmentPlans: { orderBy: { createdAt: "desc" }, take: 5 },
+        treatmentPlans: { orderBy: { createdAt: 'desc' }, take: 5 },
         appointments: {
-          where: { status: { in: ["COMPLETED"] } },
-          orderBy: { scheduledDate: "desc" },
+          where: { status: { in: ['COMPLETED'] } },
+          orderBy: { scheduledDate: 'desc' },
           take: 5,
         },
         invoices: {
-          where: { status: { in: ["PENDING", "PARTIALLY_PAID", "OVERDUE"] } },
+          where: { status: { in: ['PENDING', 'PARTIALLY_PAID', 'OVERDUE'] } },
         },
       },
     })
@@ -61,14 +61,15 @@ export async function buildContext(params: {
       if (patient.medicalHistory) {
         const h = patient.medicalHistory
         if (h.drugAllergies) flags.push(`Allergy: ${h.drugAllergies}`)
-        if (h.hasDiabetes) flags.push("Diabetes" + (h.diabetesType ? ` (${h.diabetesType})` : ""))
-        if (h.hasHypertension) flags.push("Hypertension")
-        if (h.hasHeartDisease) flags.push("Heart Disease")
-        if (h.hasHepatitis) flags.push("Hepatitis" + (h.hepatitisType ? ` (${h.hepatitisType})` : ""))
-        if (h.hasHiv) flags.push("HIV+")
-        if (h.hasEpilepsy) flags.push("Epilepsy")
-        if (h.isPregnant) flags.push(`Pregnant${h.pregnancyWeeks ? ` (${h.pregnancyWeeks}w)` : ""}`)
-        if (h.hasBleedingDisorder) flags.push("Bleeding Disorder")
+        if (h.hasDiabetes) flags.push('Diabetes' + (h.diabetesType ? ` (${h.diabetesType})` : ''))
+        if (h.hasHypertension) flags.push('Hypertension')
+        if (h.hasHeartDisease) flags.push('Heart Disease')
+        if (h.hasHepatitis)
+          flags.push('Hepatitis' + (h.hepatitisType ? ` (${h.hepatitisType})` : ''))
+        if (h.hasHiv) flags.push('HIV+')
+        if (h.hasEpilepsy) flags.push('Epilepsy')
+        if (h.isPregnant) flags.push(`Pregnant${h.pregnancyWeeks ? ` (${h.pregnancyWeeks}w)` : ''}`)
+        if (h.hasBleedingDisorder) flags.push('Bleeding Disorder')
       }
 
       ctx.patient = {
@@ -88,7 +89,7 @@ export async function buildContext(params: {
           status: tp.status,
         })),
         recentVisits: patient.appointments.map((a) => ({
-          date: a.scheduledDate.toISOString().split("T")[0],
+          date: a.scheduledDate.toISOString().split('T')[0],
           type: a.appointmentType,
         })),
       }
@@ -96,7 +97,7 @@ export async function buildContext(params: {
       // Fetch latest risk score
       const risk = await prisma.patientRiskScore.findFirst({
         where: { patientId: patient.id },
-        orderBy: { calculatedAt: "desc" },
+        orderBy: { calculatedAt: 'desc' },
       })
       if (risk) ctx.patient.riskScore = risk.overallScore
     }
@@ -115,23 +116,27 @@ export function serializeContext(ctx: AIContext): string {
   ]
 
   if (ctx.patient) {
-    lines.push("")
+    lines.push('')
     lines.push(`Patient: ${ctx.patient.name} | ID: ${ctx.patient.patientId}`)
-    if (ctx.patient.age) lines.push(`  Age: ${ctx.patient.age}, Gender: ${ctx.patient.gender || "N/A"}`)
+    if (ctx.patient.age)
+      lines.push(`  Age: ${ctx.patient.age}, Gender: ${ctx.patient.gender || 'N/A'}`)
     if (ctx.patient.medicalFlags.length > 0)
-      lines.push(`  Medical flags: ${ctx.patient.medicalFlags.join(", ")}`)
+      lines.push(`  Medical flags: ${ctx.patient.medicalFlags.join(', ')}`)
     if (ctx.patient.currentMedications)
       lines.push(`  Current medications: ${ctx.patient.currentMedications}`)
     if (ctx.patient.outstandingBalance > 0)
-      lines.push(`  Outstanding balance: ₹${ctx.patient.outstandingBalance.toLocaleString("en-IN")}`)
-    if (ctx.patient.riskScore !== undefined) lines.push(`  Risk score: ${ctx.patient.riskScore}/100`)
+      lines.push(
+        `  Outstanding balance: ₹${ctx.patient.outstandingBalance.toLocaleString('en-IN')}`
+      )
+    if (ctx.patient.riskScore !== undefined)
+      lines.push(`  Risk score: ${ctx.patient.riskScore}/100`)
     if (ctx.patient.treatmentPlans.length > 0)
       lines.push(
-        `  Treatment plans: ${ctx.patient.treatmentPlans.map((tp) => `${tp.title} (${tp.status})`).join(", ")}`
+        `  Treatment plans: ${ctx.patient.treatmentPlans.map((tp) => `${tp.title} (${tp.status})`).join(', ')}`
       )
   }
 
   if (ctx.currentPage) lines.push(`\nCurrent page: ${ctx.currentPage}`)
 
-  return lines.join("\n")
+  return lines.join('\n')
 }

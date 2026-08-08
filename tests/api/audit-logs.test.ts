@@ -210,13 +210,15 @@ describe('Audit Logs API — GET /api/settings/audit-logs', () => {
   })
 
   it('should combine multiple filters', async () => {
-    await GET(createRequest({
-      userId: 'user-1',
-      entityType: 'Patient',
-      action: 'DELETE',
-      from: '2026-01-01',
-      to: '2026-12-31',
-    }))
+    await GET(
+      createRequest({
+        userId: 'user-1',
+        entityType: 'Patient',
+        action: 'DELETE',
+        from: '2026-01-01',
+        to: '2026-12-31',
+      })
+    )
 
     expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

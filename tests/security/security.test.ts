@@ -11,7 +11,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // ---------------------------------------------------------------------------
 
 describe('Security — Authentication', () => {
-
   describe('Password Hashing', () => {
     it('bcrypt hash is generated with correct format', async () => {
       const bcrypt = await import('bcryptjs')
@@ -153,7 +152,6 @@ const mockAuth = vi.mocked(auth)
 const mockPrisma = vi.mocked(prisma)
 
 describe('Security — Authorization', () => {
-
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -258,9 +256,15 @@ describe('Security — Authorization', () => {
 
     it('checkPatientLimit blocks when over limit', async () => {
       mockPrisma.hospital.findUnique.mockResolvedValue({
-        id: 'h1', name: 'Test', slug: 'test', plan: 'FREE',
-        patientLimit: 100, staffLimit: 3, storageLimitMb: 500,
-        isActive: true, onboardingCompleted: true,
+        id: 'h1',
+        name: 'Test',
+        slug: 'test',
+        plan: 'FREE',
+        patientLimit: 100,
+        staffLimit: 3,
+        storageLimitMb: 500,
+        isActive: true,
+        onboardingCompleted: true,
       } as any)
       mockPrisma.patient.count.mockResolvedValue(100)
 
@@ -272,7 +276,10 @@ describe('Security — Authorization', () => {
 
     it('checkPatientLimit allows when under limit', async () => {
       mockPrisma.hospital.findUnique.mockResolvedValue({
-        id: 'h1', patientLimit: 100, staffLimit: 3, storageLimitMb: 500,
+        id: 'h1',
+        patientLimit: 100,
+        staffLimit: 3,
+        storageLimitMb: 500,
       } as any)
       mockPrisma.patient.count.mockResolvedValue(50)
 
@@ -282,7 +289,8 @@ describe('Security — Authorization', () => {
 
     it('checkPatientLimit allows unlimited (-1)', async () => {
       mockPrisma.hospital.findUnique.mockResolvedValue({
-        id: 'h1', patientLimit: -1,
+        id: 'h1',
+        patientLimit: -1,
       } as any)
 
       const result = await checkPatientLimit('h1')
@@ -292,7 +300,8 @@ describe('Security — Authorization', () => {
 
     it('checkStaffLimit blocks when over limit', async () => {
       mockPrisma.hospital.findUnique.mockResolvedValue({
-        id: 'h1', staffLimit: 3,
+        id: 'h1',
+        staffLimit: 3,
       } as any)
       mockPrisma.user.count.mockResolvedValue(3)
 
@@ -316,7 +325,7 @@ describe('Security — Authorization', () => {
     })
 
     it.each(roles)('%s role is rejected when not in allowedRoles', (role) => {
-      const others = roles.filter(r => r !== role)
+      const others = roles.filter((r) => r !== role)
       const result = requireRole(role, others)
       if (others.length === roles.length - 1) {
         expect(result?.status).toBe(403)
@@ -330,7 +339,6 @@ describe('Security — Authorization', () => {
 // ---------------------------------------------------------------------------
 
 describe('Security — Input Validation & Injection', () => {
-
   describe('SQL Injection Prevention (Prisma parameterized)', () => {
     it('Prisma uses parameterized queries — malicious input stays as data, not SQL', () => {
       // Prisma uses parameterized queries — the malicious string is NEVER
@@ -364,8 +372,12 @@ describe('Security — Input Validation & Injection', () => {
             .replace(/'/g, '&#039;')
       } catch {
         escapeHtml = (str: string) =>
-          str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#039;')
+          str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;')
       }
     })
 
@@ -460,8 +472,16 @@ describe('Security — Input Validation & Injection', () => {
   describe('NL Query Injection Prevention', () => {
     it('should only allow whitelisted Prisma model names', () => {
       const ALLOWED_MODELS = [
-        'patient', 'appointment', 'treatment', 'invoice', 'payment',
-        'inventoryItem', 'staff', 'labOrder', 'prescription', 'medication',
+        'patient',
+        'appointment',
+        'treatment',
+        'invoice',
+        'payment',
+        'inventoryItem',
+        'staff',
+        'labOrder',
+        'prescription',
+        'medication',
       ]
 
       // Malicious model names should be rejected
@@ -478,7 +498,6 @@ describe('Security — Input Validation & Injection', () => {
 // ---------------------------------------------------------------------------
 
 describe('Security — Data Protection', () => {
-
   describe('AES-256-GCM Encryption', () => {
     let encrypt: any, decrypt: any, generateEncryptionKey: any
 
@@ -576,7 +595,6 @@ describe('Security — Data Protection', () => {
 // ---------------------------------------------------------------------------
 
 describe('Security — API Security', () => {
-
   describe('Rate Limiting Pattern', () => {
     it('audit log count query pattern for rate limiting', () => {
       // The app uses audit log count as rate limiter
@@ -607,15 +625,9 @@ describe('Security — API Security', () => {
       const secret = 'webhook_secret_123'
       const payload = JSON.stringify({ event: 'payment.captured', amount: 1000 })
 
-      const signature = crypto
-        .createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex')
+      const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
 
-      const verifySignature = crypto
-        .createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex')
+      const verifySignature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
 
       expect(signature).toBe(verifySignature)
     })

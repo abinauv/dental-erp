@@ -1,23 +1,23 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function NewStaffPage() {
   const router = useRouter()
@@ -27,40 +27,40 @@ export default function NewStaffPage() {
 
   const [formData, setFormData] = useState({
     // Basic Info
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    alternatePhone: "",
-    role: "",
-    password: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    alternatePhone: '',
+    role: '',
+    password: '',
 
     // Personal Details
-    dateOfBirth: "",
-    gender: "",
-    address: "",
-    city: "",
-    state: "Tamil Nadu",
-    pincode: "",
+    dateOfBirth: '',
+    gender: '',
+    address: '',
+    city: '',
+    state: 'Tamil Nadu',
+    pincode: '',
 
     // Documents
-    aadharNumber: "",
-    panNumber: "",
+    aadharNumber: '',
+    panNumber: '',
 
     // Professional
-    qualification: "",
-    specialization: "",
-    licenseNumber: "",
-    joiningDate: new Date().toISOString().split("T")[0],
+    qualification: '',
+    specialization: '',
+    licenseNumber: '',
+    joiningDate: new Date().toISOString().split('T')[0],
 
     // Financial
-    salary: "",
-    bankAccountNo: "",
-    bankIfsc: "",
+    salary: '',
+    bankAccountNo: '',
+    bankIfsc: '',
 
     // Emergency
-    emergencyContact: "",
-    emergencyPhone: "",
+    emergencyContact: '',
+    emergencyPhone: '',
   })
 
   const handleChange = (field: string, value: string) => {
@@ -71,20 +71,27 @@ export default function NewStaffPage() {
     e.preventDefault()
 
     // Validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.role || !formData.password) {
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.role ||
+      !formData.password
+    ) {
       toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please fill in all required fields',
       })
       return
     }
 
     if (formData.password.length < 6) {
       toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Password must be at least 6 characters",
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Password must be at least 6 characters',
       })
       return
     }
@@ -92,33 +99,33 @@ export default function NewStaffPage() {
     try {
       setLoading(true)
 
-      const response = await fetch("/api/staff", {
-        method: "POST",
+      const response = await fetch('/api/staff', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to create staff member")
+        throw new Error(error.error || 'Failed to create staff member')
       }
 
       const staff = await response.json()
 
       toast({
-        title: "Success",
+        title: 'Success',
         description: `Staff member ${staff.firstName} ${staff.lastName} created successfully`,
       })
 
-      router.push("/staff")
+      router.push('/staff')
     } catch (error: any) {
-      console.error("Error creating staff:", error)
+      console.error('Error creating staff:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create staff member",
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to create staff member',
       })
     } finally {
       setLoading(false)
@@ -136,9 +143,7 @@ export default function NewStaffPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Add New Staff</h1>
-          <p className="text-muted-foreground">
-            Create a new staff member account
-          </p>
+          <p className="text-muted-foreground">Create a new staff member account</p>
         </div>
       </div>
 
@@ -157,7 +162,7 @@ export default function NewStaffPage() {
                   <Input
                     id="firstName"
                     value={formData.firstName}
-                    onChange={(e) => handleChange("firstName", e.target.value)}
+                    onChange={(e) => handleChange('firstName', e.target.value)}
                     placeholder="Enter first name"
                     required
                   />
@@ -167,7 +172,7 @@ export default function NewStaffPage() {
                   <Input
                     id="lastName"
                     value={formData.lastName}
-                    onChange={(e) => handleChange("lastName", e.target.value)}
+                    onChange={(e) => handleChange('lastName', e.target.value)}
                     placeholder="Enter last name"
                     required
                   />
@@ -180,7 +185,7 @@ export default function NewStaffPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
+                  onChange={(e) => handleChange('email', e.target.value)}
                   placeholder="staff@yourclinic.com"
                   required
                 />
@@ -191,9 +196,9 @@ export default function NewStaffPage() {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={formData.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
+                    onChange={(e) => handleChange('password', e.target.value)}
                     placeholder="Enter password"
                     required
                   />
@@ -204,11 +209,7 @@ export default function NewStaffPage() {
                     className="absolute right-0 top-0 h-full px-3"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
@@ -217,7 +218,7 @@ export default function NewStaffPage() {
                 <Label htmlFor="role">Role *</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value) => handleChange("role", value)}
+                  onValueChange={(value) => handleChange('role', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -247,7 +248,7 @@ export default function NewStaffPage() {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
+                    onChange={(e) => handleChange('phone', e.target.value)}
                     placeholder="+91 98765 43210"
                     required
                   />
@@ -257,7 +258,7 @@ export default function NewStaffPage() {
                   <Input
                     id="alternatePhone"
                     value={formData.alternatePhone}
-                    onChange={(e) => handleChange("alternatePhone", e.target.value)}
+                    onChange={(e) => handleChange('alternatePhone', e.target.value)}
                     placeholder="+91 98765 43210"
                   />
                 </div>
@@ -268,7 +269,7 @@ export default function NewStaffPage() {
                 <Textarea
                   id="address"
                   value={formData.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
+                  onChange={(e) => handleChange('address', e.target.value)}
                   placeholder="Enter full address"
                   rows={2}
                 />
@@ -280,7 +281,7 @@ export default function NewStaffPage() {
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
+                    onChange={(e) => handleChange('city', e.target.value)}
                     placeholder="Chennai"
                   />
                 </div>
@@ -289,7 +290,7 @@ export default function NewStaffPage() {
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
+                    onChange={(e) => handleChange('state', e.target.value)}
                     placeholder="Tamil Nadu"
                   />
                 </div>
@@ -298,7 +299,7 @@ export default function NewStaffPage() {
                   <Input
                     id="pincode"
                     value={formData.pincode}
-                    onChange={(e) => handleChange("pincode", e.target.value)}
+                    onChange={(e) => handleChange('pincode', e.target.value)}
                     placeholder="600001"
                   />
                 </div>
@@ -320,14 +321,14 @@ export default function NewStaffPage() {
                     id="dateOfBirth"
                     type="date"
                     value={formData.dateOfBirth}
-                    onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+                    onChange={(e) => handleChange('dateOfBirth', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender</Label>
                   <Select
                     value={formData.gender}
-                    onValueChange={(value) => handleChange("gender", value)}
+                    onValueChange={(value) => handleChange('gender', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
@@ -349,7 +350,7 @@ export default function NewStaffPage() {
                   <Input
                     id="aadharNumber"
                     value={formData.aadharNumber}
-                    onChange={(e) => handleChange("aadharNumber", e.target.value)}
+                    onChange={(e) => handleChange('aadharNumber', e.target.value)}
                     placeholder="1234 5678 9012"
                   />
                 </div>
@@ -358,7 +359,7 @@ export default function NewStaffPage() {
                   <Input
                     id="panNumber"
                     value={formData.panNumber}
-                    onChange={(e) => handleChange("panNumber", e.target.value)}
+                    onChange={(e) => handleChange('panNumber', e.target.value)}
                     placeholder="ABCDE1234F"
                   />
                 </div>
@@ -379,7 +380,7 @@ export default function NewStaffPage() {
                   <Input
                     id="qualification"
                     value={formData.qualification}
-                    onChange={(e) => handleChange("qualification", e.target.value)}
+                    onChange={(e) => handleChange('qualification', e.target.value)}
                     placeholder="BDS, MDS"
                   />
                 </div>
@@ -388,7 +389,7 @@ export default function NewStaffPage() {
                   <Input
                     id="specialization"
                     value={formData.specialization}
-                    onChange={(e) => handleChange("specialization", e.target.value)}
+                    onChange={(e) => handleChange('specialization', e.target.value)}
                     placeholder="Orthodontics, Endodontics"
                   />
                 </div>
@@ -400,7 +401,7 @@ export default function NewStaffPage() {
                   <Input
                     id="licenseNumber"
                     value={formData.licenseNumber}
-                    onChange={(e) => handleChange("licenseNumber", e.target.value)}
+                    onChange={(e) => handleChange('licenseNumber', e.target.value)}
                     placeholder="TN/12345"
                   />
                 </div>
@@ -410,7 +411,7 @@ export default function NewStaffPage() {
                     id="joiningDate"
                     type="date"
                     value={formData.joiningDate}
-                    onChange={(e) => handleChange("joiningDate", e.target.value)}
+                    onChange={(e) => handleChange('joiningDate', e.target.value)}
                   />
                 </div>
               </div>
@@ -430,7 +431,7 @@ export default function NewStaffPage() {
                   id="salary"
                   type="number"
                   value={formData.salary}
-                  onChange={(e) => handleChange("salary", e.target.value)}
+                  onChange={(e) => handleChange('salary', e.target.value)}
                   placeholder="50000"
                 />
               </div>
@@ -441,7 +442,7 @@ export default function NewStaffPage() {
                   <Input
                     id="bankAccountNo"
                     value={formData.bankAccountNo}
-                    onChange={(e) => handleChange("bankAccountNo", e.target.value)}
+                    onChange={(e) => handleChange('bankAccountNo', e.target.value)}
                     placeholder="1234567890"
                   />
                 </div>
@@ -450,7 +451,7 @@ export default function NewStaffPage() {
                   <Input
                     id="bankIfsc"
                     value={formData.bankIfsc}
-                    onChange={(e) => handleChange("bankIfsc", e.target.value)}
+                    onChange={(e) => handleChange('bankIfsc', e.target.value)}
                     placeholder="HDFC0001234"
                   />
                 </div>
@@ -470,7 +471,7 @@ export default function NewStaffPage() {
                 <Input
                   id="emergencyContact"
                   value={formData.emergencyContact}
-                  onChange={(e) => handleChange("emergencyContact", e.target.value)}
+                  onChange={(e) => handleChange('emergencyContact', e.target.value)}
                   placeholder="Full name"
                 />
               </div>
@@ -479,7 +480,7 @@ export default function NewStaffPage() {
                 <Input
                   id="emergencyPhone"
                   value={formData.emergencyPhone}
-                  onChange={(e) => handleChange("emergencyPhone", e.target.value)}
+                  onChange={(e) => handleChange('emergencyPhone', e.target.value)}
                   placeholder="+91 98765 43210"
                 />
               </div>

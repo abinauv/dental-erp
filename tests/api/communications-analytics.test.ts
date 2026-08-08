@@ -42,14 +42,16 @@ function mockAllAnalytics() {
   // SMS mocks
   vi.mocked(prisma.smsLog.count).mockResolvedValue(100)
   vi.mocked(prisma.smsLog.groupBy)
-    .mockResolvedValueOnce([ // smsByStatus
+    .mockResolvedValueOnce([
+      // smsByStatus
       { status: 'DELIVERED', _count: 70 },
       { status: 'SENT', _count: 10 },
       { status: 'FAILED', _count: 5 },
       { status: 'PENDING', _count: 10 },
       { status: 'QUEUED', _count: 5 },
     ] as any)
-    .mockResolvedValueOnce([ // smsByDay
+    .mockResolvedValueOnce([
+      // smsByDay
       { createdAt: new Date('2026-02-15'), _count: 30 },
       { createdAt: new Date('2026-02-16'), _count: 25 },
     ] as any)
@@ -63,31 +65,42 @@ function mockAllAnalytics() {
     .mockResolvedValueOnce(30) // emailOpened
     .mockResolvedValueOnce(10) // emailClicked
   vi.mocked(prisma.emailLog.groupBy)
-    .mockResolvedValueOnce([ // emailByStatus
+    .mockResolvedValueOnce([
+      // emailByStatus
       { status: 'SENT', _count: 50 },
       { status: 'DELIVERED', _count: 20 },
       { status: 'FAILED', _count: 10 },
     ] as any)
-    .mockResolvedValueOnce([ // emailByDay
+    .mockResolvedValueOnce([
+      // emailByDay
       { createdAt: new Date('2026-02-15'), _count: 40 },
     ] as any)
-    .mockResolvedValueOnce([ // topEmailTemplates
+    .mockResolvedValueOnce([
+      // topEmailTemplates
       { templateId: 't2', _count: 15 },
     ] as any)
 
   // SMS template top
-  vi.mocked(prisma.smsLog.groupBy).mockResolvedValueOnce([ // topSmsTemplates (3rd call)
+  vi.mocked(prisma.smsLog.groupBy).mockResolvedValueOnce([
+    // topSmsTemplates (3rd call)
     { templateId: 't1', _count: 25 },
   ] as any)
 
   // Campaigns
   vi.mocked(prisma.bulkCommunication.findMany).mockResolvedValue([
     {
-      id: 'bc1', name: 'Welcome Campaign', channel: 'SMS', status: 'COMPLETED',
-      recipientCount: 50, sentCount: 48, failedCount: 2,
+      id: 'bc1',
+      name: 'Welcome Campaign',
+      channel: 'SMS',
+      status: 'COMPLETED',
+      recipientCount: 50,
+      sentCount: 48,
+      failedCount: 2,
       estimatedCost: { toNumber: () => 100 },
       actualCost: { toNumber: () => 96 },
-      startedAt: new Date(), completedAt: new Date(), createdAt: new Date(),
+      startedAt: new Date(),
+      completedAt: new Date(),
+      createdAt: new Date(),
     },
   ] as any)
 

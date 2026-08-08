@@ -64,13 +64,16 @@ describe('POST /api/cron/automations', () => {
     // Patients with no recent visit
     vi.mocked(prisma.patient.findMany)
       .mockResolvedValueOnce([{ id: 'p1' }, { id: 'p2' }] as any) // matched by trigger
-      .mockResolvedValueOnce([ // fetched for SMS
+      .mockResolvedValueOnce([
+        // fetched for SMS
         { id: 'p1', firstName: 'John', lastName: 'Doe', phone: '9876543210' },
         { id: 'p2', firstName: 'Jane', lastName: 'Smith', phone: '9876543211' },
       ] as any)
 
     vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue({
-      id: 'tmpl1', content: 'Hi {{firstName}}, we miss you!', subject: 'Come back',
+      id: 'tmpl1',
+      content: 'Hi {{firstName}}, we miss you!',
+      subject: 'Come back',
     } as any)
     vi.mocked(prisma.sMSLog.create).mockResolvedValue({} as any)
     vi.mocked(prisma.marketingAutomation.update).mockResolvedValue({} as any)
@@ -94,7 +97,10 @@ describe('POST /api/cron/automations', () => {
         hospitalId: 'h1',
         isActive: true,
         trigger: { type: 'BIRTHDAY_UPCOMING', params: { days: 3 } },
-        action: { type: 'CREATE_NOTIFICATION', params: { title: 'Birthday!', message: 'Wish patient' } },
+        action: {
+          type: 'CREATE_NOTIFICATION',
+          params: { title: 'Birthday!', message: 'Wish patient' },
+        },
       },
     ] as any)
 
@@ -122,12 +128,12 @@ describe('POST /api/cron/automations', () => {
       },
     ] as any)
 
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([
-      { patientId: 'p1' },
-    ] as any)
+    vi.mocked(prisma.invoice.findMany).mockResolvedValue([{ patientId: 'p1' }] as any)
 
     vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue({
-      id: 'tmpl2', name: 'Payment Reminder', subject: 'Payment Due',
+      id: 'tmpl2',
+      name: 'Payment Reminder',
+      subject: 'Payment Due',
       content: 'Dear {{firstName}}, your payment is overdue.',
     } as any)
 
@@ -182,9 +188,7 @@ describe('POST /api/cron/automations', () => {
       },
     ] as any)
 
-    vi.mocked(prisma.patientMembership.findMany).mockResolvedValue([
-      { patientId: 'p1' },
-    ] as any)
+    vi.mocked(prisma.patientMembership.findMany).mockResolvedValue([{ patientId: 'p1' }] as any)
     vi.mocked(prisma.notification.create).mockResolvedValue({} as any)
     vi.mocked(prisma.marketingAutomation.update).mockResolvedValue({} as any)
 
@@ -206,9 +210,7 @@ describe('POST /api/cron/automations', () => {
       },
     ] as any)
 
-    vi.mocked(prisma.appointment.findMany).mockResolvedValue([
-      { patientId: 'p1' },
-    ] as any)
+    vi.mocked(prisma.appointment.findMany).mockResolvedValue([{ patientId: 'p1' }] as any)
     vi.mocked(prisma.notification.create).mockResolvedValue({} as any)
     vi.mocked(prisma.marketingAutomation.update).mockResolvedValue({} as any)
 
@@ -221,7 +223,10 @@ describe('POST /api/cron/automations', () => {
   it('updates automation stats after run', async () => {
     vi.mocked(prisma.marketingAutomation.findMany).mockResolvedValue([
       {
-        id: 'auto1', name: 'Test', hospitalId: 'h1', isActive: true,
+        id: 'auto1',
+        name: 'Test',
+        hospitalId: 'h1',
+        isActive: true,
         trigger: { type: 'NO_VISIT', params: { days: 180 } },
         action: { type: 'CREATE_NOTIFICATION', params: {} },
       },
@@ -243,7 +248,10 @@ describe('POST /api/cron/automations', () => {
   it('handles automation errors gracefully', async () => {
     vi.mocked(prisma.marketingAutomation.findMany).mockResolvedValue([
       {
-        id: 'auto1', name: 'Broken', hospitalId: 'h1', isActive: true,
+        id: 'auto1',
+        name: 'Broken',
+        hospitalId: 'h1',
+        isActive: true,
         trigger: { type: 'NO_VISIT', params: { days: 180 } },
         action: { type: 'SEND_SMS', params: {} },
       },

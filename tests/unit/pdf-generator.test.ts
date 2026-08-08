@@ -76,7 +76,7 @@ describe('PDF Generator Service', () => {
     const data = {
       ...baseData,
       patientName: '<script>alert("xss")</script>',
-      clinicName: 'Dr. O\'Brien & Associates',
+      clinicName: "Dr. O'Brien & Associates",
       fields: [{ label: 'Note', value: 'a < b && c > d' }],
     }
     const html = generateFormPdfHtml(data)

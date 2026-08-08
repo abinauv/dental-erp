@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from "react"
-import { cn } from "@/lib/utils"
+import { useState, useCallback } from 'react'
+import { cn } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 const EXAMPLE_QUERIES = [
-  "Monthly revenue by procedure for last 3 months",
+  'Monthly revenue by procedure for last 3 months',
   "Patients who haven't visited in 6 months",
-  "Overdue invoices sorted by amount",
-  "Appointment no-show rate by day of week",
-  "Top 5 most performed procedures this quarter",
-  "Inventory items running low on stock",
+  'Overdue invoices sorted by amount',
+  'Appointment no-show rate by day of week',
+  'Top 5 most performed procedures this quarter',
+  'Inventory items running low on stock',
 ]
 
 interface QueryResult {
@@ -33,7 +33,7 @@ interface QueryResult {
  * results as a dynamic table.  Supports exporting results as JSON.
  */
 export function ReportBuilder() {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<QueryResult | null>(null)
   const [history, setHistory] = useState<string[]>([])
@@ -44,20 +44,20 @@ export function ReportBuilder() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch("/api/ai/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/ai/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: query.trim() }),
       })
       const data = await res.json()
       if (res.ok) {
         setResult({ success: true, ...data })
       } else {
-        setResult({ success: false, error: data.error || "Query failed" })
+        setResult({ success: false, error: data.error || 'Query failed' })
       }
       setHistory((prev) => [query.trim(), ...prev.filter((h) => h !== query.trim())].slice(0, 10))
     } catch {
-      setResult({ success: false, error: "Failed to execute query" })
+      setResult({ success: false, error: 'Failed to execute query' })
     } finally {
       setLoading(false)
     }
@@ -66,11 +66,11 @@ export function ReportBuilder() {
   // ---------------------------------------------------------------
   const exportJSON = () => {
     if (!result?.rows) return
-    const blob = new Blob([JSON.stringify(result.rows, null, 2)], { type: "application/json" })
+    const blob = new Blob([JSON.stringify(result.rows, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
+    const a = document.createElement('a')
     a.href = url
-    a.download = "report.json"
+    a.download = 'report.json'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -96,8 +96,13 @@ export function ReportBuilder() {
         <input
           type="text"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setResult(null) }}
-          onKeyDown={(e) => { if (e.key === "Enter") execute() }}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setResult(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') execute()
+          }}
           placeholder="e.g. 'Show revenue by procedure for last month'"
           className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
         />
@@ -106,7 +111,7 @@ export function ReportBuilder() {
           disabled={loading || !query.trim()}
           className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
-          {loading ? "Generating…" : "Generate"}
+          {loading ? 'Generating…' : 'Generate'}
         </button>
       </div>
 
@@ -115,7 +120,10 @@ export function ReportBuilder() {
         {EXAMPLE_QUERIES.map((ex) => (
           <button
             key={ex}
-            onClick={() => { setQuery(ex); setResult(null) }}
+            onClick={() => {
+              setQuery(ex)
+              setResult(null)
+            }}
             className="rounded-full border px-3 py-1 text-xs hover:bg-muted transition-colors"
           >
             {ex}
@@ -131,7 +139,10 @@ export function ReportBuilder() {
             {history.slice(0, 5).map((h, i) => (
               <button
                 key={i}
-                onClick={() => { setQuery(h); setResult(null) }}
+                onClick={() => {
+                  setQuery(h)
+                  setResult(null)
+                }}
                 className="text-xs text-primary/60 hover:text-primary transition-colors underline underline-offset-2"
               >
                 {h}
@@ -161,7 +172,7 @@ export function ReportBuilder() {
 
           {/* error */}
           {!result.success && (
-            <div className="p-3 text-sm text-red-600">{result.error || "Query failed"}</div>
+            <div className="p-3 text-sm text-red-600">{result.error || 'Query failed'}</div>
           )}
 
           {/* data table */}
@@ -171,7 +182,10 @@ export function ReportBuilder() {
                 <thead>
                   <tr className="bg-muted">
                     {columns.map((col) => (
-                      <th key={col} className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                      <th
+                        key={col}
+                        className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"
+                      >
                         {col}
                       </th>
                     ))}
@@ -179,10 +193,13 @@ export function ReportBuilder() {
                 </thead>
                 <tbody>
                   {result.rows.map((row, i) => (
-                    <tr key={i} className={cn("border-t", i % 2 === 0 ? "bg-background" : "bg-muted/30")}>
+                    <tr
+                      key={i}
+                      className={cn('border-t', i % 2 === 0 ? 'bg-background' : 'bg-muted/30')}
+                    >
                       {columns.map((col) => (
                         <td key={col} className="px-3 py-1.5 whitespace-nowrap">
-                          {String(row[col] ?? "—")}
+                          {String(row[col] ?? '—')}
                         </td>
                       ))}
                     </tr>
@@ -194,13 +211,18 @@ export function ReportBuilder() {
 
           {/* empty state */}
           {result.success && (!result.rows || result.rows.length === 0) && (
-            <div className="p-3 text-sm text-muted-foreground">No results found for this query.</div>
+            <div className="p-3 text-sm text-muted-foreground">
+              No results found for this query.
+            </div>
           )}
 
           {/* export button */}
           {result.success && result.rows && result.rows.length > 0 && (
             <div className="p-2 border-t flex justify-end">
-              <button onClick={exportJSON} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              <button
+                onClick={exportJSON}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
                 ⬇ Export JSON
               </button>
             </div>

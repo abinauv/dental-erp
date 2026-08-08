@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -18,9 +18,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   BarChart3,
   Download,
@@ -35,12 +35,8 @@ import {
   IndianRupee,
   CreditCard,
   Banknote,
-} from "lucide-react"
-import {
-  dateRangePresets,
-  formatCurrency,
-  formatDate,
-} from "@/lib/billing-utils"
+} from 'lucide-react'
+import { dateRangePresets, formatCurrency, formatDate } from '@/lib/billing-utils'
 
 interface OutstandingInvoice {
   id: string
@@ -89,10 +85,10 @@ interface DoctorRevenue {
 
 export default function FinancialReportsPage() {
   const [loading, setLoading] = useState(true)
-  const [datePreset, setDatePreset] = useState("this_month")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
-  const [activeTab, setActiveTab] = useState("outstanding")
+  const [datePreset, setDatePreset] = useState('this_month')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [activeTab, setActiveTab] = useState('outstanding')
 
   // Report data
   const [outstandingData, setOutstandingData] = useState<{
@@ -130,27 +126,27 @@ export default function FinancialReportsPage() {
       const params = new URLSearchParams({ type })
 
       if (dateFrom && dateTo) {
-        params.append("dateFrom", dateFrom)
-        params.append("dateTo", dateTo)
+        params.append('dateFrom', dateFrom)
+        params.append('dateTo', dateTo)
       } else {
-        params.append("preset", datePreset)
+        params.append('preset', datePreset)
       }
 
       const response = await fetch(`/api/billing/reports?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch report")
+      if (!response.ok) throw new Error('Failed to fetch report')
       const data = await response.json()
 
       switch (type) {
-        case "outstanding":
+        case 'outstanding':
           setOutstandingData(data)
           break
-        case "procedure_revenue":
+        case 'procedure_revenue':
           setProcedureData(data)
           break
-        case "doctor_revenue":
+        case 'doctor_revenue':
           setDoctorData(data)
           break
-        case "daily_collection":
+        case 'daily_collection':
           setDailyData(data)
           break
       }
@@ -167,7 +163,7 @@ export default function FinancialReportsPage() {
 
   const handleExport = () => {
     // TODO: Implement export functionality
-    alert("Export functionality coming soon!")
+    alert('Export functionality coming soon!')
   }
 
   return (
@@ -176,16 +172,17 @@ export default function FinancialReportsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Financial Reports</h1>
-          <p className="text-muted-foreground">
-            View detailed financial analytics and reports
-          </p>
+          <p className="text-muted-foreground">View detailed financial analytics and reports</p>
         </div>
         <div className="flex gap-2">
-          <Select value={datePreset} onValueChange={(v) => {
-            setDatePreset(v)
-            setDateFrom("")
-            setDateTo("")
-          }}>
+          <Select
+            value={datePreset}
+            onValueChange={(v) => {
+              setDatePreset(v)
+              setDateFrom('')
+              setDateTo('')
+            }}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
@@ -197,7 +194,7 @@ export default function FinancialReportsPage() {
               ))}
             </SelectContent>
           </Select>
-          {datePreset === "custom" && (
+          {datePreset === 'custom' && (
             <>
               <Input
                 type="date"
@@ -285,7 +282,9 @@ export default function FinancialReportsPage() {
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-orange-600">31-60 Days</CardTitle>
+                    <CardTitle className="text-sm font-medium text-orange-600">
+                      31-60 Days
+                    </CardTitle>
                     <CardDescription>Overdue</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -334,7 +333,7 @@ export default function FinancialReportsPage() {
             <CardHeader>
               <CardTitle>Outstanding Invoices</CardTitle>
               <CardDescription>
-                Total: {formatCurrency(outstandingData?.totals.totalOutstanding || 0)} from{" "}
+                Total: {formatCurrency(outstandingData?.totals.totalOutstanding || 0)} from{' '}
                 {outstandingData?.totals.invoiceCount || 0} invoices
               </CardDescription>
             </CardHeader>
@@ -354,12 +353,24 @@ export default function FinancialReportsPage() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : outstandingData?.invoices.length === 0 ? (
@@ -376,9 +387,7 @@ export default function FinancialReportsPage() {
                           {invoice.patient.firstName} {invoice.patient.lastName}
                         </TableCell>
                         <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
-                        <TableCell>
-                          {invoice.dueDate ? formatDate(invoice.dueDate) : "-"}
-                        </TableCell>
+                        <TableCell>{invoice.dueDate ? formatDate(invoice.dueDate) : '-'}</TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(invoice.totalAmount)}
                         </TableCell>
@@ -446,11 +455,21 @@ export default function FinancialReportsPage() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-16" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : procedureData?.byProcedure.length === 0 ? (
@@ -522,9 +541,7 @@ export default function FinancialReportsPage() {
                 {loading ? (
                   <Skeleton className="h-8 w-32" />
                 ) : (
-                  <div className="text-2xl font-bold">
-                    {doctorData?.totals.doctorCount || 0}
-                  </div>
+                  <div className="text-2xl font-bold">{doctorData?.totals.doctorCount || 0}</div>
                 )}
               </CardContent>
             </Card>
@@ -548,10 +565,18 @@ export default function FinancialReportsPage() {
                   {loading ? (
                     Array.from({ length: 3 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-32" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-16" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : doctorData?.byDoctor.length === 0 ? (
@@ -612,9 +637,7 @@ export default function FinancialReportsPage() {
                 {loading ? (
                   <Skeleton className="h-8 w-32" />
                 ) : (
-                  <div className="text-2xl font-bold">
-                    {dailyData?.totals.totalPayments || 0}
-                  </div>
+                  <div className="text-2xl font-bold">{dailyData?.totals.totalPayments || 0}</div>
                 )}
               </CardContent>
             </Card>
@@ -651,13 +674,27 @@ export default function FinancialReportsPage() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-12" />
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : dailyData?.dailyData.length === 0 ? (
@@ -673,7 +710,9 @@ export default function FinancialReportsPage() {
                         <TableCell className="text-right">{formatCurrency(day.cash)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(day.card)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(day.upi)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(day.bankTransfer)}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(day.bankTransfer)}
+                        </TableCell>
                         <TableCell className="text-right font-medium text-green-600">
                           {formatCurrency(day.total)}
                         </TableCell>

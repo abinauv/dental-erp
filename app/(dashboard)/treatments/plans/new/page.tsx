@@ -1,20 +1,20 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -22,13 +22,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Search, User, Plus, Trash2, Save, AlertCircle, GripVertical } from "lucide-react"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import {
-  procedureCategoryConfig,
-  formatCurrency,
-} from "@/lib/treatment-utils"
+  ArrowLeft,
+  Search,
+  User,
+  Plus,
+  Trash2,
+  Save,
+  AlertCircle,
+  GripVertical,
+} from 'lucide-react'
+import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
 
 interface Patient {
   id: string
@@ -60,35 +66,35 @@ interface PlanItem {
 export default function NewTreatmentPlanPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const preselectedPatientId = searchParams.get("patientId")
+  const preselectedPatientId = searchParams.get('patientId')
 
   const [patients, setPatients] = useState<Patient[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [patientSearch, setPatientSearch] = useState("")
+  const [error, setError] = useState('')
+  const [patientSearch, setPatientSearch] = useState('')
 
   // Form state
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  const [title, setTitle] = useState("")
-  const [notes, setNotes] = useState("")
-  const [startDate, setStartDate] = useState("")
-  const [expectedEndDate, setExpectedEndDate] = useState("")
+  const [title, setTitle] = useState('')
+  const [notes, setNotes] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [expectedEndDate, setExpectedEndDate] = useState('')
   const [items, setItems] = useState<PlanItem[]>([])
 
   // Add procedure modal state
-  const [selectedProcedureId, setSelectedProcedureId] = useState("")
-  const [itemToothNumbers, setItemToothNumbers] = useState("")
-  const [itemNotes, setItemNotes] = useState("")
-  const [itemCost, setItemCost] = useState("")
+  const [selectedProcedureId, setSelectedProcedureId] = useState('')
+  const [itemToothNumbers, setItemToothNumbers] = useState('')
+  const [itemNotes, setItemNotes] = useState('')
+  const [itemCost, setItemCost] = useState('')
 
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [patientsRes, proceduresRes] = await Promise.all([
-          fetch("/api/patients?limit=100"),
-          fetch("/api/procedures?all=true&isActive=true"),
+          fetch('/api/patients?limit=100'),
+          fetch('/api/procedures?all=true&isActive=true'),
         ])
 
         if (patientsRes.ok) {
@@ -105,7 +111,7 @@ export default function NewTreatmentPlanPage() {
           setProcedures(data.procedures)
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error('Error fetching data:', error)
       }
     }
 
@@ -122,13 +128,16 @@ export default function NewTreatmentPlanPage() {
     )
   })
 
-  const groupedProcedures = procedures.reduce((acc, proc) => {
-    if (!acc[proc.category]) {
-      acc[proc.category] = []
-    }
-    acc[proc.category].push(proc)
-    return acc
-  }, {} as Record<string, Procedure[]>)
+  const groupedProcedures = procedures.reduce(
+    (acc, proc) => {
+      if (!acc[proc.category]) {
+        acc[proc.category] = []
+      }
+      acc[proc.category].push(proc)
+      return acc
+    },
+    {} as Record<string, Procedure[]>
+  )
 
   const handleAddProcedure = () => {
     if (!selectedProcedureId) return
@@ -149,10 +158,10 @@ export default function NewTreatmentPlanPage() {
     setItems([...items, newItem])
 
     // Reset form
-    setSelectedProcedureId("")
-    setItemToothNumbers("")
-    setItemNotes("")
-    setItemCost("")
+    setSelectedProcedureId('')
+    setItemToothNumbers('')
+    setItemNotes('')
+    setItemCost('')
   }
 
   const handleRemoveItem = (index: number) => {
@@ -165,29 +174,29 @@ export default function NewTreatmentPlanPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setError('')
 
     if (!selectedPatient) {
-      setError("Please select a patient")
+      setError('Please select a patient')
       return
     }
 
     if (!title) {
-      setError("Please enter a title for the treatment plan")
+      setError('Please enter a title for the treatment plan')
       return
     }
 
     if (items.length === 0) {
-      setError("Please add at least one procedure to the plan")
+      setError('Please add at least one procedure to the plan')
       return
     }
 
     setLoading(true)
 
     try {
-      const response = await fetch("/api/treatment-plans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/treatment-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
           title,
@@ -206,7 +215,7 @@ export default function NewTreatmentPlanPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to create treatment plan")
+        throw new Error(data.error || 'Failed to create treatment plan')
       }
 
       const plan = await response.json()
@@ -267,11 +276,7 @@ export default function NewTreatmentPlanPage() {
                     </div>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setSelectedPatient(null)}
-                >
+                <Button type="button" variant="outline" onClick={() => setSelectedPatient(null)}>
                   Change
                 </Button>
               </div>
@@ -414,9 +419,10 @@ export default function NewTreatmentPlanPage() {
                     step="0.01"
                     value={itemCost}
                     onChange={(e) => setItemCost(e.target.value)}
-                    placeholder={selectedProcedureId
-                      ? `Default: ${formatCurrency(procedures.find(p => p.id === selectedProcedureId)?.basePrice || 0)}`
-                      : "Enter cost"
+                    placeholder={
+                      selectedProcedureId
+                        ? `Default: ${formatCurrency(procedures.find((p) => p.id === selectedProcedureId)?.basePrice || 0)}`
+                        : 'Enter cost'
                     }
                   />
                 </div>
@@ -464,9 +470,7 @@ export default function NewTreatmentPlanPage() {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{item.procedureName}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {item.procedureCode}
-                          </div>
+                          <div className="text-sm text-muted-foreground">{item.procedureCode}</div>
                           <Badge
                             variant="outline"
                             className={`mt-1 ${procedureCategoryConfig[item.category]?.bgColor} ${procedureCategoryConfig[item.category]?.color} border-0`}
@@ -474,12 +478,8 @@ export default function NewTreatmentPlanPage() {
                             {procedureCategoryConfig[item.category]?.label}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {item.toothNumbers || "-"}
-                        </TableCell>
-                        <TableCell>
-                          {formatCurrency(item.estimatedCost)}
-                        </TableCell>
+                        <TableCell>{item.toothNumbers || '-'}</TableCell>
+                        <TableCell>{formatCurrency(item.estimatedCost)}</TableCell>
                         <TableCell>
                           <Button
                             type="button"
@@ -517,7 +517,7 @@ export default function NewTreatmentPlanPage() {
           </Link>
           <Button type="submit" disabled={loading}>
             {loading ? (
-              "Creating..."
+              'Creating...'
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />

@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Progress } from "@/components/ui/progress"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   ArrowLeft,
   User,
@@ -39,7 +39,7 @@ import {
   AlertCircle,
   Play,
   ClipboardCheck,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   treatmentPlanStatusConfig,
   treatmentPlanItemStatusConfig,
@@ -47,7 +47,7 @@ import {
   formatCurrency,
   formatDate,
   calculatePlanProgress,
-} from "@/lib/treatment-utils"
+} from '@/lib/treatment-utils'
 
 interface TreatmentPlanItem {
   id: string
@@ -96,11 +96,7 @@ interface TreatmentPlan {
   items: TreatmentPlanItem[]
 }
 
-export default function TreatmentPlanDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const [plan, setPlan] = useState<TreatmentPlan | null>(null)
@@ -113,11 +109,11 @@ export default function TreatmentPlanDetailPage({
     try {
       setLoading(true)
       const response = await fetch(`/api/treatment-plans/${id}`)
-      if (!response.ok) throw new Error("Failed to fetch treatment plan")
+      if (!response.ok) throw new Error('Failed to fetch treatment plan')
       const data = await response.json()
       setPlan(data)
     } catch (error) {
-      console.error("Error fetching treatment plan:", error)
+      console.error('Error fetching treatment plan:', error)
     } finally {
       setLoading(false)
     }
@@ -131,14 +127,14 @@ export default function TreatmentPlanDetailPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/treatment-plans/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!response.ok) throw new Error("Failed to update status")
+      if (!response.ok) throw new Error('Failed to update status')
       fetchPlan()
     } catch (error) {
-      console.error("Error updating status:", error)
+      console.error('Error updating status:', error)
     } finally {
       setActionLoading(false)
     }
@@ -148,18 +144,18 @@ export default function TreatmentPlanDetailPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/treatment-plans/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           consentGiven: true,
-          status: plan?.status === "PROPOSED" ? "ACCEPTED" : plan?.status,
+          status: plan?.status === 'PROPOSED' ? 'ACCEPTED' : plan?.status,
         }),
       })
-      if (!response.ok) throw new Error("Failed to record consent")
+      if (!response.ok) throw new Error('Failed to record consent')
       setConsentDialogOpen(false)
       fetchPlan()
     } catch (error) {
-      console.error("Error recording consent:", error)
+      console.error('Error recording consent:', error)
     } finally {
       setActionLoading(false)
     }
@@ -169,15 +165,15 @@ export default function TreatmentPlanDetailPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/treatment-plans/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CANCELLED" }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' }),
       })
-      if (!response.ok) throw new Error("Failed to cancel plan")
+      if (!response.ok) throw new Error('Failed to cancel plan')
       setCancelDialogOpen(false)
       fetchPlan()
     } catch (error) {
-      console.error("Error cancelling plan:", error)
+      console.error('Error cancelling plan:', error)
     } finally {
       setActionLoading(false)
     }
@@ -186,27 +182,21 @@ export default function TreatmentPlanDetailPage({
   const getStatusBadge = (status: string) => {
     const config = treatmentPlanStatusConfig[status] || {
       label: status,
-      color: "text-foreground",
-      bgColor: "bg-muted",
+      color: 'text-foreground',
+      bgColor: 'bg-muted',
     }
     return (
-      <Badge className={`${config.bgColor} ${config.color} border-0 text-sm`}>
-        {config.label}
-      </Badge>
+      <Badge className={`${config.bgColor} ${config.color} border-0 text-sm`}>{config.label}</Badge>
     )
   }
 
   const getItemStatusBadge = (status: string) => {
     const config = treatmentPlanItemStatusConfig[status] || {
       label: status,
-      color: "text-foreground",
-      bgColor: "bg-muted",
+      color: 'text-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   if (loading) {
@@ -247,9 +237,7 @@ export default function TreatmentPlanDetailPage({
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {plan.planNumber}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">{plan.planNumber}</h1>
               {getStatusBadge(plan.status)}
               {plan.consentGiven && (
                 <Badge variant="outline" className="bg-green-50 text-green-700">
@@ -262,25 +250,25 @@ export default function TreatmentPlanDetailPage({
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {plan.status === "DRAFT" && (
-            <Button onClick={() => handleStatusChange("PROPOSED")} disabled={actionLoading}>
+          {plan.status === 'DRAFT' && (
+            <Button onClick={() => handleStatusChange('PROPOSED')} disabled={actionLoading}>
               <FileText className="h-4 w-4 mr-2" />
               Propose to Patient
             </Button>
           )}
-          {plan.status === "PROPOSED" && !plan.consentGiven && (
+          {plan.status === 'PROPOSED' && !plan.consentGiven && (
             <Button onClick={() => setConsentDialogOpen(true)}>
               <ClipboardCheck className="h-4 w-4 mr-2" />
               Record Consent
             </Button>
           )}
-          {plan.status === "ACCEPTED" && (
-            <Button onClick={() => handleStatusChange("IN_PROGRESS")} disabled={actionLoading}>
+          {plan.status === 'ACCEPTED' && (
+            <Button onClick={() => handleStatusChange('IN_PROGRESS')} disabled={actionLoading}>
               <Play className="h-4 w-4 mr-2" />
               Start Treatment
             </Button>
           )}
-          {!["COMPLETED", "CANCELLED"].includes(plan.status) && (
+          {!['COMPLETED', 'CANCELLED'].includes(plan.status) && (
             <>
               <Link href={`/treatments/plans/${id}/edit`}>
                 <Button variant="outline">
@@ -317,7 +305,7 @@ export default function TreatmentPlanDetailPage({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    {plan.items.filter(i => i.status === "COMPLETED").length} of{" "}
+                    {plan.items.filter((i) => i.status === 'COMPLETED').length} of{' '}
                     {plan.items.length} procedures completed
                   </span>
                   <span className="text-sm font-medium">{progress}%</span>
@@ -353,9 +341,7 @@ export default function TreatmentPlanDetailPage({
                       <TableCell className="font-medium">{item.priority}</TableCell>
                       <TableCell>
                         <div className="font-medium">{item.procedure.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.procedure.code}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{item.procedure.code}</div>
                         <Badge
                           variant="outline"
                           className={`mt-1 ${procedureCategoryConfig[item.procedure.category]?.bgColor} ${procedureCategoryConfig[item.procedure.category]?.color} border-0`}
@@ -363,17 +349,17 @@ export default function TreatmentPlanDetailPage({
                           {procedureCategoryConfig[item.procedure.category]?.label}
                         </Badge>
                         {item.notes && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {item.notes}
-                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
                         )}
                       </TableCell>
-                      <TableCell>{item.toothNumbers || "-"}</TableCell>
+                      <TableCell>{item.toothNumbers || '-'}</TableCell>
                       <TableCell>{formatCurrency(item.estimatedCost)}</TableCell>
                       <TableCell>{getItemStatusBadge(item.status)}</TableCell>
                       <TableCell>
-                        {item.status === "PENDING" && plan.status === "IN_PROGRESS" && (
-                          <Link href={`/treatments/new?patientId=${plan.patient.id}&procedureId=${item.procedure.id}`}>
+                        {item.status === 'PENDING' && plan.status === 'IN_PROGRESS' && (
+                          <Link
+                            href={`/treatments/new?patientId=${plan.patient.id}&procedureId=${item.procedure.id}`}
+                          >
                             <Button size="sm" variant="outline">
                               Start
                             </Button>
@@ -428,9 +414,7 @@ export default function TreatmentPlanDetailPage({
                   <div className="font-medium">
                     {plan.patient.firstName} {plan.patient.lastName}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {plan.patient.patientId}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{plan.patient.patientId}</div>
                 </div>
               </div>
 
@@ -466,9 +450,7 @@ export default function TreatmentPlanDetailPage({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">Total Cost</div>
-                  <div className="font-bold text-lg">
-                    {formatCurrency(plan.estimatedCost)}
-                  </div>
+                  <div className="font-bold text-lg">{formatCurrency(plan.estimatedCost)}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Procedures</div>
@@ -479,9 +461,7 @@ export default function TreatmentPlanDetailPage({
               {plan.estimatedDuration && (
                 <div>
                   <div className="text-sm text-muted-foreground">Est. Duration</div>
-                  <div className="font-medium">
-                    {Math.round(plan.estimatedDuration / 60)} hours
-                  </div>
+                  <div className="font-medium">{Math.round(plan.estimatedDuration / 60)} hours</div>
                 </div>
               )}
 
@@ -522,14 +502,11 @@ export default function TreatmentPlanDetailPage({
           <DialogHeader>
             <DialogTitle>Record Patient Consent</DialogTitle>
             <DialogDescription>
-              Confirm that the patient has given consent to proceed with this
-              treatment plan.
+              Confirm that the patient has given consent to proceed with this treatment plan.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              By recording consent, you confirm that:
-            </p>
+            <p className="text-sm text-muted-foreground">By recording consent, you confirm that:</p>
             <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
               <li>The treatment plan has been explained to the patient</li>
               <li>All questions have been answered</li>
@@ -542,7 +519,7 @@ export default function TreatmentPlanDetailPage({
               Cancel
             </Button>
             <Button onClick={handleConsentGiven} disabled={actionLoading}>
-              {actionLoading ? "Recording..." : "Confirm Consent"}
+              {actionLoading ? 'Recording...' : 'Confirm Consent'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -554,20 +531,15 @@ export default function TreatmentPlanDetailPage({
           <DialogHeader>
             <DialogTitle>Cancel Treatment Plan</DialogTitle>
             <DialogDescription>
-              Are you sure you want to cancel this treatment plan? This action
-              cannot be undone.
+              Are you sure you want to cancel this treatment plan? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
               Keep Plan
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCancelPlan}
-              disabled={actionLoading}
-            >
-              {actionLoading ? "Cancelling..." : "Cancel Plan"}
+            <Button variant="destructive" onClick={handleCancelPlan} disabled={actionLoading}>
+              {actionLoading ? 'Cancelling...' : 'Cancel Plan'}
             </Button>
           </DialogFooter>
         </DialogContent>

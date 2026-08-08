@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuthenticatedHospital } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getAuthenticatedHospital } from '@/lib/api-helpers'
 
 // GET /api/notifications — list notifications for current user
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await getAuthenticatedHospital()
   if (error || !user || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { searchParams } = new URL(req.url)
-  const unreadOnly = searchParams.get("unread") === "true"
-  const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50)
-  const cursor = searchParams.get("cursor") || undefined
+  const unreadOnly = searchParams.get('unread') === 'true'
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
+  const cursor = searchParams.get('cursor') || undefined
 
   const where: Record<string, unknown> = {
     hospitalId,
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const notifications = await prisma.notification.findMany({
     where,
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   })
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const { error, user, hospitalId } = await getAuthenticatedHospital()
   if (error || !user || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const body = await req.json()

@@ -1,12 +1,16 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const dynamicPricing: Skill = {
-  name: "dynamic-pricing",
-  displayName: "Dynamic Pricing Advisor",
-  description: "Analyzes appointment demand patterns and suggests off-peak discounts or premium pricing for high-demand slots",
-  allowedRoles: ["ADMIN"],
-  modelTier: "billing",
-  systemPrompt: (hospitalName, contextStr) => `You are a demand-based pricing advisor for ${hospitalName}, a dental clinic.
+  name: 'dynamic-pricing',
+  displayName: 'Dynamic Pricing Advisor',
+  description:
+    'Analyzes appointment demand patterns and suggests off-peak discounts or premium pricing for high-demand slots',
+  allowedRoles: ['ADMIN'],
+  modelTier: 'billing',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are a demand-based pricing advisor for ${hospitalName}, a dental clinic.
 
 CONTEXT:
 ${contextStr}

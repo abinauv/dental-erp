@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -14,27 +14,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   Plus,
   Search,
@@ -45,8 +40,8 @@ import {
   Users,
   TrendingUp,
   Copy,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,8 +60,8 @@ interface Referral {
   referrerPatient: ReferrerPatient
   referredName: string
   referredPhone: string
-  status: "PENDING" | "CONVERTED" | "EXPIRED" | "REWARDED"
-  rewardType: "POINTS" | "DISCOUNT" | "CREDIT"
+  status: 'PENDING' | 'CONVERTED' | 'EXPIRED' | 'REWARDED'
+  rewardType: 'POINTS' | 'DISCOUNT' | 'CREDIT'
   rewardValue: number
   createdAt: string
 }
@@ -96,23 +91,23 @@ interface PatientSearchResult {
 // Status badge helper
 // ---------------------------------------------------------------------------
 
-function StatusBadge({ status }: { status: Referral["status"] }) {
+function StatusBadge({ status }: { status: Referral['status'] }) {
   switch (status) {
-    case "PENDING":
+    case 'PENDING':
       return <Badge variant="outline">Pending</Badge>
-    case "CONVERTED":
+    case 'CONVERTED':
       return (
         <Badge variant="default" className="bg-blue-100 text-blue-700 hover:bg-blue-100/80">
           Converted
         </Badge>
       )
-    case "REWARDED":
+    case 'REWARDED':
       return (
         <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100/80">
           Rewarded
         </Badge>
       )
-    case "EXPIRED":
+    case 'EXPIRED':
       return <Badge variant="destructive">Expired</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
@@ -132,7 +127,7 @@ export default function ReferralsPage() {
     total: 0,
     converted: 0,
     rewarded: 0,
-    conversionRate: "0",
+    conversionRate: '0',
   })
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -143,8 +138,8 @@ export default function ReferralsPage() {
   const [loading, setLoading] = useState(true)
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("ALL")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
   const [page, setPage] = useState(1)
 
   // Dialog state
@@ -152,15 +147,15 @@ export default function ReferralsPage() {
   const [submitting, setSubmitting] = useState(false)
 
   // Form state
-  const [referrerPatientId, setReferrerPatientId] = useState("")
-  const [referrerDisplay, setReferrerDisplay] = useState("")
-  const [referredName, setReferredName] = useState("")
-  const [referredPhone, setReferredPhone] = useState("")
-  const [rewardType, setRewardType] = useState<"POINTS" | "DISCOUNT" | "CREDIT">("POINTS")
-  const [rewardValue, setRewardValue] = useState("")
+  const [referrerPatientId, setReferrerPatientId] = useState('')
+  const [referrerDisplay, setReferrerDisplay] = useState('')
+  const [referredName, setReferredName] = useState('')
+  const [referredPhone, setReferredPhone] = useState('')
+  const [rewardType, setRewardType] = useState<'POINTS' | 'DISCOUNT' | 'CREDIT'>('POINTS')
+  const [rewardValue, setRewardValue] = useState('')
 
   // Patient search state
-  const [patientSearch, setPatientSearch] = useState("")
+  const [patientSearch, setPatientSearch] = useState('')
   const [patientResults, setPatientResults] = useState<PatientSearchResult[]>([])
   const [patientSearchLoading, setPatientSearchLoading] = useState(false)
   const [showPatientDropdown, setShowPatientDropdown] = useState(false)
@@ -173,24 +168,20 @@ export default function ReferralsPage() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      if (search) params.set("search", search)
-      if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter)
-      params.set("page", String(page))
-      params.set("limit", "20")
+      if (search) params.set('search', search)
+      if (statusFilter && statusFilter !== 'ALL') params.set('status', statusFilter)
+      params.set('page', String(page))
+      params.set('limit', '20')
 
       const res = await fetch(`/api/referrals?${params.toString()}`)
-      if (!res.ok) throw new Error("Failed to fetch referrals")
+      if (!res.ok) throw new Error('Failed to fetch referrals')
       const data = await res.json()
 
       setReferrals(data.referrals || [])
-      setSummary(
-        data.summary || { total: 0, converted: 0, rewarded: 0, conversionRate: "0" }
-      )
-      setPagination(
-        data.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 }
-      )
+      setSummary(data.summary || { total: 0, converted: 0, rewarded: 0, conversionRate: '0' })
+      setPagination(data.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 })
     } catch {
-      toast({ title: "Failed to load referrals", variant: "destructive" })
+      toast({ title: 'Failed to load referrals', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -214,14 +205,10 @@ export default function ReferralsPage() {
     patientSearchTimer.current = setTimeout(async () => {
       try {
         setPatientSearchLoading(true)
-        const res = await fetch(
-          `/api/patients?search=${encodeURIComponent(patientSearch)}&limit=5`
-        )
-        if (!res.ok) throw new Error("Search failed")
+        const res = await fetch(`/api/patients?search=${encodeURIComponent(patientSearch)}&limit=5`)
+        if (!res.ok) throw new Error('Search failed')
         const data = await res.json()
-        const patients: PatientSearchResult[] = Array.isArray(data)
-          ? data
-          : data.patients || []
+        const patients: PatientSearchResult[] = Array.isArray(data) ? data : data.patients || []
         setPatientResults(patients)
         setShowPatientDropdown(patients.length > 0)
       } catch {
@@ -243,47 +230,47 @@ export default function ReferralsPage() {
         setShowPatientDropdown(false)
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   // ---------- Create referral ----------
 
   function resetForm() {
-    setReferrerPatientId("")
-    setReferrerDisplay("")
-    setReferredName("")
-    setReferredPhone("")
-    setRewardType("POINTS")
-    setRewardValue("")
-    setPatientSearch("")
+    setReferrerPatientId('')
+    setReferrerDisplay('')
+    setReferredName('')
+    setReferredPhone('')
+    setRewardType('POINTS')
+    setRewardValue('')
+    setPatientSearch('')
     setPatientResults([])
     setShowPatientDropdown(false)
   }
 
   async function handleCreateReferral() {
     if (!referrerPatientId) {
-      toast({ title: "Please select a referrer patient", variant: "destructive" })
+      toast({ title: 'Please select a referrer patient', variant: 'destructive' })
       return
     }
     if (!referredName.trim()) {
-      toast({ title: "Referred person name is required", variant: "destructive" })
+      toast({ title: 'Referred person name is required', variant: 'destructive' })
       return
     }
     if (!referredPhone.trim()) {
-      toast({ title: "Referred person phone is required", variant: "destructive" })
+      toast({ title: 'Referred person phone is required', variant: 'destructive' })
       return
     }
     if (!rewardValue || Number(rewardValue) <= 0) {
-      toast({ title: "Reward value must be greater than 0", variant: "destructive" })
+      toast({ title: 'Reward value must be greater than 0', variant: 'destructive' })
       return
     }
 
     try {
       setSubmitting(true)
-      const res = await fetch("/api/referrals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           referrerPatientId,
           referredName: referredName.trim(),
@@ -294,16 +281,16 @@ export default function ReferralsPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Failed to create referral")
+        throw new Error(err.error || 'Failed to create referral')
       }
-      toast({ title: "Referral created successfully" })
+      toast({ title: 'Referral created successfully' })
       setDialogOpen(false)
       resetForm()
       setPage(1)
       fetchReferrals()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create referral"
-      toast({ title: message, variant: "destructive" })
+      const message = err instanceof Error ? err.message : 'Failed to create referral'
+      toast({ title: message, variant: 'destructive' })
     } finally {
       setSubmitting(false)
     }
@@ -311,30 +298,25 @@ export default function ReferralsPage() {
 
   // ---------- Update referral status ----------
 
-  async function handleUpdateStatus(
-    referralId: string,
-    newStatus: "CONVERTED" | "REWARDED"
-  ) {
+  async function handleUpdateStatus(referralId: string, newStatus: 'CONVERTED' | 'REWARDED') {
     try {
       const res = await fetch(`/api/referrals/${referralId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Failed to update referral")
+        throw new Error(err.error || 'Failed to update referral')
       }
       toast({
         title:
-          newStatus === "CONVERTED"
-            ? "Referral marked as converted"
-            : "Reward given successfully",
+          newStatus === 'CONVERTED' ? 'Referral marked as converted' : 'Reward given successfully',
       })
       fetchReferrals()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to update referral"
-      toast({ title: message, variant: "destructive" })
+      const message = err instanceof Error ? err.message : 'Failed to update referral'
+      toast({ title: message, variant: 'destructive' })
     }
   }
 
@@ -342,7 +324,7 @@ export default function ReferralsPage() {
 
   function copyCode(code: string) {
     navigator.clipboard.writeText(code).then(() => {
-      toast({ title: "Referral code copied" })
+      toast({ title: 'Referral code copied' })
     })
   }
 
@@ -510,8 +492,7 @@ export default function ReferralsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {referral.referrerPatient.firstName}{" "}
-                          {referral.referrerPatient.lastName}
+                          {referral.referrerPatient.firstName} {referral.referrerPatient.lastName}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {referral.referrerPatient.patientId}
@@ -523,7 +504,7 @@ export default function ReferralsPage() {
                         <StatusBadge status={referral.status} />
                       </TableCell>
                       <TableCell>
-                        {new Date(referral.createdAt).toLocaleDateString("en-IN")}
+                        {new Date(referral.createdAt).toLocaleDateString('en-IN')}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -534,34 +515,28 @@ export default function ReferralsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => copyCode(referral.referralCode)}
-                            >
+                            <DropdownMenuItem onClick={() => copyCode(referral.referralCode)}>
                               <Copy className="mr-2 h-4 w-4" />
                               Copy Code
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(referral.id, "CONVERTED")
-                              }
+                              onClick={() => handleUpdateStatus(referral.id, 'CONVERTED')}
                               disabled={
-                                referral.status === "CONVERTED" ||
-                                referral.status === "REWARDED" ||
-                                referral.status === "EXPIRED"
+                                referral.status === 'CONVERTED' ||
+                                referral.status === 'REWARDED' ||
+                                referral.status === 'EXPIRED'
                               }
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Mark Converted
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(referral.id, "REWARDED")
-                              }
+                              onClick={() => handleUpdateStatus(referral.id, 'REWARDED')}
                               disabled={
-                                referral.status === "REWARDED" ||
-                                referral.status === "EXPIRED" ||
-                                referral.status === "PENDING"
+                                referral.status === 'REWARDED' ||
+                                referral.status === 'EXPIRED' ||
+                                referral.status === 'PENDING'
                               }
                             >
                               <Gift className="mr-2 h-4 w-4" />
@@ -581,8 +556,8 @@ export default function ReferralsPage() {
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} referrals
               </p>
               <div className="flex gap-2">
@@ -631,8 +606,8 @@ export default function ReferralsPage() {
                   value={referrerPatientId ? referrerDisplay : patientSearch}
                   onChange={(e) => {
                     setPatientSearch(e.target.value)
-                    setReferrerPatientId("")
-                    setReferrerDisplay("")
+                    setReferrerPatientId('')
+                    setReferrerDisplay('')
                   }}
                   onFocus={() => {
                     if (patientResults.length > 0) setShowPatientDropdown(true)
@@ -651,10 +626,8 @@ export default function ReferralsPage() {
                         className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent text-left"
                         onClick={() => {
                           setReferrerPatientId(p.id)
-                          setReferrerDisplay(
-                            `${p.patientId} - ${p.firstName} ${p.lastName}`
-                          )
-                          setPatientSearch("")
+                          setReferrerDisplay(`${p.patientId} - ${p.firstName} ${p.lastName}`)
+                          setPatientSearch('')
                           setShowPatientDropdown(false)
                         }}
                       >
@@ -670,9 +643,7 @@ export default function ReferralsPage() {
                 )}
               </div>
               {referrerPatientId && (
-                <p className="text-xs text-muted-foreground">
-                  Selected: {referrerDisplay}
-                </p>
+                <p className="text-xs text-muted-foreground">Selected: {referrerDisplay}</p>
               )}
             </div>
 
@@ -703,9 +674,7 @@ export default function ReferralsPage() {
               <Label>Reward Type</Label>
               <Select
                 value={rewardType}
-                onValueChange={(val) =>
-                  setRewardType(val as "POINTS" | "DISCOUNT" | "CREDIT")
-                }
+                onValueChange={(val) => setRewardType(val as 'POINTS' | 'DISCOUNT' | 'CREDIT')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select reward type" />
@@ -732,11 +701,7 @@ export default function ReferralsPage() {
             </div>
 
             {/* Submit */}
-            <Button
-              className="w-full"
-              onClick={handleCreateReferral}
-              disabled={submitting}
-            >
+            <Button className="w-full" onClick={handleCreateReferral} disabled={submitting}>
               {submitting ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

@@ -172,9 +172,30 @@ describe('Inventory API - Comprehensive Tests', () => {
 
     it('should filter by low stock only', async () => {
       const mockItems = [
-        { id: '1', currentStock: 50, minimumStock: 100, reorderLevel: 200, category: null, supplierItems: [] },
-        { id: '2', currentStock: 500, minimumStock: 100, reorderLevel: 200, category: null, supplierItems: [] },
-        { id: '3', currentStock: 0, minimumStock: 10, reorderLevel: 20, category: null, supplierItems: [] },
+        {
+          id: '1',
+          currentStock: 50,
+          minimumStock: 100,
+          reorderLevel: 200,
+          category: null,
+          supplierItems: [],
+        },
+        {
+          id: '2',
+          currentStock: 500,
+          minimumStock: 100,
+          reorderLevel: 200,
+          category: null,
+          supplierItems: [],
+        },
+        {
+          id: '3',
+          currentStock: 0,
+          minimumStock: 10,
+          reorderLevel: 20,
+          category: null,
+          supplierItems: [],
+        },
       ]
 
       mockPrisma.inventoryItem.findMany.mockResolvedValue(mockItems)
@@ -184,9 +205,11 @@ describe('Inventory API - Comprehensive Tests', () => {
       const data = await response.json()
 
       // Should only return low_stock and out_of_stock items
-      expect(data.data.every((item: any) =>
-        item.stockStatus === 'low_stock' || item.stockStatus === 'out_of_stock'
-      )).toBe(true)
+      expect(
+        data.data.every(
+          (item: any) => item.stockStatus === 'low_stock' || item.stockStatus === 'out_of_stock'
+        )
+      ).toBe(true)
     })
 
     it('should search by name, SKU, or description', async () => {
@@ -454,14 +477,16 @@ describe('Inventory API - Comprehensive Tests', () => {
     it.each(testCases)(
       'should return $expected when current=$current, min=$minimum, reorder=$reorder',
       async ({ current, minimum, reorder, expected }) => {
-        const mockItems = [{
-          id: '1',
-          currentStock: current,
-          minimumStock: minimum,
-          reorderLevel: reorder,
-          category: null,
-          supplierItems: [],
-        }]
+        const mockItems = [
+          {
+            id: '1',
+            currentStock: current,
+            minimumStock: minimum,
+            reorderLevel: reorder,
+            category: null,
+            supplierItems: [],
+          },
+        ]
 
         mockPrisma.inventoryItem.findMany.mockResolvedValue(mockItems)
 
@@ -544,14 +569,16 @@ describe('Inventory API - Comprehensive Tests', () => {
   describe('Edge Cases', () => {
     it('should handle negative stock gracefully', async () => {
       // This shouldn't happen in practice but API should handle it
-      const mockItems = [{
-        id: '1',
-        currentStock: -5, // Invalid state
-        minimumStock: 10,
-        reorderLevel: 20,
-        category: null,
-        supplierItems: [],
-      }]
+      const mockItems = [
+        {
+          id: '1',
+          currentStock: -5, // Invalid state
+          minimumStock: 10,
+          reorderLevel: 20,
+          category: null,
+          supplierItems: [],
+        },
+      ]
 
       mockPrisma.inventoryItem.findMany.mockResolvedValue(mockItems)
 

@@ -23,11 +23,15 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { prescriptionNo: { contains: search, mode: 'insensitive' } },
-        { patient: { OR: [
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { patientId: { contains: search, mode: 'insensitive' } },
-        ] } },
+        {
+          patient: {
+            OR: [
+              { firstName: { contains: search, mode: 'insensitive' } },
+              { lastName: { contains: search, mode: 'insensitive' } },
+              { patientId: { contains: search, mode: 'insensitive' } },
+            ],
+          },
+        },
       ]
     }
 
@@ -38,9 +42,20 @@ export async function GET(request: NextRequest) {
       prisma.prescription.findMany({
         where,
         include: {
-          patient: { select: { id: true, patientId: true, firstName: true, lastName: true, phone: true, dateOfBirth: true } },
+          patient: {
+            select: {
+              id: true,
+              patientId: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              dateOfBirth: true,
+            },
+          },
           doctor: { select: { id: true, firstName: true, lastName: true } },
-          medications: { include: { medication: { select: { id: true, name: true, genericName: true } } } },
+          medications: {
+            include: { medication: { select: { id: true, name: true, genericName: true } } },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -56,7 +71,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (err: any) {
     console.error('Error fetching prescriptions:', err)
-    return NextResponse.json({ error: err.message || 'Failed to fetch prescriptions' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to fetch prescriptions' },
+      { status: 500 }
+    )
   }
 }
 
@@ -72,7 +90,10 @@ export async function POST(request: NextRequest) {
     const { patientId, diagnosis, notes, validUntil, medications } = body
 
     if (!patientId || !medications || medications.length === 0) {
-      return NextResponse.json({ error: 'Patient and at least one medication are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Patient and at least one medication are required' },
+        { status: 400 }
+      )
     }
 
     // Verify patient
@@ -133,6 +154,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: prescription }, { status: 201 })
   } catch (err: any) {
     console.error('Error creating prescription:', err)
-    return NextResponse.json({ error: err.message || 'Failed to create prescription' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to create prescription' },
+      { status: 500 }
+    )
   }
 }

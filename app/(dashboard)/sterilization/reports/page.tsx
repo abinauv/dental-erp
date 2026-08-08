@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -10,8 +10,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
 import {
   BarChart3,
   Shield,
@@ -20,7 +20,7 @@ import {
   XCircle,
   Loader2,
   Wrench,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface ReportData {
   complianceRate: number
@@ -31,13 +31,19 @@ interface ReportData {
   bioIndicatorRate: number
   chemIndicatorRate: number
   dueForMaintenance: Array<{
-    id: string; name: string; category: string
-    sterilizationCycleCount: number; maxCycles: number
+    id: string
+    name: string
+    category: string
+    sterilizationCycleCount: number
+    maxCycles: number
     percentUsed: number
   }>
   dueForRetirement: Array<{
-    id: string; name: string; category: string
-    sterilizationCycleCount: number; maxCycles: number
+    id: string
+    name: string
+    category: string
+    sterilizationCycleCount: number
+    maxCycles: number
   }>
   methodBreakdown: Array<{ method: string; count: number; passRate: number }>
 }
@@ -47,17 +53,19 @@ export default function ComplianceReportsPage() {
   const [loading, setLoading] = useState(true)
   const [report, setReport] = useState<ReportData | null>(null)
 
-  useEffect(() => { fetchReport() }, [])
+  useEffect(() => {
+    fetchReport()
+  }, [])
 
   const fetchReport = async () => {
     setLoading(true)
     try {
       const [instrRes, logsRes] = await Promise.all([
-        fetch("/api/sterilization/instruments"),
-        fetch("/api/sterilization/logs?limit=500"),
+        fetch('/api/sterilization/instruments'),
+        fetch('/api/sterilization/logs?limit=500'),
       ])
 
-      if (!instrRes.ok || !logsRes.ok) throw new Error("Failed to fetch data")
+      if (!instrRes.ok || !logsRes.ok) throw new Error('Failed to fetch data')
 
       const instrData = await instrRes.json()
       const logsData = await logsRes.json()
@@ -65,23 +73,32 @@ export default function ComplianceReportsPage() {
       const logs = logsData.logs || []
 
       // Compliance rate
-      const passCount = logs.filter((l: any) => l.result === "PASS").length
-      const failCount = logs.filter((l: any) => l.result === "FAIL").length
-      const pendingCount = logs.filter((l: any) => l.result === "PENDING").length
+      const passCount = logs.filter((l: any) => l.result === 'PASS').length
+      const failCount = logs.filter((l: any) => l.result === 'FAIL').length
+      const pendingCount = logs.filter((l: any) => l.result === 'PENDING').length
       const totalCycles = logs.length
       const complianceRate = totalCycles > 0 ? Math.round((passCount / totalCycles) * 1000) / 10 : 0
 
       // Indicator rates
       const bioCount = logs.filter((l: any) => l.biologicalIndicator).length
       const chemCount = logs.filter((l: any) => l.chemicalIndicator).length
-      const bioIndicatorRate = totalCycles > 0 ? Math.round((bioCount / totalCycles) * 1000) / 10 : 0
-      const chemIndicatorRate = totalCycles > 0 ? Math.round((chemCount / totalCycles) * 1000) / 10 : 0
+      const bioIndicatorRate =
+        totalCycles > 0 ? Math.round((bioCount / totalCycles) * 1000) / 10 : 0
+      const chemIndicatorRate =
+        totalCycles > 0 ? Math.round((chemCount / totalCycles) * 1000) / 10 : 0
 
       // Instruments due for maintenance (>= 80% of max cycles)
       const dueForMaintenance = instruments
-        .filter((i: any) => i.maxCycles && i.sterilizationCycleCount >= i.maxCycles * 0.8 && i.sterilizationCycleCount < i.maxCycles)
+        .filter(
+          (i: any) =>
+            i.maxCycles &&
+            i.sterilizationCycleCount >= i.maxCycles * 0.8 &&
+            i.sterilizationCycleCount < i.maxCycles
+        )
         .map((i: any) => ({
-          id: i.id, name: i.name, category: i.category,
+          id: i.id,
+          name: i.name,
+          category: i.category,
           sterilizationCycleCount: i.sterilizationCycleCount,
           maxCycles: i.maxCycles,
           percentUsed: Math.round((i.sterilizationCycleCount / i.maxCycles) * 100),
@@ -90,9 +107,14 @@ export default function ComplianceReportsPage() {
 
       // Instruments due for retirement (>= max cycles)
       const dueForRetirement = instruments
-        .filter((i: any) => i.maxCycles && i.sterilizationCycleCount >= i.maxCycles && i.status !== "RETIRED")
+        .filter(
+          (i: any) =>
+            i.maxCycles && i.sterilizationCycleCount >= i.maxCycles && i.status !== 'RETIRED'
+        )
         .map((i: any) => ({
-          id: i.id, name: i.name, category: i.category,
+          id: i.id,
+          name: i.name,
+          category: i.category,
           sterilizationCycleCount: i.sterilizationCycleCount,
           maxCycles: i.maxCycles,
         }))
@@ -102,28 +124,41 @@ export default function ComplianceReportsPage() {
       for (const l of logs) {
         if (!methodMap[l.method]) methodMap[l.method] = { total: 0, pass: 0 }
         methodMap[l.method].total++
-        if (l.result === "PASS") methodMap[l.method].pass++
+        if (l.result === 'PASS') methodMap[l.method].pass++
       }
-      const methodBreakdown = Object.entries(methodMap).map(([method, data]) => ({
-        method,
-        count: data.total,
-        passRate: data.total > 0 ? Math.round((data.pass / data.total) * 1000) / 10 : 0,
-      })).sort((a, b) => b.count - a.count)
+      const methodBreakdown = Object.entries(methodMap)
+        .map(([method, data]) => ({
+          method,
+          count: data.total,
+          passRate: data.total > 0 ? Math.round((data.pass / data.total) * 1000) / 10 : 0,
+        }))
+        .sort((a, b) => b.count - a.count)
 
       setReport({
-        complianceRate, totalCycles, passCount, failCount, pendingCount,
-        bioIndicatorRate, chemIndicatorRate, dueForMaintenance, dueForRetirement,
+        complianceRate,
+        totalCycles,
+        passCount,
+        failCount,
+        pendingCount,
+        bioIndicatorRate,
+        chemIndicatorRate,
+        dueForMaintenance,
+        dueForRetirement,
         methodBreakdown,
       })
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
   }
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   if (!report) return null
@@ -132,7 +167,9 @@ export default function ComplianceReportsPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Compliance Reports</h2>
-        <p className="text-muted-foreground">Sterilization compliance rates, indicator pass rates, and maintenance alerts</p>
+        <p className="text-muted-foreground">
+          Sterilization compliance rates, indicator pass rates, and maintenance alerts
+        </p>
       </div>
 
       {/* Overview Cards */}
@@ -143,10 +180,14 @@ export default function ComplianceReportsPage() {
             <Shield className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${report.complianceRate >= 95 ? "text-green-600" : report.complianceRate >= 80 ? "text-yellow-600" : "text-red-600"}`}>
+            <div
+              className={`text-2xl font-bold ${report.complianceRate >= 95 ? 'text-green-600' : report.complianceRate >= 80 ? 'text-yellow-600' : 'text-red-600'}`}
+            >
               {report.complianceRate}%
             </div>
-            <p className="text-xs text-muted-foreground">{report.passCount} pass / {report.totalCycles} total</p>
+            <p className="text-xs text-muted-foreground">
+              {report.passCount} pass / {report.totalCycles} total
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -205,7 +246,15 @@ export default function ComplianceReportsPage() {
                     <TableCell className="font-medium">{m.method}</TableCell>
                     <TableCell className="text-right">{m.count}</TableCell>
                     <TableCell className="text-right">
-                      <span className={m.passRate >= 95 ? "text-green-600" : m.passRate >= 80 ? "text-yellow-600" : "text-red-600"}>
+                      <span
+                        className={
+                          m.passRate >= 95
+                            ? 'text-green-600'
+                            : m.passRate >= 80
+                              ? 'text-yellow-600'
+                              : 'text-red-600'
+                        }
+                      >
                         {m.passRate}%
                       </span>
                     </TableCell>
@@ -225,7 +274,9 @@ export default function ComplianceReportsPage() {
               <AlertTriangle className="h-5 w-5" />
               Instruments Due for Retirement
             </CardTitle>
-            <CardDescription>These instruments have exceeded their maximum sterilization cycles</CardDescription>
+            <CardDescription>
+              These instruments have exceeded their maximum sterilization cycles
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -242,7 +293,9 @@ export default function ComplianceReportsPage() {
                   <TableRow key={i.id}>
                     <TableCell className="font-medium">{i.name}</TableCell>
                     <TableCell>{i.category}</TableCell>
-                    <TableCell className="text-right text-red-600 font-semibold">{i.sterilizationCycleCount}</TableCell>
+                    <TableCell className="text-right text-red-600 font-semibold">
+                      {i.sterilizationCycleCount}
+                    </TableCell>
                     <TableCell className="text-right">{i.maxCycles}</TableCell>
                   </TableRow>
                 ))}
@@ -260,7 +313,9 @@ export default function ComplianceReportsPage() {
               <Wrench className="h-5 w-5" />
               Instruments Approaching Max Cycles
             </CardTitle>
-            <CardDescription>These instruments are above 80% of their maximum sterilization cycles</CardDescription>
+            <CardDescription>
+              These instruments are above 80% of their maximum sterilization cycles
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -281,7 +336,9 @@ export default function ComplianceReportsPage() {
                     <TableCell className="text-right">{i.sterilizationCycleCount}</TableCell>
                     <TableCell className="text-right">{i.maxCycles}</TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={i.percentUsed >= 90 ? "destructive" : "secondary"}>{i.percentUsed}%</Badge>
+                      <Badge variant={i.percentUsed >= 90 ? 'destructive' : 'secondary'}>
+                        {i.percentUsed}%
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -296,7 +353,9 @@ export default function ComplianceReportsPage() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold">No compliance data yet</h3>
-            <p className="text-muted-foreground text-sm mt-1">Record sterilization cycles to see compliance reports</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Record sterilization cycles to see compliance reports
+            </p>
           </CardContent>
         </Card>
       )}

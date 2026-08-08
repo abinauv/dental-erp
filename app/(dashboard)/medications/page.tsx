@@ -9,20 +9,59 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Pill, Plus, Search, Pencil, Trash2, Loader2 } from 'lucide-react'
 
-const FORMS = ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Ointment', 'Gel', 'Drops', 'Inhaler', 'Powder', 'Suspension', 'Spray']
-const DEFAULT_CATEGORIES = ['Antibiotic', 'Analgesic', 'Anti-inflammatory', 'Antiseptic', 'Anesthetic', 'Antifungal', 'Antiviral', 'Vitamin', 'Steroid', 'Mouthwash', 'Other']
+const FORMS = [
+  'Tablet',
+  'Capsule',
+  'Syrup',
+  'Injection',
+  'Cream',
+  'Ointment',
+  'Gel',
+  'Drops',
+  'Inhaler',
+  'Powder',
+  'Suspension',
+  'Spray',
+]
+const DEFAULT_CATEGORIES = [
+  'Antibiotic',
+  'Analgesic',
+  'Anti-inflammatory',
+  'Antiseptic',
+  'Anesthetic',
+  'Antifungal',
+  'Antiviral',
+  'Vitamin',
+  'Steroid',
+  'Mouthwash',
+  'Other',
+]
 
 interface Medication {
   id: string
@@ -41,9 +80,17 @@ interface Medication {
 }
 
 const emptyForm = {
-  name: '', genericName: '', category: '', form: '', strength: '',
-  manufacturer: '', defaultDosage: '', defaultFrequency: '', defaultDuration: '',
-  contraindications: '', sideEffects: '',
+  name: '',
+  genericName: '',
+  category: '',
+  form: '',
+  strength: '',
+  manufacturer: '',
+  defaultDosage: '',
+  defaultFrequency: '',
+  defaultDuration: '',
+  contraindications: '',
+  sideEffects: '',
 }
 
 export default function MedicationsPage() {
@@ -65,7 +112,11 @@ export default function MedicationsPage() {
   const fetchMedications = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ page: String(pagination.page), limit: '50', active: 'true' })
+      const params = new URLSearchParams({
+        page: String(pagination.page),
+        limit: '50',
+        active: 'true',
+      })
       if (search) params.set('search', search)
       if (categoryFilter) params.set('category', categoryFilter)
 
@@ -73,7 +124,11 @@ export default function MedicationsPage() {
       const result = await res.json()
       if (result.success) {
         setMedications(result.data)
-        setPagination(prev => ({ ...prev, total: result.pagination.total, pages: result.pagination.pages }))
+        setPagination((prev) => ({
+          ...prev,
+          total: result.pagination.total,
+          pages: result.pagination.pages,
+        }))
       }
     } catch {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to load medications' })
@@ -90,11 +145,17 @@ export default function MedicationsPage() {
         const merged = [...new Set([...DEFAULT_CATEGORIES, ...result.data])]
         setCategories(merged.sort())
       }
-    } catch { /* use defaults */ }
+    } catch {
+      /* use defaults */
+    }
   }
 
-  useEffect(() => { fetchMedications() }, [fetchMedications])
-  useEffect(() => { fetchCategories() }, [])
+  useEffect(() => {
+    fetchMedications()
+  }, [fetchMedications])
+  useEffect(() => {
+    fetchCategories()
+  }, [])
 
   const openAdd = () => {
     setEditing(null)
@@ -137,7 +198,10 @@ export default function MedicationsPage() {
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
 
-      toast({ title: editing ? 'Updated' : 'Created', description: `${formData.name} saved successfully` })
+      toast({
+        title: editing ? 'Updated' : 'Created',
+        description: `${formData.name} saved successfully`,
+      })
       setDialogOpen(false)
       fetchMedications()
       fetchCategories()
@@ -149,7 +213,11 @@ export default function MedicationsPage() {
   }
 
   const handleDelete = async (med: Medication) => {
-    const ok = await confirm({ title: "Deactivate Medication", description: `Deactivate "${med.name}"? It will no longer appear in prescription search.`, confirmLabel: "Deactivate" })
+    const ok = await confirm({
+      title: 'Deactivate Medication',
+      description: `Deactivate "${med.name}"? It will no longer appear in prescription search.`,
+      confirmLabel: 'Deactivate',
+    })
     if (!ok) return
     try {
       const res = await fetch(`/api/medications/${med.id}`, { method: 'DELETE' })
@@ -157,7 +225,11 @@ export default function MedicationsPage() {
       toast({ title: 'Deactivated', description: `${med.name} has been deactivated` })
       fetchMedications()
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to deactivate medication' })
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to deactivate medication',
+      })
     }
   }
 
@@ -186,18 +258,29 @@ export default function MedicationsPage() {
               <Input
                 placeholder="Search medications..."
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setPagination(p => ({ ...p, page: 1 })) }}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPagination((p) => ({ ...p, page: 1 }))
+                }}
                 className="pl-9"
               />
             </div>
-            <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v === 'all' ? '' : v); setPagination(p => ({ ...p, page: 1 })) }}>
+            <Select
+              value={categoryFilter}
+              onValueChange={(v) => {
+                setCategoryFilter(v === 'all' ? '' : v)
+                setPagination((p) => ({ ...p, page: 1 }))
+              }}
+            >
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -231,10 +314,12 @@ export default function MedicationsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {medications.map(med => (
+                {medications.map((med) => (
                   <TableRow key={med.id}>
                     <TableCell className="font-medium">{med.name}</TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">{med.genericName || '—'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                      {med.genericName || '—'}
+                    </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {med.category ? <Badge variant="secondary">{med.category}</Badge> : '—'}
                     </TableCell>
@@ -242,14 +327,26 @@ export default function MedicationsPage() {
                       {[med.form, med.strength].filter(Boolean).join(' · ') || '—'}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                      {[med.defaultDosage, med.defaultFrequency, med.defaultDuration].filter(Boolean).join(', ') || '—'}
+                      {[med.defaultDosage, med.defaultFrequency, med.defaultDuration]
+                        .filter(Boolean)
+                        .join(', ') || '—'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(med)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(med)}
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(med)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => handleDelete(med)}
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -265,13 +362,23 @@ export default function MedicationsPage() {
       {/* Pagination */}
       {pagination.pages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
-          <Button variant="outline" size="sm" disabled={pagination.page <= 1} onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pagination.page <= 1}
+            onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
+          >
             Previous
           </Button>
           <span className="flex items-center text-sm text-muted-foreground px-3">
             Page {pagination.page} of {pagination.pages}
           </span>
-          <Button variant="outline" size="sm" disabled={pagination.page >= pagination.pages} onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pagination.page >= pagination.pages}
+            onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
+          >
             Next
           </Button>
         </div>
@@ -291,37 +398,71 @@ export default function MedicationsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Label>Medication Name *</Label>
-                <Input value={formData.name} onChange={e => setFormData(f => ({ ...f, name: e.target.value }))} placeholder="Amoxicillin" />
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Amoxicillin"
+                />
               </div>
               <div className="md:col-span-2">
                 <Label>Generic Name</Label>
-                <Input value={formData.genericName} onChange={e => setFormData(f => ({ ...f, genericName: e.target.value }))} placeholder="Amoxicillin Trihydrate" />
+                <Input
+                  value={formData.genericName}
+                  onChange={(e) => setFormData((f) => ({ ...f, genericName: e.target.value }))}
+                  placeholder="Amoxicillin Trihydrate"
+                />
               </div>
               <div>
                 <Label>Category</Label>
-                <Select value={formData.category || undefined} onValueChange={v => setFormData(f => ({ ...f, category: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <Select
+                  value={formData.category || undefined}
+                  onValueChange={(v) => setFormData((f) => ({ ...f, category: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {categories.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Form</Label>
-                <Select value={formData.form || undefined} onValueChange={v => setFormData(f => ({ ...f, form: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select form" /></SelectTrigger>
+                <Select
+                  value={formData.form || undefined}
+                  onValueChange={(v) => setFormData((f) => ({ ...f, form: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select form" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {FORMS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                    {FORMS.map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {f}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Strength</Label>
-                <Input value={formData.strength} onChange={e => setFormData(f => ({ ...f, strength: e.target.value }))} placeholder="500mg" />
+                <Input
+                  value={formData.strength}
+                  onChange={(e) => setFormData((f) => ({ ...f, strength: e.target.value }))}
+                  placeholder="500mg"
+                />
               </div>
               <div>
                 <Label>Manufacturer</Label>
-                <Input value={formData.manufacturer} onChange={e => setFormData(f => ({ ...f, manufacturer: e.target.value }))} placeholder="Cipla" />
+                <Input
+                  value={formData.manufacturer}
+                  onChange={(e) => setFormData((f) => ({ ...f, manufacturer: e.target.value }))}
+                  placeholder="Cipla"
+                />
               </div>
             </div>
 
@@ -330,15 +471,31 @@ export default function MedicationsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label>Dosage</Label>
-                  <Input value={formData.defaultDosage} onChange={e => setFormData(f => ({ ...f, defaultDosage: e.target.value }))} placeholder="1 tablet" />
+                  <Input
+                    value={formData.defaultDosage}
+                    onChange={(e) => setFormData((f) => ({ ...f, defaultDosage: e.target.value }))}
+                    placeholder="1 tablet"
+                  />
                 </div>
                 <div>
                   <Label>Frequency</Label>
-                  <Input value={formData.defaultFrequency} onChange={e => setFormData(f => ({ ...f, defaultFrequency: e.target.value }))} placeholder="3 times a day" />
+                  <Input
+                    value={formData.defaultFrequency}
+                    onChange={(e) =>
+                      setFormData((f) => ({ ...f, defaultFrequency: e.target.value }))
+                    }
+                    placeholder="3 times a day"
+                  />
                 </div>
                 <div>
                   <Label>Duration</Label>
-                  <Input value={formData.defaultDuration} onChange={e => setFormData(f => ({ ...f, defaultDuration: e.target.value }))} placeholder="5 days" />
+                  <Input
+                    value={formData.defaultDuration}
+                    onChange={(e) =>
+                      setFormData((f) => ({ ...f, defaultDuration: e.target.value }))
+                    }
+                    placeholder="5 days"
+                  />
                 </div>
               </div>
             </div>
@@ -347,18 +504,32 @@ export default function MedicationsPage() {
               <div className="grid gap-4">
                 <div>
                   <Label>Contraindications</Label>
-                  <Textarea value={formData.contraindications} onChange={e => setFormData(f => ({ ...f, contraindications: e.target.value }))} placeholder="Known allergies, drug interactions..." rows={2} />
+                  <Textarea
+                    value={formData.contraindications}
+                    onChange={(e) =>
+                      setFormData((f) => ({ ...f, contraindications: e.target.value }))
+                    }
+                    placeholder="Known allergies, drug interactions..."
+                    rows={2}
+                  />
                 </div>
                 <div>
                   <Label>Side Effects</Label>
-                  <Textarea value={formData.sideEffects} onChange={e => setFormData(f => ({ ...f, sideEffects: e.target.value }))} placeholder="Nausea, dizziness..." rows={2} />
+                  <Textarea
+                    value={formData.sideEffects}
+                    onChange={(e) => setFormData((f) => ({ ...f, sideEffects: e.target.value }))}
+                    placeholder="Nausea, dizziness..."
+                    rows={2}
+                  />
                 </div>
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editing ? 'Update' : 'Add Medication'}

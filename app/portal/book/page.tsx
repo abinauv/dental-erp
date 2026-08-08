@@ -1,21 +1,21 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   CalendarPlus,
   User,
@@ -25,8 +25,8 @@ import {
   CheckCircle,
   ArrowLeft,
   ArrowRight,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Doctor {
   id: string
@@ -50,10 +50,10 @@ export default function BookAppointment() {
   const [doctorsLoading, setDoctorsLoading] = useState(true)
 
   // Form state
-  const [selectedDoctor, setSelectedDoctor] = useState("")
-  const [selectedDate, setSelectedDate] = useState("")
-  const [selectedTime, setSelectedTime] = useState("")
-  const [chiefComplaint, setChiefComplaint] = useState("")
+  const [selectedDoctor, setSelectedDoctor] = useState('')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [chiefComplaint, setChiefComplaint] = useState('')
 
   // Slots state
   const [slots, setSlots] = useState<Slot[]>([])
@@ -62,13 +62,13 @@ export default function BookAppointment() {
   // Booking state
   const [booking, setBooking] = useState(false)
   const [bookingResult, setBookingResult] = useState<any>(null)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   // Fetch doctors on mount — uses portal API which provides hospitalId
   useEffect(() => {
     // We need to know the hospital slug. Get it from the portal context cookie
     // by calling the dashboard API which requires auth.
-    fetch("/api/patient-portal/appointments?filter=upcoming&limit=0")
+    fetch('/api/patient-portal/appointments?filter=upcoming&limit=0')
       .then(() => {
         // The slug comes from the portal layout context.
         // For booking, we use the patient portal appointment API directly.
@@ -82,7 +82,7 @@ export default function BookAppointment() {
   const fetchDoctors = async () => {
     setDoctorsLoading(true)
     try {
-      const res = await fetch("/api/patient-portal/doctors")
+      const res = await fetch('/api/patient-portal/doctors')
       if (res.ok) {
         const data = await res.json()
         setDoctors(data.doctors || [])
@@ -97,7 +97,7 @@ export default function BookAppointment() {
   const fetchSlots = useCallback(async () => {
     if (!selectedDoctor || !selectedDate) return
     setSlotsLoading(true)
-    setSelectedTime("")
+    setSelectedTime('')
     try {
       const res = await fetch(
         `/api/patient-portal/slots?doctorId=${selectedDoctor}&date=${selectedDate}`
@@ -121,16 +121,16 @@ export default function BookAppointment() {
 
   const handleBook = async () => {
     setBooking(true)
-    setError("")
+    setError('')
     try {
-      const res = await fetch("/api/patient-portal/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/patient-portal/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           doctorId: selectedDoctor,
           date: selectedDate,
           time: selectedTime,
-          type: "CONSULTATION",
+          type: 'CONSULTATION',
           chiefComplaint: chiefComplaint || undefined,
         }),
       })
@@ -138,14 +138,14 @@ export default function BookAppointment() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || "Booking failed")
+        setError(data.error || 'Booking failed')
         return
       }
 
       setBookingResult(data.appointment)
       setStep(4)
     } catch {
-      setError("Network error. Please try again.")
+      setError('Network error. Please try again.')
     } finally {
       setBooking(false)
     }
@@ -155,12 +155,12 @@ export default function BookAppointment() {
   const availableSlots = slots.filter((s) => s.available)
 
   // Minimum date: today
-  const today = new Date().toISOString().split("T")[0]
+  const today = new Date().toISOString().split('T')[0]
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/portal/appointments")}>
+        <Button variant="ghost" size="sm" onClick={() => router.push('/portal/appointments')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">Book Appointment</h1>
@@ -172,8 +172,8 @@ export default function BookAppointment() {
           <div
             key={s}
             className={cn(
-              "h-2 flex-1 rounded-full transition-colors",
-              s <= step ? "bg-primary" : "bg-muted"
+              'h-2 flex-1 rounded-full transition-colors',
+              s <= step ? 'bg-primary' : 'bg-muted'
             )}
           />
         ))}
@@ -191,7 +191,9 @@ export default function BookAppointment() {
           <CardContent>
             {doctorsLoading ? (
               <div className="space-y-3">
-                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16" />)}
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16" />
+                ))}
               </div>
             ) : doctors.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
@@ -203,10 +205,10 @@ export default function BookAppointment() {
                   <div
                     key={doc.id}
                     className={cn(
-                      "p-3 rounded-lg border-2 cursor-pointer transition-colors",
+                      'p-3 rounded-lg border-2 cursor-pointer transition-colors',
                       selectedDoctor === doc.id
-                        ? "border-primary bg-primary/5"
-                        : "border-transparent bg-muted/50 hover:bg-muted"
+                        ? 'border-primary bg-primary/5'
+                        : 'border-transparent bg-muted/50 hover:bg-muted'
                     )}
                     onClick={() => setSelectedDoctor(doc.id)}
                   >
@@ -221,11 +223,7 @@ export default function BookAppointment() {
               </div>
             )}
 
-            <Button
-              className="w-full mt-4"
-              disabled={!selectedDoctor}
-              onClick={() => setStep(2)}
-            >
+            <Button className="w-full mt-4" disabled={!selectedDoctor} onClick={() => setStep(2)}>
               Continue <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </CardContent>
@@ -241,7 +239,9 @@ export default function BookAppointment() {
             </CardTitle>
             <CardDescription>
               {selectedDoctorObj && (
-                <>Dr. {selectedDoctorObj.firstName} {selectedDoctorObj.lastName}</>
+                <>
+                  Dr. {selectedDoctorObj.firstName} {selectedDoctorObj.lastName}
+                </>
               )}
             </CardDescription>
           </CardHeader>
@@ -270,14 +270,11 @@ export default function BookAppointment() {
                     {slots.map((slot) => (
                       <Button
                         key={slot.time}
-                        variant={selectedTime === slot.time ? "default" : "outline"}
+                        variant={selectedTime === slot.time ? 'default' : 'outline'}
                         size="sm"
                         disabled={!slot.available}
                         onClick={() => setSelectedTime(slot.time)}
-                        className={cn(
-                          "text-xs",
-                          !slot.available && "opacity-40 line-through"
-                        )}
+                        className={cn('text-xs', !slot.available && 'opacity-40 line-through')}
                       >
                         {slot.time}
                       </Button>
@@ -291,11 +288,7 @@ export default function BookAppointment() {
               <Button variant="outline" onClick={() => setStep(1)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Back
               </Button>
-              <Button
-                className="flex-1"
-                disabled={!selectedTime}
-                onClick={() => setStep(3)}
-              >
+              <Button className="flex-1" disabled={!selectedTime} onClick={() => setStep(3)}>
                 Continue <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
@@ -312,9 +305,7 @@ export default function BookAppointment() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
-            )}
+            {error && <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>}
 
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
               <div className="flex justify-between text-sm">
@@ -326,11 +317,11 @@ export default function BookAppointment() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Date</span>
                 <span className="font-medium">
-                  {new Date(selectedDate).toLocaleDateString("en-IN", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
+                  {new Date(selectedDate).toLocaleDateString('en-IN', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
                   })}
                 </span>
               </div>
@@ -370,12 +361,31 @@ export default function BookAppointment() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold text-green-700">Booking Confirmed!</h2>
             <div className="p-4 rounded-lg bg-green-50 space-y-2 text-sm">
-              <p><strong>Appointment:</strong> {bookingResult.appointmentNo}</p>
-              <p><strong>Doctor:</strong> {bookingResult.doctor?.firstName ? `Dr. ${bookingResult.doctor.firstName} ${bookingResult.doctor.lastName}` : selectedDoctorObj ? `Dr. ${selectedDoctorObj.firstName} ${selectedDoctorObj.lastName}` : ""}</p>
-              <p><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
-              <p><strong>Time:</strong> {selectedTime}</p>
+              <p>
+                <strong>Appointment:</strong> {bookingResult.appointmentNo}
+              </p>
+              <p>
+                <strong>Doctor:</strong>{' '}
+                {bookingResult.doctor?.firstName
+                  ? `Dr. ${bookingResult.doctor.firstName} ${bookingResult.doctor.lastName}`
+                  : selectedDoctorObj
+                    ? `Dr. ${selectedDoctorObj.firstName} ${selectedDoctorObj.lastName}`
+                    : ''}
+              </p>
+              <p>
+                <strong>Date:</strong>{' '}
+                {new Date(selectedDate).toLocaleDateString('en-IN', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+              <p>
+                <strong>Time:</strong> {selectedTime}
+              </p>
             </div>
-            <Button onClick={() => router.push("/portal/appointments")}>
+            <Button onClick={() => router.push('/portal/appointments')}>
               View My Appointments
             </Button>
           </CardContent>

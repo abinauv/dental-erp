@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // Generate unique plan number for a hospital
 async function generatePlanNumber(hospitalId: string): Promise<string> {
@@ -11,12 +11,12 @@ async function generatePlanNumber(hospitalId: string): Promise<string> {
     where: {
       hospitalId,
       planNumber: {
-        startsWith: prefix
-      }
+        startsWith: prefix,
+      },
     },
     orderBy: {
-      planNumber: 'desc'
-    }
+      planNumber: 'desc',
+    },
   })
 
   if (lastPlan) {
@@ -32,17 +32,17 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
-    const search = searchParams.get("search") || ""
-    const status = searchParams.get("status") || ""
-    const patientId = searchParams.get("patientId") || ""
-    const consentGiven = searchParams.get("consentGiven")
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || ''
+    const patientId = searchParams.get('patientId') || ''
+    const consentGiven = searchParams.get('consentGiven')
 
     const skip = (page - 1) * limit
 
@@ -67,8 +67,8 @@ export async function GET(request: NextRequest) {
       where.patientId = patientId
     }
 
-    if (consentGiven !== null && consentGiven !== "") {
-      where.consentGiven = consentGiven === "true"
+    if (consentGiven !== null && consentGiven !== '') {
+      where.consentGiven = consentGiven === 'true'
     }
 
     const [treatmentPlans, total] = await Promise.all([
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
               firstName: true,
               lastName: true,
               phone: true,
-            }
+            },
           },
           items: {
             include: {
@@ -92,26 +92,26 @@ export async function GET(request: NextRequest) {
                   code: true,
                   name: true,
                   category: true,
-                }
-              }
+                },
+              },
             },
             orderBy: {
-              priority: 'asc'
-            }
+              priority: 'asc',
+            },
           },
           _count: {
             select: {
-              items: true
-            }
-          }
+              items: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: 'desc',
         },
         skip,
         take: limit,
       }),
-      prisma.treatmentPlan.count({ where })
+      prisma.treatmentPlan.count({ where }),
     ])
 
     return NextResponse.json({
@@ -120,15 +120,12 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching treatment plans:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch treatment plans" },
-      { status: 500 }
-    )
+    console.error('Error fetching treatment plans:', error)
+    return NextResponse.json({ error: 'Failed to fetch treatment plans' }, { status: 500 })
   }
 }
 
@@ -137,12 +134,12 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "DOCTOR"].includes(session?.user?.role || "")) {
+    if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
       return NextResponse.json(
         { error: "You don't have permission to create treatment plans" },
         { status: 403 }
@@ -150,32 +147,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      patientId,
-      title,
-      notes,
-      startDate,
-      expectedEndDate,
-      items = [],
-    } = body
+    const { patientId, title, notes, startDate, expectedEndDate, items = [] } = body
 
     // Validate required fields
     if (!patientId || !title) {
-      return NextResponse.json(
-        { error: "Patient and title are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Patient and title are required' }, { status: 400 })
     }
 
     // Check if patient exists and belongs to this hospital
     const patient = await prisma.patient.findFirst({
-      where: { id: patientId, hospitalId }
+      where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json(
-        { error: "Patient not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Validate procedures exist and belong to this hospital
@@ -184,15 +168,12 @@ export async function POST(request: NextRequest) {
       const procedures = await prisma.procedure.findMany({
         where: {
           id: { in: procedureIds },
-          hospitalId
-        }
+          hospitalId,
+        },
       })
 
       if (procedures.length !== procedureIds.length) {
-        return NextResponse.json(
-          { error: "One or more procedures not found" },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: 'One or more procedures not found' }, { status: 404 })
       }
     }
 
@@ -207,11 +188,11 @@ export async function POST(request: NextRequest) {
       const procedures = await prisma.procedure.findMany({
         where: {
           id: { in: items.map((item: any) => item.procedureId) },
-          hospitalId
-        }
+          hospitalId,
+        },
       })
 
-      const procedureMap = new Map(procedures.map(p => [p.id, p]))
+      const procedureMap = new Map(procedures.map((p) => [p.id, p]))
 
       items.forEach((item: any) => {
         const proc = procedureMap.get(item.procedureId)
@@ -230,7 +211,7 @@ export async function POST(request: NextRequest) {
         patientId,
         title,
         notes,
-        status: "DRAFT",
+        status: 'DRAFT',
         estimatedCost,
         estimatedDuration,
         startDate: startDate ? new Date(startDate) : null,
@@ -243,9 +224,9 @@ export async function POST(request: NextRequest) {
             priority: item.priority || index + 1,
             estimatedCost: item.estimatedCost || 0,
             notes: item.notes || null,
-            status: "PENDING",
-          }))
-        }
+            status: 'PENDING',
+          })),
+        },
       },
       include: {
         patient: {
@@ -254,7 +235,7 @@ export async function POST(request: NextRequest) {
             patientId: true,
             firstName: true,
             lastName: true,
-          }
+          },
         },
         items: {
           include: {
@@ -265,22 +246,19 @@ export async function POST(request: NextRequest) {
                 name: true,
                 category: true,
                 basePrice: true,
-              }
-            }
+              },
+            },
           },
           orderBy: {
-            priority: 'asc'
-          }
-        }
-      }
+            priority: 'asc',
+          },
+        },
+      },
     })
 
     return NextResponse.json(treatmentPlan, { status: 201 })
   } catch (error) {
-    console.error("Error creating treatment plan:", error)
-    return NextResponse.json(
-      { error: "Failed to create treatment plan" },
-      { status: 500 }
-    )
+    console.error('Error creating treatment plan:', error)
+    return NextResponse.json({ error: 'Failed to create treatment plan' }, { status: 500 })
   }
 }

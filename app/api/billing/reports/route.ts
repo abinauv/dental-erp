@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { getDateRangeFromPreset } from "@/lib/billing-utils"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { getDateRangeFromPreset } from '@/lib/billing-utils'
 
 // GET - Generate billing reports
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "ACCOUNTANT"].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to view reports" },
         { status: 403 }
@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const reportType = searchParams.get("type") || "summary"
-    const preset = searchParams.get("preset") || "this_month"
-    const dateFrom = searchParams.get("dateFrom")
-    const dateTo = searchParams.get("dateTo")
+    const reportType = searchParams.get('type') || 'summary'
+    const preset = searchParams.get('preset') || 'this_month'
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
 
     // Determine date range
     let startDate: Date
@@ -40,32 +40,29 @@ export async function GET(request: NextRequest) {
     }
 
     switch (reportType) {
-      case "summary":
+      case 'summary':
         return await getSummaryReport(startDate, endDate, hospitalId)
-      case "revenue":
+      case 'revenue':
         return await getRevenueReport(startDate, endDate, hospitalId)
-      case "payments":
+      case 'payments':
         return await getPaymentsReport(startDate, endDate, hospitalId)
-      case "outstanding":
+      case 'outstanding':
         return await getOutstandingReport(hospitalId)
-      case "procedure_revenue":
+      case 'procedure_revenue':
         return await getProcedureRevenueReport(startDate, endDate, hospitalId)
-      case "doctor_revenue":
+      case 'doctor_revenue':
         return await getDoctorRevenueReport(startDate, endDate, hospitalId)
-      case "daily_collection":
+      case 'daily_collection':
         return await getDailyCollectionReport(startDate, endDate, hospitalId)
       default:
-        return NextResponse.json(
-          { error: "Invalid report type" },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
   } catch (error) {
-    console.error("Error generating report:", error)
+    console.error('Error generating report:', error)
     return NextResponse.json(
       {
-        error: "Failed to generate report",
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to generate report',
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     )
@@ -79,12 +76,7 @@ async function getSummaryReport(startDate: Date, endDate: Date, hospitalId: stri
     lte: endDate,
   }
 
-  const [
-    invoiceSummary,
-    paymentSummary,
-    outstandingSummary,
-    insuranceSummary,
-  ] = await Promise.all([
+  const [invoiceSummary, paymentSummary, outstandingSummary, insuranceSummary] = await Promise.all([
     // Invoice summary
     prisma.invoice.aggregate({
       where: { hospitalId, createdAt: dateFilter },
@@ -96,7 +88,7 @@ async function getSummaryReport(startDate: Date, endDate: Date, hospitalId: stri
       where: {
         hospitalId,
         paymentDate: dateFilter,
-        status: "COMPLETED"
+        status: 'COMPLETED',
       },
       _sum: { amount: true },
       _count: true,
@@ -105,7 +97,7 @@ async function getSummaryReport(startDate: Date, endDate: Date, hospitalId: stri
     prisma.invoice.aggregate({
       where: {
         hospitalId,
-        status: { in: ["PENDING", "PARTIALLY_PAID", "OVERDUE"] }
+        status: { in: ['PENDING', 'PARTIALLY_PAID', 'OVERDUE'] },
       },
       _sum: { balanceAmount: true },
       _count: true,
@@ -115,7 +107,7 @@ async function getSummaryReport(startDate: Date, endDate: Date, hospitalId: stri
       where: {
         hospitalId,
         submittedDate: dateFilter,
-        status: { not: "DRAFT" }
+        status: { not: 'DRAFT' },
       },
       _sum: { claimAmount: true, settledAmount: true },
       _count: true,
@@ -128,7 +120,7 @@ async function getSummaryReport(startDate: Date, endDate: Date, hospitalId: stri
     where: {
       hospitalId,
       paymentDate: dateFilter,
-      status: "COMPLETED"
+      status: 'COMPLETED',
     },
     _sum: { amount: true },
     _count: true,
@@ -157,17 +149,17 @@ async function getSummaryReport(startDate: Date, endDate: Date, hospitalId: stri
       insuranceClaimCount: insuranceSummary._count,
     },
     breakdowns: {
-      byPaymentMethod: paymentMethodBreakdown.map(item => ({
+      byPaymentMethod: paymentMethodBreakdown.map((item) => ({
         method: item.paymentMethod,
         amount: item._sum.amount || 0,
         count: item._count,
       })),
-      byInvoiceStatus: invoiceStatusBreakdown.map(item => ({
+      byInvoiceStatus: invoiceStatusBreakdown.map((item) => ({
         status: item.status,
         amount: item._sum.totalAmount || 0,
         count: item._count,
       })),
-    }
+    },
   })
 }
 
@@ -181,7 +173,7 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
         gte: startDate,
         lte: endDate,
       },
-      status: { not: "CANCELLED" }
+      status: { not: 'CANCELLED' },
     },
     select: {
       createdAt: true,
@@ -191,20 +183,23 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
       cgstAmount: true,
       sgstAmount: true,
     },
-    orderBy: { createdAt: 'asc' }
+    orderBy: { createdAt: 'asc' },
   })
 
   // Group by date
-  const dailyRevenue: Record<string, {
-    date: string
-    billed: number
-    collected: number
-    discount: number
-    tax: number
-    count: number
-  }> = {}
+  const dailyRevenue: Record<
+    string,
+    {
+      date: string
+      billed: number
+      collected: number
+      discount: number
+      tax: number
+      count: number
+    }
+  > = {}
 
-  invoices.forEach(invoice => {
+  invoices.forEach((invoice) => {
     const dateKey = invoice.createdAt.toISOString().split('T')[0]
     if (!dailyRevenue[dateKey]) {
       dailyRevenue[dateKey] = {
@@ -232,7 +227,7 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
     invoiceCount: 0,
   }
 
-  Object.values(dailyRevenue).forEach(day => {
+  Object.values(dailyRevenue).forEach((day) => {
     totals.totalBilled += day.billed
     totals.totalCollected += day.collected
     totals.totalDiscount += day.discount
@@ -256,7 +251,7 @@ async function getPaymentsReport(startDate: Date, endDate: Date, hospitalId: str
         gte: startDate,
         lte: endDate,
       },
-      status: "COMPLETED"
+      status: 'COMPLETED',
     },
     include: {
       invoice: {
@@ -267,22 +262,25 @@ async function getPaymentsReport(startDate: Date, endDate: Date, hospitalId: str
               patientId: true,
               firstName: true,
               lastName: true,
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     },
-    orderBy: { paymentDate: 'desc' }
+    orderBy: { paymentDate: 'desc' },
   })
 
   // Group by payment method
-  const byMethod: Record<string, {
-    method: string
-    total: number
-    count: number
-  }> = {}
+  const byMethod: Record<
+    string,
+    {
+      method: string
+      total: number
+      count: number
+    }
+  > = {}
 
-  payments.forEach(payment => {
+  payments.forEach((payment) => {
     const method = payment.paymentMethod
     if (!byMethod[method]) {
       byMethod[method] = { method, total: 0, count: 0 }
@@ -301,7 +299,7 @@ async function getPaymentsReport(startDate: Date, endDate: Date, hospitalId: str
     totals: {
       totalAmount,
       totalCount: payments.length,
-    }
+    },
   })
 }
 
@@ -310,8 +308,8 @@ async function getOutstandingReport(hospitalId: string) {
   const outstandingInvoices = await prisma.invoice.findMany({
     where: {
       hospitalId,
-      status: { in: ["PENDING", "PARTIALLY_PAID", "OVERDUE"] },
-      balanceAmount: { gt: 0 }
+      status: { in: ['PENDING', 'PARTIALLY_PAID', 'OVERDUE'] },
+      balanceAmount: { gt: 0 },
     },
     include: {
       patient: {
@@ -321,13 +319,10 @@ async function getOutstandingReport(hospitalId: string) {
           firstName: true,
           lastName: true,
           phone: true,
-        }
-      }
+        },
+      },
     },
-    orderBy: [
-      { dueDate: 'asc' },
-      { balanceAmount: 'desc' }
-    ]
+    orderBy: [{ dueDate: 'asc' }, { balanceAmount: 'desc' }],
   })
 
   // Calculate aging buckets
@@ -335,14 +330,14 @@ async function getOutstandingReport(hospitalId: string) {
   today.setHours(0, 0, 0, 0)
 
   const aging = {
-    current: { amount: 0, count: 0 },      // Not yet due
-    days1_30: { amount: 0, count: 0 },     // 1-30 days overdue
-    days31_60: { amount: 0, count: 0 },    // 31-60 days overdue
-    days61_90: { amount: 0, count: 0 },    // 61-90 days overdue
-    over90: { amount: 0, count: 0 },       // Over 90 days overdue
+    current: { amount: 0, count: 0 }, // Not yet due
+    days1_30: { amount: 0, count: 0 }, // 1-30 days overdue
+    days31_60: { amount: 0, count: 0 }, // 31-60 days overdue
+    days61_90: { amount: 0, count: 0 }, // 61-90 days overdue
+    over90: { amount: 0, count: 0 }, // Over 90 days overdue
   }
 
-  outstandingInvoices.forEach(invoice => {
+  outstandingInvoices.forEach((invoice) => {
     const balance = Number(invoice.balanceAmount)
     const dueDate = invoice.dueDate ? new Date(invoice.dueDate) : new Date(invoice.createdAt)
     dueDate.setHours(0, 0, 0, 0)
@@ -378,7 +373,7 @@ async function getOutstandingReport(hospitalId: string) {
     totals: {
       totalOutstanding,
       invoiceCount: outstandingInvoices.length,
-    }
+    },
   })
 }
 
@@ -391,7 +386,7 @@ async function getProcedureRevenueReport(startDate: Date, endDate: Date, hospita
         gte: startDate,
         lte: endDate,
       },
-      status: { in: ["COMPLETED", "IN_PROGRESS"] }
+      status: { in: ['COMPLETED', 'IN_PROGRESS'] },
     },
     include: {
       procedure: {
@@ -400,23 +395,26 @@ async function getProcedureRevenueReport(startDate: Date, endDate: Date, hospita
           code: true,
           name: true,
           category: true,
-        }
-      }
-    }
+        },
+      },
+    },
   })
 
   // Group by procedure
-  const byProcedure: Record<string, {
-    procedureId: string
-    code: string
-    name: string
-    category: string
-    totalRevenue: number
-    count: number
-    avgRevenue: number
-  }> = {}
+  const byProcedure: Record<
+    string,
+    {
+      procedureId: string
+      code: string
+      name: string
+      category: string
+      totalRevenue: number
+      count: number
+      avgRevenue: number
+    }
+  > = {}
 
-  treatments.forEach(treatment => {
+  treatments.forEach((treatment) => {
     if (!treatment.procedure) return
 
     const procId = treatment.procedure.id
@@ -436,18 +434,21 @@ async function getProcedureRevenueReport(startDate: Date, endDate: Date, hospita
   })
 
   // Calculate averages
-  Object.values(byProcedure).forEach(proc => {
+  Object.values(byProcedure).forEach((proc) => {
     proc.avgRevenue = proc.count > 0 ? proc.totalRevenue / proc.count : 0
   })
 
   // Group by category
-  const byCategory: Record<string, {
-    category: string
-    totalRevenue: number
-    count: number
-  }> = {}
+  const byCategory: Record<
+    string,
+    {
+      category: string
+      totalRevenue: number
+      count: number
+    }
+  > = {}
 
-  Object.values(byProcedure).forEach(proc => {
+  Object.values(byProcedure).forEach((proc) => {
     const cat = proc.category
     if (!byCategory[cat]) {
       byCategory[cat] = { category: cat, totalRevenue: 0, count: 0 }
@@ -457,9 +458,7 @@ async function getProcedureRevenueReport(startDate: Date, endDate: Date, hospita
   })
 
   // Sort by revenue
-  const proceduresList = Object.values(byProcedure).sort(
-    (a, b) => b.totalRevenue - a.totalRevenue
-  )
+  const proceduresList = Object.values(byProcedure).sort((a, b) => b.totalRevenue - a.totalRevenue)
 
   const totalRevenue = proceduresList.reduce((sum, p) => sum + p.totalRevenue, 0)
   const totalTreatments = proceduresList.reduce((sum, p) => sum + p.count, 0)
@@ -471,7 +470,7 @@ async function getProcedureRevenueReport(startDate: Date, endDate: Date, hospita
     totals: {
       totalRevenue,
       totalTreatments,
-    }
+    },
   })
 }
 
@@ -484,7 +483,7 @@ async function getDoctorRevenueReport(startDate: Date, endDate: Date, hospitalId
         gte: startDate,
         lte: endDate,
       },
-      status: { in: ["COMPLETED", "IN_PROGRESS"] }
+      status: { in: ['COMPLETED', 'IN_PROGRESS'] },
     },
     include: {
       doctor: {
@@ -493,29 +492,32 @@ async function getDoctorRevenueReport(startDate: Date, endDate: Date, hospitalId
           firstName: true,
           lastName: true,
           specialization: true,
-        }
+        },
       },
       procedure: {
         select: {
           name: true,
           category: true,
-        }
-      }
-    }
+        },
+      },
+    },
   })
 
   // Group by doctor
-  const byDoctor: Record<string, {
-    doctorId: string
-    name: string
-    specialization: string | null
-    totalRevenue: number
-    treatmentCount: number
-    avgPerTreatment: number
-    procedures: Record<string, number>
-  }> = {}
+  const byDoctor: Record<
+    string,
+    {
+      doctorId: string
+      name: string
+      specialization: string | null
+      totalRevenue: number
+      treatmentCount: number
+      avgPerTreatment: number
+      procedures: Record<string, number>
+    }
+  > = {}
 
-  treatments.forEach(treatment => {
+  treatments.forEach((treatment) => {
     if (!treatment.doctor) return
 
     const docId = treatment.doctor.id
@@ -543,20 +545,22 @@ async function getDoctorRevenueReport(startDate: Date, endDate: Date, hospitalId
   })
 
   // Calculate averages and format procedures
-  const doctorsList = Object.values(byDoctor).map(doc => {
-    doc.avgPerTreatment = doc.treatmentCount > 0 ? doc.totalRevenue / doc.treatmentCount : 0
+  const doctorsList = Object.values(byDoctor)
+    .map((doc) => {
+      doc.avgPerTreatment = doc.treatmentCount > 0 ? doc.totalRevenue / doc.treatmentCount : 0
 
-    // Get top 5 procedures
-    const topProcedures = Object.entries(doc.procedures)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name, count]) => ({ name, count }))
+      // Get top 5 procedures
+      const topProcedures = Object.entries(doc.procedures)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count }))
 
-    return {
-      ...doc,
-      topProcedures,
-    }
-  }).sort((a, b) => b.totalRevenue - a.totalRevenue)
+      return {
+        ...doc,
+        topProcedures,
+      }
+    })
+    .sort((a, b) => b.totalRevenue - a.totalRevenue)
 
   const totalRevenue = doctorsList.reduce((sum, d) => sum + d.totalRevenue, 0)
   const totalTreatments = doctorsList.reduce((sum, d) => sum + d.treatmentCount, 0)
@@ -568,7 +572,7 @@ async function getDoctorRevenueReport(startDate: Date, endDate: Date, hospitalId
       totalRevenue,
       totalTreatments,
       doctorCount: doctorsList.length,
-    }
+    },
   })
 }
 
@@ -581,7 +585,7 @@ async function getDailyCollectionReport(startDate: Date, endDate: Date, hospital
         gte: startDate,
         lte: endDate,
       },
-      status: "COMPLETED"
+      status: 'COMPLETED',
     },
     include: {
       invoice: {
@@ -592,30 +596,33 @@ async function getDailyCollectionReport(startDate: Date, endDate: Date, hospital
               patientId: true,
               firstName: true,
               lastName: true,
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     },
-    orderBy: { paymentDate: 'asc' }
+    orderBy: { paymentDate: 'asc' },
   })
 
   // Group by date
-  const dailyCollection: Record<string, {
-    date: string
-    cash: number
-    card: number
-    upi: number
-    bankTransfer: number
-    cheque: number
-    insurance: number
-    wallet: number
-    total: number
-    count: number
-    payments: any[]
-  }> = {}
+  const dailyCollection: Record<
+    string,
+    {
+      date: string
+      cash: number
+      card: number
+      upi: number
+      bankTransfer: number
+      cheque: number
+      insurance: number
+      wallet: number
+      total: number
+      count: number
+      payments: any[]
+    }
+  > = {}
 
-  payments.forEach(payment => {
+  payments.forEach((payment) => {
     const dateKey = payment.paymentDate.toISOString().split('T')[0]
     if (!dailyCollection[dateKey]) {
       dailyCollection[dateKey] = {
@@ -638,25 +645,25 @@ async function getDailyCollectionReport(startDate: Date, endDate: Date, hospital
     dailyCollection[dateKey].count += 1
 
     switch (payment.paymentMethod) {
-      case "CASH":
+      case 'CASH':
         dailyCollection[dateKey].cash += amount
         break
-      case "CARD":
+      case 'CARD':
         dailyCollection[dateKey].card += amount
         break
-      case "UPI":
+      case 'UPI':
         dailyCollection[dateKey].upi += amount
         break
-      case "BANK_TRANSFER":
+      case 'BANK_TRANSFER':
         dailyCollection[dateKey].bankTransfer += amount
         break
-      case "CHEQUE":
+      case 'CHEQUE':
         dailyCollection[dateKey].cheque += amount
         break
-      case "INSURANCE":
+      case 'INSURANCE':
         dailyCollection[dateKey].insurance += amount
         break
-      case "WALLET":
+      case 'WALLET':
         dailyCollection[dateKey].wallet += amount
         break
     }
@@ -672,10 +679,7 @@ async function getDailyCollectionReport(startDate: Date, endDate: Date, hospital
     })
   })
 
-  const totalCollection = Object.values(dailyCollection).reduce(
-    (sum, day) => sum + day.total,
-    0
-  )
+  const totalCollection = Object.values(dailyCollection).reduce((sum, day) => sum + day.total, 0)
 
   return NextResponse.json({
     period: { startDate, endDate },
@@ -684,6 +688,6 @@ async function getDailyCollectionReport(startDate: Date, endDate: Date, hospital
       totalCollection,
       totalPayments: payments.length,
       daysWithCollection: Object.keys(dailyCollection).length,
-    }
+    },
   })
 }

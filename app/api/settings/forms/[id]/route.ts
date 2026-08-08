@@ -1,22 +1,36 @@
-import { NextRequest, NextResponse } from "next/server"
-import prisma from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { z } from "zod"
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { z } from 'zod'
 
 const fieldSchema = z.object({
   id: z.string(),
-  type: z.enum(["text", "textarea", "number", "date", "select", "checkbox", "radio", "signature", "file", "heading", "paragraph"]),
+  type: z.enum([
+    'text',
+    'textarea',
+    'number',
+    'date',
+    'select',
+    'checkbox',
+    'radio',
+    'signature',
+    'file',
+    'heading',
+    'paragraph',
+  ]),
   label: z.string().min(1),
   placeholder: z.string().optional(),
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(),
-  validation: z.object({
-    min: z.number().optional(),
-    max: z.number().optional(),
-    minLength: z.number().optional(),
-    maxLength: z.number().optional(),
-    pattern: z.string().optional(),
-  }).optional(),
+  validation: z
+    .object({
+      min: z.number().optional(),
+      max: z.number().optional(),
+      minLength: z.number().optional(),
+      maxLength: z.number().optional(),
+      pattern: z.string().optional(),
+    })
+    .optional(),
   description: z.string().optional(),
   defaultValue: z.string().optional(),
 })
@@ -24,20 +38,17 @@ const fieldSchema = z.object({
 const updateTemplateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
-  type: z.enum(["MEDICAL_HISTORY", "CONSENT", "INTAKE", "FEEDBACK", "CUSTOM"]).optional(),
+  type: z.enum(['MEDICAL_HISTORY', 'CONSENT', 'INTAKE', 'FEEDBACK', 'CUSTOM']).optional(),
   fields: z.array(fieldSchema).min(1).optional(),
   isActive: z.boolean().optional(),
 })
 
 // GET: Single template
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -45,7 +56,7 @@ export async function GET(
       where: { id, hospitalId },
       include: {
         submissions: {
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
           take: 20,
           select: {
             id: true,
@@ -61,25 +72,22 @@ export async function GET(
     })
 
     if (!template) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
     }
 
     return NextResponse.json({ template })
   } catch (err) {
-    console.error("Get form template error:", err)
-    return NextResponse.json({ error: "Failed to get template" }, { status: 500 })
+    console.error('Get form template error:', err)
+    return NextResponse.json({ error: 'Failed to get template' }, { status: 500 })
   }
 }
 
 // PUT: Update template
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -87,7 +95,7 @@ export async function PUT(
       where: { id, hospitalId },
     })
     if (!existing) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
     }
 
     const body = await req.json()
@@ -106,23 +114,20 @@ export async function PUT(
 
     return NextResponse.json({ template })
   } catch (err: any) {
-    if (err.name === "ZodError") {
-      return NextResponse.json({ error: "Invalid form data", details: err.errors }, { status: 400 })
+    if (err.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid form data', details: err.errors }, { status: 400 })
     }
-    console.error("Update form template error:", err)
-    return NextResponse.json({ error: "Failed to update template" }, { status: 500 })
+    console.error('Update form template error:', err)
+    return NextResponse.json({ error: 'Failed to update template' }, { status: 500 })
   }
 }
 
 // DELETE: Delete template
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -131,7 +136,7 @@ export async function DELETE(
       include: { _count: { select: { submissions: true } } },
     })
     if (!existing) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
     }
 
     if (existing._count.submissions > 0) {
@@ -140,13 +145,13 @@ export async function DELETE(
         where: { id },
         data: { isActive: false },
       })
-      return NextResponse.json({ message: "Template deactivated (has submissions)" })
+      return NextResponse.json({ message: 'Template deactivated (has submissions)' })
     }
 
     await prisma.formTemplate.delete({ where: { id } })
-    return NextResponse.json({ message: "Template deleted" })
+    return NextResponse.json({ message: 'Template deleted' })
   } catch (err) {
-    console.error("Delete form template error:", err)
-    return NextResponse.json({ error: "Failed to delete template" }, { status: 500 })
+    console.error('Delete form template error:', err)
+    return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 })
   }
 }

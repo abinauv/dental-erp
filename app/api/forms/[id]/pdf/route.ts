@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
-import { generateFormPdfHtml } from "@/lib/services/pdf-generator"
+import { NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { generateFormPdfHtml } from '@/lib/services/pdf-generator'
 
 /**
  * GET /api/forms/[id]/pdf
@@ -9,11 +9,8 @@ import { generateFormPdfHtml } from "@/lib/services/pdf-generator"
  * Served as HTML with print-optimized CSS — use browser print-to-PDF or
  * content-disposition for download.
  */
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR", "RECEPTIONIST"])
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error) return error
 
   const { id } = await params
@@ -26,14 +23,14 @@ export async function GET(
   })
 
   if (!submission) {
-    return NextResponse.json({ error: "Form submission not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Form submission not found' }, { status: 404 })
   }
 
   // Get patient info if linked
-  let patientName = "Unknown Patient"
-  let patientPhone = ""
-  let patientDob = ""
-  let patientDisplayId = ""
+  let patientName = 'Unknown Patient'
+  let patientPhone = ''
+  let patientDob = ''
+  let patientDisplayId = ''
   if (submission.patientId) {
     const patient = await prisma.patient.findUnique({
       where: { id: submission.patientId },
@@ -41,42 +38,57 @@ export async function GET(
     })
     if (patient) {
       patientName = `${patient.firstName} ${patient.lastName}`
-      patientPhone = patient.phone || ""
-      patientDob = patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : ""
-      patientDisplayId = patient.patientId || ""
+      patientPhone = patient.phone || ''
+      patientDob = patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : ''
+      patientDisplayId = patient.patientId || ''
     }
   }
 
   // Get clinic info from hospital
   const clinicInfo = await prisma.hospital.findUnique({
     where: { id: submission.hospitalId },
-    select: { name: true, phone: true, email: true, address: true, city: true, state: true, pincode: true, logo: true },
+    select: {
+      name: true,
+      phone: true,
+      email: true,
+      address: true,
+      city: true,
+      state: true,
+      pincode: true,
+      logo: true,
+    },
   })
 
   // Parse form fields and submission data
   let templateFields: Array<{ label: string; type: string }> = []
   try {
-    templateFields = typeof submission.template.fields === "string"
-      ? JSON.parse(submission.template.fields)
-      : (submission.template.fields as any[]) || []
-  } catch { /* empty */ }
+    templateFields =
+      typeof submission.template.fields === 'string'
+        ? JSON.parse(submission.template.fields)
+        : (submission.template.fields as any[]) || []
+  } catch {
+    /* empty */
+  }
 
   let submittedData: Record<string, unknown> = {}
   try {
-    submittedData = typeof submission.data === "string"
-      ? JSON.parse(submission.data)
-      : (submission.data as Record<string, unknown>) || {}
-  } catch { /* empty */ }
+    submittedData =
+      typeof submission.data === 'string'
+        ? JSON.parse(submission.data)
+        : (submission.data as Record<string, unknown>) || {}
+  } catch {
+    /* empty */
+  }
 
   // Build fields array for PDF
   const fields = templateFields.map((field) => ({
-    label: field.label || "Field",
-    value: String(submittedData[field.label] ?? submittedData[field.label?.toLowerCase()] ?? "N/A"),
+    label: field.label || 'Field',
+    value: String(submittedData[field.label] ?? submittedData[field.label?.toLowerCase()] ?? 'N/A'),
     type: field.type,
   }))
 
   const html = generateFormPdfHtml({
-    clinicName: clinicInfo?.name || "Dental Clinic",
+    clinicName: clinicInfo?.name || 'Dental Clinic',
     clinicAddress: clinicInfo?.address || undefined,
     clinicPhone: clinicInfo?.phone || undefined,
     clinicEmail: clinicInfo?.email || undefined,
@@ -95,8 +107,8 @@ export async function GET(
   return new Response(html, {
     status: 200,
     headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": `inline; filename="${submission.template.name.replace(/\s+/g, "-")}-${patientName.replace(/\s+/g, "-")}.html"`,
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Disposition': `inline; filename="${submission.template.name.replace(/\s+/g, '-')}-${patientName.replace(/\s+/g, '-')}.html"`,
     },
   })
 }

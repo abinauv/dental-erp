@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 function generateReferralCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-  let code = "REF-"
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = 'REF-'
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length))
   }
@@ -15,15 +15,15 @@ function generateReferralCode(): string {
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get("status") || ""
-    const search = searchParams.get("search") || ""
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "20")
+    const status = searchParams.get('status') || ''
+    const search = searchParams.get('search') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: any = { hospitalId }
     if (status) where.status = status
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     const [referrals, total] = await Promise.all([
       prisma.referral.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
     // Summary stats
     const [totalReferrals, converted, rewarded] = await Promise.all([
       prisma.referral.count({ where: { hospitalId } }),
-      prisma.referral.count({ where: { hospitalId, status: "CONVERTED" } }),
-      prisma.referral.count({ where: { hospitalId, status: "REWARDED" } }),
+      prisma.referral.count({ where: { hospitalId, status: 'CONVERTED' } }),
+      prisma.referral.count({ where: { hospitalId, status: 'REWARDED' } }),
     ])
 
     return NextResponse.json({
@@ -71,13 +71,14 @@ export async function GET(request: NextRequest) {
         total: totalReferrals,
         converted,
         rewarded,
-        conversionRate: totalReferrals > 0 ? ((converted + rewarded) / totalReferrals * 100).toFixed(1) : "0",
+        conversionRate:
+          totalReferrals > 0 ? (((converted + rewarded) / totalReferrals) * 100).toFixed(1) : '0',
       },
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error("Error fetching referrals:", err)
-    return NextResponse.json({ error: "Failed to fetch referrals" }, { status: 500 })
+    console.error('Error fetching referrals:', err)
+    return NextResponse.json({ error: 'Failed to fetch referrals' }, { status: 500 })
   }
 }
 
@@ -85,12 +86,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    if (!["ADMIN", "RECEPTIONIST"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 403 })
+    if (!['ADMIN', 'RECEPTIONIST'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     if (!referrerPatientId || !referredName?.trim() || !referredPhone?.trim()) {
       return NextResponse.json(
-        { error: "Referrer patient, referred name, and phone are required" },
+        { error: 'Referrer patient, referred name, and phone are required' },
         { status: 400 }
       )
     }
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       where: { id: referrerPatientId, hospitalId },
     })
     if (!referrer) {
-      return NextResponse.json({ error: "Referrer patient not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Referrer patient not found' }, { status: 404 })
     }
 
     // Generate unique code
@@ -128,14 +129,14 @@ export async function POST(request: NextRequest) {
         referredName: referredName.trim(),
         referredPhone: referredPhone.trim(),
         referralCode,
-        rewardType: rewardType || "POINTS",
+        rewardType: rewardType || 'POINTS',
         rewardValue: rewardValue || null,
       },
     })
 
     return NextResponse.json(referral, { status: 201 })
   } catch (err) {
-    console.error("Error creating referral:", err)
-    return NextResponse.json({ error: "Failed to create referral" }, { status: 500 })
+    console.error('Error creating referral:', err)
+    return NextResponse.json({ error: 'Failed to create referral' }, { status: 500 })
   }
 }

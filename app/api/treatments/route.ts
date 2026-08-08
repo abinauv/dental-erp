@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // Generate unique treatment number
 async function generateTreatmentNo(hospitalId: string): Promise<string> {
@@ -11,12 +11,12 @@ async function generateTreatmentNo(hospitalId: string): Promise<string> {
     where: {
       hospitalId,
       treatmentNo: {
-        startsWith: prefix
-      }
+        startsWith: prefix,
+      },
     },
     orderBy: {
-      treatmentNo: 'desc'
-    }
+      treatmentNo: 'desc',
+    },
   })
 
   if (lastTreatment) {
@@ -31,21 +31,21 @@ async function generateTreatmentNo(hospitalId: string): Promise<string> {
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
-    const search = searchParams.get("search") || ""
-    const status = searchParams.get("status") || ""
-    const patientId = searchParams.get("patientId") || ""
-    const doctorId = searchParams.get("doctorId") || ""
-    const procedureId = searchParams.get("procedureId") || ""
-    const dateFrom = searchParams.get("dateFrom") || ""
-    const dateTo = searchParams.get("dateTo") || ""
-    const followUpRequired = searchParams.get("followUpRequired")
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || ''
+    const patientId = searchParams.get('patientId') || ''
+    const doctorId = searchParams.get('doctorId') || ''
+    const procedureId = searchParams.get('procedureId') || ''
+    const dateFrom = searchParams.get('dateFrom') || ''
+    const dateTo = searchParams.get('dateTo') || ''
+    const followUpRequired = searchParams.get('followUpRequired')
 
     const skip = (page - 1) * limit
 
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       where.procedureId = procedureId
     }
 
-    if (followUpRequired === "true") {
+    if (followUpRequired === 'true') {
       where.followUpRequired = true
     }
 
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
               firstName: true,
               lastName: true,
               phone: true,
-            }
+            },
           },
           doctor: {
             select: {
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
               firstName: true,
               lastName: true,
               specialization: true,
-            }
+            },
           },
           procedure: {
             select: {
@@ -122,23 +122,23 @@ export async function GET(request: NextRequest) {
               code: true,
               name: true,
               category: true,
-            }
+            },
           },
           appointment: {
             select: {
               id: true,
               appointmentNo: true,
               scheduledDate: true,
-            }
-          }
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: 'desc',
         },
         skip,
         take: limit,
       }),
-      prisma.treatment.count({ where })
+      prisma.treatment.count({ where }),
     ])
 
     return NextResponse.json({
@@ -147,15 +147,12 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching treatments:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch treatments" },
-      { status: 500 }
-    )
+    console.error('Error fetching treatments:', error)
+    return NextResponse.json({ error: 'Failed to fetch treatments' }, { status: 500 })
   }
 }
 
@@ -163,12 +160,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "DOCTOR"].includes(session.user.role)) {
+    if (!['ADMIN', 'DOCTOR'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to create treatments" },
         { status: 403 }
@@ -196,54 +193,42 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!patientId || !procedureId || !doctorId) {
       return NextResponse.json(
-        { error: "Patient, procedure, and doctor are required" },
+        { error: 'Patient, procedure, and doctor are required' },
         { status: 400 }
       )
     }
 
     // Check if patient exists
     const patient = await prisma.patient.findUnique({
-      where: { id: patientId, hospitalId }
+      where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json(
-        { error: "Patient not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Check if doctor exists
     const doctor = await prisma.staff.findUnique({
-      where: { id: doctorId, hospitalId }
+      where: { id: doctorId, hospitalId },
     })
     if (!doctor) {
-      return NextResponse.json(
-        { error: "Doctor not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
     }
 
     // Check if procedure exists
     const procedure = await prisma.procedure.findUnique({
-      where: { id: procedureId, hospitalId }
+      where: { id: procedureId, hospitalId },
     })
     if (!procedure) {
-      return NextResponse.json(
-        { error: "Procedure not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
     }
 
     // Check if appointment exists (if provided)
     if (appointmentId) {
       const appointment = await prisma.appointment.findUnique({
-        where: { id: appointmentId, hospitalId }
+        where: { id: appointmentId, hospitalId },
       })
       if (!appointment) {
-        return NextResponse.json(
-          { error: "Appointment not found" },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
       }
     }
 
@@ -269,7 +254,7 @@ export async function POST(request: NextRequest) {
         followUpRequired,
         followUpDate: followUpDate ? new Date(followUpDate) : null,
         cost: cost || procedure.basePrice,
-        status: "PLANNED",
+        status: 'PLANNED',
       },
       include: {
         patient: {
@@ -278,14 +263,14 @@ export async function POST(request: NextRequest) {
             patientId: true,
             firstName: true,
             lastName: true,
-          }
+          },
         },
         doctor: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-          }
+          },
         },
         procedure: {
           select: {
@@ -293,17 +278,14 @@ export async function POST(request: NextRequest) {
             code: true,
             name: true,
             category: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     return NextResponse.json(treatment, { status: 201 })
   } catch (error) {
-    console.error("Error creating treatment:", error)
-    return NextResponse.json(
-      { error: "Failed to create treatment" },
-      { status: 500 }
-    )
+    console.error('Error creating treatment:', error)
+    return NextResponse.json({ error: 'Failed to create treatment' }, { status: 500 })
   }
 }

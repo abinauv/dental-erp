@@ -1,24 +1,32 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Loader2, Building2, Clock, CreditCard, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import {
+  Loader2,
+  Building2,
+  Clock,
+  CreditCard,
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const onboardingSchema = z.object({
   tagline: z.string().optional(),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  pincode: z.string().min(5, "Valid pincode is required"),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  pincode: z.string().min(5, 'Valid pincode is required'),
   alternatePhone: z.string().optional(),
   website: z.string().optional(),
   gstNumber: z.string().optional(),
@@ -34,20 +42,20 @@ const onboardingSchema = z.object({
 type OnboardingFormData = z.infer<typeof onboardingSchema>
 
 const defaultWorkingHours = {
-  monday: { open: "09:00", close: "18:00", closed: false },
-  tuesday: { open: "09:00", close: "18:00", closed: false },
-  wednesday: { open: "09:00", close: "18:00", closed: false },
-  thursday: { open: "09:00", close: "18:00", closed: false },
-  friday: { open: "09:00", close: "18:00", closed: false },
-  saturday: { open: "09:00", close: "14:00", closed: false },
+  monday: { open: '09:00', close: '18:00', closed: false },
+  tuesday: { open: '09:00', close: '18:00', closed: false },
+  wednesday: { open: '09:00', close: '18:00', closed: false },
+  thursday: { open: '09:00', close: '18:00', closed: false },
+  friday: { open: '09:00', close: '18:00', closed: false },
+  saturday: { open: '09:00', close: '14:00', closed: false },
   sunday: { open: null, close: null, closed: true },
 }
 
 const steps = [
-  { id: 1, title: "Clinic Details", icon: Building2 },
-  { id: 2, title: "Working Hours", icon: Clock },
-  { id: 3, title: "Payment Setup", icon: CreditCard },
-  { id: 4, title: "Complete", icon: CheckCircle2 },
+  { id: 1, title: 'Clinic Details', icon: Building2 },
+  { id: 2, title: 'Working Hours', icon: Clock },
+  { id: 3, title: 'Payment Setup', icon: CreditCard },
+  { id: 4, title: 'Complete', icon: CheckCircle2 },
 ]
 
 export default function OnboardingPage() {
@@ -55,7 +63,7 @@ export default function OnboardingPage() {
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [hospitalName, setHospitalName] = useState("")
+  const [hospitalName, setHospitalName] = useState('')
   const [workingHours, setWorkingHours] = useState(defaultWorkingHours)
 
   const {
@@ -66,11 +74,11 @@ export default function OnboardingPage() {
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      tagline: "",
-      address: "",
-      city: "",
-      state: "",
-      pincode: "",
+      tagline: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
     },
   })
 
@@ -80,18 +88,18 @@ export default function OnboardingPage() {
 
   const fetchHospitalData = async () => {
     try {
-      const response = await fetch("/api/onboarding")
+      const response = await fetch('/api/onboarding')
       if (response.ok) {
         const data = await response.json()
         setHospitalName(data.name)
         if (data.onboardingCompleted) {
-          router.push("/dashboard")
+          router.push('/dashboard')
         }
         // Pre-fill form if data exists
-        if (data.address) setValue("address", data.address)
-        if (data.city) setValue("city", data.city)
-        if (data.state) setValue("state", data.state)
-        if (data.pincode) setValue("pincode", data.pincode)
+        if (data.address) setValue('address', data.address)
+        if (data.city) setValue('city', data.city)
+        if (data.state) setValue('state', data.state)
+        if (data.pincode) setValue('pincode', data.pincode)
         if (data.workingHours) {
           try {
             setWorkingHours(JSON.parse(data.workingHours))
@@ -119,9 +127,9 @@ export default function OnboardingPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/onboarding", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
           workingHours: JSON.stringify(workingHours),
@@ -132,23 +140,23 @@ export default function OnboardingPage() {
 
       if (!response.ok) {
         toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error || "Something went wrong. Please try again.",
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error || 'Something went wrong. Please try again.',
         })
         return
       }
 
       setCurrentStep(4)
       toast({
-        title: "Setup complete!",
-        description: "Your clinic is ready to use.",
+        title: 'Setup complete!',
+        description: 'Your clinic is ready to use.',
       })
     } catch {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
       })
     } finally {
       setIsLoading(false)
@@ -173,10 +181,10 @@ export default function OnboardingPage() {
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
                       isActive
-                        ? "bg-primary text-primary-foreground"
+                        ? 'bg-primary text-primary-foreground'
                         : isComplete
-                        ? "bg-green-500 text-white"
-                        : "bg-muted text-muted-foreground"
+                          ? 'bg-green-500 text-white'
+                          : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -191,13 +199,13 @@ export default function OnboardingPage() {
         <Card className="shadow-lg">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">
-              {currentStep === 4 ? "You're all set!" : `Setup ${hospitalName || "your clinic"}`}
+              {currentStep === 4 ? "You're all set!" : `Setup ${hospitalName || 'your clinic'}`}
             </CardTitle>
             <CardDescription>
               {currentStep === 1 && "Enter your clinic's location details"}
-              {currentStep === 2 && "Set your working hours"}
-              {currentStep === 3 && "Configure payment options (optional)"}
-              {currentStep === 4 && "Your clinic is ready to accept patients"}
+              {currentStep === 2 && 'Set your working hours'}
+              {currentStep === 3 && 'Configure payment options (optional)'}
+              {currentStep === 4 && 'Your clinic is ready to accept patients'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -210,17 +218,13 @@ export default function OnboardingPage() {
                     <Input
                       id="tagline"
                       placeholder="Your smile, our priority"
-                      {...register("tagline")}
+                      {...register('tagline')}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="address">Address *</Label>
-                    <Input
-                      id="address"
-                      placeholder="123, Main Street"
-                      {...register("address")}
-                    />
+                    <Input id="address" placeholder="123, Main Street" {...register('address')} />
                     {errors.address && (
                       <p className="text-sm text-destructive">{errors.address.message}</p>
                     )}
@@ -229,14 +233,14 @@ export default function OnboardingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city">City *</Label>
-                      <Input id="city" placeholder="Chennai" {...register("city")} />
+                      <Input id="city" placeholder="Chennai" {...register('city')} />
                       {errors.city && (
                         <p className="text-sm text-destructive">{errors.city.message}</p>
                       )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">State *</Label>
-                      <Input id="state" placeholder="Tamil Nadu" {...register("state")} />
+                      <Input id="state" placeholder="Tamil Nadu" {...register('state')} />
                       {errors.state && (
                         <p className="text-sm text-destructive">{errors.state.message}</p>
                       )}
@@ -246,7 +250,7 @@ export default function OnboardingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="pincode">Pincode *</Label>
-                      <Input id="pincode" placeholder="600001" {...register("pincode")} />
+                      <Input id="pincode" placeholder="600001" {...register('pincode')} />
                       {errors.pincode && (
                         <p className="text-sm text-destructive">{errors.pincode.message}</p>
                       )}
@@ -256,7 +260,7 @@ export default function OnboardingPage() {
                       <Input
                         id="alternatePhone"
                         placeholder="9876543210"
-                        {...register("alternatePhone")}
+                        {...register('alternatePhone')}
                       />
                     </div>
                   </div>
@@ -264,18 +268,14 @@ export default function OnboardingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="website">Website</Label>
-                      <Input
-                        id="website"
-                        placeholder="www.myclinic.com"
-                        {...register("website")}
-                      />
+                      <Input id="website" placeholder="www.myclinic.com" {...register('website')} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="gstNumber">GST Number</Label>
                       <Input
                         id="gstNumber"
                         placeholder="33AAACX1234X1ZX"
-                        {...register("gstNumber")}
+                        {...register('gstNumber')}
                       />
                     </div>
                   </div>
@@ -285,7 +285,7 @@ export default function OnboardingPage() {
                     <Input
                       id="registrationNo"
                       placeholder="MED-2024-12345"
-                      {...register("registrationNo")}
+                      {...register('registrationNo')}
                     />
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export default function OnboardingPage() {
                         <Checkbox
                           checked={!hours.closed}
                           onCheckedChange={(checked) =>
-                            handleWorkingHoursChange(day, "closed", !checked)
+                            handleWorkingHoursChange(day, 'closed', !checked)
                           }
                         />
                         <span className="text-sm text-muted-foreground">Open</span>
@@ -310,19 +310,15 @@ export default function OnboardingPage() {
                         <>
                           <Input
                             type="time"
-                            value={hours.open || "09:00"}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(day, "open", e.target.value)
-                            }
+                            value={hours.open || '09:00'}
+                            onChange={(e) => handleWorkingHoursChange(day, 'open', e.target.value)}
                             className="w-32"
                           />
                           <span className="text-muted-foreground">to</span>
                           <Input
                             type="time"
-                            value={hours.close || "18:00"}
-                            onChange={(e) =>
-                              handleWorkingHoursChange(day, "close", e.target.value)
-                            }
+                            value={hours.close || '18:00'}
+                            onChange={(e) => handleWorkingHoursChange(day, 'close', e.target.value)}
                             className="w-32"
                           />
                         </>
@@ -344,11 +340,7 @@ export default function OnboardingPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="upiId">UPI ID</Label>
-                    <Input
-                      id="upiId"
-                      placeholder="clinic@upi"
-                      {...register("upiId")}
-                    />
+                    <Input id="upiId" placeholder="clinic@upi" {...register('upiId')} />
                   </div>
 
                   <div className="border-t pt-4 mt-4">
@@ -359,7 +351,7 @@ export default function OnboardingPage() {
                         <Input
                           id="bankName"
                           placeholder="State Bank of India"
-                          {...register("bankName")}
+                          {...register('bankName')}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -368,7 +360,7 @@ export default function OnboardingPage() {
                           <Input
                             id="bankAccountNo"
                             placeholder="1234567890"
-                            {...register("bankAccountNo")}
+                            {...register('bankAccountNo')}
                           />
                         </div>
                         <div className="space-y-2">
@@ -376,7 +368,7 @@ export default function OnboardingPage() {
                           <Input
                             id="bankIfsc"
                             placeholder="SBIN0001234"
-                            {...register("bankIfsc")}
+                            {...register('bankIfsc')}
                           />
                         </div>
                       </div>
@@ -385,7 +377,7 @@ export default function OnboardingPage() {
                         <Input
                           id="bankAccountName"
                           placeholder="Dr. John Smith"
-                          {...register("bankAccountName")}
+                          {...register('bankAccountName')}
                         />
                       </div>
                     </div>
@@ -403,10 +395,10 @@ export default function OnboardingPage() {
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Setup Complete!</h3>
                   <p className="text-muted-foreground mb-6">
-                    Your clinic is now ready. Start by adding your first patient or
-                    exploring the dashboard.
+                    Your clinic is now ready. Start by adding your first patient or exploring the
+                    dashboard.
                   </p>
-                  <Button onClick={() => router.push("/dashboard")} className="w-full">
+                  <Button onClick={() => router.push('/dashboard')} className="w-full">
                     Go to Dashboard
                   </Button>
                 </div>

@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Retrieve SMS and email settings
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -15,16 +15,16 @@ export async function GET(request: NextRequest) {
       where: {
         hospitalId,
         category: {
-          in: ['sms', 'email', 'reviews']
-        }
-      }
+          in: ['sms', 'email', 'reviews'],
+        },
+      },
     })
 
     // Organize settings by category
     const smsSettings: Record<string, string> = {}
     const emailSettings: Record<string, string> = {}
 
-    settings.forEach(setting => {
+    settings.forEach((setting) => {
       if (setting.category === 'sms') {
         const key = setting.key.replace('sms.', '')
         smsSettings[key] = setting.value
@@ -36,28 +36,25 @@ export async function GET(request: NextRequest) {
 
     // Also check for consolidated JSON settings
     const smsSettingsJson = await prisma.setting.findUnique({
-      where: { hospitalId_key: { key: 'sms_settings', hospitalId } }
+      where: { hospitalId_key: { key: 'sms_settings', hospitalId } },
     })
 
     const emailSettingsJson = await prisma.setting.findUnique({
-      where: { hospitalId_key: { key: 'email_settings', hospitalId } }
+      where: { hospitalId_key: { key: 'email_settings', hospitalId } },
     })
 
     const reviewSettingsJson = await prisma.setting.findUnique({
-      where: { hospitalId_key: { key: 'reviews_settings', hospitalId } }
+      where: { hospitalId_key: { key: 'reviews_settings', hospitalId } },
     })
 
     return NextResponse.json({
       sms: smsSettingsJson ? JSON.parse(smsSettingsJson.value) : smsSettings,
       email: emailSettingsJson ? JSON.parse(emailSettingsJson.value) : emailSettings,
-      reviews: reviewSettingsJson ? JSON.parse(reviewSettingsJson.value) : {}
+      reviews: reviewSettingsJson ? JSON.parse(reviewSettingsJson.value) : {},
     })
   } catch (error) {
-    console.error("Error fetching communication settings:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch communication settings" },
-      { status: 500 }
-    )
+    console.error('Error fetching communication settings:', error)
+    return NextResponse.json({ error: 'Failed to fetch communication settings' }, { status: 500 })
   }
 }
 
@@ -65,7 +62,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -73,10 +70,7 @@ export async function POST(request: NextRequest) {
     const { type, settings } = body
 
     if (!type || !settings) {
-      return NextResponse.json(
-        { error: "Type and settings are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Type and settings are required' }, { status: 400 })
     }
 
     if (type !== 'sms' && type !== 'email' && type !== 'reviews') {
@@ -95,7 +89,7 @@ export async function POST(request: NextRequest) {
         value: JSON.stringify(settings),
         type: 'json',
         category: type,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       create: {
         key: settingKey,
@@ -104,7 +98,7 @@ export async function POST(request: NextRequest) {
         category: type,
         description: `${type.toUpperCase()} configuration settings`,
         hospitalId,
-      }
+      },
     })
 
     // Also store individual settings for backward compatibility
@@ -121,14 +115,26 @@ export async function POST(request: NextRequest) {
     } else if (type === 'reviews') {
       settingsArray.push(
         { key: 'google_review_url', value: settings.google_review_url || '', category: 'reviews' },
-        { key: 'auto_review_requests', value: String(settings.auto_review_requests ?? false), category: 'reviews' },
-        { key: 'review_request_delay_hours', value: String(settings.review_request_delay_hours || '2'), category: 'reviews' }
+        {
+          key: 'auto_review_requests',
+          value: String(settings.auto_review_requests ?? false),
+          category: 'reviews',
+        },
+        {
+          key: 'review_request_delay_hours',
+          value: String(settings.review_request_delay_hours || '2'),
+          category: 'reviews',
+        }
       )
     } else {
       settingsArray.push(
         { key: 'email.smtp.host', value: settings.smtp_host || '', category: 'email' },
         { key: 'email.smtp.port', value: settings.smtp_port || '587', category: 'email' },
-        { key: 'email.smtp.secure', value: String(settings.smtp_secure ?? false), category: 'email' },
+        {
+          key: 'email.smtp.secure',
+          value: String(settings.smtp_secure ?? false),
+          category: 'email',
+        },
         { key: 'email.smtp.user', value: settings.smtp_user || '', category: 'email' },
         { key: 'email.smtp.password', value: settings.smtp_password || '', category: 'email' },
         { key: 'email.from.name', value: settings.from_name || '', category: 'email' },
@@ -144,7 +150,7 @@ export async function POST(request: NextRequest) {
         where: { hospitalId_key: { key: setting.key, hospitalId } },
         update: {
           value: setting.value,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         create: {
           key: setting.key,
@@ -152,19 +158,16 @@ export async function POST(request: NextRequest) {
           category: setting.category,
           type: 'string',
           hospitalId,
-        }
+        },
       })
     }
 
     return NextResponse.json({
       success: true,
-      message: `${type.toUpperCase()} settings saved successfully`
+      message: `${type.toUpperCase()} settings saved successfully`,
     })
   } catch (error) {
-    console.error("Error saving communication settings:", error)
-    return NextResponse.json(
-      { error: "Failed to save communication settings" },
-      { status: 500 }
-    )
+    console.error('Error saving communication settings:', error)
+    return NextResponse.json({ error: 'Failed to save communication settings' }, { status: 500 })
   }
 }

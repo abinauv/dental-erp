@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get patient segments based on criteria
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -30,38 +30,40 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         appointments: {
           select: { scheduledDate: true, status: true },
-          orderBy: { scheduledDate: "desc" },
+          orderBy: { scheduledDate: 'desc' },
           take: 1,
         },
         invoices: {
           select: { totalAmount: true },
-          where: { status: { not: "CANCELLED" } },
+          where: { status: { not: 'CANCELLED' } },
         },
       },
     })
 
     // Segment patients
     const segments: Record<string, any[]> = {
-      new: [],       // Registered in last 3 months, <=1 visit
-      active: [],    // Visited in last 3 months
-      loyal: [],     // 4+ visits in last year AND visited in last 6 months
-      atRisk: [],    // Last visit 3-6 months ago
-      lost: [],      // No visit in 6+ months
+      new: [], // Registered in last 3 months, <=1 visit
+      active: [], // Visited in last 3 months
+      loyal: [], // 4+ visits in last year AND visited in last 6 months
+      atRisk: [], // Last visit 3-6 months ago
+      lost: [], // No visit in 6+ months
       highValue: [], // Total spend > top 20%
     }
 
     // Calculate total spend per patient for high-value threshold
     const spendMap = patients.map((p: any) => {
       const totalSpend = (p.invoices || []).reduce(
-        (sum: number, inv: any) => sum + Number(inv.totalAmount || 0), 0
+        (sum: number, inv: any) => sum + Number(inv.totalAmount || 0),
+        0
       )
       return { ...p, totalSpend }
     })
 
     const sortedBySpend = [...spendMap].sort((a, b) => b.totalSpend - a.totalSpend)
-    const highValueThreshold = sortedBySpend.length > 0
-      ? sortedBySpend[Math.floor(sortedBySpend.length * 0.2)]?.totalSpend || 0
-      : 0
+    const highValueThreshold =
+      sortedBySpend.length > 0
+        ? sortedBySpend[Math.floor(sortedBySpend.length * 0.2)]?.totalSpend || 0
+        : 0
 
     for (const patient of spendMap) {
       const lastVisit = patient.appointments[0]?.scheduledDate
@@ -115,7 +117,7 @@ export async function GET(request: NextRequest) {
       totalPatients: patients.length,
     })
   } catch (err) {
-    console.error("Error fetching segments:", err)
-    return NextResponse.json({ error: "Failed to fetch segments" }, { status: 500 })
+    console.error('Error fetching segments:', err)
+    return NextResponse.json({ error: 'Failed to fetch segments' }, { status: 500 })
   }
 }

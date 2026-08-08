@@ -150,7 +150,8 @@ describe('Navigation Structure', () => {
       const allItems = accountantNav.flatMap((s) => s.items)
       // Accountant should see billing
       const hasBilling = allItems.some(
-        (i) => i.href.includes('billing') || i.href.includes('invoices') || i.title.includes('Billing')
+        (i) =>
+          i.href.includes('billing') || i.href.includes('invoices') || i.title.includes('Billing')
       )
       expect(hasBilling).toBe(true)
     })

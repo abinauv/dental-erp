@@ -1,27 +1,29 @@
-"use client"
+'use client'
 
-import { useState, useEffect, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Loader2, UserPlus, XCircle, CheckCircle2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Loader2, UserPlus, XCircle, CheckCircle2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useToast } from '@/hooks/use-toast'
 
-const acceptInviteSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-})
+const acceptInviteSchema = z
+  .object({
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 type AcceptInviteFormData = z.infer<typeof acceptInviteSchema>
 
@@ -37,12 +39,12 @@ function AcceptInviteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const [status, setStatus] = useState<"loading" | "valid" | "invalid" | "success">("loading")
+  const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'success'>('loading')
   const [inviteData, setInviteData] = useState<InviteData | null>(null)
-  const [errorMessage, setErrorMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const token = searchParams.get("token")
+  const token = searchParams.get('token')
 
   const {
     register,
@@ -56,8 +58,8 @@ function AcceptInviteContent() {
     if (token) {
       validateToken(token)
     } else {
-      setStatus("invalid")
-      setErrorMessage("No invite token provided.")
+      setStatus('invalid')
+      setErrorMessage('No invite token provided.')
     }
   }, [token])
 
@@ -67,15 +69,15 @@ function AcceptInviteContent() {
       const result = await response.json()
 
       if (response.ok && result.valid) {
-        setStatus("valid")
+        setStatus('valid')
         setInviteData(result.invite)
       } else {
-        setStatus("invalid")
-        setErrorMessage(result.error || "Invalid invite link.")
+        setStatus('invalid')
+        setErrorMessage(result.error || 'Invalid invite link.')
       }
     } catch {
-      setStatus("invalid")
-      setErrorMessage("An error occurred. Please try again.")
+      setStatus('invalid')
+      setErrorMessage('An error occurred. Please try again.')
     }
   }
 
@@ -85,9 +87,9 @@ function AcceptInviteContent() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/public/invite/accept", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/public/invite/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
           password: data.password,
@@ -98,23 +100,23 @@ function AcceptInviteContent() {
       const result = await response.json()
 
       if (response.ok) {
-        setStatus("success")
+        setStatus('success')
         toast({
-          title: "Account created!",
-          description: "You can now log in to your account.",
+          title: 'Account created!',
+          description: 'You can now log in to your account.',
         })
       } else {
         toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error || "Something went wrong. Please try again.",
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error || 'Something went wrong. Please try again.',
         })
       }
     } catch {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
       })
     } finally {
       setIsSubmitting(false)
@@ -122,10 +124,10 @@ function AcceptInviteContent() {
   }
 
   const formatRole = (role: string) => {
-    return role.charAt(0) + role.slice(1).toLowerCase().replace("_", " ")
+    return role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')
   }
 
-  if (status === "loading") {
+  if (status === 'loading') {
     return (
       <Card className="shadow-lg">
         <CardHeader className="space-y-1 text-center">
@@ -141,7 +143,7 @@ function AcceptInviteContent() {
     )
   }
 
-  if (status === "invalid") {
+  if (status === 'invalid') {
     return (
       <Card className="shadow-lg">
         <CardHeader className="space-y-1 text-center">
@@ -162,7 +164,7 @@ function AcceptInviteContent() {
     )
   }
 
-  if (status === "success") {
+  if (status === 'success') {
     return (
       <Card className="shadow-lg">
         <CardHeader className="space-y-1 text-center">
@@ -173,7 +175,7 @@ function AcceptInviteContent() {
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Aboard!</CardTitle>
           <CardDescription>
-            Your account has been created successfully. You can now log in to{" "}
+            Your account has been created successfully. You can now log in to{' '}
             {inviteData?.hospitalName}.
           </CardDescription>
         </CardHeader>
@@ -196,19 +198,19 @@ function AcceptInviteContent() {
         </div>
         <CardTitle className="text-2xl font-bold">Join {inviteData?.hospitalName}</CardTitle>
         <CardDescription>
-          You&apos;ve been invited to join as a{" "}
-          <Badge variant="secondary">{formatRole(inviteData?.role || "")}</Badge>
+          You&apos;ve been invited to join as a{' '}
+          <Badge variant="secondary">{formatRole(inviteData?.role || '')}</Badge>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-6 p-4 bg-muted rounded-lg">
           <div className="text-sm space-y-1">
             <p>
-              <span className="text-muted-foreground">Name:</span>{" "}
+              <span className="text-muted-foreground">Name:</span>{' '}
               <span className="font-medium">{inviteData?.name}</span>
             </p>
             <p>
-              <span className="text-muted-foreground">Email:</span>{" "}
+              <span className="text-muted-foreground">Email:</span>{' '}
               <span className="font-medium">{inviteData?.email}</span>
             </p>
           </div>
@@ -221,12 +223,10 @@ function AcceptInviteContent() {
               id="phone"
               type="tel"
               placeholder="9876543210"
-              {...register("phone")}
+              {...register('phone')}
               disabled={isSubmitting}
             />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -235,7 +235,7 @@ function AcceptInviteContent() {
               id="password"
               type="password"
               placeholder="At least 8 characters"
-              {...register("password")}
+              {...register('password')}
               disabled={isSubmitting}
             />
             {errors.password && (
@@ -249,7 +249,7 @@ function AcceptInviteContent() {
               id="confirmPassword"
               type="password"
               placeholder="Confirm your password"
-              {...register("confirmPassword")}
+              {...register('confirmPassword')}
               disabled={isSubmitting}
             />
             {errors.confirmPassword && (
@@ -273,18 +273,20 @@ function AcceptInviteContent() {
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={
-      <Card className="shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    <Suspense
+      fallback={
+        <Card className="shadow-lg">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
-        </CardHeader>
-      </Card>
-    }>
+            <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
+          </CardHeader>
+        </Card>
+      }
+    >
       <AcceptInviteContent />
     </Suspense>
   )

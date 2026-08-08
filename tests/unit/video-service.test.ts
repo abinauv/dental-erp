@@ -30,7 +30,11 @@ describe('Video Service', () => {
       vi.stubEnv('DAILY_API_KEY', 'test-api-key')
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ url: 'https://test.daily.co/dental-consult-1', name: 'dental-consult-1' }),
+        json: () =>
+          Promise.resolve({
+            url: 'https://test.daily.co/dental-consult-1',
+            name: 'dental-consult-1',
+          }),
       })
 
       const { createRoom } = await import('@/lib/services/video.service')

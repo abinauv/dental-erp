@@ -131,10 +131,10 @@ describe('Security — HTTPS Enforcement', () => {
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob: https:",
-        "upgrade-insecure-requests",
+        'upgrade-insecure-requests',
       ]
 
-      expect(cspDirectives.some(d => d.includes('upgrade-insecure-requests'))).toBe(true)
+      expect(cspDirectives.some((d) => d.includes('upgrade-insecure-requests'))).toBe(true)
     })
 
     it('image sources restrict to HTTPS', () => {

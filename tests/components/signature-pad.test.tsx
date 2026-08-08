@@ -23,7 +23,9 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, type, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} type={type} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} type={type} {...props}>
+      {children}
+    </button>
   ),
 }))
 
@@ -66,7 +68,9 @@ const originalToDataURL = HTMLCanvasElement.prototype.toDataURL
 
 beforeEach(() => {
   HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx)
-  HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/png;base64,mockSignature')
+  HTMLCanvasElement.prototype.toDataURL = vi
+    .fn()
+    .mockReturnValue('data:image/png;base64,mockSignature')
 })
 
 import { SignaturePad } from '@/components/forms/signature-pad'

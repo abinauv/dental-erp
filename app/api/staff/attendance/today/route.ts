@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get today's attendance summary
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     const today = new Date()
@@ -17,17 +19,17 @@ export async function GET(request: NextRequest) {
       include: {
         user: {
           select: {
-            role: true
-          }
+            role: true,
+          },
         },
         attendance: {
           where: {
-            date: today
+            date: today,
           },
-          take: 1
-        }
+          take: 1,
+        },
       },
-      orderBy: { firstName: 'asc' }
+      orderBy: { firstName: 'asc' },
     })
 
     // Calculate summary
@@ -38,10 +40,10 @@ export async function GET(request: NextRequest) {
       late: 0,
       halfDay: 0,
       onLeave: 0,
-      notMarked: 0
+      notMarked: 0,
     }
 
-    const staffWithAttendance = staff.map(s => {
+    const staffWithAttendance = staff.map((s) => {
       const todayAttendance = s.attendance[0]
 
       if (!todayAttendance) {
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
           ...s,
           todayStatus: null,
           clockIn: null,
-          clockOut: null
+          clockOut: null,
         }
       }
 
@@ -77,20 +79,17 @@ export async function GET(request: NextRequest) {
         todayStatus: todayAttendance.status,
         clockIn: todayAttendance.clockIn,
         clockOut: todayAttendance.clockOut,
-        attendanceNotes: todayAttendance.notes
+        attendanceNotes: todayAttendance.notes,
       }
     })
 
     return NextResponse.json({
       date: today.toISOString().split('T')[0],
       summary,
-      staff: staffWithAttendance
+      staff: staffWithAttendance,
     })
   } catch (error) {
     console.error("Error fetching today's attendance:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch today's attendance" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to fetch today's attendance" }, { status: 500 })
   }
 }

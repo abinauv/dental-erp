@@ -40,9 +40,7 @@ describe('Navigation — Back Button Behavior', () => {
   })
 
   it('back button calls router.back()', () => {
-    const BackButton = () => (
-      <button onClick={() => mockBack()}>Go Back</button>
-    )
+    const BackButton = () => <button onClick={() => mockBack()}>Go Back</button>
 
     render(<BackButton />)
     fireEvent.click(screen.getByText('Go Back'))
@@ -150,9 +148,7 @@ describe('Navigation — Keyboard Shortcuts', () => {
       }
 
       document.addEventListener('keydown', listener)
-      document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'k', bubbles: true })
-      )
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', bubbles: true }))
 
       expect(handler).not.toHaveBeenCalled()
       document.removeEventListener('keydown', listener)

@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuthenticatedHospital } from "@/lib/api-helpers"
-import { getGateway } from "@/lib/payment-gateways"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getAuthenticatedHospital } from '@/lib/api-helpers'
+import { getGateway } from '@/lib/payment-gateways'
 
 export async function POST(req: NextRequest) {
   try {
     const { error, user, hospitalId } = await getAuthenticatedHospital()
     if (error || !user || !hospitalId) {
-      return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await req.json()
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     if (!invoiceId || !orderId || !paymentId) {
       return NextResponse.json(
-        { error: "invoiceId, orderId, paymentId are required" },
+        { error: 'invoiceId, orderId, paymentId are required' },
         { status: 400 }
       )
     }
@@ -32,16 +32,13 @@ export async function POST(req: NextRequest) {
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
 
     // Get gateway
     const gatewayResult = await getGateway(hospitalId)
     if (!gatewayResult) {
-      return NextResponse.json(
-        { error: "Payment gateway is not configured" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Payment gateway is not configured' }, { status: 400 })
     }
 
     const { gateway } = gatewayResult
@@ -50,13 +47,13 @@ export async function POST(req: NextRequest) {
     const result = await gateway.verifyPayment({
       orderId,
       paymentId,
-      signature: signature || "",
+      signature: signature || '',
       ...extra,
     })
 
     if (!result.verified) {
       return NextResponse.json(
-        { error: "Payment verification failed", status: result.status },
+        { error: 'Payment verification failed', status: result.status },
         { status: 400 }
       )
     }
@@ -69,13 +66,11 @@ export async function POST(req: NextRequest) {
     // Generate payment number
     const lastPayment = await prisma.payment.findFirst({
       where: { hospitalId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: { paymentNo: true },
     })
-    const lastNum = lastPayment
-      ? parseInt(lastPayment.paymentNo.replace(/\D/g, "")) || 0
-      : 0
-    const paymentNo = `PAY${String(lastNum + 1).padStart(5, "0")}`
+    const lastNum = lastPayment ? parseInt(lastPayment.paymentNo.replace(/\D/g, '')) || 0 : 0
+    const paymentNo = `PAY${String(lastNum + 1).padStart(5, '0')}`
 
     const [payment] = await prisma.$transaction([
       prisma.payment.create({
@@ -84,10 +79,10 @@ export async function POST(req: NextRequest) {
           paymentNo,
           invoiceId: invoice.id,
           amount: paymentAmount,
-          paymentMethod: "ONLINE",
+          paymentMethod: 'ONLINE',
           paymentDate: new Date(),
           transactionId: result.transactionId,
-          status: "COMPLETED",
+          status: 'COMPLETED',
           gateway: gatewayResult.credentials.provider.toLowerCase(),
           gatewayOrderId: orderId,
           gatewayPaymentId: paymentId,
@@ -100,7 +95,7 @@ export async function POST(req: NextRequest) {
         data: {
           paidAmount: newPaidAmount,
           balanceAmount: Math.max(0, newBalance),
-          status: newBalance <= 0 ? "PAID" : "PARTIALLY_PAID",
+          status: newBalance <= 0 ? 'PAID' : 'PARTIALLY_PAID',
         },
       }),
     ])
@@ -112,12 +107,12 @@ export async function POST(req: NextRequest) {
         paymentNo: payment.paymentNo,
         amount: paymentAmount,
         transactionId: result.transactionId,
-        status: "COMPLETED",
+        status: 'COMPLETED',
       },
     })
   } catch (err: unknown) {
-    console.error("Payment verification error:", err)
-    const message = err instanceof Error ? err.message : "Payment verification failed"
+    console.error('Payment verification error:', err)
+    const message = err instanceof Error ? err.message : 'Payment verification failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

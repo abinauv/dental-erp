@@ -17,10 +17,7 @@ vi.mock('@/lib/patient-auth', () => ({
 // ── Imports ──────────────────────────────────────────────────────────────────
 
 import { GET as recordsGET } from '@/app/api/patient-portal/records/route'
-import {
-  GET as formsGET,
-  POST as formsPOST,
-} from '@/app/api/patient-portal/forms/route'
+import { GET as formsGET, POST as formsPOST } from '@/app/api/patient-portal/forms/route'
 import { prisma } from '@/lib/prisma'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -66,7 +63,8 @@ describe('GET /api/patient-portal/records', () => {
     mockPatientAuth()
     const mockTreatments = [
       {
-        id: 't1', status: 'COMPLETED',
+        id: 't1',
+        status: 'COMPLETED',
         procedure: { name: 'Cleaning', code: 'D0100', category: 'PREVENTIVE' },
         doctor: { firstName: 'Dr.', lastName: 'Smith' },
       },
@@ -143,8 +141,14 @@ describe('GET /api/patient-portal/forms', () => {
     mockPatientAuth()
     vi.mocked(prisma.formSubmission.findMany).mockResolvedValue([
       {
-        id: 'fs1', data: { field1: 'value1' },
-        template: { id: 'ft1', name: 'Consent Form', type: 'CONSENT', description: 'General consent' },
+        id: 'fs1',
+        data: { field1: 'value1' },
+        template: {
+          id: 'ft1',
+          name: 'Consent Form',
+          type: 'CONSENT',
+          description: 'General consent',
+        },
       },
     ] as any)
     vi.mocked(prisma.formTemplate.findMany).mockResolvedValue([
@@ -184,23 +188,32 @@ describe('POST /api/patient-portal/forms', () => {
   it('returns 404 when template not found', async () => {
     mockPatientAuth()
     vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue(null)
-    const res = await formsPOST(makeReq('/api/patient-portal/forms', 'POST', { templateId: 'ft999' }))
+    const res = await formsPOST(
+      makeReq('/api/patient-portal/forms', 'POST', { templateId: 'ft999' })
+    )
     expect(res.status).toBe(404)
   })
 
   it('creates a form submission', async () => {
     mockPatientAuth()
     vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({
-      id: 'ft1', hospitalId: 'h1', isActive: true,
+      id: 'ft1',
+      hospitalId: 'h1',
+      isActive: true,
     } as any)
     vi.mocked(prisma.formSubmission.create).mockResolvedValue({
-      id: 'fs1', templateId: 'ft1', patientId: 'pat1', data: { q1: 'yes' },
+      id: 'fs1',
+      templateId: 'ft1',
+      patientId: 'pat1',
+      data: { q1: 'yes' },
     } as any)
 
-    const res = await formsPOST(makeReq('/api/patient-portal/forms', 'POST', {
-      templateId: 'ft1',
-      data: { q1: 'yes' },
-    }))
+    const res = await formsPOST(
+      makeReq('/api/patient-portal/forms', 'POST', {
+        templateId: 'ft1',
+        data: { q1: 'yes' },
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -210,17 +223,24 @@ describe('POST /api/patient-portal/forms', () => {
   it('creates submission with signature and sets signedAt', async () => {
     mockPatientAuth()
     vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({
-      id: 'ft1', hospitalId: 'h1', isActive: true,
+      id: 'ft1',
+      hospitalId: 'h1',
+      isActive: true,
     } as any)
     vi.mocked(prisma.formSubmission.create).mockResolvedValue({
-      id: 'fs1', templateId: 'ft1', signature: 'base64sig', signedAt: new Date(),
+      id: 'fs1',
+      templateId: 'ft1',
+      signature: 'base64sig',
+      signedAt: new Date(),
     } as any)
 
-    await formsPOST(makeReq('/api/patient-portal/forms', 'POST', {
-      templateId: 'ft1',
-      data: { q1: 'yes' },
-      signature: 'base64sig',
-    }))
+    await formsPOST(
+      makeReq('/api/patient-portal/forms', 'POST', {
+        templateId: 'ft1',
+        data: { q1: 'yes' },
+        signature: 'base64sig',
+      })
+    )
 
     const createCall = vi.mocked(prisma.formSubmission.create).mock.calls[0][0]
     expect(createCall.data.signature).toBe('base64sig')
@@ -230,12 +250,15 @@ describe('POST /api/patient-portal/forms', () => {
   it('records IP address', async () => {
     mockPatientAuth()
     vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({
-      id: 'ft1', hospitalId: 'h1', isActive: true,
+      id: 'ft1',
+      hospitalId: 'h1',
+      isActive: true,
     } as any)
     vi.mocked(prisma.formSubmission.create).mockResolvedValue({ id: 'fs1' } as any)
 
     const req = makeReq('/api/patient-portal/forms', 'POST', {
-      templateId: 'ft1', data: {},
+      templateId: 'ft1',
+      data: {},
     })
 
     await formsPOST(req)
@@ -247,13 +270,19 @@ describe('POST /api/patient-portal/forms', () => {
   it('includes appointmentId when provided', async () => {
     mockPatientAuth()
     vi.mocked(prisma.formTemplate.findFirst).mockResolvedValue({
-      id: 'ft1', hospitalId: 'h1', isActive: true,
+      id: 'ft1',
+      hospitalId: 'h1',
+      isActive: true,
     } as any)
     vi.mocked(prisma.formSubmission.create).mockResolvedValue({ id: 'fs1' } as any)
 
-    await formsPOST(makeReq('/api/patient-portal/forms', 'POST', {
-      templateId: 'ft1', data: {}, appointmentId: 'apt1',
-    }))
+    await formsPOST(
+      makeReq('/api/patient-portal/forms', 'POST', {
+        templateId: 'ft1',
+        data: {},
+        appointmentId: 'apt1',
+      })
+    )
 
     const createCall = vi.mocked(prisma.formSubmission.create).mock.calls[0][0]
     expect(createCall.data.appointmentId).toBe('apt1')

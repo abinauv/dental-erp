@@ -55,7 +55,7 @@ describe('Email Tracking Pixel — GET /api/track/email/[id]', () => {
     await GET(req, createParams('track-abc'))
 
     // Allow microtask to run (background update)
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     expect(prisma.emailLog.updateMany).toHaveBeenCalledWith({
       where: { trackingId: 'track-abc', openedAt: null },
@@ -67,7 +67,7 @@ describe('Email Tracking Pixel — GET /api/track/email/[id]', () => {
     const req = new Request('http://localhost/api/track/email/track-xyz')
     await GET(req, createParams('track-xyz'))
 
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     expect(prisma.emailLog.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -96,9 +96,9 @@ describe('Email Tracking Pixel — GET /api/track/email/[id]', () => {
 
     // PNG magic bytes: 137 80 78 71 13 10 26 10
     expect(bytes[0]).toBe(137) // 0x89
-    expect(bytes[1]).toBe(80)  // P
-    expect(bytes[2]).toBe(78)  // N
-    expect(bytes[3]).toBe(71)  // G
+    expect(bytes[1]).toBe(80) // P
+    expect(bytes[2]).toBe(78) // N
+    expect(bytes[3]).toBe(71) // G
   })
 
   it('should not require authentication', async () => {
@@ -118,7 +118,7 @@ describe('Email Tracking Pixel — GET /api/track/email/[id]', () => {
       expect(res.status).toBe(200)
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     expect(prisma.emailLog.updateMany).toHaveBeenCalledTimes(3)
   })

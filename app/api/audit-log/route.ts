@@ -1,21 +1,21 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 export async function GET(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(req.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "50")
-    const action = searchParams.get("action") || undefined
-    const userId = searchParams.get("userId") || undefined
-    const entity = searchParams.get("entity") || undefined
-    const search = searchParams.get("q") || undefined
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const action = searchParams.get('action') || undefined
+    const userId = searchParams.get('userId') || undefined
+    const entity = searchParams.get('entity') || undefined
+    const search = searchParams.get('q') || undefined
 
     const where: Record<string, unknown> = { hospitalId }
     if (action) where.action = action
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where: where as any,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
         include: {
@@ -51,14 +51,12 @@ export async function GET(req: NextRequest) {
         details: log.oldValues || log.newValues || null,
         ipAddress: log.ipAddress,
         createdAt: log.createdAt,
-        user: log.user
-          ? { name: log.user.name, email: log.user.email, role: log.user.role }
-          : null,
+        user: log.user ? { name: log.user.name, email: log.user.email, role: log.user.role } : null,
       })),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error("Audit log error:", err)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Audit log error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

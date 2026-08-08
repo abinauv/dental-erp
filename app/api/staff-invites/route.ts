@@ -1,22 +1,22 @@
-import { NextResponse } from "next/server"
-import { z } from "zod"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole, checkStaffLimit, generateToken } from "@/lib/api-helpers"
-import { Role, StaffInviteStatus } from "@prisma/client"
-import { sendInviteEmail } from "@/lib/email-helpers"
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole, checkStaffLimit, generateToken } from '@/lib/api-helpers'
+import { Role, StaffInviteStatus } from '@prisma/client'
+import { sendInviteEmail } from '@/lib/email-helpers'
 
 const inviteSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["DOCTOR", "RECEPTIONIST", "LAB_TECH", "ACCOUNTANT"]),
+  email: z.string().email('Please enter a valid email address'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  role: z.enum(['DOCTOR', 'RECEPTIONIST', 'LAB_TECH', 'ACCOUNTANT']),
 })
 
 // Create a new staff invite
 export async function POST(request: Request) {
-  const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validated.error.flatten() },
+        { error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     if (!staffLimit.allowed) {
       return NextResponse.json(
         {
-          error: "Staff limit reached",
+          error: 'Staff limit reached',
           message: `Your plan allows up to ${staffLimit.max} staff members. Please upgrade to add more.`,
           current: staffLimit.current,
           max: staffLimit.max,
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "A user with this email already exists in your hospital" },
+        { error: 'A user with this email already exists in your hospital' },
         { status: 409 }
       )
     }
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
     if (existingInvite) {
       return NextResponse.json(
-        { error: "An invite has already been sent to this email" },
+        { error: 'An invite has already been sent to this email' },
         { status: 409 }
       )
     }
@@ -104,9 +104,9 @@ export async function POST(request: Request) {
     const emailSent = await sendInviteEmail({
       to: email,
       inviteeName: name,
-      hospitalName: hospital?.name || "Your Dental Clinic",
+      hospitalName: hospital?.name || 'Your Dental Clinic',
       role,
-      inviterName: user!.name || "Admin",
+      inviterName: user!.name || 'Admin',
       token,
     })
 
@@ -124,31 +124,28 @@ export async function POST(request: Request) {
       },
       emailSent,
       // Development-only: show direct link for testing
-      ...(process.env.NODE_ENV === "development" && {
+      ...(process.env.NODE_ENV === 'development' && {
         inviteLink: `/invite/accept?token=${token}`,
       }),
     })
   } catch (error) {
-    console.error("Create invite error:", error)
-    return NextResponse.json(
-      { error: "An error occurred. Please try again." },
-      { status: 500 }
-    )
+    console.error('Create invite error:', error)
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }
 
 // List all invites for the hospital
 export async function GET() {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const invites = await prisma.staffInvite.findMany({
       where: { hospitalId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         email: true,
@@ -164,10 +161,7 @@ export async function GET() {
 
     return NextResponse.json({ invites })
   } catch (error) {
-    console.error("List invites error:", error)
-    return NextResponse.json(
-      { error: "An error occurred. Please try again." },
-      { status: 500 }
-    )
+    console.error('List invites error:', error)
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

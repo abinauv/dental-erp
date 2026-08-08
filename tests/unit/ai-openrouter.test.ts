@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  complete,
-  streamResponse,
-  extractJSON,
-  type ChatMessage,
-} from '@/lib/ai/openrouter'
+import { complete, streamResponse, extractJSON, type ChatMessage } from '@/lib/ai/openrouter'
 
 // Mock prisma to avoid DB connection attempts during import resolution
 vi.mock('@/lib/prisma', () => ({
@@ -266,17 +261,13 @@ describe('complete', () => {
   it('should throw on 429 rate limit response', async () => {
     mockFetchError(429, 'Rate limit exceeded')
 
-    await expect(complete(sampleMessages)).rejects.toThrow(
-      'OpenRouter [429]: Rate limit exceeded'
-    )
+    await expect(complete(sampleMessages)).rejects.toThrow('OpenRouter [429]: Rate limit exceeded')
   })
 
   it('should throw on 401 unauthorized response', async () => {
     mockFetchError(401, 'Invalid API key')
 
-    await expect(complete(sampleMessages)).rejects.toThrow(
-      'OpenRouter [401]: Invalid API key'
-    )
+    await expect(complete(sampleMessages)).rejects.toThrow('OpenRouter [401]: Invalid API key')
   })
 
   it('should handle temperature of 0 correctly (not fallback to default)', async () => {
@@ -321,9 +312,7 @@ describe('getHeaders (via complete)', () => {
     const originalKey = process.env.OPENROUTER_API_KEY
     delete process.env.OPENROUTER_API_KEY
 
-    await expect(complete(sampleMessages)).rejects.toThrow(
-      'OPENROUTER_API_KEY is not set'
-    )
+    await expect(complete(sampleMessages)).rejects.toThrow('OPENROUTER_API_KEY is not set')
 
     // Restore for other tests
     process.env.OPENROUTER_API_KEY = originalKey
@@ -333,9 +322,7 @@ describe('getHeaders (via complete)', () => {
     const originalKey = process.env.OPENROUTER_API_KEY
     process.env.OPENROUTER_API_KEY = ''
 
-    await expect(complete(sampleMessages)).rejects.toThrow(
-      'OPENROUTER_API_KEY is not set'
-    )
+    await expect(complete(sampleMessages)).rejects.toThrow('OPENROUTER_API_KEY is not set')
 
     process.env.OPENROUTER_API_KEY = originalKey
   })
@@ -524,8 +511,8 @@ describe('streamResponse', () => {
     const encoder = new TextEncoder()
     const sseChunk = encoder.encode(
       'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n' +
-      'data: {"choices":[{"delta":{"content":" world"}}]}\n\n' +
-      'data: [DONE]\n\n'
+        'data: {"choices":[{"delta":{"content":" world"}}]}\n\n' +
+        'data: [DONE]\n\n'
     )
 
     const readable = new ReadableStream({
@@ -560,9 +547,7 @@ describe('streamResponse', () => {
   it('should skip SSE lines that do not start with "data: "', async () => {
     const encoder = new TextEncoder()
     const sseChunk = encoder.encode(
-      ': comment line\n' +
-      'event: ping\n' +
-      'data: {"choices":[{"delta":{"content":"kept"}}]}\n\n'
+      ': comment line\n' + 'event: ping\n' + 'data: {"choices":[{"delta":{"content":"kept"}}]}\n\n'
     )
 
     const readable = new ReadableStream({
@@ -598,8 +583,8 @@ describe('streamResponse', () => {
     const encoder = new TextEncoder()
     const sseChunk = encoder.encode(
       'data: {"choices":[{"delta":{}}]}\n\n' +
-      'data: {"choices":[{"delta":{"content":"visible"}}]}\n\n' +
-      'data: [DONE]\n\n'
+        'data: {"choices":[{"delta":{"content":"visible"}}]}\n\n' +
+        'data: [DONE]\n\n'
     )
 
     const readable = new ReadableStream({
@@ -637,8 +622,8 @@ describe('streamResponse', () => {
     const encoder = new TextEncoder()
     const sseChunk = encoder.encode(
       'data: {invalid json\n\n' +
-      'data: {"choices":[{"delta":{"content":"after-error"}}]}\n\n' +
-      'data: [DONE]\n\n'
+        'data: {"choices":[{"delta":{"content":"after-error"}}]}\n\n' +
+        'data: [DONE]\n\n'
     )
 
     const readable = new ReadableStream({
@@ -674,9 +659,7 @@ describe('streamResponse', () => {
     const originalKey = process.env.OPENROUTER_API_KEY
     delete process.env.OPENROUTER_API_KEY
 
-    await expect(streamResponse(sampleMessages)).rejects.toThrow(
-      'OPENROUTER_API_KEY is not set'
-    )
+    await expect(streamResponse(sampleMessages)).rejects.toThrow('OPENROUTER_API_KEY is not set')
 
     process.env.OPENROUTER_API_KEY = originalKey
   })

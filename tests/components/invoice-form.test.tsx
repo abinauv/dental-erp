@@ -23,9 +23,12 @@ vi.mock('@/lib/billing-utils', () => ({
   formatCurrency: (val: number) => `₹${val.toLocaleString('en-IN')}`,
   calculateInvoiceTotals: (items: any[], discountType: string, discountValue: number) => {
     const subtotal = items.reduce((sum: number, i: any) => sum + i.quantity * i.unitPrice, 0)
-    const discountAmount = discountType === 'PERCENTAGE' ? (subtotal * discountValue) / 100 : discountValue
+    const discountAmount =
+      discountType === 'PERCENTAGE' ? (subtotal * discountValue) / 100 : discountValue
     const afterDiscount = subtotal - discountAmount
-    const taxable = items.filter((i: any) => i.taxable).reduce((sum: number, i: any) => sum + i.quantity * i.unitPrice, 0)
+    const taxable = items
+      .filter((i: any) => i.taxable)
+      .reduce((sum: number, i: any) => sum + i.quantity * i.unitPrice, 0)
     const cgst = (Math.max(0, taxable - discountAmount) * 9) / 100
     const sgst = cgst
     return {
@@ -60,7 +63,9 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, disabled, onClick, ...props }: any) => (
-    <button disabled={disabled} onClick={onClick} {...props}>{children}</button>
+    <button disabled={disabled} onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
 }))
 
@@ -133,7 +138,11 @@ vi.mock('@/components/ui/table', () => ({
 }))
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 import NewInvoicePage from '@/app/(dashboard)/billing/invoices/new/page'
@@ -219,8 +228,8 @@ describe('NewInvoicePage', () => {
 
       await waitFor(() => {
         // Fetch should not be called for search (only initial mount fetch is allowed)
-        const searchCalls = (global.fetch as any).mock.calls.filter(
-          (c: any) => c[0].includes('search=J')
+        const searchCalls = (global.fetch as any).mock.calls.filter((c: any) =>
+          c[0].includes('search=J')
         )
         expect(searchCalls.length).toBe(0)
       })
@@ -229,11 +238,19 @@ describe('NewInvoicePage', () => {
     it('searches when 2+ characters typed', async () => {
       ;(global.fetch as any).mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          patients: [
-            { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', email: null },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            patients: [
+              {
+                id: 'p1',
+                patientId: 'PAT001',
+                firstName: 'John',
+                lastName: 'Doe',
+                phone: '9876543210',
+                email: null,
+              },
+            ],
+          }),
       })
 
       render(<NewInvoicePage />)
@@ -259,11 +276,19 @@ describe('NewInvoicePage', () => {
         if (url.includes('search=Jo')) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({
-              patients: [
-                { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', email: null },
-              ],
-            }),
+            json: () =>
+              Promise.resolve({
+                patients: [
+                  {
+                    id: 'p1',
+                    patientId: 'PAT001',
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    phone: '9876543210',
+                    email: null,
+                  },
+                ],
+              }),
           })
         }
         if (url.includes('unbilled')) {
@@ -350,8 +375,8 @@ describe('NewInvoicePage', () => {
 
     it('pre-fills terms and conditions', () => {
       render(<NewInvoicePage />)
-      const termsArea = screen.getByDisplayValue(/Payment is due/i) ||
-        screen.getByText(/Payment is due/i)
+      const termsArea =
+        screen.getByDisplayValue(/Payment is due/i) || screen.getByText(/Payment is due/i)
       expect(termsArea).toBeInTheDocument()
     })
   })
@@ -359,9 +384,9 @@ describe('NewInvoicePage', () => {
   describe('Navigation', () => {
     it('has back link to invoices list', () => {
       render(<NewInvoicePage />)
-      const backLink = screen.getAllByRole('link').find(
-        (link) => link.getAttribute('href') === '/billing/invoices'
-      )
+      const backLink = screen
+        .getAllByRole('link')
+        .find((link) => link.getAttribute('href') === '/billing/invoices')
       expect(backLink).toBeDefined()
     })
   })

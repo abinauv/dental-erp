@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { usePathname } from "next/navigation"
-import { useAI } from "./ai-provider"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { usePathname } from 'next/navigation'
+import { useAI } from './ai-provider'
+import { cn } from '@/lib/utils'
 
 export function CommandBar() {
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const [result, setResult] = useState<any>(null)
   const [history, setHistory] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
@@ -17,16 +17,16 @@ export function CommandBar() {
   // Ctrl+K shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault()
         setOpen(true)
-        setQuery("")
+        setQuery('')
         setResult(null)
       }
-      if (e.key === "Escape") setOpen(false)
+      if (e.key === 'Escape') setOpen(false)
     }
-    window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
 
   // Focus input when opened
@@ -56,7 +56,14 @@ export function CommandBar() {
         {/* Header */}
         <div className="flex items-center gap-2 border-b px-4 py-3">
           <span className="text-muted-foreground">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
@@ -64,10 +71,13 @@ export function CommandBar() {
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setResult(null) }}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setResult(null)
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit()
-              if (e.key === "Escape") setOpen(false)
+              if (e.key === 'Enter') handleSubmit()
+              if (e.key === 'Escape') setOpen(false)
             }}
             placeholder="Type a command… e.g. 'Book appointment for Raj Kumar tomorrow at 10am'"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
@@ -78,14 +88,16 @@ export function CommandBar() {
         {/* Quick examples (shown when no query) */}
         {!query && !result && (
           <div className="p-3">
-            <p className="mb-2 text-xs text-muted-foreground font-medium uppercase tracking-wide">Quick commands</p>
+            <p className="mb-2 text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              Quick commands
+            </p>
             <div className="flex flex-wrap gap-2">
               {[
                 "Show today's appointments",
-                "Check stock for composite resin",
+                'Check stock for composite resin',
                 "Show this month's revenue",
-                "Check overdue invoices",
-                "Low stock alerts",
+                'Check overdue invoices',
+                'Low stock alerts',
               ].map((example) => (
                 <button
                   key={example}
@@ -100,7 +112,9 @@ export function CommandBar() {
             {/* Recent history */}
             {history.length > 0 && (
               <>
-                <p className="mt-3 mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">Recent</p>
+                <p className="mt-3 mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                  Recent
+                </p>
                 <div className="flex flex-col gap-1">
                   {history.slice(0, 5).map((item, i) => (
                     <button
@@ -131,19 +145,23 @@ export function CommandBar() {
             {/* Summary */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {result.intent?.replace(/_/g, " ")}
+                {result.intent?.replace(/_/g, ' ')}
               </span>
               {result.requiresApproval && (
-                <span className="rounded-full bg-amber-100 text-amber-800 text-xs px-2 py-0.5">Needs approval</span>
+                <span className="rounded-full bg-amber-100 text-amber-800 text-xs px-2 py-0.5">
+                  Needs approval
+                </span>
               )}
             </div>
 
             {/* Result content */}
-            {result.result?.type === "general" ? (
+            {result.result?.type === 'general' ? (
               <p className="text-sm leading-relaxed">{result.result.message}</p>
             ) : result.result?.success ? (
               <div className="text-sm space-y-2">
-                {result.result.message && <p className="text-emerald-700 font-medium">{result.result.message}</p>}
+                {result.result.message && (
+                  <p className="text-emerald-700 font-medium">{result.result.message}</p>
+                )}
                 {result.result.summary && (
                   <pre className="whitespace-pre-wrap text-xs bg-muted rounded p-2">
                     {JSON.stringify(result.result.summary, null, 2)}
@@ -152,9 +170,16 @@ export function CommandBar() {
                 {result.result.appointments && (
                   <div className="space-y-1">
                     {result.result.appointments.map((a: any, i: number) => (
-                      <div key={i} className="flex justify-between text-xs bg-muted rounded px-2 py-1">
-                        <span>{a.time} – {a.patient}</span>
-                        <span className="text-muted-foreground">{a.doctor} • {a.status}</span>
+                      <div
+                        key={i}
+                        className="flex justify-between text-xs bg-muted rounded px-2 py-1"
+                      >
+                        <span>
+                          {a.time} – {a.patient}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {a.doctor} • {a.status}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -162,11 +187,21 @@ export function CommandBar() {
                 {result.result.items && (
                   <div className="space-y-1">
                     {result.result.items.map((item: any, i: number) => (
-                      <div key={i} className={cn("flex justify-between text-xs rounded px-2 py-1",
-                        item.status === "Critical" ? "bg-red-50" : item.status === "Low" ? "bg-amber-50" : "bg-emerald-50"
-                      )}>
+                      <div
+                        key={i}
+                        className={cn(
+                          'flex justify-between text-xs rounded px-2 py-1',
+                          item.status === 'Critical'
+                            ? 'bg-red-50'
+                            : item.status === 'Low'
+                              ? 'bg-amber-50'
+                              : 'bg-emerald-50'
+                        )}
+                      >
                         <span>{item.name}</span>
-                        <span className="font-medium">{item.stock} – {item.status}</span>
+                        <span className="font-medium">
+                          {item.stock} – {item.status}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -174,8 +209,13 @@ export function CommandBar() {
                 {result.result.invoices && (
                   <div className="space-y-1">
                     {result.result.invoices.map((inv: any, i: number) => (
-                      <div key={i} className="flex justify-between text-xs bg-red-50 rounded px-2 py-1">
-                        <span>{inv.patient} ({inv.invoiceNo})</span>
+                      <div
+                        key={i}
+                        className="flex justify-between text-xs bg-red-50 rounded px-2 py-1"
+                      >
+                        <span>
+                          {inv.patient} ({inv.invoiceNo})
+                        </span>
                         <span className="font-medium text-red-700">{inv.balance}</span>
                       </div>
                     ))}
@@ -183,7 +223,7 @@ export function CommandBar() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-red-600">{result.result?.message || "No result"}</p>
+              <p className="text-sm text-red-600">{result.result?.message || 'No result'}</p>
             )}
           </div>
         )}

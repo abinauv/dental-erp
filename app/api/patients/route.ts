@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole, checkPatientLimit } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole, checkPatientLimit } from '@/lib/api-helpers'
 
 // Generate unique patient ID for the hospital
 async function generatePatientId(hospitalId: string): Promise<string> {
@@ -11,12 +11,12 @@ async function generatePatientId(hospitalId: string): Promise<string> {
     where: {
       hospitalId,
       patientId: {
-        startsWith: prefix
-      }
+        startsWith: prefix,
+      },
     },
     orderBy: {
-      patientId: 'desc'
-    }
+      patientId: 'desc',
+    },
   })
 
   if (lastPatient) {
@@ -32,21 +32,21 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1)
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10") || 10))
-    const search = searchParams.get("search") || ""
-    const all = searchParams.get("all") === "true"
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10') || 10))
+    const search = searchParams.get('search') || ''
+    const all = searchParams.get('all') === 'true'
 
     const skip = (page - 1) * limit
 
     const where: any = {
       hospitalId,
-      isActive: true
+      isActive: true,
     }
 
     if (search) {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         skip: all ? undefined : skip,
         take: all ? undefined : limit,
       }),
-      prisma.patient.count({ where })
+      prisma.patient.count({ where }),
     ])
 
     return NextResponse.json({
@@ -87,15 +87,12 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching patients:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch patients" },
-      { status: 500 }
-    )
+    console.error('Error fetching patients:', error)
+    return NextResponse.json({ error: 'Failed to fetch patients' }, { status: 500 })
   }
 }
 
@@ -104,7 +101,7 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -113,7 +110,7 @@ export async function POST(request: NextRequest) {
     if (!patientLimit.allowed) {
       return NextResponse.json(
         {
-          error: "Patient limit reached",
+          error: 'Patient limit reached',
           message: `Your plan allows up to ${patientLimit.max} patients. Please upgrade to add more.`,
           current: patientLimit.current,
           max: patientLimit.max,
@@ -149,19 +146,19 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!firstName || !lastName || !phone) {
       return NextResponse.json(
-        { error: "First name, last name, and phone are required" },
+        { error: 'First name, last name, and phone are required' },
         { status: 400 }
       )
     }
 
     // Check for duplicate phone within this hospital
     const existingPatient = await prisma.patient.findFirst({
-      where: { hospitalId, phone }
+      where: { hospitalId, phone },
     })
 
     if (existingPatient) {
       return NextResponse.json(
-        { error: "A patient with this phone number already exists" },
+        { error: 'A patient with this phone number already exists' },
         { status: 409 }
       )
     }
@@ -193,21 +190,20 @@ export async function POST(request: NextRequest) {
         emergencyContactPhone,
         emergencyContactRelation,
         hospitalId,
-        medicalHistory: medicalHistory ? {
-          create: medicalHistory
-        } : undefined
+        medicalHistory: medicalHistory
+          ? {
+              create: medicalHistory,
+            }
+          : undefined,
       },
       include: {
-        medicalHistory: true
-      }
+        medicalHistory: true,
+      },
     })
 
     return NextResponse.json(patient, { status: 201 })
   } catch (error) {
-    console.error("Error creating patient:", error)
-    return NextResponse.json(
-      { error: "Failed to create patient" },
-      { status: 500 }
-    )
+    console.error('Error creating patient:', error)
+    return NextResponse.json({ error: 'Failed to create patient' }, { status: 500 })
   }
 }

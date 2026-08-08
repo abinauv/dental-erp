@@ -1,21 +1,21 @@
-"use client"
+'use client'
 
-import { useState, Suspense } from "react"
-import { signIn } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { useState, Suspense } from 'react'
+import { signIn } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -25,7 +25,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
   const {
     register,
@@ -39,7 +39,7 @@ function LoginForm() {
     setIsLoading(true)
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
         redirect: false,
@@ -47,9 +47,9 @@ function LoginForm() {
 
       if (result?.error) {
         toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: "Invalid email or password. Please try again.",
+          variant: 'destructive',
+          title: 'Login failed',
+          description: 'Invalid email or password. Please try again.',
         })
       } else {
         router.push(callbackUrl)
@@ -57,9 +57,9 @@ function LoginForm() {
       }
     } catch {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
       })
     } finally {
       setIsLoading(false)
@@ -75,9 +75,7 @@ function LoginForm() {
           </div>
         </div>
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-        <CardDescription>
-          Sign in to your DentalERP account
-        </CardDescription>
+        <CardDescription>Sign in to your DentalERP account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -87,12 +85,10 @@ function LoginForm() {
               id="email"
               type="email"
               placeholder="admin@demo-dental.com"
-              {...register("email")}
+              {...register('email')}
               disabled={isLoading}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -100,7 +96,7 @@ function LoginForm() {
               id="password"
               type="password"
               placeholder="Enter your password"
-              {...register("password")}
+              {...register('password')}
               disabled={isLoading}
             />
             {errors.password && (
@@ -115,7 +111,7 @@ function LoginForm() {
 
         <div className="mt-6 text-center text-sm">
           <p className="text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{' '}
             <a href="/signup" className="text-primary hover:underline">
               Sign up for free
             </a>
@@ -133,19 +129,21 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <Card className="shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-xl font-bold">
-              D
+    <Suspense
+      fallback={
+        <Card className="shadow-lg">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-xl font-bold">
+                D
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>Loading...</CardDescription>
-        </CardHeader>
-      </Card>
-    }>
+            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+            <CardDescription>Loading...</CardDescription>
+          </CardHeader>
+        </Card>
+      }
+    >
       <LoginForm />
     </Suspense>
   )

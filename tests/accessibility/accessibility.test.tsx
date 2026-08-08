@@ -18,9 +18,7 @@ async function axe(container: HTMLElement) {
 function expectNoViolations(results: axeCore.AxeResults) {
   const violations = results.violations
   if (violations.length > 0) {
-    const msgs = violations.map(
-      (v) => `${v.id}: ${v.description} (${v.nodes.length} nodes)`
-    )
+    const msgs = violations.map((v) => `${v.id}: ${v.description} (${v.nodes.length} nodes)`)
     throw new Error(`Accessibility violations:\n${msgs.join('\n')}`)
   }
 }
@@ -34,7 +32,14 @@ vi.mock('@/lib/utils', () => ({
 }))
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/',
   useParams: () => ({}),
@@ -43,7 +48,12 @@ vi.mock('next/navigation', () => ({
 vi.mock('lucide-react', async (importOriginal) => {
   const icon = (name: string) =>
     React.forwardRef((props: any, ref: any) =>
-      React.createElement('svg', { ...props, ref, 'data-testid': `lucide-${name}`, 'aria-hidden': 'true' })
+      React.createElement('svg', {
+        ...props,
+        ref,
+        'data-testid': `lucide-${name}`,
+        'aria-hidden': 'true',
+      })
     )
   const actual = (await importOriginal()) as any
   const handler = { get: (_: any, p: string) => actual[p] || icon(p) }
@@ -146,10 +156,14 @@ describe('Accessibility — Screen Reader & ARIA', () => {
       const { container } = render(
         <div>
           <button aria-label="Close dialog">
-            <svg aria-hidden="true"><path d="M6 6l12 12" /></svg>
+            <svg aria-hidden="true">
+              <path d="M6 6l12 12" />
+            </svg>
           </button>
           <button aria-label="Open menu">
-            <svg aria-hidden="true"><path d="M3 12h18" /></svg>
+            <svg aria-hidden="true">
+              <path d="M3 12h18" />
+            </svg>
           </button>
         </div>
       )
@@ -161,15 +175,15 @@ describe('Accessibility — Screen Reader & ARIA', () => {
       const { container } = render(
         <div>
           <button>
-            <svg><path d="M6 6l12 12" /></svg>
+            <svg>
+              <path d="M6 6l12 12" />
+            </svg>
           </button>
         </div>
       )
       const results = await axe(container)
       // Should have button-name violation
-      const hasNameViolation = results.violations.some(
-        (v) => v.id === 'button-name'
-      )
+      const hasNameViolation = results.violations.some((v) => v.id === 'button-name')
       expect(hasNameViolation).toBe(true)
     })
   })
@@ -178,7 +192,9 @@ describe('Accessibility — Screen Reader & ARIA', () => {
     it('aria-live region announces dynamic changes', async () => {
       const { container } = render(
         <div>
-          <div aria-live="polite" role="status">3 patients found</div>
+          <div aria-live="polite" role="status">
+            3 patients found
+          </div>
         </div>
       )
       const results = await axe(container)
@@ -205,11 +221,7 @@ describe('Accessibility — Screen Reader & ARIA', () => {
   describe('Modal focus management', () => {
     it('dialog has proper role and aria attributes', async () => {
       const { container } = render(
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="dialog-title"
-        >
+        <div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
           <h2 id="dialog-title">Add New Patient</h2>
           <form>
             <label htmlFor="fname">First Name</label>
@@ -235,9 +247,7 @@ describe('Accessibility — Screen Reader & ARIA', () => {
         </div>
       )
       const results = await axe(container)
-      const hasViolation = results.violations.some(
-        (v) => v.id === 'aria-dialog-name'
-      )
+      const hasViolation = results.violations.some((v) => v.id === 'aria-dialog-name')
       expect(hasViolation).toBe(true)
     })
   })
@@ -329,12 +339,16 @@ describe('Accessibility — Keyboard Navigation', () => {
             <tr>
               <td>John Doe</td>
               <td>9876543210</td>
-              <td><button aria-label="Edit John Doe">Edit</button></td>
+              <td>
+                <button aria-label="Edit John Doe">Edit</button>
+              </td>
             </tr>
             <tr>
               <td>Jane Smith</td>
               <td>9123456789</td>
-              <td><button aria-label="Edit Jane Smith">Edit</button></td>
+              <td>
+                <button aria-label="Edit Jane Smith">Edit</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -350,7 +364,10 @@ describe('Accessibility — Keyboard Navigation', () => {
       const { container } = render(
         <table>
           <tbody>
-            <tr><td>Data1</td><td>Data2</td></tr>
+            <tr>
+              <td>Data1</td>
+              <td>Data2</td>
+            </tr>
           </tbody>
         </table>
       )
@@ -387,11 +404,15 @@ describe('Accessibility — Color & Contrast Indicators', () => {
     const { container } = render(
       <div>
         <span className="status-success" role="status">
-          <svg aria-hidden="true" data-testid="check-icon"><circle /></svg>
+          <svg aria-hidden="true" data-testid="check-icon">
+            <circle />
+          </svg>
           <span>Active</span>
         </span>
         <span className="status-error" role="status">
-          <svg aria-hidden="true" data-testid="x-icon"><circle /></svg>
+          <svg aria-hidden="true" data-testid="x-icon">
+            <circle />
+          </svg>
           <span>Inactive</span>
         </span>
       </div>
@@ -409,7 +430,9 @@ describe('Accessibility — Color & Contrast Indicators', () => {
     const { container } = render(
       <div>
         <div role="alert" className="text-red-500">
-          <svg aria-hidden="true"><path /></svg>
+          <svg aria-hidden="true">
+            <path />
+          </svg>
           <span>This field is required</span>
         </div>
       </div>
@@ -441,13 +464,10 @@ describe('Accessibility — WCAG 2.1 AA', () => {
       const { container } = render(
         <form>
           <label htmlFor="patient-name">Patient Name</label>
-          <input
-            id="patient-name"
-            type="text"
-            aria-invalid="true"
-            aria-describedby="name-error"
-          />
-          <span id="name-error" role="alert">Name is required</span>
+          <input id="patient-name" type="text" aria-invalid="true" aria-describedby="name-error" />
+          <span id="name-error" role="alert">
+            Name is required
+          </span>
         </form>
       )
       const results = await axe(container)
@@ -485,9 +505,7 @@ describe('Accessibility — WCAG 2.1 AA', () => {
         </div>
       )
       const results = await axe(container)
-      const headingViolation = results.violations.find(
-        (v) => v.id === 'heading-order'
-      )
+      const headingViolation = results.violations.find((v) => v.id === 'heading-order')
       expect(headingViolation).toBeDefined()
     })
   })
@@ -512,9 +530,7 @@ describe('Accessibility — WCAG 2.1 AA', () => {
         </nav>
       )
       const results = await axe(container)
-      const linkViolation = results.violations.find(
-        (v) => v.id === 'link-name'
-      )
+      const linkViolation = results.violations.find((v) => v.id === 'link-name')
       expect(linkViolation).toBeDefined()
     })
   })

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
-import { complete } from "@/lib/ai/openrouter"
-import { getModelByTier } from "@/lib/ai/models"
-import { extractJSON } from "@/lib/ai/openrouter"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
+import { complete } from '@/lib/ai/openrouter'
+import { getModelByTier } from '@/lib/ai/models'
+import { extractJSON } from '@/lib/ai/openrouter'
 
 /**
  * GET /api/ai/insights – fetch recent, non-dismissed insights
@@ -14,9 +14,10 @@ import { extractJSON } from "@/lib/ai/openrouter"
 // GET – list insights
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
-  if (error || !user || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (error || !user || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const category = req.nextUrl.searchParams.get("category")
+  const category = req.nextUrl.searchParams.get('category')
   const where: any = { hospitalId, dismissed: false }
   if (category) where.category = category
   // Exclude expired insights
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const insights = await prisma.aIInsight.findMany({
     where,
-    orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ severity: 'desc' }, { createdAt: 'desc' }],
     take: 20,
   })
 
@@ -33,8 +34,9 @@ export async function GET(req: NextRequest) {
 
 // POST – generate fresh insights via AI
 export async function POST(req: Request) {
-  const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !user || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
+  if (error || !user || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Gather clinic data for the analysis window (last 30 days)
   const thirtyDaysAgo = new Date()
@@ -64,19 +66,23 @@ export async function POST(req: Request) {
       total: invoices.length,
       totalBilled: invoices.reduce((s, i) => s + Number(i.totalAmount), 0),
       totalCollected: invoices.reduce((s, i) => s + Number(i.paidAmount), 0),
-      overdueCount: invoices.filter((i) => i.status === "OVERDUE").length,
+      overdueCount: invoices.filter((i) => i.status === 'OVERDUE').length,
     },
     appointmentSummary: {
       total: appointments.length,
-      noShows: appointments.filter((a) => a.status === "NO_SHOW").length,
-      cancelled: appointments.filter((a) => a.status === "CANCELLED").length,
-      completed: appointments.filter((a) => a.status === "COMPLETED").length,
+      noShows: appointments.filter((a) => a.status === 'NO_SHOW').length,
+      cancelled: appointments.filter((a) => a.status === 'CANCELLED').length,
+      completed: appointments.filter((a) => a.status === 'COMPLETED').length,
     },
     lowStockItems: inventoryItems
       .filter((i) => i.currentStock <= i.reorderLevel)
       .map((i) => ({ name: i.name, stock: i.currentStock })),
     delayedLabOrders: labOrders.filter(
-      (lo) => lo.expectedDate && new Date(lo.expectedDate) < new Date() && lo.status !== "DELIVERED" && lo.status !== "FITTED"
+      (lo) =>
+        lo.expectedDate &&
+        new Date(lo.expectedDate) < new Date() &&
+        lo.status !== 'DELIVERED' &&
+        lo.status !== 'FITTED'
     ).length,
   }
 
@@ -95,16 +101,17 @@ Each insight must have:
 Respond ONLY with a JSON array of insight objects:
 [{ "category": "...", "severity": "...", "title": "...", "description": "...", "actionable": true }]`
 
-  let insights: Array<{ category: string; severity: string; title: string; description: string }> = []
+  let insights: Array<{ category: string; severity: string; title: string; description: string }> =
+    []
   try {
     const { content } = await complete(
-      [{ role: "system", content: prompt }],
-      getModelByTier("fast") // Structured JSON output from numeric data — Flash handles this well
+      [{ role: 'system', content: prompt }],
+      getModelByTier('fast') // Structured JSON output from numeric data — Flash handles this well
     )
     insights = JSON.parse(extractJSON(content))
     if (!Array.isArray(insights)) insights = []
   } catch {
-    return NextResponse.json({ error: "Insight generation failed" }, { status: 502 })
+    return NextResponse.json({ error: 'Insight generation failed' }, { status: 502 })
   }
 
   // Persist
@@ -113,8 +120,8 @@ Respond ONLY with a JSON array of insight objects:
       prisma.aIInsight.create({
         data: {
           hospitalId,
-          category: (ins.category as any) || "OPERATIONAL",
-          severity: (ins.severity as any) || "INFO",
+          category: (ins.category as any) || 'OPERATIONAL',
+          severity: (ins.severity as any) || 'INFO',
           title: ins.title,
           description: ins.description,
           data: dataSnapshot as any,
@@ -129,18 +136,19 @@ Respond ONLY with a JSON array of insight objects:
 
 // PUT – dismiss or mark action-taken
 export async function PUT(req: Request) {
-  const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !user || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
+  if (error || !user || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: { id: string; dismissed?: boolean; actionTaken?: boolean }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   const { id, dismissed, actionTaken } = body
-  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 })
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
   const updated = await prisma.aIInsight.updateMany({
     where: { id, hospitalId },
@@ -150,7 +158,7 @@ export async function PUT(req: Request) {
     },
   })
 
-  if (updated.count === 0) return NextResponse.json({ error: "Insight not found" }, { status: 404 })
+  if (updated.count === 0) return NextResponse.json({ error: 'Insight not found' }, { status: 404 })
 
   return NextResponse.json({ updated: true })
 }

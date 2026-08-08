@@ -14,7 +14,9 @@ const refundModule = await import('@/app/api/payments/[id]/refund/route')
 function makeRequest(method: string, body?: any) {
   return new Request('http://localhost/api/payments/pay-1', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -94,7 +96,14 @@ describe('Payments Detail & Refund API', () => {
       ;(prisma.payment.update as any).mockResolvedValue({
         id: 'pay-1',
         notes: 'Updated note',
-        invoice: { id: 'inv-1', invoiceNo: 'INV001', totalAmount: 2000, paidAmount: 0, balanceAmount: 2000, status: 'PENDING' },
+        invoice: {
+          id: 'inv-1',
+          invoiceNo: 'INV001',
+          totalAmount: 2000,
+          paidAmount: 0,
+          balanceAmount: 2000,
+          status: 'PENDING',
+        },
       })
 
       const res = await detailModule.PUT(makeRequest('PUT', { notes: 'Updated note' }), ctx)
@@ -230,7 +239,14 @@ describe('Payments Detail & Refund API', () => {
           id: 'pay-1',
           status: 'REFUNDED',
           refundAmount: 1000,
-          invoice: { id: 'inv-1', invoiceNo: 'INV001', totalAmount: 1000, paidAmount: 0, balanceAmount: 1000, status: 'REFUNDED' },
+          invoice: {
+            id: 'inv-1',
+            invoiceNo: 'INV001',
+            totalAmount: 1000,
+            paidAmount: 0,
+            balanceAmount: 1000,
+            status: 'REFUNDED',
+          },
         })
       ;(prisma.payment.update as any).mockResolvedValue({})
       ;(prisma.invoice.update as any).mockResolvedValue({})
@@ -267,10 +283,7 @@ describe('Payments Detail & Refund API', () => {
       ;(prisma.payment.update as any).mockResolvedValue({})
       ;(prisma.invoice.update as any).mockResolvedValue({})
 
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 500 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 500 }), ctx)
       expect(res.status).toBe(200)
       expect(prisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -280,10 +293,7 @@ describe('Payments Detail & Refund API', () => {
     })
 
     it('returns 400 for invalid refund amount', async () => {
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 0 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 0 }), ctx)
       expect(res.status).toBe(400)
     })
 
@@ -296,10 +306,7 @@ describe('Payments Detail & Refund API', () => {
         invoice: { paidAmount: 500, totalAmount: 500, status: 'PAID' },
       })
 
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 1000 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 1000 }), ctx)
       expect(res.status).toBe(400)
       const body = await res.json()
       expect(body.error).toContain('exceeds')
@@ -314,10 +321,7 @@ describe('Payments Detail & Refund API', () => {
         invoice: {},
       })
 
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 500 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 500 }), ctx)
       expect(res.status).toBe(400)
       const body = await res.json()
       expect(body.error).toContain('completed')
@@ -332,10 +336,7 @@ describe('Payments Detail & Refund API', () => {
         invoice: {},
       })
 
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 500 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 500 }), ctx)
       expect(res.status).toBe(400)
       const body = await res.json()
       expect(body.error).toContain('already been refunded')
@@ -344,10 +345,7 @@ describe('Payments Detail & Refund API', () => {
     it('returns 404 when payment not found', async () => {
       ;(prisma.payment.findUnique as any).mockResolvedValue(null)
 
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 500 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 500 }), ctx)
       expect(res.status).toBe(404)
     })
 
@@ -358,10 +356,7 @@ describe('Payments Detail & Refund API', () => {
         session: { user: { id: 'user-1', role: 'DOCTOR' } },
       })
 
-      const res = await refundModule.POST(
-        makeRequest('POST', { refundAmount: 500 }),
-        ctx
-      )
+      const res = await refundModule.POST(makeRequest('POST', { refundAmount: 500 }), ctx)
       expect(res.status).toBe(403)
     })
   })

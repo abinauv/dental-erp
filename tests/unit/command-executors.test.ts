@@ -136,8 +136,16 @@ describe('Command Executors', () => {
   describe('execBookAppointment', () => {
     it('books appointment when patient and doctor found', async () => {
       // findPatient uses single findFirst with OR query
-      ;(prisma.patient.findFirst as any).mockResolvedValueOnce({ id: 'p1', firstName: 'John', lastName: 'Doe' })
-      ;(prisma.staff.findFirst as any).mockResolvedValue({ id: 's1', firstName: 'Alice', lastName: 'Brown' })
+      ;(prisma.patient.findFirst as any).mockResolvedValueOnce({
+        id: 'p1',
+        firstName: 'John',
+        lastName: 'Doe',
+      })
+      ;(prisma.staff.findFirst as any).mockResolvedValue({
+        id: 's1',
+        firstName: 'Alice',
+        lastName: 'Brown',
+      })
       // conflict check returns null (no conflict)
       ;(prisma.appointment.findFirst as any).mockResolvedValue(null)
       ;(prisma.appointment.count as any).mockResolvedValue(10)
@@ -194,7 +202,11 @@ describe('Command Executors', () => {
 
   describe('execCreateInvoice', () => {
     it('creates invoice for patient with unbilled treatments', async () => {
-      ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1', firstName: 'John', lastName: 'Doe' })
+      ;(prisma.patient.findFirst as any).mockResolvedValue({
+        id: 'p1',
+        firstName: 'John',
+        lastName: 'Doe',
+      })
       ;(prisma.treatment.findMany as any).mockResolvedValue([
         { id: 't1', cost: 5000, procedure: { name: 'Root Canal' } },
       ])
@@ -205,10 +217,7 @@ describe('Command Executors', () => {
         balanceAmount: 5900,
       })
 
-      const result = await execCreateInvoice(
-        { query: 'John' },
-        'h1'
-      )
+      const result = await execCreateInvoice({ query: 'John' }, 'h1')
       expect(result.success).toBe(true)
       expect(result.message).toContain('Invoice')
     })
@@ -221,7 +230,11 @@ describe('Command Executors', () => {
     })
 
     it('returns error when no unbilled treatments', async () => {
-      ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1', firstName: 'John', lastName: 'Doe' })
+      ;(prisma.patient.findFirst as any).mockResolvedValue({
+        id: 'p1',
+        firstName: 'John',
+        lastName: 'Doe',
+      })
       ;(prisma.treatment.findMany as any).mockResolvedValue([])
 
       const result = await execCreateInvoice({ query: 'John' }, 'h1')
@@ -232,13 +245,15 @@ describe('Command Executors', () => {
 
   describe('execCheckStock', () => {
     it('checks stock for specific item', async () => {
-      ;(prisma.inventoryItem.findMany as any).mockResolvedValue([{
-        name: 'Gloves',
-        currentStock: 50,
-        minimumStock: 20,
-        reorderLevel: 30,
-        unit: 'box',
-      }])
+      ;(prisma.inventoryItem.findMany as any).mockResolvedValue([
+        {
+          name: 'Gloves',
+          currentStock: 50,
+          minimumStock: 20,
+          reorderLevel: 30,
+          unit: 'box',
+        },
+      ])
 
       const result = await execCheckStock({ itemName: 'Gloves' }, 'h1')
       expect(result.success).toBe(true)
@@ -282,7 +297,13 @@ describe('Command Executors', () => {
   describe('execShowStaff', () => {
     it('returns active staff list', async () => {
       ;(prisma.staff.findMany as any).mockResolvedValue([
-        { employeeId: 'EMP-001', firstName: 'Alice', lastName: 'Brown', phone: '9876543210', user: { role: 'DOCTOR' } },
+        {
+          employeeId: 'EMP-001',
+          firstName: 'Alice',
+          lastName: 'Brown',
+          phone: '9876543210',
+          user: { role: 'DOCTOR' },
+        },
       ])
 
       const result = await execShowStaff('h1')
@@ -330,7 +351,11 @@ describe('Command Executors', () => {
         phone: '123',
       })
 
-      const result = await executeIntent('create_patient', { firstName: 'Test', lastName: 'User', phone: '123' }, 'h1')
+      const result = await executeIntent(
+        'create_patient',
+        { firstName: 'Test', lastName: 'User', phone: '123' },
+        'h1'
+      )
       expect(result.success).toBe(true)
     })
 
@@ -353,12 +378,20 @@ describe('Command Executors', () => {
     })
 
     it('routes generate_invoice as alias for create_invoice', async () => {
-      ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1', firstName: 'A', lastName: 'B' })
+      ;(prisma.patient.findFirst as any).mockResolvedValue({
+        id: 'p1',
+        firstName: 'A',
+        lastName: 'B',
+      })
       ;(prisma.treatment.findMany as any).mockResolvedValue([
         { id: 't1', cost: 100, procedure: { name: 'Filling' } },
       ])
       ;(prisma.invoice.count as any).mockResolvedValue(0)
-      ;(prisma.invoice.create as any).mockResolvedValue({ invoiceNo: 'INV-00001', totalAmount: 118, balanceAmount: 118 })
+      ;(prisma.invoice.create as any).mockResolvedValue({
+        invoiceNo: 'INV-00001',
+        totalAmount: 118,
+        balanceAmount: 118,
+      })
 
       const result = await executeIntent('generate_invoice', { query: 'A' }, 'h1')
       expect(result.success).toBe(true)
@@ -371,17 +404,37 @@ describe('Command Executors', () => {
 
     it('routes all known intents without error', async () => {
       const intents = [
-        'create_patient', 'update_patient', 'search_patients', 'check_patient',
-        'book_appointment', 'cancel_appointment', 'reschedule_appointment',
-        'complete_appointment', 'show_appointments',
-        'create_treatment', 'complete_treatment', 'show_treatments',
-        'create_invoice', 'generate_invoice', 'record_payment',
-        'show_invoices', 'check_overdue', 'show_revenue',
-        'check_stock', 'low_stock', 'add_inventory_item', 'update_stock',
-        'create_lab_order', 'update_lab_order', 'show_lab_orders',
-        'create_prescription', 'show_prescriptions',
-        'add_medication', 'search_medications',
-        'show_staff', 'daily_summary',
+        'create_patient',
+        'update_patient',
+        'search_patients',
+        'check_patient',
+        'book_appointment',
+        'cancel_appointment',
+        'reschedule_appointment',
+        'complete_appointment',
+        'show_appointments',
+        'create_treatment',
+        'complete_treatment',
+        'show_treatments',
+        'create_invoice',
+        'generate_invoice',
+        'record_payment',
+        'show_invoices',
+        'check_overdue',
+        'show_revenue',
+        'check_stock',
+        'low_stock',
+        'add_inventory_item',
+        'update_stock',
+        'create_lab_order',
+        'update_lab_order',
+        'show_lab_orders',
+        'create_prescription',
+        'show_prescriptions',
+        'add_medication',
+        'search_medications',
+        'show_staff',
+        'daily_summary',
       ]
 
       // Stub all prisma methods to return safe defaults

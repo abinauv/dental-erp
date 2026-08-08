@@ -19,16 +19,22 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: any) => <div data-testid="dropdown-menu">{children}</div>,
-  DropdownMenuTrigger: ({ children, asChild }: any) => <div data-testid="dropdown-trigger">{children}</div>,
+  DropdownMenuTrigger: ({ children, asChild }: any) => (
+    <div data-testid="dropdown-trigger">{children}</div>
+  ),
   DropdownMenuContent: ({ children }: any) => <div data-testid="dropdown-content">{children}</div>,
   DropdownMenuItem: ({ children, onClick }: any) => (
-    <div data-testid="dropdown-item" role="menuitem" onClick={onClick}>{children}</div>
+    <div data-testid="dropdown-item" role="menuitem" onClick={onClick}>
+      {children}
+    </div>
   ),
 }))
 
@@ -100,25 +106,23 @@ describe('ExportMenu', () => {
     fireEvent.click(screen.getByText('Export as CSV'))
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'No data' })
-      )
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'No data' }))
     })
   })
 
   it('shows error toast on export failure', async () => {
     render(
       <ExportMenu
-        getData={() => { throw new Error('fail') }}
+        getData={() => {
+          throw new Error('fail')
+        }}
         filename="test"
       />
     )
     fireEvent.click(screen.getByText('Export as CSV'))
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Export failed' })
-      )
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Export failed' }))
     })
   })
 

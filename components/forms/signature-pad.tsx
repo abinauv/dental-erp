@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useRef, useEffect, useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Eraser, Undo2 } from "lucide-react"
+import { useRef, useEffect, useState, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Eraser, Undo2 } from 'lucide-react'
 
 interface SignaturePadProps {
   onSignatureChange: (signature: string | null) => void
@@ -18,7 +18,7 @@ export function SignaturePad({
   initialSignature,
   width = 500,
   height = 200,
-  label = "I agree to the terms and conditions above",
+  label = 'I agree to the terms and conditions above',
 }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -29,13 +29,13 @@ export function SignaturePad({
   const getCtx = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return null
-    return canvas.getContext("2d")
+    return canvas.getContext('2d')
   }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     // Set canvas resolution for crisp lines
@@ -57,16 +57,16 @@ export function SignaturePad({
       img.src = initialSignature
     } else {
       // Draw placeholder line
-      ctx.strokeStyle = "#e5e7eb"
+      ctx.strokeStyle = '#e5e7eb'
       ctx.lineWidth = 1
       ctx.beginPath()
       ctx.moveTo(20, height - 40)
       ctx.lineTo(width - 20, height - 40)
       ctx.stroke()
 
-      ctx.fillStyle = "#9ca3af"
-      ctx.font = "14px sans-serif"
-      ctx.fillText("Sign here", 20, height - 20)
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '14px sans-serif'
+      ctx.fillText('Sign here', 20, height - 20)
     }
   }, [width, height, initialSignature])
 
@@ -75,7 +75,7 @@ export function SignaturePad({
     if (!canvas) return { x: 0, y: 0 }
     const rect = canvas.getBoundingClientRect()
 
-    if ("touches" in e) {
+    if ('touches' in e) {
       return {
         x: e.touches[0].clientX - rect.left,
         y: e.touches[0].clientY - rect.top,
@@ -90,7 +90,7 @@ export function SignaturePad({
   const saveState = () => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
     setHistory((prev) => [...prev.slice(-10), data])
@@ -105,10 +105,10 @@ export function SignaturePad({
     const { x, y } = getPosition(e)
     ctx.beginPath()
     ctx.moveTo(x, y)
-    ctx.strokeStyle = "#1a1a2e"
+    ctx.strokeStyle = '#1a1a2e'
     ctx.lineWidth = 2.5
-    ctx.lineCap = "round"
-    ctx.lineJoin = "round"
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
     setIsDrawing(true)
   }
 
@@ -134,29 +134,29 @@ export function SignaturePad({
 
   const emitSignature = () => {
     if (!canvasRef.current || !agreed) return
-    const data = canvasRef.current.toDataURL("image/png")
+    const data = canvasRef.current.toDataURL('image/png')
     onSignatureChange(data)
   }
 
   const clearCanvas = () => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     const dpr = window.devicePixelRatio || 1
 
     // Redraw placeholder
-    ctx.strokeStyle = "#e5e7eb"
+    ctx.strokeStyle = '#e5e7eb'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(20, height - 40)
     ctx.lineTo(width - 20, height - 40)
     ctx.stroke()
-    ctx.fillStyle = "#9ca3af"
-    ctx.font = "14px sans-serif"
-    ctx.fillText("Sign here", 20, height - 20)
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '14px sans-serif'
+    ctx.fillText('Sign here', 20, height - 20)
 
     setHasSignature(false)
     setHistory([])
@@ -166,7 +166,7 @@ export function SignaturePad({
   const undo = () => {
     const canvas = canvasRef.current
     if (!canvas || history.length === 0) return
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     const prev = history[history.length - 1]
@@ -178,7 +178,7 @@ export function SignaturePad({
   const handleAgreeChange = (checked: boolean) => {
     setAgreed(checked)
     if (checked && hasSignature && canvasRef.current) {
-      onSignatureChange(canvasRef.current.toDataURL("image/png"))
+      onSignatureChange(canvasRef.current.toDataURL('image/png'))
     } else {
       onSignatureChange(null)
     }
@@ -186,7 +186,10 @@ export function SignaturePad({
 
   return (
     <div className="space-y-3">
-      <div className="relative border rounded-lg bg-background overflow-hidden" style={{ width, height }}>
+      <div
+        className="relative border rounded-lg bg-background overflow-hidden"
+        style={{ width, height }}
+      >
         <canvas
           ref={canvasRef}
           className="cursor-crosshair touch-none"
@@ -227,12 +230,16 @@ export function SignaturePad({
           checked={agreed}
           onCheckedChange={(checked) => handleAgreeChange(checked === true)}
         />
-        <label htmlFor="agree" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+        <label
+          htmlFor="agree"
+          className="text-sm text-muted-foreground leading-tight cursor-pointer"
+        >
           {label}
         </label>
       </div>
       <p className="text-xs text-muted-foreground">
-        Signed on: {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+        Signed on:{' '}
+        {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
     </div>
   )

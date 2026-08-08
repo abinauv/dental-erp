@@ -25,7 +25,9 @@ function createFetchMock(options: {
       json: () => Promise.resolve(options.body ?? {}),
       text: () => Promise.resolve(JSON.stringify(options.body ?? {})),
       headers: new Headers({ 'content-type': 'application/json' }),
-      clone: function () { return { ...this } },
+      clone: function () {
+        return { ...this }
+      },
     }
     if (options.delay) {
       return new Promise((resolve) => setTimeout(() => resolve(response), options.delay))
@@ -299,9 +301,11 @@ describe('Network Resilience — Slow Network', () => {
     const fetchMock = createFetchMock({ delay: 3000, body: { patients: [] } })
     global.fetch = fetchMock
 
-    const promise = fetch('/api/patients').then((r) => r.json()).then(() => {
-      isLoading = false
-    })
+    const promise = fetch('/api/patients')
+      .then((r) => r.json())
+      .then(() => {
+        isLoading = false
+      })
 
     expect(isLoading).toBe(true)
     vi.advanceTimersByTime(3000)
@@ -341,9 +345,11 @@ describe('Network Resilience — Slow Network', () => {
 
     function dedupFetch(url: string) {
       if (cache.has(url)) return cache.get(url)!
-      const promise = fetch(url).then((r) => r.json()).finally(() => {
-        cache.delete(url)
-      })
+      const promise = fetch(url)
+        .then((r) => r.json())
+        .finally(() => {
+          cache.delete(url)
+        })
       cache.set(url, promise)
       return promise
     }

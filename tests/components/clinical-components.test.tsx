@@ -21,7 +21,7 @@ vi.mock('lucide-react', async (importOriginal) => {
     React.forwardRef((props: any, ref: any) =>
       React.createElement('svg', { ...props, ref, 'data-testid': `lucide-${name}` })
     )
-  const actual = await importOriginal() as any
+  const actual = (await importOriginal()) as any
   const handler = { get: (_: any, p: string) => actual[p] || icon(p) }
   return new Proxy(actual, handler)
 })
@@ -36,15 +36,27 @@ vi.mock('next/link', () => ({
 
 // UI mocks
 vi.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => <div data-testid="card" className={className}>{children}</div>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
   CardTitle: ({ children }: any) => <h3 data-testid="card-title">{children}</h3>,
   CardDescription: ({ children }: any) => <p data-testid="card-desc">{children}</p>,
 }))
 
 vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant }: any) => <span data-testid="badge" data-variant={variant}>{children}</span>,
+  Badge: ({ children, variant }: any) => (
+    <span data-testid="badge" data-variant={variant}>
+      {children}
+    </span>
+  ),
 }))
 
 vi.mock('@/components/ui/skeleton', () => ({
@@ -53,7 +65,9 @@ vi.mock('@/components/ui/skeleton', () => ({
 
 vi.mock('@/components/ui/button', () => ({
   Button: React.forwardRef(({ children, onClick, disabled, variant, ...rest }: any, ref: any) => (
-    <button onClick={onClick} disabled={disabled} data-variant={variant} ref={ref} {...rest}>{children}</button>
+    <button onClick={onClick} disabled={disabled} data-variant={variant} ref={ref} {...rest}>
+      {children}
+    </button>
   )),
 }))
 
@@ -69,7 +83,11 @@ let dialogOpen = false
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open, onOpenChange }: any) => {
     dialogOpen = open
-    return <div data-testid="dialog" data-open={String(!!open)}>{open ? children : null}</div>
+    return (
+      <div data-testid="dialog" data-open={String(!!open)}>
+        {open ? children : null}
+      </div>
+    )
   },
   DialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
   DialogHeader: ({ children }: any) => <div>{children}</div>,
@@ -79,7 +97,11 @@ vi.mock('@/components/ui/dialog', () => ({
 }))
 
 vi.mock('@/components/ui/select', () => ({
-  Select: ({ children, value, onValueChange }: any) => <div data-testid="select" data-value={value}>{children}</div>,
+  Select: ({ children, value, onValueChange }: any) => (
+    <div data-testid="select" data-value={value}>
+      {children}
+    </div>
+  ),
   SelectContent: ({ children }: any) => <div>{children}</div>,
   SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
   SelectTrigger: ({ children }: any) => <div>{children}</div>,
@@ -88,7 +110,13 @@ vi.mock('@/components/ui/select', () => ({
 
 vi.mock('@/components/ui/checkbox', () => ({
   Checkbox: ({ id, checked, onCheckedChange }: any) => (
-    <input type="checkbox" id={id} checked={checked} onChange={(e) => onCheckedChange(e.target.checked)} data-testid={`checkbox-${id}`} />
+    <input
+      type="checkbox"
+      id={id}
+      checked={checked}
+      onChange={(e) => onCheckedChange(e.target.checked)}
+      data-testid={`checkbox-${id}`}
+    />
   ),
 }))
 
@@ -114,9 +142,57 @@ import { DentalChart } from '@/components/dental-chart/dental-chart'
 // ---------------------------------------------------------------------------
 describe('DentalChart', () => {
   const mockChartData = {
-    11: [{ id: 'e1', toothNumber: 11, toothNotation: '11', condition: 'CARIES', severity: 'MODERATE', mesial: true, distal: false, occlusal: false, buccal: false, lingual: false, notes: 'Deep caries', diagnosedDate: '2026-01-15', resolvedDate: null }],
-    21: [{ id: 'e2', toothNumber: 21, toothNotation: '21', condition: 'FILLED', severity: 'MILD', mesial: false, distal: false, occlusal: true, buccal: false, lingual: false, notes: '', diagnosedDate: '2025-12-01', resolvedDate: null }],
-    36: [{ id: 'e3', toothNumber: 36, toothNotation: '36', condition: 'MISSING', severity: 'SEVERE', mesial: false, distal: false, occlusal: false, buccal: false, lingual: false, notes: '', diagnosedDate: '2025-06-01', resolvedDate: null }],
+    11: [
+      {
+        id: 'e1',
+        toothNumber: 11,
+        toothNotation: '11',
+        condition: 'CARIES',
+        severity: 'MODERATE',
+        mesial: true,
+        distal: false,
+        occlusal: false,
+        buccal: false,
+        lingual: false,
+        notes: 'Deep caries',
+        diagnosedDate: '2026-01-15',
+        resolvedDate: null,
+      },
+    ],
+    21: [
+      {
+        id: 'e2',
+        toothNumber: 21,
+        toothNotation: '21',
+        condition: 'FILLED',
+        severity: 'MILD',
+        mesial: false,
+        distal: false,
+        occlusal: true,
+        buccal: false,
+        lingual: false,
+        notes: '',
+        diagnosedDate: '2025-12-01',
+        resolvedDate: null,
+      },
+    ],
+    36: [
+      {
+        id: 'e3',
+        toothNumber: 36,
+        toothNotation: '36',
+        condition: 'MISSING',
+        severity: 'SEVERE',
+        mesial: false,
+        distal: false,
+        occlusal: false,
+        buccal: false,
+        lingual: false,
+        notes: '',
+        diagnosedDate: '2025-06-01',
+        resolvedDate: null,
+      },
+    ],
   }
 
   beforeEach(() => {
@@ -263,9 +339,15 @@ describe('DentalChart', () => {
 
   it('saves entry when Save Changes clicked', async () => {
     vi.mocked(global.fetch)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ chartData: mockChartData }) } as Response) // initial fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ chartData: mockChartData }),
+      } as Response) // initial fetch
       .mockResolvedValueOnce({ ok: true, json: async () => ({}) } as Response) // save
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ chartData: mockChartData }) } as Response) // refetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ chartData: mockChartData }),
+      } as Response) // refetch
 
     render(<DentalChart patientId="p1" />)
     await waitFor(() => expect(screen.getByText('Interactive Dental Chart')).toBeInTheDocument())
@@ -276,7 +358,7 @@ describe('DentalChart', () => {
     fireEvent.click(screen.getByText('Save Changes'))
 
     await waitFor(() => {
-      const postCalls = vi.mocked(global.fetch).mock.calls.filter(c => c[1]?.method === 'POST')
+      const postCalls = vi.mocked(global.fetch).mock.calls.filter((c) => c[1]?.method === 'POST')
       expect(postCalls.length).toBe(1)
       const body = JSON.parse(postCalls[0][1].body)
       expect(body.patientId).toBe('p1')
@@ -287,9 +369,15 @@ describe('DentalChart', () => {
 
   it('shows success toast after saving', async () => {
     vi.mocked(global.fetch)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ chartData: mockChartData }) } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ chartData: mockChartData }),
+      } as Response)
       .mockResolvedValueOnce({ ok: true, json: async () => ({}) } as Response)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ chartData: mockChartData }) } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ chartData: mockChartData }),
+      } as Response)
 
     render(<DentalChart patientId="p1" />)
     await waitFor(() => expect(screen.getByText('Interactive Dental Chart')).toBeInTheDocument())
@@ -309,17 +397,25 @@ describe('DentalChart', () => {
     render(<DentalChart patientId="p1" />)
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-        variant: 'destructive',
-        title: 'Error',
-      }))
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          title: 'Error',
+        })
+      )
     })
   })
 
   it('shows error toast on save failure', async () => {
     vi.mocked(global.fetch)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ chartData: mockChartData }) } as Response)
-      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Validation failed' }) } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ chartData: mockChartData }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Validation failed' }),
+      } as Response)
 
     render(<DentalChart patientId="p1" />)
     await waitFor(() => expect(screen.getByText('Interactive Dental Chart')).toBeInTheDocument())

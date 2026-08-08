@@ -1,27 +1,27 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { generateInvoiceNo, calculateInvoiceTotals, gstConfig } from "@/lib/billing-utils"
-import { DiscountType, InvoiceStatus } from "@prisma/client"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { generateInvoiceNo, calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
+import { DiscountType, InvoiceStatus } from '@prisma/client'
 
 // GET - List invoices with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
-    const search = searchParams.get("search") || ""
-    const status = searchParams.get("status") || ""
-    const patientId = searchParams.get("patientId") || ""
-    const dateFrom = searchParams.get("dateFrom") || ""
-    const dateTo = searchParams.get("dateTo") || ""
-    const paymentMethod = searchParams.get("paymentMethod") || ""
-    const overdue = searchParams.get("overdue") === "true"
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const search = searchParams.get('search') || ''
+    const status = searchParams.get('status') || ''
+    const patientId = searchParams.get('patientId') || ''
+    const dateFrom = searchParams.get('dateFrom') || ''
+    const dateTo = searchParams.get('dateTo') || ''
+    const paymentMethod = searchParams.get('paymentMethod') || ''
+    const overdue = searchParams.get('overdue') === 'true'
 
     const skip = (page - 1) * limit
 
@@ -62,15 +62,15 @@ export async function GET(request: NextRequest) {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       where.dueDate = { lt: today }
-      where.status = { in: ["PENDING", "PARTIALLY_PAID"] }
+      where.status = { in: ['PENDING', 'PARTIALLY_PAID'] }
     }
 
     // If filtering by payment method, we need to join with payments
     if (paymentMethod) {
       where.payments = {
         some: {
-          paymentMethod: paymentMethod
-        }
+          paymentMethod: paymentMethod,
+        },
       }
     }
 
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
               lastName: true,
               phone: true,
               email: true,
-            }
+            },
           },
           items: {
             include: {
@@ -97,12 +97,12 @@ export async function GET(request: NextRequest) {
                   procedure: {
                     select: {
                       name: true,
-                      code: true
-                    }
-                  }
-                }
-              }
-            }
+                      code: true,
+                    },
+                  },
+                },
+              },
+            },
           },
           payments: {
             select: {
@@ -114,8 +114,8 @@ export async function GET(request: NextRequest) {
               status: true,
             },
             orderBy: {
-              paymentDate: 'desc'
-            }
+              paymentDate: 'desc',
+            },
           },
           insuranceClaim: {
             select: {
@@ -123,22 +123,22 @@ export async function GET(request: NextRequest) {
               claimNumber: true,
               status: true,
               approvedAmount: true,
-            }
+            },
           },
           _count: {
             select: {
               payments: true,
               items: true,
-            }
-          }
+            },
+          },
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: 'desc',
         },
         skip,
         take: limit,
       }),
-      prisma.invoice.count({ where })
+      prisma.invoice.count({ where }),
     ])
 
     return NextResponse.json({
@@ -147,15 +147,12 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
-    console.error("Error fetching invoices:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch invoices" },
-      { status: 500 }
-    )
+    console.error('Error fetching invoices:', error)
+    return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 })
   }
 }
 
@@ -163,12 +160,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "ACCOUNTANT", "RECEPTIONIST"].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to create invoices" },
         { status: 403 }
@@ -179,7 +176,7 @@ export async function POST(request: NextRequest) {
     const {
       patientId,
       items,
-      discountType = "FIXED",
+      discountType = 'FIXED',
       discountValue = 0,
       cgstRate = gstConfig.cgstRate,
       sgstRate = gstConfig.sgstRate,
@@ -187,40 +184,34 @@ export async function POST(request: NextRequest) {
       notes,
       termsAndConditions,
       paymentTermDays = 0,
-      status = "DRAFT",
+      status = 'DRAFT',
     } = body
 
     // Validate required fields
     if (!patientId) {
-      return NextResponse.json(
-        { error: "Patient is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Patient is required' }, { status: 400 })
     }
 
     if (!items || items.length === 0) {
-      return NextResponse.json(
-        { error: "At least one item is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'At least one item is required' }, { status: 400 })
     }
 
     // Check if patient exists
     const patient = await prisma.patient.findUnique({
-      where: { id: patientId, hospitalId }
+      where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json(
-        { error: "Patient not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Validate items
     for (const item of items) {
       if (!item.description || item.quantity <= 0 || item.unitPrice < 0) {
         return NextResponse.json(
-          { error: "Invalid item data. Description, quantity (>0), and unit price (>=0) are required" },
+          {
+            error:
+              'Invalid item data. Description, quantity (>0), and unit price (>=0) are required',
+          },
           { status: 400 }
         )
       }
@@ -231,7 +222,7 @@ export async function POST(request: NextRequest) {
       items.map((item: any) => ({
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        taxable: item.taxable !== false
+        taxable: item.taxable !== false,
       })),
       discountType as DiscountType,
       discountValue,
@@ -282,8 +273,8 @@ export async function POST(request: NextRequest) {
             unitPrice: item.unitPrice,
             amount: item.quantity * item.unitPrice,
             taxable: item.taxable !== false,
-          }))
-        }
+          })),
+        },
       },
       include: {
         patient: {
@@ -294,7 +285,7 @@ export async function POST(request: NextRequest) {
             lastName: true,
             phone: true,
             email: true,
-          }
+          },
         },
         items: {
           include: {
@@ -305,22 +296,19 @@ export async function POST(request: NextRequest) {
                 procedure: {
                   select: {
                     name: true,
-                    code: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     })
 
     return NextResponse.json(invoice, { status: 201 })
   } catch (error) {
-    console.error("Error creating invoice:", error)
-    return NextResponse.json(
-      { error: "Failed to create invoice" },
-      { status: 500 }
-    )
+    console.error('Error creating invoice:', error)
+    return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 })
   }
 }

@@ -62,8 +62,24 @@ describe('GET /api/staff/doctors', () => {
   it('returns list of active doctors', async () => {
     mockAuth()
     vi.mocked(prisma.staff.findMany).mockResolvedValue([
-      { id: 's1', employeeId: 'EMP001', firstName: 'Dr', lastName: 'Smith', specialization: 'Orthodontics', phone: '9876543210', email: 'smith@clinic.com' },
-      { id: 's2', employeeId: 'EMP002', firstName: 'Dr', lastName: 'Jones', specialization: 'Endodontics', phone: '9876543211', email: 'jones@clinic.com' },
+      {
+        id: 's1',
+        employeeId: 'EMP001',
+        firstName: 'Dr',
+        lastName: 'Smith',
+        specialization: 'Orthodontics',
+        phone: '9876543210',
+        email: 'smith@clinic.com',
+      },
+      {
+        id: 's2',
+        employeeId: 'EMP002',
+        firstName: 'Dr',
+        lastName: 'Jones',
+        specialization: 'Endodontics',
+        phone: '9876543211',
+        email: 'jones@clinic.com',
+      },
     ] as any)
 
     const res = await doctorsGET(makeReq('/api/staff/doctors'))
@@ -112,7 +128,20 @@ describe('GET /api/staff/attendance', () => {
   it('returns attendance records with pagination', async () => {
     mockAuth()
     const mockRecords = [
-      { id: 'a1', staffId: 's1', date: new Date('2026-02-20'), status: 'PRESENT', clockIn: new Date(), staff: { id: 's1', employeeId: 'E001', firstName: 'John', lastName: 'Doe', user: { role: 'DOCTOR' } } },
+      {
+        id: 'a1',
+        staffId: 's1',
+        date: new Date('2026-02-20'),
+        status: 'PRESENT',
+        clockIn: new Date(),
+        staff: {
+          id: 's1',
+          employeeId: 'E001',
+          firstName: 'John',
+          lastName: 'Doe',
+          user: { role: 'DOCTOR' },
+        },
+      },
     ]
     vi.mocked(prisma.attendance.findMany).mockResolvedValue(mockRecords as any)
     vi.mocked(prisma.attendance.count).mockResolvedValue(1)
@@ -175,11 +204,13 @@ describe('POST /api/staff/attendance', () => {
     mockAuth()
     vi.mocked(prisma.staff.findFirst).mockResolvedValue(null)
 
-    const res = await attendancePOST(makeReq('/api/staff/attendance', 'POST', {
-      staffId: 's-nonexistent',
-      date: '2026-02-20',
-      status: 'PRESENT',
-    }))
+    const res = await attendancePOST(
+      makeReq('/api/staff/attendance', 'POST', {
+        staffId: 's-nonexistent',
+        date: '2026-02-20',
+        status: 'PRESENT',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(404)
@@ -191,16 +222,21 @@ describe('POST /api/staff/attendance', () => {
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 's1' } as any)
     vi.mocked(prisma.attendance.findUnique).mockResolvedValue(null) // no existing
     vi.mocked(prisma.attendance.create).mockResolvedValue({
-      id: 'att1', staffId: 's1', status: 'PRESENT', date: new Date('2026-02-20'),
+      id: 'att1',
+      staffId: 's1',
+      status: 'PRESENT',
+      date: new Date('2026-02-20'),
       staff: { employeeId: 'E001', firstName: 'John', lastName: 'Doe' },
     } as any)
 
-    const res = await attendancePOST(makeReq('/api/staff/attendance', 'POST', {
-      staffId: 's1',
-      date: '2026-02-20',
-      status: 'PRESENT',
-      clockIn: '2026-02-20T09:00:00',
-    }))
+    const res = await attendancePOST(
+      makeReq('/api/staff/attendance', 'POST', {
+        staffId: 's1',
+        date: '2026-02-20',
+        status: 'PRESENT',
+        clockIn: '2026-02-20T09:00:00',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -210,18 +246,26 @@ describe('POST /api/staff/attendance', () => {
   it('updates existing attendance record', async () => {
     mockAuth()
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 's1' } as any)
-    vi.mocked(prisma.attendance.findUnique).mockResolvedValue({ id: 'att1', clockIn: new Date(), clockOut: null } as any)
+    vi.mocked(prisma.attendance.findUnique).mockResolvedValue({
+      id: 'att1',
+      clockIn: new Date(),
+      clockOut: null,
+    } as any)
     vi.mocked(prisma.attendance.update).mockResolvedValue({
-      id: 'att1', staffId: 's1', status: 'PRESENT',
+      id: 'att1',
+      staffId: 's1',
+      status: 'PRESENT',
       staff: { employeeId: 'E001', firstName: 'John', lastName: 'Doe' },
     } as any)
 
-    const res = await attendancePOST(makeReq('/api/staff/attendance', 'POST', {
-      staffId: 's1',
-      date: '2026-02-20',
-      status: 'PRESENT',
-      clockOut: '2026-02-20T18:00:00',
-    }))
+    const res = await attendancePOST(
+      makeReq('/api/staff/attendance', 'POST', {
+        staffId: 's1',
+        date: '2026-02-20',
+        status: 'PRESENT',
+        clockOut: '2026-02-20T18:00:00',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -245,7 +289,21 @@ describe('GET /api/staff/leaves', () => {
   it('returns leave requests with pagination', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findMany).mockResolvedValue([
-      { id: 'l1', staffId: 's1', leaveType: 'CASUAL', status: 'PENDING', startDate: new Date(), endDate: new Date(), staff: { id: 's1', employeeId: 'E001', firstName: 'John', lastName: 'Doe', user: { role: 'DOCTOR' } } },
+      {
+        id: 'l1',
+        staffId: 's1',
+        leaveType: 'CASUAL',
+        status: 'PENDING',
+        startDate: new Date(),
+        endDate: new Date(),
+        staff: {
+          id: 's1',
+          employeeId: 'E001',
+          firstName: 'John',
+          lastName: 'Doe',
+          user: { role: 'DOCTOR' },
+        },
+      },
     ] as any)
     vi.mocked(prisma.leave.count).mockResolvedValue(1)
 
@@ -291,12 +349,14 @@ describe('POST /api/staff/leaves', () => {
     mockAuth()
     vi.mocked(prisma.staff.findFirst).mockResolvedValue(null)
 
-    const res = await leavesPOST(makeReq('/api/staff/leaves', 'POST', {
-      staffId: 's-nonexistent',
-      leaveType: 'CASUAL',
-      startDate: '2026-03-01',
-      endDate: '2026-03-03',
-    }))
+    const res = await leavesPOST(
+      makeReq('/api/staff/leaves', 'POST', {
+        staffId: 's-nonexistent',
+        leaveType: 'CASUAL',
+        startDate: '2026-03-01',
+        endDate: '2026-03-03',
+      })
+    )
 
     expect(res.status).toBe(404)
   })
@@ -305,12 +365,14 @@ describe('POST /api/staff/leaves', () => {
     mockAuth()
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 's1' } as any)
 
-    const res = await leavesPOST(makeReq('/api/staff/leaves', 'POST', {
-      staffId: 's1',
-      leaveType: 'CASUAL',
-      startDate: '2026-03-05',
-      endDate: '2026-03-01',
-    }))
+    const res = await leavesPOST(
+      makeReq('/api/staff/leaves', 'POST', {
+        staffId: 's1',
+        leaveType: 'CASUAL',
+        startDate: '2026-03-05',
+        endDate: '2026-03-01',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -322,12 +384,14 @@ describe('POST /api/staff/leaves', () => {
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 's1' } as any)
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({ id: 'l1' } as any)
 
-    const res = await leavesPOST(makeReq('/api/staff/leaves', 'POST', {
-      staffId: 's1',
-      leaveType: 'CASUAL',
-      startDate: '2026-03-01',
-      endDate: '2026-03-03',
-    }))
+    const res = await leavesPOST(
+      makeReq('/api/staff/leaves', 'POST', {
+        staffId: 's1',
+        leaveType: 'CASUAL',
+        startDate: '2026-03-01',
+        endDate: '2026-03-03',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -339,18 +403,24 @@ describe('POST /api/staff/leaves', () => {
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 's1' } as any)
     vi.mocked(prisma.leave.findFirst).mockResolvedValue(null) // no overlap
     vi.mocked(prisma.leave.create).mockResolvedValue({
-      id: 'l1', staffId: 's1', leaveType: 'CASUAL', status: 'PENDING',
-      startDate: new Date('2026-03-01'), endDate: new Date('2026-03-03'),
+      id: 'l1',
+      staffId: 's1',
+      leaveType: 'CASUAL',
+      status: 'PENDING',
+      startDate: new Date('2026-03-01'),
+      endDate: new Date('2026-03-03'),
       staff: { employeeId: 'E001', firstName: 'John', lastName: 'Doe' },
     } as any)
 
-    const res = await leavesPOST(makeReq('/api/staff/leaves', 'POST', {
-      staffId: 's1',
-      leaveType: 'CASUAL',
-      startDate: '2026-03-01',
-      endDate: '2026-03-03',
-      reason: 'Personal',
-    }))
+    const res = await leavesPOST(
+      makeReq('/api/staff/leaves', 'POST', {
+        staffId: 's1',
+        leaveType: 'CASUAL',
+        startDate: '2026-03-01',
+        endDate: '2026-03-03',
+        reason: 'Personal',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)

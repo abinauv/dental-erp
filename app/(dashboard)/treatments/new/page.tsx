@@ -1,29 +1,26 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { ArrowLeft, Search, User, Stethoscope, Save, AlertCircle } from "lucide-react"
-import { DentalChart } from "@/components/treatments/dental-chart"
-import {
-  procedureCategoryConfig,
-  formatCurrency,
-} from "@/lib/treatment-utils"
-import { TreatmentAssist } from "@/components/ai/treatment-assist"
-import { VoiceInput } from "@/components/clinical/voice-input"
+} from '@/components/ui/select'
+import { ArrowLeft, Search, User, Stethoscope, Save, AlertCircle } from 'lucide-react'
+import { DentalChart } from '@/components/treatments/dental-chart'
+import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
+import { TreatmentAssist } from '@/components/ai/treatment-assist'
+import { VoiceInput } from '@/components/clinical/voice-input'
 
 interface Patient {
   id: string
@@ -54,31 +51,31 @@ interface Procedure {
 export default function NewTreatmentPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const preselectedPatientId = searchParams.get("patientId")
-  const preselectedAppointmentId = searchParams.get("appointmentId")
+  const preselectedPatientId = searchParams.get('patientId')
+  const preselectedAppointmentId = searchParams.get('appointmentId')
 
   const [patients, setPatients] = useState<Patient[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [patientSearch, setPatientSearch] = useState("")
+  const [error, setError] = useState('')
+  const [patientSearch, setPatientSearch] = useState('')
 
   // Form state
   const [formData, setFormData] = useState({
-    patientId: preselectedPatientId || "",
-    doctorId: "",
-    procedureId: "",
-    appointmentId: preselectedAppointmentId || "",
+    patientId: preselectedPatientId || '',
+    doctorId: '',
+    procedureId: '',
+    appointmentId: preselectedAppointmentId || '',
     toothNumbers: [] as number[],
-    chiefComplaint: "",
-    diagnosis: "",
-    findings: "",
-    procedureNotes: "",
-    materialsUsed: "",
+    chiefComplaint: '',
+    diagnosis: '',
+    findings: '',
+    procedureNotes: '',
+    materialsUsed: '',
     followUpRequired: false,
-    followUpDate: "",
-    cost: "",
+    followUpDate: '',
+    cost: '',
   })
 
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
@@ -89,9 +86,9 @@ export default function NewTreatmentPage() {
     const fetchData = async () => {
       try {
         const [patientsRes, doctorsRes, proceduresRes] = await Promise.all([
-          fetch("/api/patients?limit=100"),
-          fetch("/api/staff/doctors"),
-          fetch("/api/procedures?all=true&isActive=true"),
+          fetch('/api/patients?limit=100'),
+          fetch('/api/staff/doctors'),
+          fetch('/api/procedures?all=true&isActive=true'),
         ])
 
         if (patientsRes.ok) {
@@ -114,7 +111,7 @@ export default function NewTreatmentPage() {
           setProcedures(data.procedures)
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error('Error fetching data:', error)
       }
     }
 
@@ -133,13 +130,16 @@ export default function NewTreatmentPage() {
   })
 
   // Group procedures by category
-  const groupedProcedures = procedures.reduce((acc, proc) => {
-    if (!acc[proc.category]) {
-      acc[proc.category] = []
-    }
-    acc[proc.category].push(proc)
-    return acc
-  }, {} as Record<string, Procedure[]>)
+  const groupedProcedures = procedures.reduce(
+    (acc, proc) => {
+      if (!acc[proc.category]) {
+        acc[proc.category] = []
+      }
+      acc[proc.category].push(proc)
+      return acc
+    },
+    {} as Record<string, Procedure[]>
+  )
 
   const handlePatientSelect = (patientId: string) => {
     const patient = patients.find((p) => p.id === patientId)
@@ -153,46 +153,44 @@ export default function NewTreatmentPage() {
     setFormData({
       ...formData,
       procedureId,
-      cost: procedure ? procedure.basePrice.toString() : "",
+      cost: procedure ? procedure.basePrice.toString() : '',
     })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
+    setError('')
 
     // Validation
     if (!formData.patientId) {
-      setError("Please select a patient")
+      setError('Please select a patient')
       return
     }
     if (!formData.doctorId) {
-      setError("Please select a doctor")
+      setError('Please select a doctor')
       return
     }
     if (!formData.procedureId) {
-      setError("Please select a procedure")
+      setError('Please select a procedure')
       return
     }
 
     setLoading(true)
 
     try {
-      const response = await fetch("/api/treatments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/treatments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          toothNumbers: formData.toothNumbers.length > 0
-            ? formData.toothNumbers.join(",")
-            : null,
+          toothNumbers: formData.toothNumbers.length > 0 ? formData.toothNumbers.join(',') : null,
           cost: formData.cost ? parseFloat(formData.cost) : null,
         }),
       })
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to create treatment")
+        throw new Error(data.error || 'Failed to create treatment')
       }
 
       const treatment = await response.json()
@@ -215,9 +213,7 @@ export default function NewTreatmentPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">New Treatment</h1>
-          <p className="text-muted-foreground">
-            Record a new treatment for a patient
-          </p>
+          <p className="text-muted-foreground">Record a new treatment for a patient</p>
         </div>
       </div>
 
@@ -236,9 +232,7 @@ export default function NewTreatmentPage() {
               <User className="h-5 w-5" />
               Patient Information
             </CardTitle>
-            <CardDescription>
-              Select the patient for this treatment
-            </CardDescription>
+            <CardDescription>Select the patient for this treatment</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedPatient ? (
@@ -261,7 +255,7 @@ export default function NewTreatmentPage() {
                   variant="outline"
                   onClick={() => {
                     setSelectedPatient(null)
-                    setFormData({ ...formData, patientId: "" })
+                    setFormData({ ...formData, patientId: '' })
                   }}
                 >
                   Change
@@ -280,9 +274,7 @@ export default function NewTreatmentPage() {
                 </div>
                 <div className="max-h-60 overflow-y-auto border rounded-lg">
                   {filteredPatients.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">
-                      No patients found
-                    </div>
+                    <div className="p-4 text-center text-muted-foreground">No patients found</div>
                   ) : (
                     filteredPatients.slice(0, 10).map((patient) => (
                       <button
@@ -318,9 +310,7 @@ export default function NewTreatmentPage() {
               <Stethoscope className="h-5 w-5" />
               Treatment Details
             </CardTitle>
-            <CardDescription>
-              Select the doctor and procedure
-            </CardDescription>
+            <CardDescription>Select the doctor and procedure</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -346,10 +336,7 @@ export default function NewTreatmentPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="procedure">Procedure *</Label>
-                <Select
-                  value={formData.procedureId}
-                  onValueChange={handleProcedureSelect}
-                >
+                <Select value={formData.procedureId} onValueChange={handleProcedureSelect}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select procedure" />
                   </SelectTrigger>
@@ -413,9 +400,7 @@ export default function NewTreatmentPage() {
         <Card>
           <CardHeader>
             <CardTitle>Clinical Notes</CardTitle>
-            <CardDescription>
-              Document the clinical findings and treatment notes
-            </CardDescription>
+            <CardDescription>Document the clinical findings and treatment notes</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -455,10 +440,12 @@ export default function NewTreatmentPage() {
               <div className="flex items-center gap-2">
                 <Label htmlFor="procedureNotes">Procedure Notes</Label>
                 <VoiceInput
-                  onTranscript={(text) => setFormData((prev) => ({
-                    ...prev,
-                    procedureNotes: prev.procedureNotes ? prev.procedureNotes + " " + text : text,
-                  }))}
+                  onTranscript={(text) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      procedureNotes: prev.procedureNotes ? prev.procedureNotes + ' ' + text : text,
+                    }))
+                  }
                 />
               </div>
               <Textarea
@@ -535,7 +522,7 @@ export default function NewTreatmentPage() {
           </Link>
           <Button type="submit" disabled={loading}>
             {loading ? (
-              "Creating..."
+              'Creating...'
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />

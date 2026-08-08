@@ -12,7 +12,10 @@ vi.mock('@/lib/patient-auth', () => ({
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
-import { GET as appointmentsGET, POST as appointmentsPOST } from '@/app/api/patient-portal/appointments/route'
+import {
+  GET as appointmentsGET,
+  POST as appointmentsPOST,
+} from '@/app/api/patient-portal/appointments/route'
 import { GET as billsGET } from '@/app/api/patient-portal/bills/route'
 import { GET as prescriptionsGET } from '@/app/api/patient-portal/prescriptions/route'
 import { GET as doctorsGET } from '@/app/api/patient-portal/doctors/route'
@@ -59,7 +62,12 @@ describe('GET /api/patient-portal/appointments', () => {
   it('returns upcoming appointments by default', async () => {
     mockPatientAuth()
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([
-      { id: 'a1', scheduledDate: new Date('2026-03-01'), status: 'SCHEDULED', doctor: { firstName: 'Dr', lastName: 'Smith', specialization: 'General' } },
+      {
+        id: 'a1',
+        scheduledDate: new Date('2026-03-01'),
+        status: 'SCHEDULED',
+        doctor: { firstName: 'Dr', lastName: 'Smith', specialization: 'General' },
+      },
     ] as any)
     vi.mocked(prisma.appointment.count).mockResolvedValue(1)
 
@@ -111,7 +119,9 @@ describe('POST /api/patient-portal/appointments', () => {
 
   it('returns 400 when required fields missing', async () => {
     mockPatientAuth()
-    const res = await appointmentsPOST(makeReq('/api/patient-portal/appointments', 'POST', { doctorId: 'd1' }))
+    const res = await appointmentsPOST(
+      makeReq('/api/patient-portal/appointments', 'POST', { doctorId: 'd1' })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -122,11 +132,13 @@ describe('POST /api/patient-portal/appointments', () => {
     mockPatientAuth()
     vi.mocked(prisma.staff.findFirst).mockResolvedValue(null)
 
-    const res = await appointmentsPOST(makeReq('/api/patient-portal/appointments', 'POST', {
-      doctorId: 'd-nonexistent',
-      date: '2026-03-15',
-      time: '10:00',
-    }))
+    const res = await appointmentsPOST(
+      makeReq('/api/patient-portal/appointments', 'POST', {
+        doctorId: 'd-nonexistent',
+        date: '2026-03-15',
+        time: '10:00',
+      })
+    )
 
     expect(res.status).toBe(404)
   })
@@ -136,16 +148,20 @@ describe('POST /api/patient-portal/appointments', () => {
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 'd1' } as any)
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue({ appointmentNo: 'APT00042' } as any)
     vi.mocked(prisma.appointment.create).mockResolvedValue({
-      id: 'a1', appointmentNo: 'APT00043', status: 'SCHEDULED',
+      id: 'a1',
+      appointmentNo: 'APT00043',
+      status: 'SCHEDULED',
       doctor: { firstName: 'Dr', lastName: 'Smith', specialization: 'General' },
     } as any)
 
-    const res = await appointmentsPOST(makeReq('/api/patient-portal/appointments', 'POST', {
-      doctorId: 'd1',
-      date: '2026-03-15',
-      time: '10:00',
-      chiefComplaint: 'Tooth pain',
-    }))
+    const res = await appointmentsPOST(
+      makeReq('/api/patient-portal/appointments', 'POST', {
+        doctorId: 'd1',
+        date: '2026-03-15',
+        time: '10:00',
+        chiefComplaint: 'Tooth pain',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -178,9 +194,22 @@ describe('GET /api/patient-portal/bills', () => {
     mockPatientAuth()
     vi.mocked(prisma.invoice.findMany).mockResolvedValue([
       {
-        id: 'inv1', invoiceNo: 'INV001', totalAmount: 5000, paidAmount: 2000, status: 'PARTIALLY_PAID',
+        id: 'inv1',
+        invoiceNo: 'INV001',
+        totalAmount: 5000,
+        paidAmount: 2000,
+        status: 'PARTIALLY_PAID',
         items: [{ description: 'Cleaning', quantity: 1, unitPrice: 5000, amount: 5000 }],
-        payments: [{ id: 'pay1', paymentNo: 'PAY001', amount: 2000, paymentMethod: 'CASH', paymentDate: new Date(), status: 'COMPLETED' }],
+        payments: [
+          {
+            id: 'pay1',
+            paymentNo: 'PAY001',
+            amount: 2000,
+            paymentMethod: 'CASH',
+            paymentDate: new Date(),
+            status: 'COMPLETED',
+          },
+        ],
         paymentLinks: [],
       },
     ] as any)
@@ -230,7 +259,14 @@ describe('GET /api/patient-portal/prescriptions', () => {
         id: 'rx1',
         doctor: { firstName: 'Dr', lastName: 'Smith', specialization: 'General' },
         medications: [
-          { medication: { name: 'Amoxicillin', genericName: 'Amoxicillin', form: 'Capsule', strength: '500mg' } },
+          {
+            medication: {
+              name: 'Amoxicillin',
+              genericName: 'Amoxicillin',
+              form: 'Capsule',
+              strength: '500mg',
+            },
+          },
         ],
       },
     ] as any)
@@ -330,7 +366,12 @@ describe('GET /api/patient-portal/slots', () => {
   it('returns available time slots', async () => {
     mockPatientAuth()
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
-      workingHours: JSON.stringify({ start: '09:00', end: '12:00', lunchStart: '13:00', lunchEnd: '14:00' }),
+      workingHours: JSON.stringify({
+        start: '09:00',
+        end: '12:00',
+        lunchStart: '13:00',
+        lunchEnd: '14:00',
+      }),
     } as any)
     vi.mocked(prisma.holiday.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 'd1' } as any)

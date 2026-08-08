@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Progress } from "@/components/ui/progress"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
 import {
   ArrowLeft,
   Calendar,
@@ -21,8 +21,8 @@ import {
   UserCheck,
   UserX,
   AlertCircle,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface PerformanceData {
   staff: {
@@ -71,23 +71,19 @@ interface PerformanceData {
 }
 
 const categoryLabels: Record<string, string> = {
-  PREVENTIVE: "Preventive",
-  RESTORATIVE: "Restorative",
-  ENDODONTIC: "Endodontic",
-  PERIODONTIC: "Periodontic",
-  PROSTHODONTIC: "Prosthodontic",
-  ORTHODONTIC: "Orthodontic",
-  ORAL_SURGERY: "Oral Surgery",
-  COSMETIC: "Cosmetic",
-  DIAGNOSTIC: "Diagnostic",
-  EMERGENCY: "Emergency",
+  PREVENTIVE: 'Preventive',
+  RESTORATIVE: 'Restorative',
+  ENDODONTIC: 'Endodontic',
+  PERIODONTIC: 'Periodontic',
+  PROSTHODONTIC: 'Prosthodontic',
+  ORTHODONTIC: 'Orthodontic',
+  ORAL_SURGERY: 'Oral Surgery',
+  COSMETIC: 'Cosmetic',
+  DIAGNOSTIC: 'Diagnostic',
+  EMERGENCY: 'Emergency',
 }
 
-export default function PerformancePage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function PerformancePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const { toast } = useToast()
@@ -98,10 +94,10 @@ export default function PerformancePage({
   const [startDate, setStartDate] = useState(() => {
     const date = new Date()
     date.setDate(1)
-    return date.toISOString().split("T")[0]
+    return date.toISOString().split('T')[0]
   })
   const [endDate, setEndDate] = useState(() => {
-    return new Date().toISOString().split("T")[0]
+    return new Date().toISOString().split('T')[0]
   })
 
   const fetchPerformance = async () => {
@@ -116,24 +112,24 @@ export default function PerformancePage({
       if (!response.ok) {
         if (response.status === 404) {
           toast({
-            variant: "destructive",
-            title: "Not Found",
-            description: "Staff member not found",
+            variant: 'destructive',
+            title: 'Not Found',
+            description: 'Staff member not found',
           })
-          router.push("/staff")
+          router.push('/staff')
           return
         }
-        throw new Error("Failed to fetch performance data")
+        throw new Error('Failed to fetch performance data')
       }
 
       const result = await response.json()
       setData(result)
     } catch (error) {
-      console.error("Error fetching performance:", error)
+      console.error('Error fetching performance:', error)
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch performance data",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch performance data',
       })
     } finally {
       setLoading(false)
@@ -145,9 +141,9 @@ export default function PerformancePage({
   }, [resolvedParams.id, startDate, endDate])
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
       maximumFractionDigits: 0,
     }).format(amount)
   }
@@ -159,7 +155,9 @@ export default function PerformancePage({
 
   const getAttendanceRate = () => {
     if (!data || data.attendance.totalDays === 0) return 0
-    return Math.round(((data.attendance.present + data.attendance.late) / data.attendance.totalDays) * 100)
+    return Math.round(
+      ((data.attendance.present + data.attendance.late) / data.attendance.totalDays) * 100
+    )
   }
 
   if (loading) {
@@ -258,9 +256,7 @@ export default function PerformancePage({
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Unique patients this period
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">Unique patients this period</p>
           </CardContent>
         </Card>
 
@@ -292,9 +288,7 @@ export default function PerformancePage({
                 <FileText className="h-6 w-6 text-orange-600" />
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Written this period
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">Written this period</p>
           </CardContent>
         </Card>
       </div>
@@ -307,9 +301,7 @@ export default function PerformancePage({
               <Calendar className="h-4 w-4" />
               Appointments
             </CardTitle>
-            <CardDescription>
-              Appointment statistics for the selected period
-            </CardDescription>
+            <CardDescription>Appointment statistics for the selected period</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -355,9 +347,7 @@ export default function PerformancePage({
               <UserCheck className="h-4 w-4" />
               Attendance
             </CardTitle>
-            <CardDescription>
-              Attendance statistics for the selected period
-            </CardDescription>
+            <CardDescription>Attendance statistics for the selected period</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -403,9 +393,7 @@ export default function PerformancePage({
               <TrendingUp className="h-4 w-4" />
               Procedure Breakdown
             </CardTitle>
-            <CardDescription>
-              Revenue and count by procedure category
-            </CardDescription>
+            <CardDescription>Revenue and count by procedure category</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

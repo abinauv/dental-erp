@@ -3,10 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
 // GET — single prescription with medications
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,13 +16,30 @@ export async function GET(
       include: {
         patient: {
           select: {
-            id: true, patientId: true, firstName: true, lastName: true,
-            phone: true, email: true, dateOfBirth: true, gender: true,
-            address: true, city: true,
-            medicalHistory: { select: { drugAllergies: true, foodAllergies: true, materialAllergies: true } },
+            id: true,
+            patientId: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            email: true,
+            dateOfBirth: true,
+            gender: true,
+            address: true,
+            city: true,
+            medicalHistory: {
+              select: { drugAllergies: true, foodAllergies: true, materialAllergies: true },
+            },
           },
         },
-        doctor: { select: { id: true, firstName: true, lastName: true, specialization: true, licenseNumber: true } },
+        doctor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            specialization: true,
+            licenseNumber: true,
+          },
+        },
         medications: {
           include: { medication: { select: { id: true, name: true, genericName: true } } },
         },
@@ -40,16 +54,26 @@ export async function GET(
     const hospital = await prisma.hospital.findUnique({
       where: { id: hospitalId },
       select: {
-        name: true, tagline: true, phone: true, email: true,
-        address: true, city: true, state: true, pincode: true,
-        logo: true, registrationNo: true,
+        name: true,
+        tagline: true,
+        phone: true,
+        email: true,
+        address: true,
+        city: true,
+        state: true,
+        pincode: true,
+        logo: true,
+        registrationNo: true,
       },
     })
 
     return NextResponse.json({ success: true, data: prescription, hospital })
   } catch (err: any) {
     console.error('Error fetching prescription:', err)
-    return NextResponse.json({ error: err.message || 'Failed to fetch prescription' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to fetch prescription' },
+      { status: 500 }
+    )
   }
 }
 
@@ -75,6 +99,9 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: 'Prescription deleted' })
   } catch (err: any) {
     console.error('Error deleting prescription:', err)
-    return NextResponse.json({ error: err.message || 'Failed to delete prescription' }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message || 'Failed to delete prescription' },
+      { status: 500 }
+    )
   }
 }

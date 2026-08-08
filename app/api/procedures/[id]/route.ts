@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get single procedure
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -22,41 +19,32 @@ export async function GET(
           select: {
             treatments: true,
             treatmentPlanItems: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     if (!procedure) {
-      return NextResponse.json(
-        { error: "Procedure not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
     }
 
     return NextResponse.json(procedure)
   } catch (error) {
-    console.error("Error fetching procedure:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch procedure" },
-      { status: 500 }
-    )
+    console.error('Error fetching procedure:', error)
+    return NextResponse.json({ error: 'Failed to fetch procedure' }, { status: 500 })
   }
 }
 
 // PUT - Update procedure
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "DOCTOR"].includes(session.user.role)) {
+    if (!['ADMIN', 'DOCTOR'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to update procedures" },
         { status: 403 }
@@ -68,14 +56,11 @@ export async function PUT(
 
     // Check if procedure exists
     const existingProcedure = await prisma.procedure.findUnique({
-      where: { id, hospitalId }
+      where: { id, hospitalId },
     })
 
     if (!existingProcedure) {
-      return NextResponse.json(
-        { error: "Procedure not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
     }
 
     // Check if name is being changed and if new name already exists
@@ -84,13 +69,13 @@ export async function PUT(
         where: {
           hospitalId,
           name: body.name,
-          id: { not: id }
-        }
+          id: { not: id },
+        },
       })
 
       if (nameExists) {
         return NextResponse.json(
-          { error: "A procedure with this name already exists" },
+          { error: 'A procedure with this name already exists' },
           { status: 409 }
         )
       }
@@ -109,16 +94,13 @@ export async function PUT(
 
     const procedure = await prisma.procedure.update({
       where: { id, hospitalId },
-      data: updateData
+      data: updateData,
     })
 
     return NextResponse.json(procedure)
   } catch (error) {
-    console.error("Error updating procedure:", error)
-    return NextResponse.json(
-      { error: "Failed to update procedure" },
-      { status: 500 }
-    )
+    console.error('Error updating procedure:', error)
+    return NextResponse.json({ error: 'Failed to update procedure' }, { status: 500 })
   }
 }
 
@@ -129,14 +111,14 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (session.user.role !== "ADMIN") {
+    if (session.user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: "Only administrators can delete procedures" },
+        { error: 'Only administrators can delete procedures' },
         { status: 403 }
       )
     }
@@ -151,16 +133,13 @@ export async function DELETE(
           select: {
             treatments: true,
             treatmentPlanItems: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     if (!procedure) {
-      return NextResponse.json(
-        { error: "Procedure not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
     }
 
     // Check if procedure is used in treatments or treatment plans
@@ -168,29 +147,26 @@ export async function DELETE(
       // Soft delete - just mark as inactive
       await prisma.procedure.update({
         where: { id, hospitalId },
-        data: { isActive: false }
+        data: { isActive: false },
       })
 
       return NextResponse.json({
-        message: "Procedure has been deactivated as it is used in existing treatments",
-        deactivated: true
+        message: 'Procedure has been deactivated as it is used in existing treatments',
+        deactivated: true,
       })
     }
 
     // Hard delete if not used
     await prisma.procedure.delete({
-      where: { id, hospitalId }
+      where: { id, hospitalId },
     })
 
     return NextResponse.json({
-      message: "Procedure deleted successfully",
-      deleted: true
+      message: 'Procedure deleted successfully',
+      deleted: true,
     })
   } catch (error) {
-    console.error("Error deleting procedure:", error)
-    return NextResponse.json(
-      { error: "Failed to delete procedure" },
-      { status: 500 }
-    )
+    console.error('Error deleting procedure:', error)
+    return NextResponse.json({ error: 'Failed to delete procedure' }, { status: 500 })
   }
 }

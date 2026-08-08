@@ -6,12 +6,12 @@
  * top-10 skill breakdown for the current month.
  */
 
-import { NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error) return error
 
   const now = new Date()
@@ -21,27 +21,35 @@ export async function GET() {
   // ---------------------------------------------------------------
   // Parallel fetches
   // ---------------------------------------------------------------
-  const [totalConvos, totalExecs, totalInsights, monthConvos, monthExecs, costAgg, monthCostAgg, recentExecs] =
-    await Promise.all([
-      prisma.aIConversation.count({ where: { hospitalId: hid } }),
-      prisma.aISkillExecution.count({ where: { hospitalId: hid } }),
-      prisma.aIInsight.count({ where: { hospitalId: hid } }),
-      prisma.aIConversation.count({ where: { hospitalId: hid, createdAt: { gte: monthStart } } }),
-      prisma.aISkillExecution.count({ where: { hospitalId: hid, createdAt: { gte: monthStart } } }),
-      prisma.aISkillExecution.aggregate({
-        _sum: { cost: true, tokensUsed: true },
-        where: { hospitalId: hid },
-      }),
-      prisma.aISkillExecution.aggregate({
-        _sum: { cost: true, tokensUsed: true },
-        where: { hospitalId: hid, createdAt: { gte: monthStart } },
-      }),
-      // Fetch this-month executions for in-memory skill grouping
-      prisma.aISkillExecution.findMany({
-        where: { hospitalId: hid, createdAt: { gte: monthStart } },
-        select: { skill: true, cost: true },
-      }),
-    ])
+  const [
+    totalConvos,
+    totalExecs,
+    totalInsights,
+    monthConvos,
+    monthExecs,
+    costAgg,
+    monthCostAgg,
+    recentExecs,
+  ] = await Promise.all([
+    prisma.aIConversation.count({ where: { hospitalId: hid } }),
+    prisma.aISkillExecution.count({ where: { hospitalId: hid } }),
+    prisma.aIInsight.count({ where: { hospitalId: hid } }),
+    prisma.aIConversation.count({ where: { hospitalId: hid, createdAt: { gte: monthStart } } }),
+    prisma.aISkillExecution.count({ where: { hospitalId: hid, createdAt: { gte: monthStart } } }),
+    prisma.aISkillExecution.aggregate({
+      _sum: { cost: true, tokensUsed: true },
+      where: { hospitalId: hid },
+    }),
+    prisma.aISkillExecution.aggregate({
+      _sum: { cost: true, tokensUsed: true },
+      where: { hospitalId: hid, createdAt: { gte: monthStart } },
+    }),
+    // Fetch this-month executions for in-memory skill grouping
+    prisma.aISkillExecution.findMany({
+      where: { hospitalId: hid, createdAt: { gte: monthStart } },
+      select: { skill: true, cost: true },
+    }),
+  ])
 
   // ---------------------------------------------------------------
   // Skill breakdown (grouped in JS to avoid groupBy quirks)

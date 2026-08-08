@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from 'react'
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 interface SuspiciousPattern {
   pattern: string
-  severity: "low" | "medium" | "high"
+  severity: 'low' | 'medium' | 'high'
   affectedUsers?: string[]
   occurrences?: number
   recommendation: string
@@ -19,9 +19,9 @@ interface AuditAnalysis {
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
-  low:    "bg-blue-50 border-blue-200 text-blue-800",
-  medium: "bg-amber-50 border-amber-200 text-amber-800",
-  high:   "bg-red-50 border-red-200 text-red-800",
+  low: 'bg-blue-50 border-blue-200 text-blue-800',
+  medium: 'bg-amber-50 border-amber-200 text-amber-800',
+  high: 'bg-red-50 border-red-200 text-red-800',
 }
 
 /**
@@ -38,10 +38,10 @@ export function AuditMonitor() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/ai/clinical", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "audit_analysis", daysBack }),
+      const res = await fetch('/api/ai/clinical', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'audit_analysis', daysBack }),
       })
       const data = await res.json()
       if (data.success) setAnalysis(data.data)
@@ -52,7 +52,9 @@ export function AuditMonitor() {
     }
   }, [daysBack])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+  }, [load])
 
   return (
     <div className="space-y-3">
@@ -73,7 +75,11 @@ export function AuditMonitor() {
             <option value={14}>14 days</option>
             <option value={30}>30 days</option>
           </select>
-          <button onClick={load} disabled={loading} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          <button
+            onClick={load}
+            disabled={loading}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
             ↻
           </button>
         </div>
@@ -88,20 +94,25 @@ export function AuditMonitor() {
       )}
 
       {/* summary sentence */}
-      {!loading && analysis && (
-        <p className="text-xs text-muted-foreground">{analysis.summary}</p>
-      )}
+      {!loading && analysis && <p className="text-xs text-muted-foreground">{analysis.summary}</p>}
 
       {/* suspicious-pattern cards */}
       {!loading && analysis?.suspicious && analysis.suspicious.length > 0 && (
         <div className="space-y-2">
           {analysis.suspicious.map((p, i) => (
-            <div key={i} className={`rounded border p-3 text-xs ${SEVERITY_STYLES[p.severity] || SEVERITY_STYLES.low}`}>
+            <div
+              key={i}
+              className={`rounded border p-3 text-xs ${SEVERITY_STYLES[p.severity] || SEVERITY_STYLES.low}`}
+            >
               <div className="flex items-center justify-between mb-1">
                 <p className="font-semibold">{p.pattern}</p>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    p.severity === "high" ? "bg-red-100" : p.severity === "medium" ? "bg-amber-100" : "bg-blue-100"
+                    p.severity === 'high'
+                      ? 'bg-red-100'
+                      : p.severity === 'medium'
+                        ? 'bg-amber-100'
+                        : 'bg-blue-100'
                   }`}
                 >
                   {p.severity}
@@ -109,10 +120,12 @@ export function AuditMonitor() {
               </div>
               <p className="opacity-80">{p.recommendation}</p>
               {p.affectedUsers && p.affectedUsers.length > 0 && (
-                <p className="mt-1 opacity-60">Affected users: {p.affectedUsers.join(", ")}</p>
+                <p className="mt-1 opacity-60">Affected users: {p.affectedUsers.join(', ')}</p>
               )}
               {p.occurrences != null && (
-                <p className="mt-0.5 opacity-60">{p.occurrences} occurrence{p.occurrences !== 1 ? "s" : ""}</p>
+                <p className="mt-0.5 opacity-60">
+                  {p.occurrences} occurrence{p.occurrences !== 1 ? 's' : ''}
+                </p>
               )}
             </div>
           ))}
@@ -122,7 +135,7 @@ export function AuditMonitor() {
       {/* clean bill of health */}
       {!loading && analysis?.suspicious && analysis.suspicious.length === 0 && (
         <p className="text-xs text-emerald-700 bg-emerald-50 rounded border border-emerald-200 px-3 py-2">
-          ✓ No suspicious patterns detected in the last {daysBack} day{daysBack !== 1 ? "s" : ""}.
+          ✓ No suspicious patterns detected in the last {daysBack} day{daysBack !== 1 ? 's' : ''}.
         </p>
       )}
     </div>

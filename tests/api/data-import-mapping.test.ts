@@ -49,7 +49,9 @@ describe('POST /api/data-import/ai-mapping', () => {
         Mobile: { targetField: 'phone', confidence: 0.95 },
         DOB: { targetField: 'dateOfBirth', confidence: 0.85 },
       },
-      splitFields: [{ sourceColumn: 'Name', targetFields: ['firstName', 'lastName'], splitStrategy: 'space' }],
+      splitFields: [
+        { sourceColumn: 'Name', targetFields: ['firstName', 'lastName'], splitStrategy: 'space' },
+      ],
     })
 
     mockAI.complete.mockResolvedValue({ content: aiResponse })

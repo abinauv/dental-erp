@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -13,15 +13,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Plus, MoreHorizontal, Pencil, Trash2, Eye, FileText, ClipboardCheck, MessageSquareText, FilePlus2 } from "lucide-react"
-import { toast } from "sonner"
+} from '@/components/ui/dropdown-menu'
+import {
+  Plus,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Eye,
+  FileText,
+  ClipboardCheck,
+  MessageSquareText,
+  FilePlus2,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
 interface FormTemplate {
   id: string
@@ -43,11 +53,11 @@ const typeIcons: Record<string, React.ReactNode> = {
 }
 
 const typeLabels: Record<string, string> = {
-  MEDICAL_HISTORY: "Medical History",
-  CONSENT: "Consent",
-  INTAKE: "Intake",
-  FEEDBACK: "Feedback",
-  CUSTOM: "Custom",
+  MEDICAL_HISTORY: 'Medical History',
+  CONSENT: 'Consent',
+  INTAKE: 'Intake',
+  FEEDBACK: 'Feedback',
+  CUSTOM: 'Custom',
 }
 
 export default function FormsSettingsPage() {
@@ -61,11 +71,11 @@ export default function FormsSettingsPage() {
 
   const fetchTemplates = async () => {
     try {
-      const res = await fetch("/api/settings/forms")
+      const res = await fetch('/api/settings/forms')
       const data = await res.json()
       if (data.templates) setTemplates(data.templates)
     } catch {
-      toast.error("Failed to load form templates")
+      toast.error('Failed to load form templates')
     } finally {
       setLoading(false)
     }
@@ -73,34 +83,38 @@ export default function FormsSettingsPage() {
 
   const handleSeedDefaults = async () => {
     try {
-      const res = await fetch("/api/settings/forms/seed", { method: "POST" })
+      const res = await fetch('/api/settings/forms/seed', { method: 'POST' })
       const data = await res.json()
       if (res.ok) {
         toast.success(data.message)
         fetchTemplates()
       } else {
-        toast.error(data.error || "Failed to load defaults")
+        toast.error(data.error || 'Failed to load defaults')
       }
     } catch {
-      toast.error("Failed to load defaults")
+      toast.error('Failed to load defaults')
     }
   }
 
   const handleDelete = async (id: string, name: string) => {
-    const ok = await confirm({ title: "Delete Template", description: `Delete "${name}"? Templates with submissions will be deactivated instead.`, confirmLabel: "Delete" })
+    const ok = await confirm({
+      title: 'Delete Template',
+      description: `Delete "${name}"? Templates with submissions will be deactivated instead.`,
+      confirmLabel: 'Delete',
+    })
     if (!ok) return
 
     try {
-      const res = await fetch(`/api/settings/forms/${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/settings/forms/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast.success("Template removed")
+        toast.success('Template removed')
         fetchTemplates()
       } else {
         const data = await res.json()
-        toast.error(data.error || "Failed to delete")
+        toast.error(data.error || 'Failed to delete')
       }
     } catch {
-      toast.error("Failed to delete template")
+      toast.error('Failed to delete template')
     }
   }
 
@@ -174,7 +188,9 @@ export default function FormsSettingsPage() {
                           )}
                         </div>
                         {t.isDefault && (
-                          <Badge variant="secondary" className="text-xs">Default</Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            Default
+                          </Badge>
                         )}
                       </div>
                     </TableCell>
@@ -182,13 +198,13 @@ export default function FormsSettingsPage() {
                       <Badge variant="outline">{typeLabels[t.type] || t.type}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={t.isActive ? "default" : "secondary"}>
-                        {t.isActive ? "Active" : "Inactive"}
+                      <Badge variant={t.isActive ? 'default' : 'secondary'}>
+                        {t.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">{t._count.submissions}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {new Date(t.createdAt).toLocaleDateString("en-IN")}
+                      {new Date(t.createdAt).toLocaleDateString('en-IN')}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

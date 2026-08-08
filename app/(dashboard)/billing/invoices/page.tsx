@@ -1,19 +1,19 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -21,9 +21,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -41,20 +41,15 @@ import {
   Trash2,
   AlertCircle,
   Clock,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  invoiceStatusConfig,
-  formatCurrency,
-  formatDate,
-  getDueDays,
-} from "@/lib/billing-utils"
+} from '@/components/ui/dropdown-menu'
+import { invoiceStatusConfig, formatCurrency, formatDate, getDueDays } from '@/lib/billing-utils'
 
 interface Invoice {
   id: string
@@ -101,10 +96,10 @@ export default function InvoicesPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [overdueOnly, setOverdueOnly] = useState(false)
 
   const fetchInvoices = async () => {
@@ -115,20 +110,20 @@ export default function InvoicesPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (dateFrom) params.append("dateFrom", dateFrom)
-      if (dateTo) params.append("dateTo", dateTo)
-      if (overdueOnly) params.append("overdue", "true")
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (dateFrom) params.append('dateFrom', dateFrom)
+      if (dateTo) params.append('dateTo', dateTo)
+      if (overdueOnly) params.append('overdue', 'true')
 
       const response = await fetch(`/api/invoices?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch invoices")
+      if (!response.ok) throw new Error('Failed to fetch invoices')
 
       const data = await response.json()
       setInvoices(data.invoices)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching invoices:", error)
+      console.error('Error fetching invoices:', error)
     } finally {
       setLoading(false)
     }
@@ -141,28 +136,28 @@ export default function InvoicesPage() {
   const getStatusBadge = (status: string) => {
     const config = invoiceStatusConfig[status as keyof typeof invoiceStatusConfig] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const handleDelete = async (id: string) => {
-    const ok = await confirm({ title: "Cancel Invoice", description: "Are you sure you want to delete/cancel this invoice?", confirmLabel: "Cancel Invoice" })
+    const ok = await confirm({
+      title: 'Cancel Invoice',
+      description: 'Are you sure you want to delete/cancel this invoice?',
+      confirmLabel: 'Cancel Invoice',
+    })
     if (!ok) return
 
     try {
       const response = await fetch(`/api/invoices/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       })
-      if (!response.ok) throw new Error("Failed to delete invoice")
+      if (!response.ok) throw new Error('Failed to delete invoice')
       fetchInvoices()
     } catch (error) {
-      console.error("Error deleting invoice:", error)
+      console.error('Error deleting invoice:', error)
     }
   }
 
@@ -172,9 +167,7 @@ export default function InvoicesPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-          <p className="text-muted-foreground">
-            Manage patient invoices and billing
-          </p>
+          <p className="text-muted-foreground">Manage patient invoices and billing</p>
         </div>
         <Link href="/billing/invoices/new">
           <Button>
@@ -228,7 +221,7 @@ export default function InvoicesPage() {
                 placeholder="To Date"
               />
               <Button
-                variant={overdueOnly ? "default" : "outline"}
+                variant={overdueOnly ? 'default' : 'outline'}
                 onClick={() => setOverdueOnly(!overdueOnly)}
                 size="sm"
               >
@@ -260,14 +253,30 @@ export default function InvoicesPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : invoices.length === 0 ? (
@@ -319,7 +328,11 @@ export default function InvoicesPage() {
                         {formatCurrency(invoice.paidAmount)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className={Number(invoice.balanceAmount) > 0 ? "text-red-600 font-medium" : ""}>
+                        <span
+                          className={
+                            Number(invoice.balanceAmount) > 0 ? 'text-red-600 font-medium' : ''
+                          }
+                        >
                           {formatCurrency(invoice.balanceAmount)}
                         </span>
                       </TableCell>
@@ -327,7 +340,7 @@ export default function InvoicesPage() {
                         {invoice.dueDate ? (
                           <div className="flex flex-col">
                             <span className="text-sm">{formatDate(invoice.dueDate)}</span>
-                            {dueDays.isOverdue && invoice.status !== "PAID" && (
+                            {dueDays.isOverdue && invoice.status !== 'PAID' && (
                               <span className="text-xs text-red-600 flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {dueDays.label}
@@ -338,9 +351,7 @@ export default function InvoicesPage() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {getStatusBadge(invoice.status)}
-                      </TableCell>
+                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -355,7 +366,7 @@ export default function InvoicesPage() {
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            {invoice.status === "DRAFT" && (
+                            {invoice.status === 'DRAFT' && (
                               <DropdownMenuItem
                                 onClick={() => router.push(`/billing/invoices/${invoice.id}/edit`)}
                               >
@@ -364,17 +375,17 @@ export default function InvoicesPage() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            {["PENDING", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
+                            {['PENDING', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) && (
                               <DropdownMenuItem
-                                onClick={() => router.push(`/billing/invoices/${invoice.id}?action=payment`)}
+                                onClick={() =>
+                                  router.push(`/billing/invoices/${invoice.id}?action=payment`)
+                                }
                               >
                                 <CreditCard className="h-4 w-4 mr-2" />
                                 Record Payment
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem
-                              onClick={() => window.print()}
-                            >
+                            <DropdownMenuItem onClick={() => window.print()}>
                               <Printer className="h-4 w-4 mr-2" />
                               Print Invoice
                             </DropdownMenuItem>
@@ -385,7 +396,7 @@ export default function InvoicesPage() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
+                            {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
                               <DropdownMenuItem
                                 onClick={() => handleDelete(invoice.id)}
                                 className="text-red-600"
@@ -408,8 +419,8 @@ export default function InvoicesPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} invoices
               </div>
               <div className="flex items-center gap-2">

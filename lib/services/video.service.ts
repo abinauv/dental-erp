@@ -7,36 +7,36 @@
  * If DAILY_API_KEY is not set, falls back to Jitsi Meet (free, no API key needed).
  */
 
-const DAILY_API_BASE = "https://api.daily.co/v1"
+const DAILY_API_BASE = 'https://api.daily.co/v1'
 
 function getDailyApiKey(): string | null {
   return process.env.DAILY_API_KEY || null
 }
 
 function getDailyDomain(): string {
-  return process.env.DAILY_DOMAIN || "your-domain.daily.co"
+  return process.env.DAILY_DOMAIN || 'your-domain.daily.co'
 }
 
 function getJitsiDomain(): string {
-  return process.env.JITSI_DOMAIN || "meet.jit.si"
+  return process.env.JITSI_DOMAIN || 'meet.jit.si'
 }
 
-export type VideoProvider = "daily" | "jitsi"
+export type VideoProvider = 'daily' | 'jitsi'
 
 export function getVideoProvider(): VideoProvider {
-  return getDailyApiKey() ? "daily" : "jitsi"
+  return getDailyApiKey() ? 'daily' : 'jitsi'
 }
 
 // ── Daily.co API helpers ──
 
 async function dailyFetch(path: string, options: RequestInit = {}) {
   const apiKey = getDailyApiKey()
-  if (!apiKey) throw new Error("DAILY_API_KEY not configured")
+  if (!apiKey) throw new Error('DAILY_API_KEY not configured')
 
   const res = await fetch(`${DAILY_API_BASE}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
       ...options.headers,
     },
@@ -66,15 +66,15 @@ interface CreateRoomResult {
 export async function createRoom(consultationId: string): Promise<CreateRoomResult> {
   const provider = getVideoProvider()
 
-  if (provider === "daily") {
+  if (provider === 'daily') {
     const roomName = `dental-${consultationId}`
     const expiryTime = Math.floor(Date.now() / 1000) + 24 * 60 * 60 // 24h from now
 
-    const room = await dailyFetch("/rooms", {
-      method: "POST",
+    const room = await dailyFetch('/rooms', {
+      method: 'POST',
       body: JSON.stringify({
         name: roomName,
-        privacy: "private",
+        privacy: 'private',
         properties: {
           exp: expiryTime,
           max_participants: 10,
@@ -90,7 +90,7 @@ export async function createRoom(consultationId: string): Promise<CreateRoomResu
     return {
       roomUrl: room.url,
       roomName: room.name,
-      provider: "daily",
+      provider: 'daily',
     }
   }
 
@@ -101,7 +101,7 @@ export async function createRoom(consultationId: string): Promise<CreateRoomResu
   return {
     roomUrl: `https://${jitsiDomain}/${roomName}`,
     roomName,
-    provider: "jitsi",
+    provider: 'jitsi',
   }
 }
 
@@ -111,10 +111,10 @@ export async function createRoom(consultationId: string): Promise<CreateRoomResu
  */
 export async function deleteRoom(roomName: string): Promise<void> {
   const provider = getVideoProvider()
-  if (provider !== "daily") return
+  if (provider !== 'daily') return
 
   try {
-    await dailyFetch(`/rooms/${roomName}`, { method: "DELETE" })
+    await dailyFetch(`/rooms/${roomName}`, { method: 'DELETE' })
   } catch {
     // Room may already be expired/deleted — ignore
   }
@@ -131,12 +131,12 @@ export async function getRoomToken(
   isDoctor: boolean
 ): Promise<string | null> {
   const provider = getVideoProvider()
-  if (provider !== "daily") return null
+  if (provider !== 'daily') return null
 
   const expiryTime = Math.floor(Date.now() / 1000) + 4 * 60 * 60 // 4h
 
-  const token = await dailyFetch("/meeting-tokens", {
-    method: "POST",
+  const token = await dailyFetch('/meeting-tokens', {
+    method: 'POST',
     body: JSON.stringify({
       properties: {
         room_name: roomName,
@@ -159,7 +159,7 @@ export async function getRoomToken(
  */
 export async function getRoomInfo(roomName: string) {
   const provider = getVideoProvider()
-  if (provider !== "daily") return null
+  if (provider !== 'daily') return null
 
   try {
     return await dailyFetch(`/rooms/${roomName}`)

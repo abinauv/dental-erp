@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -29,21 +29,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
-import {
-  Clock,
-  Plus,
-  Trash2,
-  Users,
-  Bell,
-  CheckCircle2,
-  Loader2,
-  Search,
-} from "lucide-react"
-import { format } from "date-fns"
+} from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Clock, Plus, Trash2, Users, Bell, CheckCircle2, Loader2, Search } from 'lucide-react'
+import { format } from 'date-fns'
 
 interface WaitlistEntry {
   id: string
@@ -75,19 +66,19 @@ interface Summary {
   booked: number
 }
 
-const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 const TIME_SLOTS = [
-  { value: "MORNING", label: "Morning (Before 12 PM)" },
-  { value: "AFTERNOON", label: "Afternoon (12-5 PM)" },
-  { value: "EVENING", label: "Evening (After 5 PM)" },
+  { value: 'MORNING', label: 'Morning (Before 12 PM)' },
+  { value: 'AFTERNOON', label: 'Afternoon (12-5 PM)' },
+  { value: 'EVENING', label: 'Evening (After 5 PM)' },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-blue-100 text-blue-800",
-  NOTIFIED: "bg-yellow-100 text-yellow-800",
-  BOOKED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-muted text-foreground",
-  EXPIRED: "bg-red-100 text-red-800",
+  ACTIVE: 'bg-blue-100 text-blue-800',
+  NOTIFIED: 'bg-yellow-100 text-yellow-800',
+  BOOKED: 'bg-green-100 text-green-800',
+  CANCELLED: 'bg-muted text-foreground',
+  EXPIRED: 'bg-red-100 text-red-800',
 }
 
 export default function WaitlistPage() {
@@ -96,34 +87,34 @@ export default function WaitlistPage() {
   const [entries, setEntries] = useState<WaitlistEntry[]>([])
   const [summary, setSummary] = useState<Summary>({ active: 0, notified: 0, booked: 0 })
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState("ACTIVE")
+  const [statusFilter, setStatusFilter] = useState('ACTIVE')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [adding, setAdding] = useState(false)
 
   // Form state
-  const [patientSearch, setPatientSearch] = useState("")
+  const [patientSearch, setPatientSearch] = useState('')
   const [patientResults, setPatientResults] = useState<any[]>([])
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [searchingPatients, setSearchingPatients] = useState(false)
   const [doctors, setDoctors] = useState<any[]>([])
-  const [selectedDoctor, setSelectedDoctor] = useState("")
+  const [selectedDoctor, setSelectedDoctor] = useState('')
   const [selectedDays, setSelectedDays] = useState<string[]>([])
-  const [selectedTime, setSelectedTime] = useState("")
-  const [notes, setNotes] = useState("")
+  const [selectedTime, setSelectedTime] = useState('')
+  const [notes, setNotes] = useState('')
 
   const fetchWaitlist = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      if (statusFilter) params.set("status", statusFilter)
+      if (statusFilter) params.set('status', statusFilter)
 
       const response = await fetch(`/api/appointments/waitlist?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch")
+      if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
       setEntries(data.entries)
       setSummary(data.summary)
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to load waitlist" })
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load waitlist' })
     } finally {
       setLoading(false)
     }
@@ -135,7 +126,7 @@ export default function WaitlistPage() {
 
   // Load doctors on mount
   useEffect(() => {
-    fetch("/api/staff?role=DOCTOR")
+    fetch('/api/staff?role=DOCTOR')
       .then((r) => r.json())
       .then((data) => setDoctors(data.staff || []))
       .catch(() => {})
@@ -164,15 +155,15 @@ export default function WaitlistPage() {
 
   const handleAdd = async () => {
     if (!selectedPatient) {
-      toast({ variant: "destructive", title: "Error", description: "Please select a patient" })
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a patient' })
       return
     }
 
     try {
       setAdding(true)
-      const response = await fetch("/api/appointments/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/appointments/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
           doctorId: selectedDoctor || null,
@@ -184,46 +175,49 @@ export default function WaitlistPage() {
 
       if (!response.ok) {
         const err = await response.json()
-        throw new Error(err.error || "Failed to add")
+        throw new Error(err.error || 'Failed to add')
       }
 
-      toast({ title: "Added to waitlist" })
+      toast({ title: 'Added to waitlist' })
       setDialogOpen(false)
       resetForm()
       fetchWaitlist()
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error", description: err.message })
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setAdding(false)
     }
   }
 
   const handleRemove = async (id: string) => {
-    const ok = await confirm({ title: "Remove from waitlist?", description: "Remove this patient from the waitlist?", confirmLabel: "Delete" }); if (!ok) return
+    const ok = await confirm({
+      title: 'Remove from waitlist?',
+      description: 'Remove this patient from the waitlist?',
+      confirmLabel: 'Delete',
+    })
+    if (!ok) return
     try {
-      const response = await fetch(`/api/appointments/waitlist?id=${id}`, { method: "DELETE" })
-      if (!response.ok) throw new Error("Failed to remove")
-      toast({ title: "Removed from waitlist" })
+      const response = await fetch(`/api/appointments/waitlist?id=${id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Failed to remove')
+      toast({ title: 'Removed from waitlist' })
       fetchWaitlist()
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to remove" })
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to remove' })
     }
   }
 
   const resetForm = () => {
-    setPatientSearch("")
+    setPatientSearch('')
     setPatientResults([])
     setSelectedPatient(null)
-    setSelectedDoctor("")
+    setSelectedDoctor('')
     setSelectedDays([])
-    setSelectedTime("")
-    setNotes("")
+    setSelectedTime('')
+    setNotes('')
   }
 
   const toggleDay = (day: string) => {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    )
+    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]))
   }
 
   return (
@@ -231,11 +225,15 @@ export default function WaitlistPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Waitlist</h1>
-          <p className="text-muted-foreground">
-            Manage patients waiting for appointment slots
-          </p>
+          <p className="text-muted-foreground">Manage patients waiting for appointment slots</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open)
+            if (!open) resetForm()
+          }}
+        >
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -256,7 +254,8 @@ export default function WaitlistPage() {
                 {selectedPatient ? (
                   <div className="flex items-center justify-between bg-muted p-2 rounded">
                     <span className="text-sm font-medium">
-                      {selectedPatient.firstName} {selectedPatient.lastName} ({selectedPatient.patientId})
+                      {selectedPatient.firstName} {selectedPatient.lastName} (
+                      {selectedPatient.patientId})
                     </span>
                     <Button variant="ghost" size="sm" onClick={() => setSelectedPatient(null)}>
                       Change
@@ -282,7 +281,7 @@ export default function WaitlistPage() {
                             className="w-full text-left px-3 py-2 hover:bg-muted text-sm"
                             onClick={() => {
                               setSelectedPatient(p)
-                              setPatientSearch("")
+                              setPatientSearch('')
                               setPatientResults([])
                             }}
                           >
@@ -321,7 +320,7 @@ export default function WaitlistPage() {
                     <Button
                       key={day}
                       type="button"
-                      variant={selectedDays.includes(day) ? "default" : "outline"}
+                      variant={selectedDays.includes(day) ? 'default' : 'outline'}
                       size="sm"
                       className="text-xs h-7"
                       onClick={() => toggleDay(day)}
@@ -418,10 +417,10 @@ export default function WaitlistPage() {
 
       {/* Filters */}
       <div className="flex gap-2">
-        {["ACTIVE", "NOTIFIED", "BOOKED", "CANCELLED"].map((s) => (
+        {['ACTIVE', 'NOTIFIED', 'BOOKED', 'CANCELLED'].map((s) => (
           <Button
             key={s}
-            variant={statusFilter === s ? "default" : "outline"}
+            variant={statusFilter === s ? 'default' : 'outline'}
             size="sm"
             onClick={() => setStatusFilter(s)}
           >
@@ -469,43 +468,37 @@ export default function WaitlistPage() {
                   <TableRow key={entry.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{entry.patient?.name || "Unknown"}</p>
+                        <p className="font-medium">{entry.patient?.name || 'Unknown'}</p>
                         <p className="text-xs text-muted-foreground">
                           {entry.patient?.patientId} | {entry.patient?.phone}
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell>{entry.doctor?.name || "Any"}</TableCell>
+                    <TableCell>{entry.doctor?.name || 'Any'}</TableCell>
                     <TableCell>
                       {entry.preferredDays && (entry.preferredDays as string[]).length > 0
-                        ? (entry.preferredDays as string[]).map((d) => d.slice(0, 3)).join(", ")
-                        : "Any"}
+                        ? (entry.preferredDays as string[]).map((d) => d.slice(0, 3)).join(', ')
+                        : 'Any'}
                     </TableCell>
-                    <TableCell>{entry.preferredTime || "Any"}</TableCell>
+                    <TableCell>{entry.preferredTime || 'Any'}</TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[entry.status] || ""}>
-                        {entry.status}
-                      </Badge>
+                      <Badge className={STATUS_COLORS[entry.status] || ''}>{entry.status}</Badge>
                     </TableCell>
-                    <TableCell>{format(new Date(entry.createdAt), "PP")}</TableCell>
+                    <TableCell>{format(new Date(entry.createdAt), 'PP')}</TableCell>
                     <TableCell className="text-right">
-                      {entry.status === "ACTIVE" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemove(entry.id)}
-                        >
+                      {entry.status === 'ACTIVE' && (
+                        <Button variant="ghost" size="icon" onClick={() => handleRemove(entry.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       )}
                       {entry.notifiedAt && (
                         <span className="text-xs text-muted-foreground block">
-                          Notified {format(new Date(entry.notifiedAt), "PP")}
+                          Notified {format(new Date(entry.notifiedAt), 'PP')}
                         </span>
                       )}
                       {entry.bookedAt && (
                         <span className="text-xs text-green-600 block">
-                          Booked {format(new Date(entry.bookedAt), "PP")}
+                          Booked {format(new Date(entry.bookedAt), 'PP')}
                         </span>
                       )}
                     </TableCell>

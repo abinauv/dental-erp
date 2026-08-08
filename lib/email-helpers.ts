@@ -4,12 +4,12 @@
  * configured, the calling operation still succeeds.
  */
 
-import { emailService } from "@/lib/services/email.service"
+import { emailService } from '@/lib/services/email.service'
 
-const APP_NAME = "DentalERP"
+const APP_NAME = 'DentalERP'
 
 function baseUrl(): string {
-  return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 }
 
 function wrapHTML(content: string): string {
@@ -60,7 +60,7 @@ export async function sendInviteEmail(params: {
 }): Promise<boolean> {
   const { to, inviteeName, hospitalName, role, inviterName, token } = params
   const link = `${baseUrl()}/invite/accept?token=${token}`
-  const roleLabel = role.charAt(0) + role.slice(1).toLowerCase().replace("_", " ")
+  const roleLabel = role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')
 
   const html = wrapHTML(`
     <div class="logo">${APP_NAME}</div>

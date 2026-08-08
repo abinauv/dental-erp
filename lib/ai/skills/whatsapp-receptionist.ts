@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const whatsappReceptionist: Skill = {
-  name: "whatsapp-receptionist",
-  displayName: "WhatsApp Receptionist",
-  description: "Virtual front-desk agent for patient-facing WhatsApp/web chat",
-  allowedRoles: ["ADMIN", "RECEPTIONIST"],
-  modelTier: "chat",
-  systemPrompt: (hospitalName, contextStr) => `You are the virtual front desk for ${hospitalName} on WhatsApp / web chat.
+  name: 'whatsapp-receptionist',
+  displayName: 'WhatsApp Receptionist',
+  description: 'Virtual front-desk agent for patient-facing WhatsApp/web chat',
+  allowedRoles: ['ADMIN', 'RECEPTIONIST'],
+  modelTier: 'chat',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are the virtual front desk for ${hospitalName} on WhatsApp / web chat.
 
 CONTEXT:
 ${contextStr}

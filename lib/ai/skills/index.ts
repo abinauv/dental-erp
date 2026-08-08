@@ -1,19 +1,19 @@
-import { patientIntake } from "./patient-intake"
-import { smartScheduler } from "./smart-scheduler"
-import { treatmentAdvisor } from "./treatment-advisor"
-import { billingAgent } from "./billing-agent"
-import { inventoryManager } from "./inventory-manager"
-import { labCoordinator } from "./lab-coordinator"
-import { clinicAnalyst } from "./clinic-analyst"
-import { whatsappReceptionist } from "./whatsapp-receptionist"
-import { noShowPredictor } from "./no-show-predictor"
-import { inventoryForecaster } from "./inventory-forecaster"
-import { cashflowForecaster } from "./cashflow-forecaster"
-import { patientSegmentation } from "./patient-segmentation"
-import { claimAnalyzer } from "./claim-analyzer"
-import { consentGenerator } from "./consent-generator"
-import { dynamicPricing } from "./dynamic-pricing"
-import type { Skill } from "./types"
+import { patientIntake } from './patient-intake'
+import { smartScheduler } from './smart-scheduler'
+import { treatmentAdvisor } from './treatment-advisor'
+import { billingAgent } from './billing-agent'
+import { inventoryManager } from './inventory-manager'
+import { labCoordinator } from './lab-coordinator'
+import { clinicAnalyst } from './clinic-analyst'
+import { whatsappReceptionist } from './whatsapp-receptionist'
+import { noShowPredictor } from './no-show-predictor'
+import { inventoryForecaster } from './inventory-forecaster'
+import { cashflowForecaster } from './cashflow-forecaster'
+import { patientSegmentation } from './patient-segmentation'
+import { claimAnalyzer } from './claim-analyzer'
+import { consentGenerator } from './consent-generator'
+import { dynamicPricing } from './dynamic-pricing'
+import type { Skill } from './types'
 
 export const SKILLS: Record<string, Skill> = {
   [patientIntake.name]: patientIntake,
@@ -42,4 +42,4 @@ export function getSkillsForRole(role: string): Skill[] {
   return Object.values(SKILLS).filter((s) => s.allowedRoles.includes(role))
 }
 
-export type { Skill } from "./types"
+export type { Skill } from './types'

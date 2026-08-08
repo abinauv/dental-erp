@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // POST - Enroll patient in membership plan
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    if (!["ADMIN", "RECEPTIONIST", "ACCOUNTANT"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Not authorized to enroll patients" }, { status: 403 })
+    if (!['ADMIN', 'RECEPTIONIST', 'ACCOUNTANT'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Not authorized to enroll patients' }, { status: 403 })
     }
 
     const body = await request.json()
     const { patientId, planId, autoRenew } = body
 
     if (!patientId || !planId) {
-      return NextResponse.json({ error: "Patient and plan are required" }, { status: 400 })
+      return NextResponse.json({ error: 'Patient and plan are required' }, { status: 400 })
     }
 
     // Verify patient
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: "Patient not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Verify plan
@@ -34,16 +34,16 @@ export async function POST(request: NextRequest) {
       where: { id: planId },
     })
     if (!plan || plan.hospitalId !== hospitalId || !plan.isActive) {
-      return NextResponse.json({ error: "Plan not found or inactive" }, { status: 404 })
+      return NextResponse.json({ error: 'Plan not found or inactive' }, { status: 404 })
     }
 
     // Check for existing active membership
     const existing = await prisma.patientMembership.findFirst({
-      where: { patientId, hospitalId, status: "ACTIVE" },
+      where: { patientId, hospitalId, status: 'ACTIVE' },
     })
     if (existing) {
       return NextResponse.json(
-        { error: "Patient already has an active membership" },
+        { error: 'Patient already has an active membership' },
         { status: 409 }
       )
     }
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(membership, { status: 201 })
   } catch (err) {
-    console.error("Error enrolling patient:", err)
-    return NextResponse.json({ error: "Failed to enroll patient" }, { status: 500 })
+    console.error('Error enrolling patient:', err)
+    return NextResponse.json({ error: 'Failed to enroll patient' }, { status: 500 })
   }
 }
 
@@ -78,16 +78,16 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get("status") || ""
-    const patientId = searchParams.get("patientId") || ""
-    const planId = searchParams.get("planId") || ""
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "20")
+    const status = searchParams.get('status') || ''
+    const patientId = searchParams.get('patientId') || ''
+    const planId = searchParams.get('planId') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: any = { hospitalId }
     if (status) where.status = status
@@ -99,9 +99,11 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           plan: { select: { name: true, price: true, duration: true } },
-          patient: { select: { id: true, patientId: true, firstName: true, lastName: true, phone: true } },
+          patient: {
+            select: { id: true, patientId: true, firstName: true, lastName: true, phone: true },
+          },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -113,7 +115,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error("Error fetching memberships:", err)
-    return NextResponse.json({ error: "Failed to fetch memberships" }, { status: 500 })
+    console.error('Error fetching memberships:', err)
+    return NextResponse.json({ error: 'Failed to fetch memberships' }, { status: 500 })
   }
 }

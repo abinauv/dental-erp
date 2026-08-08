@@ -1,11 +1,8 @@
-"use client"
+'use client'
 
-import { useState, useRef, useCallback, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
   ZoomIn,
   ZoomOut,
@@ -21,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface ImageViewerProps {
   open: boolean
@@ -156,43 +153,52 @@ export function ImageViewer({
     if (!open) return
     const handleKey = (e: KeyboardEvent) => {
       switch (e.key) {
-        case "+":
-        case "=":
+        case '+':
+        case '=':
           handleZoomIn()
           break
-        case "-":
+        case '-':
           handleZoomOut()
           break
-        case "r":
+        case 'r':
           handleRotateCW()
           break
-        case "0":
+        case '0':
           resetTransforms()
           break
-        case "ArrowLeft":
+        case 'ArrowLeft':
           handlePrev()
           break
-        case "ArrowRight":
+        case 'ArrowRight':
           handleNext()
           break
-        case "f":
+        case 'f':
           handleFullscreen()
           break
       }
     }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [open, handleZoomIn, handleZoomOut, handleRotateCW, resetTransforms, handlePrev, handleNext, handleFullscreen])
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [
+    open,
+    handleZoomIn,
+    handleZoomOut,
+    handleRotateCW,
+    resetTransforms,
+    handlePrev,
+    handleNext,
+    handleFullscreen,
+  ])
 
   const imageStyle: React.CSSProperties = {
     transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg) scaleX(${flipH ? -1 : 1}) scaleY(${flipV ? -1 : 1})`,
     filter: `brightness(${brightness}%) contrast(${contrast}%)`,
-    cursor: zoom > 1 ? (isPanning ? "grabbing" : "grab") : "default",
-    transition: isPanning ? "none" : "transform 0.2s ease",
-    maxHeight: "100%",
-    maxWidth: "100%",
-    objectFit: "contain" as const,
-    userSelect: "none" as const,
+    cursor: zoom > 1 ? (isPanning ? 'grabbing' : 'grab') : 'default',
+    transition: isPanning ? 'none' : 'transform 0.2s ease',
+    maxHeight: '100%',
+    maxWidth: '100%',
+    objectFit: 'contain' as const,
+    userSelect: 'none' as const,
   }
 
   const currentImage = images?.[currentIndex]
@@ -297,7 +303,7 @@ export function ImageViewer({
             <img
               ref={imgRef}
               src={displaySrc}
-              alt={displayTitle || "Image"}
+              alt={displayTitle || 'Image'}
               style={imageStyle}
               draggable={false}
               onClick={(e) => e.stopPropagation()}
@@ -308,21 +314,45 @@ export function ImageViewer({
           {showControls && (
             <div className="flex items-center justify-center gap-1 px-4 py-2 bg-black/80 text-white z-10 flex-wrap">
               {/* Zoom controls */}
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" onClick={handleZoomOut} title="Zoom out (-)">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 h-8 w-8"
+                onClick={handleZoomOut}
+                title="Zoom out (-)"
+              >
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <span className="text-xs w-12 text-center">{Math.round(zoom * 100)}%</span>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" onClick={handleZoomIn} title="Zoom in (+)">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 h-8 w-8"
+                onClick={handleZoomIn}
+                title="Zoom in (+)"
+              >
                 <ZoomIn className="h-4 w-4" />
               </Button>
 
               <div className="w-px h-5 bg-white/30 mx-1" />
 
               {/* Rotation */}
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" onClick={handleRotateCCW} title="Rotate left">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 h-8 w-8"
+                onClick={handleRotateCCW}
+                title="Rotate left"
+              >
                 <RotateCcw className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" onClick={handleRotateCW} title="Rotate right (R)">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 h-8 w-8"
+                onClick={handleRotateCW}
+                title="Rotate right (R)"
+              >
                 <RotateCw className="h-4 w-4" />
               </Button>
 
@@ -332,7 +362,7 @@ export function ImageViewer({
               <Button
                 variant="ghost"
                 size="icon"
-                className={`hover:bg-white/20 h-8 w-8 ${flipH ? "text-blue-400" : "text-white"}`}
+                className={`hover:bg-white/20 h-8 w-8 ${flipH ? 'text-blue-400' : 'text-white'}`}
                 onClick={() => setFlipH((f) => !f)}
                 title="Flip horizontal"
               >
@@ -341,7 +371,7 @@ export function ImageViewer({
               <Button
                 variant="ghost"
                 size="icon"
-                className={`hover:bg-white/20 h-8 w-8 ${flipV ? "text-blue-400" : "text-white"}`}
+                className={`hover:bg-white/20 h-8 w-8 ${flipV ? 'text-blue-400' : 'text-white'}`}
                 onClick={() => setFlipV((f) => !f)}
                 title="Flip vertical"
               >
@@ -379,8 +409,18 @@ export function ImageViewer({
               <div className="w-px h-5 bg-white/30 mx-1" />
 
               {/* Fullscreen */}
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" onClick={handleFullscreen} title="Fullscreen (F)">
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 h-8 w-8"
+                onClick={handleFullscreen}
+                title="Fullscreen (F)"
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
               </Button>
 
               {/* Reset */}

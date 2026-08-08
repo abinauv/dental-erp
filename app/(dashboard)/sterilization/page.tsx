@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { useToast } from '@/hooks/use-toast'
 import {
   Shield,
   Package,
@@ -17,7 +17,7 @@ import {
   Loader2,
   Wrench,
   ArrowRight,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface DashboardStats {
   total: number
@@ -51,11 +51,11 @@ export default function SterilizationDashboardPage() {
     setLoading(true)
     try {
       const [instrRes, logsRes] = await Promise.all([
-        fetch("/api/sterilization/instruments"),
-        fetch("/api/sterilization/logs?limit=10"),
+        fetch('/api/sterilization/instruments'),
+        fetch('/api/sterilization/logs?limit=10'),
       ])
 
-      if (!instrRes.ok || !logsRes.ok) throw new Error("Failed to fetch data")
+      if (!instrRes.ok || !logsRes.ok) throw new Error('Failed to fetch data')
 
       const instrData = await instrRes.json()
       const logsData = await logsRes.json()
@@ -72,17 +72,17 @@ export default function SterilizationDashboardPage() {
 
       setStats({
         total: instruments.length,
-        available: statusCounts["AVAILABLE"] || 0,
-        inUse: statusCounts["IN_USE"] || 0,
-        sterilizing: statusCounts["STERILIZING"] || 0,
-        contaminated: statusCounts["CONTAMINATED"] || 0,
-        maintenance: statusCounts["MAINTENANCE"] || 0,
-        retired: statusCounts["RETIRED"] || 0,
+        available: statusCounts['AVAILABLE'] || 0,
+        inUse: statusCounts['IN_USE'] || 0,
+        sterilizing: statusCounts['STERILIZING'] || 0,
+        contaminated: statusCounts['CONTAMINATED'] || 0,
+        maintenance: statusCounts['MAINTENANCE'] || 0,
+        retired: statusCounts['RETIRED'] || 0,
         nearMaxCycles,
         recentLogs: logsData.logs || [],
       })
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -90,10 +90,14 @@ export default function SterilizationDashboardPage() {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case "PASS": return "default"
-      case "FAIL": return "destructive"
-      case "PENDING": return "secondary"
-      default: return "outline"
+      case 'PASS':
+        return 'default'
+      case 'FAIL':
+        return 'destructive'
+      case 'PENDING':
+        return 'secondary'
+      default:
+        return 'outline'
     }
   }
 
@@ -227,7 +231,10 @@ export default function SterilizationDashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {stats.recentLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between border-b pb-2 last:border-0"
+                >
                   <div>
                     <p className="font-medium text-sm">{log.instrument.name}</p>
                     <p className="text-xs text-muted-foreground">

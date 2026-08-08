@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get single payment details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -34,43 +31,34 @@ export async function GET(
                 lastName: true,
                 phone: true,
                 email: true,
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     })
 
     if (!payment) {
-      return NextResponse.json(
-        { error: "Payment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
     return NextResponse.json(payment)
   } catch (error) {
-    console.error("Error fetching payment:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch payment" },
-      { status: 500 }
-    )
+    console.error('Error fetching payment:', error)
+    return NextResponse.json({ error: 'Failed to fetch payment' }, { status: 500 })
   }
 }
 
 // PUT - Update payment (mainly for notes or processing refunds)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN", "ACCOUNTANT"].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to update payments" },
         { status: 403 }
@@ -84,15 +72,12 @@ export async function PUT(
     const existingPayment = await prisma.payment.findUnique({
       where: { id, hospitalId },
       include: {
-        invoice: true
-      }
+        invoice: true,
+      },
     })
 
     if (!existingPayment) {
-      return NextResponse.json(
-        { error: "Payment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
     const { notes, status } = body
@@ -107,20 +92,21 @@ export async function PUT(
     // Handle status changes (mainly for pending payments)
     if (status && status !== existingPayment.status) {
       // Only allow certain status changes
-      if (existingPayment.status === "PENDING") {
-        if (status === "COMPLETED" || status === "CANCELLED" || status === "FAILED") {
+      if (existingPayment.status === 'PENDING') {
+        if (status === 'COMPLETED' || status === 'CANCELLED' || status === 'FAILED') {
           updateData.status = status
 
           // If completing a pending payment, update invoice
-          if (status === "COMPLETED") {
-            const newPaidAmount = Number(existingPayment.invoice.paidAmount) + Number(existingPayment.amount)
+          if (status === 'COMPLETED') {
+            const newPaidAmount =
+              Number(existingPayment.invoice.paidAmount) + Number(existingPayment.amount)
             const newBalanceAmount = Number(existingPayment.invoice.totalAmount) - newPaidAmount
 
             let newInvoiceStatus = existingPayment.invoice.status
             if (newBalanceAmount <= 0) {
-              newInvoiceStatus = "PAID"
+              newInvoiceStatus = 'PAID'
             } else if (newPaidAmount > 0) {
-              newInvoiceStatus = "PARTIALLY_PAID"
+              newInvoiceStatus = 'PARTIALLY_PAID'
             }
 
             await prisma.invoice.update({
@@ -129,7 +115,7 @@ export async function PUT(
                 paidAmount: newPaidAmount,
                 balanceAmount: newBalanceAmount,
                 status: newInvoiceStatus,
-              }
+              },
             })
           }
         } else {
@@ -138,19 +124,16 @@ export async function PUT(
             { status: 400 }
           )
         }
-      } else if (existingPayment.status === "COMPLETED" && status !== "COMPLETED") {
+      } else if (existingPayment.status === 'COMPLETED' && status !== 'COMPLETED') {
         return NextResponse.json(
-          { error: "Cannot change status of a completed payment. Use refund instead." },
+          { error: 'Cannot change status of a completed payment. Use refund instead.' },
           { status: 400 }
         )
       }
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: "No valid fields to update" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
     }
 
     const payment = await prisma.payment.update({
@@ -165,18 +148,15 @@ export async function PUT(
             paidAmount: true,
             balanceAmount: true,
             status: true,
-          }
-        }
-      }
+          },
+        },
+      },
     })
 
     return NextResponse.json(payment)
   } catch (error) {
-    console.error("Error updating payment:", error)
-    return NextResponse.json(
-      { error: "Failed to update payment" },
-      { status: 500 }
-    )
+    console.error('Error updating payment:', error)
+    return NextResponse.json({ error: 'Failed to update payment' }, { status: 500 })
   }
 }
 
@@ -187,12 +167,12 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     // Check if user has permission
-    if (!["ADMIN"].includes(session.user.role)) {
+    if (!['ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to delete payments" },
         { status: 403 }
@@ -203,35 +183,29 @@ export async function DELETE(
 
     // Check if payment exists
     const existingPayment = await prisma.payment.findUnique({
-      where: { id, hospitalId }
+      where: { id, hospitalId },
     })
 
     if (!existingPayment) {
-      return NextResponse.json(
-        { error: "Payment not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
     }
 
     // Only allow deleting pending or failed payments
-    if (existingPayment.status === "COMPLETED") {
+    if (existingPayment.status === 'COMPLETED') {
       return NextResponse.json(
-        { error: "Cannot delete a completed payment. Use refund instead." },
+        { error: 'Cannot delete a completed payment. Use refund instead.' },
         { status: 400 }
       )
     }
 
     // Delete the payment
     await prisma.payment.delete({
-      where: { id }
+      where: { id },
     })
 
-    return NextResponse.json({ message: "Payment deleted successfully" })
+    return NextResponse.json({ message: 'Payment deleted successfully' })
   } catch (error) {
-    console.error("Error deleting payment:", error)
-    return NextResponse.json(
-      { error: "Failed to delete payment" },
-      { status: 500 }
-    )
+    console.error('Error deleting payment:', error)
+    return NextResponse.json({ error: 'Failed to delete payment' }, { status: 500 })
   }
 }

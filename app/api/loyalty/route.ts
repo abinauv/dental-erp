@@ -1,20 +1,20 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get loyalty points for a patient or all transactions
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const patientId = searchParams.get("patientId") || ""
-    const type = searchParams.get("type") || ""
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "20")
+    const patientId = searchParams.get('patientId') || ''
+    const type = searchParams.get('type') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     const where: any = { hospitalId }
     if (patientId) where.patientId = patientId
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const [transactions, total] = await Promise.all([
       prisma.loyaltyTransaction.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error("Error fetching loyalty transactions:", err)
-    return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
+    console.error('Error fetching loyalty transactions:', err)
+    return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
   }
 }
 
@@ -55,12 +55,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    if (!["ADMIN", "RECEPTIONIST", "ACCOUNTANT"].includes(session.user.role)) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 403 })
+    if (!['ADMIN', 'RECEPTIONIST', 'ACCOUNTANT'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     if (!patientId || points === undefined || !type || !description) {
       return NextResponse.json(
-        { error: "patientId, points, type, and description are required" },
+        { error: 'patientId, points, type, and description are required' },
         { status: 400 }
       )
     }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: "Patient not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // For redemptions, check balance
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transaction, { status: 201 })
   } catch (err) {
-    console.error("Error creating loyalty transaction:", err)
-    return NextResponse.json({ error: "Failed to process transaction" }, { status: 500 })
+    console.error('Error creating loyalty transaction:', err)
+    return NextResponse.json({ error: 'Failed to process transaction' }, { status: 500 })
   }
 }

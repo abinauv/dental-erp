@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server"
-import { z } from "zod"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 const onboardingSchema = z.object({
   // Step 1: Clinic Details
   tagline: z.string().optional(),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  pincode: z.string().min(5, "Valid pincode is required"),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  pincode: z.string().min(5, 'Valid pincode is required'),
   alternatePhone: z.string().optional(),
   website: z.string().optional(),
 
@@ -29,15 +29,18 @@ const onboardingSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   // Only hospital admin can complete onboarding
   if (!user?.isHospitalAdmin) {
-    return NextResponse.json({ error: "Only the hospital admin can complete onboarding" }, { status: 403 })
+    return NextResponse.json(
+      { error: 'Only the hospital admin can complete onboarding' },
+      { status: 403 }
+    )
   }
 
   try {
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validated.error.flatten() },
+        { error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -78,7 +81,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Onboarding completed successfully",
+      message: 'Onboarding completed successfully',
       hospital: {
         id: hospital.id,
         name: hospital.name,
@@ -86,9 +89,9 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error("Onboarding error:", error)
+    console.error('Onboarding error:', error)
     return NextResponse.json(
-      { error: "An error occurred during onboarding. Please try again." },
+      { error: 'An error occurred during onboarding. Please try again.' },
       { status: 500 }
     )
   }
@@ -99,7 +102,7 @@ export async function GET() {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -132,15 +135,12 @@ export async function GET() {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: "Hospital not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Hospital not found' }, { status: 404 })
     }
 
     return NextResponse.json(hospital)
   } catch (error) {
-    console.error("Get onboarding status error:", error)
-    return NextResponse.json(
-      { error: "An error occurred. Please try again." },
-      { status: 500 }
-    )
+    console.error('Get onboarding status error:', error)
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

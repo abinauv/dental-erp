@@ -39,14 +39,8 @@ import {
   POST as templatesPOST,
   GET as templatesGET,
 } from '@/app/api/communications/templates/route'
-import {
-  POST as smsPOST,
-  GET as smsGET,
-} from '@/app/api/communications/sms/route'
-import {
-  POST as emailPOST,
-  GET as emailGET,
-} from '@/app/api/communications/email/route'
+import { POST as smsPOST, GET as smsGET } from '@/app/api/communications/sms/route'
+import { POST as emailPOST, GET as emailGET } from '@/app/api/communications/email/route'
 
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { templateService } from '@/lib/services/template.service'
@@ -89,9 +83,14 @@ describe('POST /api/communications/templates', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await templatesPOST(makeReq('/api/communications/templates', 'POST', {
-      name: 'T', category: 'GENERAL', channel: 'SMS', content: 'Hi',
-    }))
+    const res = await templatesPOST(
+      makeReq('/api/communications/templates', 'POST', {
+        name: 'T',
+        category: 'GENERAL',
+        channel: 'SMS',
+        content: 'Hi',
+      })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -110,12 +109,14 @@ describe('POST /api/communications/templates', () => {
       content: 'Hello {{patientName}}',
     } as any)
 
-    const res = await templatesPOST(makeReq('/api/communications/templates', 'POST', {
-      name: 'Reminder',
-      category: 'APPOINTMENT',
-      channel: 'SMS',
-      content: 'Hello {{patientName}}',
-    }))
+    const res = await templatesPOST(
+      makeReq('/api/communications/templates', 'POST', {
+        name: 'Reminder',
+        category: 'APPOINTMENT',
+        channel: 'SMS',
+        content: 'Hello {{patientName}}',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -134,9 +135,14 @@ describe('POST /api/communications/templates', () => {
       unknownVariables: ['badVar'],
     })
 
-    const res = await templatesPOST(makeReq('/api/communications/templates', 'POST', {
-      name: 'Bad', category: 'GENERAL', channel: 'SMS', content: 'Hello {{badVar}}',
-    }))
+    const res = await templatesPOST(
+      makeReq('/api/communications/templates', 'POST', {
+        name: 'Bad',
+        category: 'GENERAL',
+        channel: 'SMS',
+        content: 'Hello {{badVar}}',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -146,9 +152,14 @@ describe('POST /api/communications/templates', () => {
 
   it('returns 500 for invalid category enum', async () => {
     mockAuth()
-    const res = await templatesPOST(makeReq('/api/communications/templates', 'POST', {
-      name: 'T', category: 'INVALID_CAT', channel: 'SMS', content: 'Hi',
-    }))
+    const res = await templatesPOST(
+      makeReq('/api/communications/templates', 'POST', {
+        name: 'T',
+        category: 'INVALID_CAT',
+        channel: 'SMS',
+        content: 'Hi',
+      })
+    )
     expect(res.status).toBe(500)
   })
 })
@@ -187,7 +198,9 @@ describe('GET /api/communications/templates', () => {
     mockAuth()
     vi.mocked(templateService.getTemplates).mockResolvedValue([])
 
-    await templatesGET(makeReq('/api/communications/templates?category=PAYMENT&channel=EMAIL&isActive=true'))
+    await templatesGET(
+      makeReq('/api/communications/templates?category=PAYMENT&channel=EMAIL&isActive=true')
+    )
 
     expect(templateService.getTemplates).toHaveBeenCalledWith('h1', {
       category: 'PAYMENT',
@@ -217,9 +230,12 @@ describe('POST /api/communications/sms', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await smsPOST(makeReq('/api/communications/sms', 'POST', {
-      phone: '9876543210', message: 'Hello',
-    }))
+    const res = await smsPOST(
+      makeReq('/api/communications/sms', 'POST', {
+        phone: '9876543210',
+        message: 'Hello',
+      })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -227,10 +243,12 @@ describe('POST /api/communications/sms', () => {
     mockAuth()
     vi.mocked(smsService.sendSMS).mockResolvedValue('sms1' as any)
 
-    const res = await smsPOST(makeReq('/api/communications/sms', 'POST', {
-      phone: '9876543210',
-      message: 'Test message',
-    }))
+    const res = await smsPOST(
+      makeReq('/api/communications/sms', 'POST', {
+        phone: '9876543210',
+        message: 'Test message',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -240,19 +258,23 @@ describe('POST /api/communications/sms', () => {
 
   it('returns 500 for validation error (phone too short)', async () => {
     mockAuth()
-    const res = await smsPOST(makeReq('/api/communications/sms', 'POST', {
-      phone: '123',
-      message: 'Hello',
-    }))
+    const res = await smsPOST(
+      makeReq('/api/communications/sms', 'POST', {
+        phone: '123',
+        message: 'Hello',
+      })
+    )
     expect(res.status).toBe(500)
   })
 
   it('returns 500 for validation error (message too long)', async () => {
     mockAuth()
-    const res = await smsPOST(makeReq('/api/communications/sms', 'POST', {
-      phone: '9876543210',
-      message: 'x'.repeat(501),
-    }))
+    const res = await smsPOST(
+      makeReq('/api/communications/sms', 'POST', {
+        phone: '9876543210',
+        message: 'x'.repeat(501),
+      })
+    )
     expect(res.status).toBe(500)
   })
 })
@@ -272,9 +294,7 @@ describe('GET /api/communications/sms', () => {
 
   it('returns SMS history', async () => {
     mockAuth()
-    const mockHistory = [
-      { id: 'sms1', phone: '9876543210', status: 'DELIVERED' },
-    ]
+    const mockHistory = [{ id: 'sms1', phone: '9876543210', status: 'DELIVERED' }]
     vi.mocked(smsService.getSMSHistory).mockResolvedValue(mockHistory as any)
 
     const res = await smsGET(makeReq('/api/communications/sms'))
@@ -311,9 +331,13 @@ describe('POST /api/communications/email', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await emailPOST(makeReq('/api/communications/email', 'POST', {
-      to: 'test@example.com', subject: 'Hi', body: 'Hello',
-    }))
+    const res = await emailPOST(
+      makeReq('/api/communications/email', 'POST', {
+        to: 'test@example.com',
+        subject: 'Hi',
+        body: 'Hello',
+      })
+    )
     expect(res.status).toBe(401)
   })
 
@@ -321,11 +345,13 @@ describe('POST /api/communications/email', () => {
     mockAuth()
     vi.mocked(emailService.sendEmail).mockResolvedValue('em1' as any)
 
-    const res = await emailPOST(makeReq('/api/communications/email', 'POST', {
-      to: 'patient@example.com',
-      subject: 'Appointment Reminder',
-      body: 'Your appointment is tomorrow.',
-    }))
+    const res = await emailPOST(
+      makeReq('/api/communications/email', 'POST', {
+        to: 'patient@example.com',
+        subject: 'Appointment Reminder',
+        body: 'Your appointment is tomorrow.',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -337,11 +363,13 @@ describe('POST /api/communications/email', () => {
     mockAuth()
     vi.mocked(emailService.sendWithTemplate).mockResolvedValue('em2' as any)
 
-    const res = await emailPOST(makeReq('/api/communications/email', 'POST', {
-      to: 'patient@example.com',
-      templateId: 't1',
-      variables: { patientName: 'John' },
-    }))
+    const res = await emailPOST(
+      makeReq('/api/communications/email', 'POST', {
+        to: 'patient@example.com',
+        templateId: 't1',
+        variables: { patientName: 'John' },
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -364,9 +392,7 @@ describe('GET /api/communications/email', () => {
 
   it('returns email history', async () => {
     mockAuth()
-    const mockHistory = [
-      { id: 'em1', to: 'test@example.com', status: 'SENT' },
-    ]
+    const mockHistory = [{ id: 'em1', to: 'test@example.com', status: 'SENT' }]
     vi.mocked(emailService.getEmailHistory).mockResolvedValue(mockHistory as any)
 
     const res = await emailGET(makeReq('/api/communications/email'))

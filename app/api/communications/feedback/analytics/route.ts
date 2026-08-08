@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
 
 /**
  * GET /api/communications/feedback/analytics
@@ -9,17 +9,17 @@ import { prisma } from "@/lib/prisma"
  * Query params: ?period=7d|30d|90d|all
  */
 export async function GET(req: Request) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error) return error
 
   const { searchParams } = new URL(req.url)
-  const period = searchParams.get("period") || "30d"
+  const period = searchParams.get('period') || '30d'
 
   const now = new Date()
   let since: Date | null = null
-  if (period === "7d") since = new Date(now.getTime() - 7 * 86400000)
-  else if (period === "30d") since = new Date(now.getTime() - 30 * 86400000)
-  else if (period === "90d") since = new Date(now.getTime() - 90 * 86400000)
+  if (period === '7d') since = new Date(now.getTime() - 7 * 86400000)
+  else if (period === '30d') since = new Date(now.getTime() - 30 * 86400000)
+  else if (period === '90d') since = new Date(now.getTime() - 90 * 86400000)
 
   const dateFilter = since ? { gte: since } : undefined
 
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
       sentiment: true,
       createdAt: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: 'asc' },
   })
 
   const totalResponses = responses.length
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
   // NPS trend by month
   const npsByMonth: Record<string, { promoters: number; detractors: number; total: number }> = {}
   for (const r of ratedResponses) {
-    const monthKey = `${r.createdAt.getFullYear()}-${String(r.createdAt.getMonth() + 1).padStart(2, "0")}`
+    const monthKey = `${r.createdAt.getFullYear()}-${String(r.createdAt.getMonth() + 1).padStart(2, '0')}`
     if (!npsByMonth[monthKey]) npsByMonth[monthKey] = { promoters: 0, detractors: 0, total: 0 }
     npsByMonth[monthKey].total++
     if ((r.rating || 0) >= 4) npsByMonth[monthKey].promoters++
@@ -94,15 +94,16 @@ export async function GET(req: Request) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, data]) => ({
       month,
-      score: data.total > 0 ? Math.round(((data.promoters - data.detractors) / data.total) * 100) : 0,
+      score:
+        data.total > 0 ? Math.round(((data.promoters - data.detractors) / data.total) * 100) : 0,
       responses: data.total,
     }))
 
   // Sentiment breakdown
   const sentimentBreakdown = {
-    positive: responses.filter((r) => r.sentiment === "positive").length,
-    neutral: responses.filter((r) => r.sentiment === "neutral").length,
-    negative: responses.filter((r) => r.sentiment === "negative").length,
+    positive: responses.filter((r) => r.sentiment === 'positive').length,
+    neutral: responses.filter((r) => r.sentiment === 'neutral').length,
+    negative: responses.filter((r) => r.sentiment === 'negative').length,
   }
 
   // Satisfaction by doctor — join through patientId → appointments → doctor
@@ -116,7 +117,7 @@ export async function GET(req: Request) {
       where: {
         hospitalId: hospitalId!,
         patientId: { in: patientIds },
-        status: "COMPLETED",
+        status: 'COMPLETED',
         scheduledDate: dateFilter,
       },
       select: {
@@ -186,7 +187,7 @@ export async function GET(req: Request) {
   // Satisfaction by month
   const ratingByMonth: Record<string, { total: number; count: number }> = {}
   for (const r of ratedResponses) {
-    const monthKey = `${r.createdAt.getFullYear()}-${String(r.createdAt.getMonth() + 1).padStart(2, "0")}`
+    const monthKey = `${r.createdAt.getFullYear()}-${String(r.createdAt.getMonth() + 1).padStart(2, '0')}`
     if (!ratingByMonth[monthKey]) ratingByMonth[monthKey] = { total: 0, count: 0 }
     ratingByMonth[monthKey].total += r.rating || 0
     ratingByMonth[monthKey].count++
@@ -201,18 +202,114 @@ export async function GET(req: Request) {
 
   // Word frequency from open-text answers
   const stopWords = new Set([
-    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-    "have", "has", "had", "do", "does", "did", "will", "would", "could",
-    "should", "may", "might", "must", "shall", "can", "need", "dare",
-    "to", "of", "in", "for", "on", "with", "at", "by", "from", "as",
-    "into", "through", "during", "before", "after", "above", "below",
-    "between", "out", "off", "over", "under", "again", "further", "then",
-    "once", "here", "there", "when", "where", "why", "how", "all", "each",
-    "every", "both", "few", "more", "most", "other", "some", "such", "no",
-    "nor", "not", "only", "own", "same", "so", "than", "too", "very",
-    "just", "because", "but", "and", "or", "if", "while", "that", "this",
-    "it", "its", "i", "me", "my", "we", "our", "you", "your", "he", "him",
-    "she", "her", "they", "them", "their", "what", "which", "who", "whom",
+    'the',
+    'a',
+    'an',
+    'is',
+    'are',
+    'was',
+    'were',
+    'be',
+    'been',
+    'being',
+    'have',
+    'has',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'could',
+    'should',
+    'may',
+    'might',
+    'must',
+    'shall',
+    'can',
+    'need',
+    'dare',
+    'to',
+    'of',
+    'in',
+    'for',
+    'on',
+    'with',
+    'at',
+    'by',
+    'from',
+    'as',
+    'into',
+    'through',
+    'during',
+    'before',
+    'after',
+    'above',
+    'below',
+    'between',
+    'out',
+    'off',
+    'over',
+    'under',
+    'again',
+    'further',
+    'then',
+    'once',
+    'here',
+    'there',
+    'when',
+    'where',
+    'why',
+    'how',
+    'all',
+    'each',
+    'every',
+    'both',
+    'few',
+    'more',
+    'most',
+    'other',
+    'some',
+    'such',
+    'no',
+    'nor',
+    'not',
+    'only',
+    'own',
+    'same',
+    'so',
+    'than',
+    'too',
+    'very',
+    'just',
+    'because',
+    'but',
+    'and',
+    'or',
+    'if',
+    'while',
+    'that',
+    'this',
+    'it',
+    'its',
+    'i',
+    'me',
+    'my',
+    'we',
+    'our',
+    'you',
+    'your',
+    'he',
+    'him',
+    'she',
+    'her',
+    'they',
+    'them',
+    'their',
+    'what',
+    'which',
+    'who',
+    'whom',
   ])
 
   const wordCounts: Record<string, number> = {}
@@ -220,14 +317,15 @@ export async function GET(req: Request) {
     try {
       const answers = JSON.parse(r.answers)
       // answers could be an object { "question": "answer" } or array
-      const textValues = typeof answers === "object"
-        ? Object.values(answers).filter((v): v is string => typeof v === "string")
-        : []
+      const textValues =
+        typeof answers === 'object'
+          ? Object.values(answers).filter((v): v is string => typeof v === 'string')
+          : []
 
       for (const text of textValues) {
         const words = text
           .toLowerCase()
-          .replace(/[^a-zA-Z\s]/g, "")
+          .replace(/[^a-zA-Z\s]/g, '')
           .split(/\s+/)
           .filter((w) => w.length > 2 && !stopWords.has(w))
 

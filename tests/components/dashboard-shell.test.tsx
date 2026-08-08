@@ -32,7 +32,9 @@ vi.mock('@/components/layout/sidebar', () => ({
 
 vi.mock('@/components/layout/mobile-sidebar', () => ({
   MobileSidebar: ({ role }: any) => (
-    <div data-testid="mobile-sidebar" data-role={role}>MobileSidebar</div>
+    <div data-testid="mobile-sidebar" data-role={role}>
+      MobileSidebar
+    </div>
   ),
 }))
 
@@ -61,7 +63,11 @@ vi.mock('@/components/ai/chat-widget', () => ({
 }))
 
 vi.mock('@/components/ui/breadcrumb', () => ({
-  Breadcrumb: ({ className }: any) => <nav data-testid="breadcrumb" className={className}>Breadcrumb</nav>,
+  Breadcrumb: ({ className }: any) => (
+    <nav data-testid="breadcrumb" className={className}>
+      Breadcrumb
+    </nav>
+  ),
 }))
 
 vi.mock('@/components/layout/keyboard-shortcut-help', () => ({

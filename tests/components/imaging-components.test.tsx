@@ -23,18 +23,28 @@ vi.mock('lucide-react', async (importOriginal) => {
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, title, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} title={title} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} title={title} {...props}>
+      {children}
+    </button>
   ),
 }))
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children, onOpenChange }: any) =>
-    open ? <div data-testid="dialog" data-open={open}>{children}</div> : null,
+    open ? (
+      <div data-testid="dialog" data-open={open}>
+        {children}
+      </div>
+    ) : null,
   DialogContent: ({ children, className }: any) => (
-    <div data-testid="dialog-content" className={className}>{children}</div>
+    <div data-testid="dialog-content" className={className}>
+      {children}
+    </div>
   ),
   DialogFooter: ({ children, className }: any) => (
-    <div data-testid="dialog-footer" className={className}>{children}</div>
+    <div data-testid="dialog-footer" className={className}>
+      {children}
+    </div>
   ),
 }))
 
@@ -142,12 +152,7 @@ describe('ImageViewer', () => {
       { src: '/img3.jpg', title: 'Image 3' },
     ]
     render(
-      <ImageViewer
-        {...defaultProps}
-        images={images}
-        currentIndex={1}
-        onIndexChange={vi.fn()}
-      />
+      <ImageViewer {...defaultProps} images={images} currentIndex={1} onIndexChange={vi.fn()} />
     )
     expect(screen.getByText('2 / 3')).toBeInTheDocument()
   })
@@ -158,12 +163,7 @@ describe('ImageViewer', () => {
       { src: '/img2.jpg', title: 'Image 2' },
     ]
     render(
-      <ImageViewer
-        {...defaultProps}
-        images={images}
-        currentIndex={0}
-        onIndexChange={vi.fn()}
-      />
+      <ImageViewer {...defaultProps} images={images} currentIndex={0} onIndexChange={vi.fn()} />
     )
     // At index 0, should show a next arrow button (in the image area)
     // The arrow buttons have className containing "absolute right-2"
@@ -248,7 +248,9 @@ describe('ImageAnnotator', () => {
   it('renders color swatches', () => {
     render(<ImageAnnotator {...defaultProps} />)
     // 7 color buttons (red, orange, yellow, green, blue, violet, white)
-    const colorBtns = screen.getByTestId('dialog-content').querySelectorAll('button[style*="background"]')
+    const colorBtns = screen
+      .getByTestId('dialog-content')
+      .querySelectorAll('button[style*="background"]')
     expect(colorBtns.length).toBe(7)
   })
 

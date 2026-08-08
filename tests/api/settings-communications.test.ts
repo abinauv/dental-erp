@@ -36,9 +36,11 @@ describe('Settings Communications API', () => {
     it('returns organized settings from JSON records', async () => {
       ;(prisma.setting.findMany as any).mockResolvedValue([])
       ;(prisma.setting.findUnique as any)
-        .mockResolvedValueOnce({ value: JSON.stringify({ gateway: 'twilio', apiKey: 'key123' }) })  // sms_settings
-        .mockResolvedValueOnce({ value: JSON.stringify({ smtp_host: 'smtp.test.com' }) })  // email_settings
-        .mockResolvedValueOnce({ value: JSON.stringify({ google_review_url: 'https://g.co/review' }) })  // reviews_settings
+        .mockResolvedValueOnce({ value: JSON.stringify({ gateway: 'twilio', apiKey: 'key123' }) }) // sms_settings
+        .mockResolvedValueOnce({ value: JSON.stringify({ smtp_host: 'smtp.test.com' }) }) // email_settings
+        .mockResolvedValueOnce({
+          value: JSON.stringify({ google_review_url: 'https://g.co/review' }),
+        }) // reviews_settings
 
       const res = await mod.GET(makeGetRequest())
       expect(res.status).toBe(200)
@@ -54,9 +56,9 @@ describe('Settings Communications API', () => {
         { category: 'email', key: 'email.smtp.host', value: 'smtp.example.com' },
       ])
       ;(prisma.setting.findUnique as any)
-        .mockResolvedValueOnce(null)  // sms_settings
-        .mockResolvedValueOnce(null)  // email_settings
-        .mockResolvedValueOnce(null)  // reviews_settings
+        .mockResolvedValueOnce(null) // sms_settings
+        .mockResolvedValueOnce(null) // email_settings
+        .mockResolvedValueOnce(null) // reviews_settings
 
       const res = await mod.GET(makeGetRequest())
       expect(res.status).toBe(200)
@@ -80,10 +82,12 @@ describe('Settings Communications API', () => {
     it('saves SMS settings with upsert', async () => {
       ;(prisma.setting.upsert as any).mockResolvedValue({})
 
-      const res = await mod.POST(makePostRequest({
-        type: 'sms',
-        settings: { gateway: 'twilio', apiKey: 'key123', senderId: 'CLINIC', enabled: true },
-      }))
+      const res = await mod.POST(
+        makePostRequest({
+          type: 'sms',
+          settings: { gateway: 'twilio', apiKey: 'key123', senderId: 'CLINIC', enabled: true },
+        })
+      )
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.success).toBe(true)
@@ -95,10 +99,12 @@ describe('Settings Communications API', () => {
     it('saves email settings', async () => {
       ;(prisma.setting.upsert as any).mockResolvedValue({})
 
-      const res = await mod.POST(makePostRequest({
-        type: 'email',
-        settings: { smtp_host: 'smtp.test.com', smtp_port: '587', from_name: 'Clinic' },
-      }))
+      const res = await mod.POST(
+        makePostRequest({
+          type: 'email',
+          settings: { smtp_host: 'smtp.test.com', smtp_port: '587', from_name: 'Clinic' },
+        })
+      )
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.message).toContain('EMAIL')
@@ -107,10 +113,12 @@ describe('Settings Communications API', () => {
     it('saves reviews settings', async () => {
       ;(prisma.setting.upsert as any).mockResolvedValue({})
 
-      const res = await mod.POST(makePostRequest({
-        type: 'reviews',
-        settings: { google_review_url: 'https://g.co/review', auto_review_requests: true },
-      }))
+      const res = await mod.POST(
+        makePostRequest({
+          type: 'reviews',
+          settings: { google_review_url: 'https://g.co/review', auto_review_requests: true },
+        })
+      )
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.message).toContain('REVIEWS')

@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,10 +20,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Progress } from "@/components/ui/progress"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
 import {
   Plus,
   Search,
@@ -36,20 +36,20 @@ import {
   FileText,
   CheckCircle,
   ArrowLeft,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   treatmentPlanStatusConfig,
   formatCurrency,
   formatDate,
   calculatePlanProgress,
-} from "@/lib/treatment-utils"
+} from '@/lib/treatment-utils'
 
 interface TreatmentPlanItem {
   id: string
@@ -108,9 +108,9 @@ export default function TreatmentPlansPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [consentFilter, setConsentFilter] = useState("all")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [consentFilter, setConsentFilter] = useState('all')
 
   const fetchPlans = async () => {
     try {
@@ -120,18 +120,18 @@ export default function TreatmentPlansPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (consentFilter && consentFilter !== "all") params.append("consentGiven", consentFilter)
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (consentFilter && consentFilter !== 'all') params.append('consentGiven', consentFilter)
 
       const response = await fetch(`/api/treatment-plans?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch treatment plans")
+      if (!response.ok) throw new Error('Failed to fetch treatment plans')
 
       const data = await response.json()
       setPlans(data.treatmentPlans)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching treatment plans:", error)
+      console.error('Error fetching treatment plans:', error)
     } finally {
       setLoading(false)
     }
@@ -144,14 +144,10 @@ export default function TreatmentPlansPage() {
   const getStatusBadge = (status: string) => {
     const config = treatmentPlanStatusConfig[status] || {
       label: status,
-      color: "text-foreground",
-      bgColor: "bg-muted",
+      color: 'text-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   return (
@@ -166,9 +162,7 @@ export default function TreatmentPlansPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Treatment Plans</h1>
-            <p className="text-muted-foreground">
-              Create and manage comprehensive treatment plans
-            </p>
+            <p className="text-muted-foreground">Create and manage comprehensive treatment plans</p>
           </div>
         </div>
         <Link href="/treatments/plans/new">
@@ -241,13 +235,27 @@ export default function TreatmentPlansPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : plans.length === 0 ? (
@@ -272,9 +280,7 @@ export default function TreatmentPlansPage() {
                     <TableRow key={plan.id}>
                       <TableCell>
                         <div className="font-medium">{plan.planNumber}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {plan.title}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{plan.title}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -293,21 +299,17 @@ export default function TreatmentPlansPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {plan._count.items} procedure{plan._count.items !== 1 ? "s" : ""}
+                          {plan._count.items} procedure{plan._count.items !== 1 ? 's' : ''}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="w-24 space-y-1">
                           <Progress value={progress} className="h-2" />
-                          <div className="text-xs text-muted-foreground">
-                            {progress}% complete
-                          </div>
+                          <div className="text-xs text-muted-foreground">{progress}% complete</div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">
-                          {formatCurrency(plan.estimatedCost)}
-                        </div>
+                        <div className="font-medium">{formatCurrency(plan.estimatedCost)}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
@@ -334,7 +336,7 @@ export default function TreatmentPlansPage() {
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            {plan.status !== "COMPLETED" && plan.status !== "CANCELLED" && (
+                            {plan.status !== 'COMPLETED' && plan.status !== 'CANCELLED' && (
                               <DropdownMenuItem
                                 onClick={() => router.push(`/treatments/plans/${plan.id}/edit`)}
                               >
@@ -356,8 +358,8 @@ export default function TreatmentPlansPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} plans
               </div>
               <div className="flex items-center gap-2">

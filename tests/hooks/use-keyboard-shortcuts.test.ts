@@ -9,11 +9,7 @@ vi.mock('next/navigation', () => ({
 
 import { useKeyboardShortcuts, useHotkey } from '@/hooks/use-keyboard-shortcuts'
 
-function fireKey(
-  key: string,
-  opts: Partial<KeyboardEventInit> = {},
-  target?: HTMLElement
-) {
+function fireKey(key: string, opts: Partial<KeyboardEventInit> = {}, target?: HTMLElement) {
   const event = new KeyboardEvent('keydown', {
     key,
     bubbles: true,

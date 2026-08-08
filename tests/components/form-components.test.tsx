@@ -52,7 +52,9 @@ vi.mock('@/components/ui/radio-group', () => ({
   RadioGroup: ({ children, value, onValueChange, disabled }: any) => (
     <div data-testid="radio-group" data-value={value}>
       {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as any, { onValueChange, disabled }) : child
+        React.isValidElement(child)
+          ? React.cloneElement(child as any, { onValueChange, disabled })
+          : child
       )}
     </div>
   ),
@@ -72,7 +74,9 @@ vi.mock('@/components/ui/select', () => ({
   Select: ({ children, value, onValueChange, disabled }: any) => (
     <div data-testid="select-root">
       {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as any, { onValueChange, disabled }) : child
+        React.isValidElement(child)
+          ? React.cloneElement(child as any, { onValueChange, disabled })
+          : child
       )}
     </div>
   ),
@@ -107,10 +111,7 @@ vi.mock('@/components/forms/signature-pad', () => ({
       >
         Sign
       </button>
-      <button
-        data-testid="mock-clear-sig-btn"
-        onClick={() => onSignatureChange(null)}
-      >
+      <button data-testid="mock-clear-sig-btn" onClick={() => onSignatureChange(null)}>
         Clear Sig
       </button>
     </div>
@@ -385,13 +386,7 @@ describe('FormRenderer', () => {
     })
 
     it('shows signature required error', async () => {
-      render(
-        <FormRenderer
-          fields={[signatureField]}
-          onSubmit={mockSubmit}
-          showSignature={true}
-        />
-      )
+      render(<FormRenderer fields={[signatureField]} onSubmit={mockSubmit} showSignature={true} />)
       fireEvent.submit(screen.getByText('Submit Form').closest('form')!)
       expect(screen.getByText('Signature is required')).toBeInTheDocument()
     })
@@ -447,13 +442,7 @@ describe('FormRenderer', () => {
     })
 
     it('shows "No signature" in readOnly mode when no signature', () => {
-      render(
-        <FormRenderer
-          fields={[signatureField]}
-          onSubmit={mockSubmit}
-          readOnly={true}
-        />
-      )
+      render(<FormRenderer fields={[signatureField]} onSubmit={mockSubmit} readOnly={true} />)
       expect(screen.getByText('No signature')).toBeInTheDocument()
     })
   })
@@ -461,11 +450,7 @@ describe('FormRenderer', () => {
   describe('Initial data', () => {
     it('pre-fills text field with initial data', () => {
       render(
-        <FormRenderer
-          fields={[textField]}
-          onSubmit={mockSubmit}
-          initialData={{ name: 'Jane' }}
-        />
+        <FormRenderer fields={[textField]} onSubmit={mockSubmit} initialData={{ name: 'Jane' }} />
       )
       expect(screen.getByDisplayValue('Jane')).toBeInTheDocument()
     })

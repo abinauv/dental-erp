@@ -1,10 +1,10 @@
-import type { NextAuthConfig } from "next-auth"
+import type { NextAuthConfig } from 'next-auth'
 
 export const authConfig: NextAuthConfig = {
   trustHost: true,
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: '/login',
+    error: '/login',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
@@ -13,23 +13,21 @@ export const authConfig: NextAuthConfig = {
 
       // Public routes that don't require auth
       const publicRoutes = [
-        "/login",
-        "/forgot-password",
-        "/signup",
-        "/pricing",
-        "/verify-email",
-        "/invite/accept",
+        '/login',
+        '/forgot-password',
+        '/signup',
+        '/pricing',
+        '/verify-email',
+        '/invite/accept',
       ]
 
-      const isPublicRoute = publicRoutes.some((route) =>
-        pathname.startsWith(route)
-      )
-      const isLandingPage = pathname === "/"
+      const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
+      const isLandingPage = pathname === '/'
 
       if (isPublicRoute || isLandingPage) {
         // If logged in and trying to access login/signup, redirect to dashboard
-        if (isLoggedIn && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
-          return Response.redirect(new URL("/dashboard", nextUrl))
+        if (isLoggedIn && (pathname === '/login' || pathname === '/signup' || pathname === '/')) {
+          return Response.redirect(new URL('/dashboard', nextUrl))
         }
         return true
       }

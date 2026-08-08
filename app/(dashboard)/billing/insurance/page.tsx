@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -45,27 +45,18 @@ import {
   Gavel,
   Brain,
   Loader2,
-} from "lucide-react"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+} from 'lucide-react'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  insuranceClaimStatusConfig,
-  formatCurrency,
-  formatDate,
-} from "@/lib/billing-utils"
+} from '@/components/ui/dropdown-menu'
+import { insuranceClaimStatusConfig, formatCurrency, formatDate } from '@/lib/billing-utils'
 
 interface InsuranceClaim {
   id: string
@@ -131,10 +122,10 @@ export default function InsuranceClaimsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const fetchClaims = async () => {
     try {
@@ -144,20 +135,20 @@ export default function InsuranceClaimsPage() {
         limit: pagination.limit.toString(),
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (dateFrom) params.append("dateFrom", dateFrom)
-      if (dateTo) params.append("dateTo", dateTo)
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (dateFrom) params.append('dateFrom', dateFrom)
+      if (dateTo) params.append('dateTo', dateTo)
 
       const response = await fetch(`/api/insurance-claims?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch claims")
+      if (!response.ok) throw new Error('Failed to fetch claims')
 
       const data = await response.json()
       setClaims(data.claims)
       setSummary(data.summary)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching claims:", error)
+      console.error('Error fetching claims:', error)
     } finally {
       setLoading(false)
     }
@@ -168,16 +159,14 @@ export default function InsuranceClaimsPage() {
   }, [pagination.page, search, statusFilter, dateFrom, dateTo])
 
   const getStatusBadge = (status: string) => {
-    const config = insuranceClaimStatusConfig[status as keyof typeof insuranceClaimStatusConfig] || {
+    const config = insuranceClaimStatusConfig[
+      status as keyof typeof insuranceClaimStatusConfig
+    ] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   // AI Analysis
@@ -190,15 +179,15 @@ export default function InsuranceClaimsPage() {
     setAiAnalysis(null)
     setAiAnalyzing(true)
     try {
-      const res = await fetch("/api/ai/claim-analysis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/ai/claim-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ claimId: claim.id }),
       })
-      if (!res.ok) throw new Error("Failed")
+      if (!res.ok) throw new Error('Failed')
       setAiAnalysis(await res.json())
     } catch {
-      setAiAnalysis({ error: "Failed to analyze claim" })
+      setAiAnalysis({ error: 'Failed to analyze claim' })
     } finally {
       setAiAnalyzing(false)
     }
@@ -206,33 +195,33 @@ export default function InsuranceClaimsPage() {
 
   const [denialClaim, setDenialClaim] = useState<InsuranceClaim | null>(null)
   const [denialForm, setDenialForm] = useState({
-    denialCode: "",
-    appealDeadline: "",
-    appealStatus: "",
-    appealNotes: "",
+    denialCode: '',
+    appealDeadline: '',
+    appealStatus: '',
+    appealNotes: '',
   })
 
   const handleSubmitClaim = async (id: string) => {
     try {
       const response = await fetch(`/api/insurance-claims/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "SUBMITTED" }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'SUBMITTED' }),
       })
-      if (!response.ok) throw new Error("Failed to submit claim")
+      if (!response.ok) throw new Error('Failed to submit claim')
       fetchClaims()
     } catch (error) {
-      console.error("Error submitting claim:", error)
+      console.error('Error submitting claim:', error)
     }
   }
 
   const openDenialManagement = (claim: InsuranceClaim) => {
     setDenialClaim(claim)
     setDenialForm({
-      denialCode: claim.denialCode || "",
-      appealDeadline: claim.appealDeadline ? claim.appealDeadline.split("T")[0] : "",
-      appealStatus: claim.appealStatus || "",
-      appealNotes: claim.appealNotes || "",
+      denialCode: claim.denialCode || '',
+      appealDeadline: claim.appealDeadline ? claim.appealDeadline.split('T')[0] : '',
+      appealStatus: claim.appealStatus || '',
+      appealNotes: claim.appealNotes || '',
     })
   }
 
@@ -240,21 +229,22 @@ export default function InsuranceClaimsPage() {
     if (!denialClaim) return
     try {
       const response = await fetch(`/api/insurance-claims/${denialClaim.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           denialCode: denialForm.denialCode || null,
           appealDeadline: denialForm.appealDeadline || null,
           appealStatus: denialForm.appealStatus || null,
           appealNotes: denialForm.appealNotes || null,
-          appealDate: denialForm.appealStatus === "SUBMITTED" ? new Date().toISOString() : undefined,
+          appealDate:
+            denialForm.appealStatus === 'SUBMITTED' ? new Date().toISOString() : undefined,
         }),
       })
-      if (!response.ok) throw new Error("Failed to update")
+      if (!response.ok) throw new Error('Failed to update')
       setDenialClaim(null)
       fetchClaims()
     } catch (error) {
-      console.error("Error updating denial info:", error)
+      console.error('Error updating denial info:', error)
     }
   }
 
@@ -264,9 +254,7 @@ export default function InsuranceClaimsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Insurance Claims</h1>
-          <p className="text-muted-foreground">
-            Manage insurance claims and track settlements
-          </p>
+          <p className="text-muted-foreground">Manage insurance claims and track settlements</p>
         </div>
         <div className="flex gap-2">
           <Link href="/billing/insurance/providers">
@@ -301,9 +289,7 @@ export default function InsuranceClaimsPage() {
             {loading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
-              <div className="text-2xl font-bold">
-                {formatCurrency(summary.totalClaimed)}
-              </div>
+              <div className="text-2xl font-bold">{formatCurrency(summary.totalClaimed)}</div>
             )}
           </CardContent>
         </Card>
@@ -407,14 +393,30 @@ export default function InsuranceClaimsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : claims.length === 0 ? (
@@ -493,7 +495,7 @@ export default function InsuranceClaimsPage() {
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          {claim.status === "DRAFT" && (
+                          {claim.status === 'DRAFT' && (
                             <>
                               <DropdownMenuItem
                                 onClick={() => router.push(`/billing/insurance/${claim.id}/edit`)}
@@ -508,7 +510,8 @@ export default function InsuranceClaimsPage() {
                               </DropdownMenuItem>
                             </>
                           )}
-                          {(claim.status === "REJECTED" || claim.status === "PARTIALLY_APPROVED") && (
+                          {(claim.status === 'REJECTED' ||
+                            claim.status === 'PARTIALLY_APPROVED') && (
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => openDenialManagement(claim)}>
@@ -548,8 +551,8 @@ export default function InsuranceClaimsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                 {pagination.total} claims
               </div>
               <div className="flex items-center gap-2">
@@ -594,7 +597,8 @@ export default function InsuranceClaimsPage() {
               <div className="bg-muted/50 rounded-lg p-3 text-sm">
                 <p className="font-medium">{denialClaim.claimNumber}</p>
                 <p className="text-muted-foreground">
-                  {denialClaim.patient.firstName} {denialClaim.patient.lastName} — {denialClaim.insuranceProvider}
+                  {denialClaim.patient.firstName} {denialClaim.patient.lastName} —{' '}
+                  {denialClaim.insuranceProvider}
                 </p>
                 {denialClaim.rejectionReason && (
                   <p className="text-destructive mt-1">Rejection: {denialClaim.rejectionReason}</p>
@@ -615,7 +619,9 @@ export default function InsuranceClaimsPage() {
                   <Input
                     type="date"
                     value={denialForm.appealDeadline}
-                    onChange={(e) => setDenialForm({ ...denialForm, appealDeadline: e.target.value })}
+                    onChange={(e) =>
+                      setDenialForm({ ...denialForm, appealDeadline: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -651,7 +657,9 @@ export default function InsuranceClaimsPage() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setDenialClaim(null)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setDenialClaim(null)}>
+                  Cancel
+                </Button>
                 <Button onClick={handleSaveDenialInfo}>Save</Button>
               </div>
             </div>
@@ -660,7 +668,13 @@ export default function InsuranceClaimsPage() {
       </Dialog>
 
       {/* AI Analysis Dialog */}
-      <Dialog open={!!aiAnalysisClaim} onOpenChange={() => { setAiAnalysisClaim(null); setAiAnalysis(null) }}>
+      <Dialog
+        open={!!aiAnalysisClaim}
+        onOpenChange={() => {
+          setAiAnalysisClaim(null)
+          setAiAnalysis(null)
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -673,11 +687,16 @@ export default function InsuranceClaimsPage() {
               <div className="bg-muted/50 rounded-lg p-3 text-sm">
                 <p className="font-medium">{aiAnalysisClaim.claimNumber}</p>
                 <p className="text-muted-foreground">
-                  {aiAnalysisClaim.patient.firstName} {aiAnalysisClaim.patient.lastName} — {aiAnalysisClaim.insuranceProvider}
+                  {aiAnalysisClaim.patient.firstName} {aiAnalysisClaim.patient.lastName} —{' '}
+                  {aiAnalysisClaim.insuranceProvider}
                 </p>
-                <p className="text-muted-foreground">Amount: {formatCurrency(aiAnalysisClaim.claimAmount)}</p>
+                <p className="text-muted-foreground">
+                  Amount: {formatCurrency(aiAnalysisClaim.claimAmount)}
+                </p>
                 {aiAnalysisClaim.rejectionReason && (
-                  <p className="text-destructive mt-1">Rejection: {aiAnalysisClaim.rejectionReason}</p>
+                  <p className="text-destructive mt-1">
+                    Rejection: {aiAnalysisClaim.rejectionReason}
+                  </p>
                 )}
               </div>
 
@@ -694,9 +713,18 @@ export default function InsuranceClaimsPage() {
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Analysis</h4>
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
-                      <p><span className="font-medium">Likely Cause:</span> {aiAnalysis.analysis?.likelyCause}</p>
-                      <p><span className="font-medium">Category:</span> {aiAnalysis.analysis?.denialCategory}</p>
-                      <p><span className="font-medium">Recovery Likelihood:</span> {aiAnalysis.analysis?.severityOfDenial}</p>
+                      <p>
+                        <span className="font-medium">Likely Cause:</span>{' '}
+                        {aiAnalysis.analysis?.likelyCause}
+                      </p>
+                      <p>
+                        <span className="font-medium">Category:</span>{' '}
+                        {aiAnalysis.analysis?.denialCategory}
+                      </p>
+                      <p>
+                        <span className="font-medium">Recovery Likelihood:</span>{' '}
+                        {aiAnalysis.analysis?.severityOfDenial}
+                      </p>
                     </div>
                   </div>
 
@@ -707,11 +735,15 @@ export default function InsuranceClaimsPage() {
                       <div className="space-y-1">
                         {aiAnalysis.suggestions.map((s: any, i: number) => (
                           <div key={i} className="flex items-start gap-2 text-sm">
-                            <Badge className={
-                              s.priority === "HIGH" ? "bg-red-100 text-red-700 border-0 text-xs" :
-                              s.priority === "MEDIUM" ? "bg-amber-100 text-amber-700 border-0 text-xs" :
-                              "bg-muted text-muted-foreground border-0 text-xs"
-                            }>
+                            <Badge
+                              className={
+                                s.priority === 'HIGH'
+                                  ? 'bg-red-100 text-red-700 border-0 text-xs'
+                                  : s.priority === 'MEDIUM'
+                                    ? 'bg-amber-100 text-amber-700 border-0 text-xs'
+                                    : 'bg-muted text-muted-foreground border-0 text-xs'
+                              }
+                            >
                               {s.priority}
                             </Badge>
                             <span>{s.action}</span>
@@ -747,7 +779,9 @@ export default function InsuranceClaimsPage() {
                       <h4 className="text-sm font-medium">Prevention Tips</h4>
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         {aiAnalysis.preventionTips.map((tip: string, i: number) => (
-                          <p key={i} className="text-xs text-blue-600">• {tip}</p>
+                          <p key={i} className="text-xs text-blue-600">
+                            • {tip}
+                          </p>
                         ))}
                       </div>
                     </div>
@@ -756,7 +790,15 @@ export default function InsuranceClaimsPage() {
               ) : null}
 
               <div className="flex justify-end">
-                <Button variant="outline" onClick={() => { setAiAnalysisClaim(null); setAiAnalysis(null) }}>Close</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAiAnalysisClaim(null)
+                    setAiAnalysis(null)
+                  }}
+                >
+                  Close
+                </Button>
               </div>
             </div>
           )}

@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { createRoom } from "@/lib/services/video.service"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { createRoom } from '@/lib/services/video.service'
 
 /**
  * GET /api/video/consultations
@@ -13,13 +13,13 @@ export async function GET(req: Request) {
   if (error) return error
 
   const { searchParams } = new URL(req.url)
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1"))
-  const limit = Math.min(50, parseInt(searchParams.get("limit") || "20"))
-  const status = searchParams.get("status")
-  const doctorId = searchParams.get("doctorId")
-  const patientId = searchParams.get("patientId")
-  const from = searchParams.get("from")
-  const to = searchParams.get("to")
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+  const limit = Math.min(50, parseInt(searchParams.get('limit') || '20'))
+  const status = searchParams.get('status')
+  const doctorId = searchParams.get('doctorId')
+  const patientId = searchParams.get('patientId')
+  const from = searchParams.get('from')
+  const to = searchParams.get('to')
 
   const where: any = { hospitalId }
   if (status) where.status = status
@@ -35,11 +35,15 @@ export async function GET(req: Request) {
     prisma.videoConsultation.findMany({
       where,
       include: {
-        patient: { select: { id: true, patientId: true, firstName: true, lastName: true, phone: true } },
+        patient: {
+          select: { id: true, patientId: true, firstName: true, lastName: true, phone: true },
+        },
         doctor: { select: { id: true, firstName: true, lastName: true, specialization: true } },
-        appointment: { select: { id: true, appointmentNo: true, scheduledDate: true, scheduledTime: true } },
+        appointment: {
+          select: { id: true, appointmentNo: true, scheduledDate: true, scheduledTime: true },
+        },
       },
-      orderBy: { scheduledAt: "desc" },
+      orderBy: { scheduledAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
     }),
@@ -48,10 +52,10 @@ export async function GET(req: Request) {
 
   // Summary counts
   const [scheduled, inProgress, completed, cancelled] = await Promise.all([
-    prisma.videoConsultation.count({ where: { hospitalId, status: "SCHEDULED" } }),
-    prisma.videoConsultation.count({ where: { hospitalId, status: "IN_PROGRESS" } }),
-    prisma.videoConsultation.count({ where: { hospitalId, status: "COMPLETED" } }),
-    prisma.videoConsultation.count({ where: { hospitalId, status: "CANCELLED" } }),
+    prisma.videoConsultation.count({ where: { hospitalId, status: 'SCHEDULED' } }),
+    prisma.videoConsultation.count({ where: { hospitalId, status: 'IN_PROGRESS' } }),
+    prisma.videoConsultation.count({ where: { hospitalId, status: 'COMPLETED' } }),
+    prisma.videoConsultation.count({ where: { hospitalId, status: 'CANCELLED' } }),
   ])
 
   return NextResponse.json({
@@ -68,7 +72,7 @@ export async function GET(req: Request) {
  * Create a new video consultation (optionally linked to an appointment).
  */
 export async function POST(req: Request) {
-  const { error, user, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR", "RECEPTIONIST"])
+  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error) return error
 
   const body = await req.json()
@@ -76,7 +80,7 @@ export async function POST(req: Request) {
 
   if (!patientId || !doctorId || !scheduledAt) {
     return NextResponse.json(
-      { error: "patientId, doctorId, and scheduledAt are required" },
+      { error: 'patientId, doctorId, and scheduledAt are required' },
       { status: 400 }
     )
   }
@@ -86,7 +90,7 @@ export async function POST(req: Request) {
     where: { id: patientId, hospitalId },
   })
   if (!patient) {
-    return NextResponse.json({ error: "Patient not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
   }
 
   // Validate doctor belongs to hospital
@@ -94,7 +98,7 @@ export async function POST(req: Request) {
     where: { id: doctorId, hospitalId },
   })
   if (!doctor) {
-    return NextResponse.json({ error: "Doctor not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
   }
 
   // If linked to appointment, validate it
@@ -103,7 +107,7 @@ export async function POST(req: Request) {
       where: { id: appointmentId, hospitalId },
     })
     if (!appointment) {
-      return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
     }
 
     // Check no existing consultation for this appointment
@@ -112,7 +116,7 @@ export async function POST(req: Request) {
     })
     if (existing) {
       return NextResponse.json(
-        { error: "A video consultation already exists for this appointment" },
+        { error: 'A video consultation already exists for this appointment' },
         { status: 409 }
       )
     }

@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const patientIntake: Skill = {
-  name: "patient-intake",
-  displayName: "Patient Intake",
-  description: "Conversational patient intake and medical history collection",
-  allowedRoles: ["ADMIN", "RECEPTIONIST"],
-  modelTier: "chat",
-  systemPrompt: (hospitalName, contextStr) => `You are a friendly dental clinic intake assistant for ${hospitalName}.
+  name: 'patient-intake',
+  displayName: 'Patient Intake',
+  description: 'Conversational patient intake and medical history collection',
+  allowedRoles: ['ADMIN', 'RECEPTIONIST'],
+  modelTier: 'chat',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are a friendly dental clinic intake assistant for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

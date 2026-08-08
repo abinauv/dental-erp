@@ -2,13 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -70,12 +64,13 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Add Your Clinic Logo',
-        description: 'Upload your clinic logo that will appear on invoices, prescriptions, and the patient portal.',
+        description:
+          'Upload your clinic logo that will appear on invoices, prescriptions, and the patient portal.',
         steps: [
           'Go to Settings → Clinic Information',
           'Click the camera icon on the placeholder image at the top',
           'Select your clinic logo from your computer (JPEG, PNG, or SVG, max 2MB)',
-          'The logo will be uploaded automatically — you\'ll see a preview',
+          "The logo will be uploaded automatically — you'll see a preview",
           'Click "Save Changes" at the bottom of the page',
         ],
         tips: [
@@ -87,7 +82,8 @@ const setupSections: SetupSection[] = [
       },
       {
         title: 'Fill in Clinic Details',
-        description: 'Add your clinic name, phone number, email, address, and registration details.',
+        description:
+          'Add your clinic name, phone number, email, address, and registration details.',
         steps: [
           'Go to Settings → Clinic Information',
           'Fill in the "Basic Information" section: Clinic Name and Tagline',
@@ -105,7 +101,7 @@ const setupSections: SetupSection[] = [
       },
       {
         title: 'Set Working Hours',
-        description: 'Configure your clinic\'s opening and closing hours for each day of the week.',
+        description: "Configure your clinic's opening and closing hours for each day of the week.",
         steps: [
           'Go to Settings → Clinic Information, scroll to "Working Hours"',
           'For each day, set the Opening Time and Closing Time',
@@ -151,13 +147,13 @@ const setupSections: SetupSection[] = [
         steps: [
           'Go to Staff from the left sidebar',
           'Click the "+ Add Staff" button in the top-right',
-          'Fill in the staff member\'s details: Name, Email, Phone, and Role',
+          "Fill in the staff member's details: Name, Email, Phone, and Role",
           'Choose a Role: ADMIN (full access), DOCTOR, RECEPTIONIST, ACCOUNTANT, or LAB_TECH',
           'Set a temporary password — the staff member will be asked to change it on first login',
           'Click "Create Staff" to save',
         ],
         tips: [
-          'Each role has different permissions — receptionists can book appointments but can\'t change settings',
+          "Each role has different permissions — receptionists can book appointments but can't change settings",
           'Doctors can view and create treatments, prescriptions, and medical records',
           'Only ADMIN users can access Settings and manage other staff',
           'Share the login URL and temporary password with each staff member',
@@ -170,7 +166,7 @@ const setupSections: SetupSection[] = [
         steps: [
           'Go to Staff → Invites tab',
           'Click "+ Send Invite"',
-          'Enter the staff member\'s email address and select their role',
+          "Enter the staff member's email address and select their role",
           'Click "Send Invite" — they\'ll receive an email with a signup link',
           'The invite appears as "Pending" until they accept',
         ],
@@ -193,7 +189,8 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Add Your Dental Procedures',
-        description: 'Create your catalog of dental procedures with codes, pricing, and instructions.',
+        description:
+          'Create your catalog of dental procedures with codes, pricing, and instructions.',
         steps: [
           'Go to Settings → Procedure Settings',
           'Click "+ New Procedure"',
@@ -224,7 +221,8 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Configure Time Slots',
-        description: 'Set up how long each appointment slot is and the buffer time between appointments.',
+        description:
+          'Set up how long each appointment slot is and the buffer time between appointments.',
         steps: [
           'Go to Settings → Appointment Settings',
           'Set "Default Slot Duration" — this is how long each appointment lasts (e.g., 30 minutes)',
@@ -241,14 +239,15 @@ const setupSections: SetupSection[] = [
       },
       {
         title: 'Add Holidays',
-        description: 'Block out dates when your clinic is closed so patients can\'t book on those days.',
+        description:
+          "Block out dates when your clinic is closed so patients can't book on those days.",
         steps: [
           'Go to Settings → Appointment Settings',
           'Scroll down to the "Holiday Calendar" section',
           'Enter the Holiday Name (e.g., "Diwali", "Christmas")',
           'Select the Date',
           'Click "Add Holiday"',
-          'The holiday will appear in the list below — appointments can\'t be booked on that date',
+          "The holiday will appear in the list below — appointments can't be booked on that date",
         ],
         tips: [
           'Add all national and regional holidays at the start of the year',
@@ -270,7 +269,8 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Set Up GST & Tax Rates',
-        description: 'Configure your CGST and SGST percentages for automatic tax calculation on invoices.',
+        description:
+          'Configure your CGST and SGST percentages for automatic tax calculation on invoices.',
         steps: [
           'Go to Settings → Billing Settings',
           'In the "Tax Configuration" section, enter your CGST Rate (e.g., 9%)',
@@ -296,7 +296,7 @@ const setupSections: SetupSection[] = [
           'Click "Save Settings"',
         ],
         tips: [
-          'If you\'re migrating from another system, set the starting number to continue from where you left off',
+          "If you're migrating from another system, set the starting number to continue from where you left off",
           'Common footer text: "Payment is due within 15 days. Thank you for your business."',
         ],
         link: { label: 'Go to Billing Settings', href: '/settings/billing' },
@@ -314,13 +314,14 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Set Up Razorpay',
-        description: 'Accept credit cards, debit cards, UPI, and net banking payments through Razorpay.',
+        description:
+          'Accept credit cards, debit cards, UPI, and net banking payments through Razorpay.',
         steps: [
-          'Create a Razorpay account at razorpay.com if you don\'t have one',
+          "Create a Razorpay account at razorpay.com if you don't have one",
           'Complete KYC verification on the Razorpay dashboard (PAN, bank account, business details)',
           'Once verified, go to Razorpay Dashboard → Settings → API Keys',
           'Click "Generate Key" — you\'ll get a Key ID (starts with "rzp_") and a Key Secret',
-          'IMPORTANT: Copy the Key Secret immediately — it\'s shown only once!',
+          "IMPORTANT: Copy the Key Secret immediately — it's shown only once!",
           'In DentalERP, go to Settings → Billing Settings → "Payment Gateway" tab',
           'Select "Razorpay" as the gateway',
           'Paste your Key ID and Key Secret in the fields',
@@ -338,7 +339,10 @@ const setupSections: SetupSection[] = [
         link: { label: 'Go to Billing Settings', href: '/settings/billing' },
         externalLinks: [
           { label: 'Create Razorpay Account', url: 'https://dashboard.razorpay.com/signup' },
-          { label: 'Razorpay API Keys Guide', url: 'https://razorpay.com/docs/payments/dashboard/account-settings/api-keys/' },
+          {
+            label: 'Razorpay API Keys Guide',
+            url: 'https://razorpay.com/docs/payments/dashboard/account-settings/api-keys/',
+          },
         ],
       },
       {
@@ -361,9 +365,7 @@ const setupSections: SetupSection[] = [
           'Make sure your business category is set correctly during KYC',
         ],
         link: { label: 'Go to Billing Settings', href: '/settings/billing' },
-        externalLinks: [
-          { label: 'PhonePe Business Signup', url: 'https://business.phonepe.com' },
-        ],
+        externalLinks: [{ label: 'PhonePe Business Signup', url: 'https://business.phonepe.com' }],
       },
       {
         title: 'Set Up Paytm Business',
@@ -384,9 +386,7 @@ const setupSections: SetupSection[] = [
           'Paytm offers lower rates for small businesses — check their pricing page',
         ],
         link: { label: 'Go to Billing Settings', href: '/settings/billing' },
-        externalLinks: [
-          { label: 'Paytm Business Signup', url: 'https://business.paytm.com' },
-        ],
+        externalLinks: [{ label: 'Paytm Business Signup', url: 'https://business.paytm.com' }],
       },
     ],
   },
@@ -401,7 +401,7 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Set Up SMS Gateway (MSG91)',
-        description: 'MSG91 is the most popular SMS gateway in India. Here\'s how to connect it.',
+        description: "MSG91 is the most popular SMS gateway in India. Here's how to connect it.",
         steps: [
           'Create an account at msg91.com',
           'Verify your email and phone number',
@@ -423,9 +423,7 @@ const setupSections: SetupSection[] = [
           'SMS costs approximately ₹0.15 - ₹0.25 per message depending on volume',
         ],
         link: { label: 'Go to Communication Settings', href: '/settings/communications' },
-        externalLinks: [
-          { label: 'Create MSG91 Account', url: 'https://msg91.com/signup' },
-        ],
+        externalLinks: [{ label: 'Create MSG91 Account', url: 'https://msg91.com/signup' }],
       },
       {
         title: 'Set Up SMS Gateway (Fast2SMS)',
@@ -446,9 +444,7 @@ const setupSections: SetupSection[] = [
           'Approval for Sender ID may take 1-2 days',
         ],
         link: { label: 'Go to Communication Settings', href: '/settings/communications' },
-        externalLinks: [
-          { label: 'Create Fast2SMS Account', url: 'https://www.fast2sms.com' },
-        ],
+        externalLinks: [{ label: 'Create Fast2SMS Account', url: 'https://www.fast2sms.com' }],
       },
     ],
   },
@@ -463,12 +459,13 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Set Up Email with Your Domain',
-        description: 'If you have a business email (e.g., info@yourclinic.com) through Hostinger, GoDaddy, etc.',
+        description:
+          'If you have a business email (e.g., info@yourclinic.com) through Hostinger, GoDaddy, etc.',
         steps: [
           'In DentalERP, go to Settings → Communication Settings → Email tab',
           'Toggle "Enable Email" ON',
           'Enter the SMTP settings from your email provider:',
-          '  — SMTP Host: e.g., smtp.hostinger.com (check your email provider\'s documentation)',
+          "  — SMTP Host: e.g., smtp.hostinger.com (check your email provider's documentation)",
           '  — SMTP Port: 587 (most common) or 465 (for SSL)',
           '  — SMTP Username: your full email address (e.g., info@yourclinic.com)',
           '  — SMTP Password: your email account password',
@@ -558,13 +555,14 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Set Up Automatic Google Review Requests',
-        description: 'Automatically ask patients who rated you 4 or 5 stars to leave a Google review.',
+        description:
+          'Automatically ask patients who rated you 4 or 5 stars to leave a Google review.',
         steps: [
           'First, find your Google Review URL:',
           '  1. Search for your clinic on Google Maps',
           '  2. Click on your clinic listing',
           '  3. Click "Write a Review"',
-          '  4. Copy the URL from your browser\'s address bar',
+          "  4. Copy the URL from your browser's address bar",
           'In DentalERP, go to Settings → Communication Settings → "Google Reviews" tab',
           'Paste your Google Review URL in the field',
           'Toggle "Auto-Request Reviews" ON',
@@ -575,7 +573,7 @@ const setupSections: SetupSection[] = [
           'Review requests are only sent to patients who rated your clinic 4/5 or higher in feedback surveys',
           'Each patient receives at most one review request per 30 days',
           'Patients who opted out of communications will not receive requests',
-          'More Google reviews improve your clinic\'s visibility in Google searches',
+          "More Google reviews improve your clinic's visibility in Google searches",
         ],
         link: { label: 'Go to Communication Settings', href: '/settings/communications' },
       },
@@ -592,7 +590,8 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Enable the Patient Portal',
-        description: 'Allow patients to log in, book appointments, view treatment history, and make payments online.',
+        description:
+          'Allow patients to log in, book appointments, view treatment history, and make payments online.',
         steps: [
           'Go to Settings → Clinic Information',
           'Scroll down to the "Patient Portal" section',
@@ -614,7 +613,8 @@ const setupSections: SetupSection[] = [
   {
     id: 'ai',
     title: 'AI Assistant Setup',
-    description: 'Enable AI-powered features like chat, scheduling suggestions, and billing assistance',
+    description:
+      'Enable AI-powered features like chat, scheduling suggestions, and billing assistance',
     icon: Sparkles,
     color: 'text-amber-600 bg-amber-50',
     priority: 'optional',
@@ -622,14 +622,14 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Get an OpenRouter API Key',
-        description: 'DentalERP uses OpenRouter to power its AI features. You\'ll need an API key.',
+        description: "DentalERP uses OpenRouter to power its AI features. You'll need an API key.",
         steps: [
           'Go to openrouter.ai and create a free account',
           'Click on your profile icon → "Keys" (or go to openrouter.ai/keys)',
           'Click "Create Key" and give it a name like "DentalERP"',
           'Copy the API key (starts with "sk-or-")',
           'Add this key to your DentalERP environment configuration:',
-          '  — In your server\'s .env file, add: OPENROUTER_API_KEY=sk-or-your-key-here',
+          "  — In your server's .env file, add: OPENROUTER_API_KEY=sk-or-your-key-here",
           '  — Restart the application after adding the key',
           'In DentalERP, go to Settings → AI Features and toggle "Enable AI" ON',
         ],
@@ -640,9 +640,7 @@ const setupSections: SetupSection[] = [
           'Start with "Economy" model and upgrade to "Quality" if needed',
         ],
         link: { label: 'Go to AI Settings', href: '/settings/ai' },
-        externalLinks: [
-          { label: 'Create OpenRouter Account', url: 'https://openrouter.ai' },
-        ],
+        externalLinks: [{ label: 'Create OpenRouter Account', url: 'https://openrouter.ai' }],
       },
       {
         title: 'Configure AI Features',
@@ -680,7 +678,8 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Register a New Device',
-        description: 'Add IoT-enabled dental equipment like chairs, sensors, or monitors to the system.',
+        description:
+          'Add IoT-enabled dental equipment like chairs, sensors, or monitors to the system.',
         steps: [
           'Go to Devices from the sidebar (under Operations)',
           'Click "+ Register Device"',
@@ -743,7 +742,8 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Configure Security Policies',
-        description: 'Set password strength rules, auto-logout timers, and enable 2FA for extra security.',
+        description:
+          'Set password strength rules, auto-logout timers, and enable 2FA for extra security.',
         steps: [
           'Go to Settings → Security Settings',
           'Set "Minimum Password Length" (recommended: 8 or more characters)',
@@ -767,7 +767,8 @@ const setupSections: SetupSection[] = [
   {
     id: 'data-import',
     title: 'Import Data from Old System',
-    description: 'Migrate patient records, appointments, and billing data from your previous software',
+    description:
+      'Migrate patient records, appointments, and billing data from your previous software',
     icon: Upload,
     color: 'text-emerald-600 bg-emerald-50',
     priority: 'optional',
@@ -779,15 +780,15 @@ const setupSections: SetupSection[] = [
         steps: [
           'Export your data from your old software as CSV or Excel (.xlsx) files',
           'Go to Settings → Data Import',
-          'Step 1: Select what you\'re importing (Patients, Appointments, Treatments, etc.)',
+          "Step 1: Select what you're importing (Patients, Appointments, Treatments, etc.)",
           'Upload your CSV/Excel file (max 20MB)',
           'Step 2: AI will automatically suggest column mappings (e.g., "Full Name" → First Name + Last Name)',
-          'Review the mappings — adjust any that don\'t look right using the dropdown menus',
+          "Review the mappings — adjust any that don't look right using the dropdown menus",
           'Step 3: Preview the transformed data — click any cell to edit if needed',
           'Step 4: Validate — the system checks for errors (missing required fields, duplicate records, etc.)',
           'Fix any errors by going back, or check "Skip Error Rows" to import only valid data',
           'Step 5: Confirm — review the summary and click "Confirm Import"',
-          'Wait for import to complete — you\'ll see a success count and any error details',
+          "Wait for import to complete — you'll see a success count and any error details",
         ],
         tips: [
           'Always back up your data before importing',
@@ -810,8 +811,15 @@ function PriorityBadge({ priority }: { priority: string }) {
     optional: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
   }
   return (
-    <Badge className={styles[priority as keyof typeof styles] || styles.optional} variant="secondary">
-      {priority === 'essential' ? 'Essential' : priority === 'recommended' ? 'Recommended' : 'Optional'}
+    <Badge
+      className={styles[priority as keyof typeof styles] || styles.optional}
+      variant="secondary"
+    >
+      {priority === 'essential'
+        ? 'Essential'
+        : priority === 'recommended'
+          ? 'Recommended'
+          : 'Optional'}
     </Badge>
   )
 }
@@ -832,7 +840,11 @@ function GuideSection({ guide, index }: { guide: SetupStep; index: number }) {
           <p className="font-medium text-sm">{guide.title}</p>
           <p className="text-xs text-muted-foreground truncate">{guide.description}</p>
         </div>
-        {open ? <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground" />}
+        {open ? (
+          <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground" />
+        )}
       </button>
 
       {open && (
@@ -844,8 +856,12 @@ function GuideSection({ guide, index }: { guide: SetupStep; index: number }) {
               <ol className="space-y-1.5 ml-1">
                 {guide.steps.map((step, i) => (
                   <li key={i} className="flex gap-2 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground shrink-0 w-5 text-right">{step.startsWith('  ') ? '' : `${i + 1}.`}</span>
-                    <span className={step.startsWith('  ') ? 'ml-5' : ''}>{step.replace(/^\s+/, '')}</span>
+                    <span className="font-medium text-foreground shrink-0 w-5 text-right">
+                      {step.startsWith('  ') ? '' : `${i + 1}.`}
+                    </span>
+                    <span className={step.startsWith('  ') ? 'ml-5' : ''}>
+                      {step.replace(/^\s+/, '')}
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -854,7 +870,9 @@ function GuideSection({ guide, index }: { guide: SetupStep; index: number }) {
             {/* Tips */}
             {guide.tips && guide.tips.length > 0 && (
               <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-3">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-400 mb-1.5">Tips:</p>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-400 mb-1.5">
+                  Tips:
+                </p>
                 <ul className="space-y-1">
                   {guide.tips.map((tip, i) => (
                     <li key={i} className="text-xs text-amber-700 dark:text-amber-500 flex gap-1.5">
@@ -911,9 +929,8 @@ export default function SetupGuidePage() {
   const expandAll = () => setExpandedSections(new Set(setupSections.map((s) => s.id)))
   const collapseAll = () => setExpandedSections(new Set())
 
-  const filteredSections = filter === 'all'
-    ? setupSections
-    : setupSections.filter((s) => s.priority === filter)
+  const filteredSections =
+    filter === 'all' ? setupSections : setupSections.filter((s) => s.priority === filter)
 
   const essentialCount = setupSections.filter((s) => s.priority === 'essential').length
   const recommendedCount = setupSections.filter((s) => s.priority === 'recommended').length
@@ -936,7 +953,8 @@ export default function SetupGuidePage() {
           Setup Guide
         </h1>
         <p className="text-muted-foreground mt-1">
-          Step-by-step instructions to set up your clinic. Follow the essential steps first, then add optional integrations.
+          Step-by-step instructions to set up your clinic. Follow the essential steps first, then
+          add optional integrations.
         </p>
       </div>
 
@@ -994,8 +1012,12 @@ export default function SetupGuidePage() {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={expandAll}>Expand All</Button>
-        <Button variant="outline" size="sm" onClick={collapseAll}>Collapse All</Button>
+        <Button variant="outline" size="sm" onClick={expandAll}>
+          Expand All
+        </Button>
+        <Button variant="outline" size="sm" onClick={collapseAll}>
+          Collapse All
+        </Button>
         {filter !== 'all' && (
           <Button variant="ghost" size="sm" onClick={() => setFilter('all')}>
             Clear Filter
@@ -1011,20 +1033,21 @@ export default function SetupGuidePage() {
 
           return (
             <Card key={section.id}>
-              <button
-                onClick={() => toggleSection(section.id)}
-                className="w-full text-left"
-              >
+              <button onClick={() => toggleSection(section.id)} className="w-full text-left">
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${section.color}`}>
+                    <div
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${section.color}`}
+                    >
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-0.5">
                         <CardTitle className="text-base">{section.title}</CardTitle>
                         <PriorityBadge priority={section.priority} />
-                        <span className="text-xs text-muted-foreground">~{section.estimatedTime}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ~{section.estimatedTime}
+                        </span>
                       </div>
                       <CardDescription className="text-sm">{section.description}</CardDescription>
                     </div>
@@ -1059,8 +1082,8 @@ export default function SetupGuidePage() {
           <div className="text-center">
             <h3 className="font-semibold mb-1">Need More Help?</h3>
             <p className="text-sm text-muted-foreground mb-3">
-              If you&apos;re stuck on any step, feel free to use the AI Chat Assistant (bottom-right corner)
-              for instant help, or contact our support team.
+              If you&apos;re stuck on any step, feel free to use the AI Chat Assistant (bottom-right
+              corner) for instant help, or contact our support team.
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               <Link href="/chat">

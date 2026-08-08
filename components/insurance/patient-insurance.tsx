@@ -1,26 +1,21 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
 import {
   Plus,
   Shield,
@@ -31,8 +26,8 @@ import {
   Edit,
   BadgeCheck,
   IndianRupee,
-} from "lucide-react"
-import { formatCurrency, formatDate } from "@/lib/billing-utils"
+} from 'lucide-react'
+import { formatCurrency, formatDate } from '@/lib/billing-utils'
 
 interface InsurancePolicy {
   id: string
@@ -67,18 +62,18 @@ interface Provider {
 }
 
 const emptyForm = {
-  providerId: "",
-  policyNumber: "",
-  groupNumber: "",
-  memberId: "",
-  subscriberName: "",
-  subscriberRelation: "Self",
-  effectiveDate: "",
-  expiryDate: "",
-  coverageType: "",
-  annualMaximum: "",
-  deductible: "",
-  copayPercentage: "",
+  providerId: '',
+  policyNumber: '',
+  groupNumber: '',
+  memberId: '',
+  subscriberName: '',
+  subscriberRelation: 'Self',
+  effectiveDate: '',
+  expiryDate: '',
+  coverageType: '',
+  annualMaximum: '',
+  deductible: '',
+  copayPercentage: '',
 }
 
 export function PatientInsurance({ patientId }: { patientId: string }) {
@@ -96,7 +91,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
       const res = await fetch(`/api/patients/${patientId}/insurance`)
       if (res.ok) setPolicies(await res.json())
     } catch {
-      toast({ title: "Failed to load insurance policies", variant: "destructive" })
+      toast({ title: 'Failed to load insurance policies', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -104,7 +99,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
 
   const fetchProviders = async () => {
     try {
-      const res = await fetch("/api/insurance-providers?activeOnly=true")
+      const res = await fetch('/api/insurance-providers?activeOnly=true')
       if (res.ok) setProviders(await res.json())
     } catch {}
   }
@@ -125,44 +120,50 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
     setForm({
       providerId: p.provider.id,
       policyNumber: p.policyNumber,
-      groupNumber: p.groupNumber || "",
+      groupNumber: p.groupNumber || '',
       memberId: p.memberId,
       subscriberName: p.subscriberName,
       subscriberRelation: p.subscriberRelation,
-      effectiveDate: p.effectiveDate ? p.effectiveDate.split("T")[0] : "",
-      expiryDate: p.expiryDate ? p.expiryDate.split("T")[0] : "",
-      coverageType: p.coverageType || "",
-      annualMaximum: p.annualMaximum ? String(Number(p.annualMaximum)) : "",
-      deductible: p.deductible ? String(Number(p.deductible)) : "",
-      copayPercentage: p.copayPercentage ? String(Number(p.copayPercentage)) : "",
+      effectiveDate: p.effectiveDate ? p.effectiveDate.split('T')[0] : '',
+      expiryDate: p.expiryDate ? p.expiryDate.split('T')[0] : '',
+      coverageType: p.coverageType || '',
+      annualMaximum: p.annualMaximum ? String(Number(p.annualMaximum)) : '',
+      deductible: p.deductible ? String(Number(p.deductible)) : '',
+      copayPercentage: p.copayPercentage ? String(Number(p.copayPercentage)) : '',
     })
     setDialogOpen(true)
   }
 
   const handleSave = async () => {
-    if (!form.providerId || !form.policyNumber || !form.memberId || !form.subscriberName || !form.effectiveDate) {
-      toast({ title: "Please fill all required fields", variant: "destructive" })
+    if (
+      !form.providerId ||
+      !form.policyNumber ||
+      !form.memberId ||
+      !form.subscriberName ||
+      !form.effectiveDate
+    ) {
+      toast({ title: 'Please fill all required fields', variant: 'destructive' })
       return
     }
     setSaving(true)
     try {
       const url = `/api/patients/${patientId}/insurance`
-      const method = editingId ? "PUT" : "POST"
+      const method = editingId ? 'PUT' : 'POST'
       const payload = editingId ? { policyId: editingId, ...form } : form
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Failed to save")
+        throw new Error(data.error || 'Failed to save')
       }
-      toast({ title: editingId ? "Policy updated" : "Policy added" })
+      toast({ title: editingId ? 'Policy updated' : 'Policy added' })
       setDialogOpen(false)
       fetchPolicies()
     } catch (err: any) {
-      toast({ title: err.message, variant: "destructive" })
+      toast({ title: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -171,48 +172,70 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
   const handleVerify = async (policyId: string) => {
     try {
       const res = await fetch(`/api/patients/${patientId}/insurance/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ policyId }),
       })
       if (res.ok) {
-        toast({ title: "Insurance verified successfully" })
+        toast({ title: 'Insurance verified successfully' })
         fetchPolicies()
       }
     } catch {
-      toast({ title: "Verification failed", variant: "destructive" })
+      toast({ title: 'Verification failed', variant: 'destructive' })
     }
   }
 
   const handleToggleActive = async (policyId: string, isActive: boolean) => {
     try {
       await fetch(`/api/patients/${patientId}/insurance`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ policyId, isActive: !isActive }),
       })
-      toast({ title: isActive ? "Policy deactivated" : "Policy activated" })
+      toast({ title: isActive ? 'Policy deactivated' : 'Policy activated' })
       fetchPolicies()
     } catch {
-      toast({ title: "Failed to update policy", variant: "destructive" })
+      toast({ title: 'Failed to update policy', variant: 'destructive' })
     }
   }
 
   const getVerificationBadge = (p: InsurancePolicy) => {
     if (!p.verificationStatus) {
-      return <Badge variant="outline" className="text-xs"><Clock className="h-3 w-3 mr-1" /> Unverified</Badge>
+      return (
+        <Badge variant="outline" className="text-xs">
+          <Clock className="h-3 w-3 mr-1" /> Unverified
+        </Badge>
+      )
     }
-    if (p.verificationStatus === "VERIFIED") {
-      return <Badge variant="default" className="text-xs bg-green-600"><CheckCircle className="h-3 w-3 mr-1" /> Verified</Badge>
+    if (p.verificationStatus === 'VERIFIED') {
+      return (
+        <Badge variant="default" className="text-xs bg-green-600">
+          <CheckCircle className="h-3 w-3 mr-1" /> Verified
+        </Badge>
+      )
     }
-    if (p.verificationStatus === "EXPIRED") {
-      return <Badge variant="destructive" className="text-xs"><AlertTriangle className="h-3 w-3 mr-1" /> Expired</Badge>
+    if (p.verificationStatus === 'EXPIRED') {
+      return (
+        <Badge variant="destructive" className="text-xs">
+          <AlertTriangle className="h-3 w-3 mr-1" /> Expired
+        </Badge>
+      )
     }
-    return <Badge variant="secondary" className="text-xs"><Clock className="h-3 w-3 mr-1" /> {p.verificationStatus}</Badge>
+    return (
+      <Badge variant="secondary" className="text-xs">
+        <Clock className="h-3 w-3 mr-1" /> {p.verificationStatus}
+      </Badge>
+    )
   }
 
   if (loading) {
-    return <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}</div>
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 w-full" />
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -230,13 +253,15 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
           <CardContent className="py-12 text-center text-muted-foreground">
             <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="font-medium">No insurance policies on file</p>
-            <p className="text-sm">Add the patient&apos;s insurance information to enable claims and pre-authorizations</p>
+            <p className="text-sm">
+              Add the patient&apos;s insurance information to enable claims and pre-authorizations
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {policies.map((p) => (
-            <Card key={p.id} className={!p.isActive ? "opacity-60" : ""}>
+            <Card key={p.id} className={!p.isActive ? 'opacity-60' : ''}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -265,7 +290,9 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                   </div>
                   <div>
                     <p className="text-muted-foreground">Subscriber</p>
-                    <p className="font-medium">{p.subscriberName} ({p.subscriberRelation})</p>
+                    <p className="font-medium">
+                      {p.subscriberName} ({p.subscriberRelation})
+                    </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Effective</p>
@@ -273,7 +300,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                   </div>
                   <div>
                     <p className="text-muted-foreground">Expires</p>
-                    <p className="font-medium">{p.expiryDate ? formatDate(p.expiryDate) : "N/A"}</p>
+                    <p className="font-medium">{p.expiryDate ? formatDate(p.expiryDate) : 'N/A'}</p>
                   </div>
                 </div>
                 {(p.annualMaximum || p.deductible || p.copayPercentage) && (
@@ -287,7 +314,9 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                     {p.remainingAmount != null && (
                       <div>
                         <p className="text-muted-foreground">Remaining</p>
-                        <p className="font-medium text-green-600">{formatCurrency(Number(p.remainingAmount))}</p>
+                        <p className="font-medium text-green-600">
+                          {formatCurrency(Number(p.remainingAmount))}
+                        </p>
                       </div>
                     )}
                     {p.deductible != null && (
@@ -318,9 +347,13 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                     onClick={() => handleToggleActive(p.id, p.isActive)}
                   >
                     {p.isActive ? (
-                      <><XCircle className="h-4 w-4 mr-1" /> Deactivate</>
+                      <>
+                        <XCircle className="h-4 w-4 mr-1" /> Deactivate
+                      </>
                     ) : (
-                      <><CheckCircle className="h-4 w-4 mr-1" /> Activate</>
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-1" /> Activate
+                      </>
                     )}
                   </Button>
                 </div>
@@ -334,18 +367,25 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Insurance Policy" : "Add Insurance Policy"}</DialogTitle>
+            <DialogTitle>
+              {editingId ? 'Edit Insurance Policy' : 'Add Insurance Policy'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Insurance Provider *</Label>
-              <Select value={form.providerId} onValueChange={(v) => setForm({ ...form, providerId: v })}>
+              <Select
+                value={form.providerId}
+                onValueChange={(v) => setForm({ ...form, providerId: v })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
                   {providers.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -377,13 +417,18 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
               </div>
               <div>
                 <Label>Subscriber Relation</Label>
-                <Select value={form.subscriberRelation} onValueChange={(v) => setForm({ ...form, subscriberRelation: v })}>
+                <Select
+                  value={form.subscriberRelation}
+                  onValueChange={(v) => setForm({ ...form, subscriberRelation: v })}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {["Self", "Spouse", "Child", "Parent", "Other"].map((r) => (
-                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    {['Self', 'Spouse', 'Child', 'Parent', 'Other'].map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -414,7 +459,10 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
               </div>
               <div>
                 <Label>Coverage Type</Label>
-                <Select value={form.coverageType} onValueChange={(v) => setForm({ ...form, coverageType: v })}>
+                <Select
+                  value={form.coverageType}
+                  onValueChange={(v) => setForm({ ...form, coverageType: v })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
@@ -454,9 +502,11 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving..." : editingId ? "Update" : "Add Policy"}
+                {saving ? 'Saving...' : editingId ? 'Update' : 'Add Policy'}
               </Button>
             </div>
           </div>

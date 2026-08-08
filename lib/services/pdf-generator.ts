@@ -36,10 +36,10 @@ export function generateFormPdfHtml(data: PdfFormData): string {
       <div class="signature-box">
         <img src="${data.signature}" alt="Patient Signature" class="signature-image" />
       </div>
-      <p class="signed-date">Signed on: ${data.signedAt ? new Date(data.signedAt).toLocaleString() : "N/A"}</p>
+      <p class="signed-date">Signed on: ${data.signedAt ? new Date(data.signedAt).toLocaleString() : 'N/A'}</p>
     </div>
   `
-    : ""
+    : ''
 
   const fieldsHtml = data.fields
     .map(
@@ -50,7 +50,7 @@ export function generateFormPdfHtml(data: PdfFormData): string {
     </tr>
   `
     )
-    .join("")
+    .join('')
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -134,11 +134,11 @@ export function generateFormPdfHtml(data: PdfFormData): string {
 <body>
   <div class="header">
     <h1>${escapeHtml(data.clinicName)}</h1>
-    ${data.clinicAddress ? `<p>${escapeHtml(data.clinicAddress)}</p>` : ""}
+    ${data.clinicAddress ? `<p>${escapeHtml(data.clinicAddress)}</p>` : ''}
     <p>
-      ${data.clinicPhone ? `Phone: ${escapeHtml(data.clinicPhone)}` : ""}
-      ${data.clinicPhone && data.clinicEmail ? " | " : ""}
-      ${data.clinicEmail ? `Email: ${escapeHtml(data.clinicEmail)}` : ""}
+      ${data.clinicPhone ? `Phone: ${escapeHtml(data.clinicPhone)}` : ''}
+      ${data.clinicPhone && data.clinicEmail ? ' | ' : ''}
+      ${data.clinicEmail ? `Email: ${escapeHtml(data.clinicEmail)}` : ''}
     </p>
   </div>
 
@@ -146,9 +146,9 @@ export function generateFormPdfHtml(data: PdfFormData): string {
     <div class="col">
       <strong>Patient Information</strong>
       Name: ${escapeHtml(data.patientName)}<br/>
-      ${data.patientId ? `ID: ${escapeHtml(data.patientId)}<br/>` : ""}
-      ${data.patientPhone ? `Phone: ${escapeHtml(data.patientPhone)}<br/>` : ""}
-      ${data.patientDob ? `DOB: ${escapeHtml(data.patientDob)}<br/>` : ""}
+      ${data.patientId ? `ID: ${escapeHtml(data.patientId)}<br/>` : ''}
+      ${data.patientPhone ? `Phone: ${escapeHtml(data.patientPhone)}<br/>` : ''}
+      ${data.patientDob ? `DOB: ${escapeHtml(data.patientDob)}<br/>` : ''}
     </div>
     <div class="col" style="text-align: right;">
       <strong>Form Details</strong>
@@ -174,9 +174,9 @@ export function generateFormPdfHtml(data: PdfFormData): string {
 
 function escapeHtml(str: string): string {
   return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;")
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 }

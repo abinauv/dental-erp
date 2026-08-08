@@ -6,11 +6,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/lib/prisma', () => import('../__mocks__/prisma'))
 
 vi.mock('@/lib/ai/openrouter', () => ({
-  complete: vi.fn().mockResolvedValue({ content: 'Test briefing content', usage: { totalTokens: 100 } }),
+  complete: vi
+    .fn()
+    .mockResolvedValue({ content: 'Test briefing content', usage: { totalTokens: 100 } }),
 }))
 
 vi.mock('@/lib/ai/models', () => ({
-  getModelByTier: vi.fn().mockReturnValue({ model: 'test-model', maxTokens: 4096, temperature: 0.7 }),
+  getModelByTier: vi
+    .fn()
+    .mockReturnValue({ model: 'test-model', maxTokens: 4096, temperature: 0.7 }),
 }))
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
@@ -51,9 +55,7 @@ function badSecretReq(path: string, method = 'GET'): Request {
 const now = new Date()
 const todayStr = now.toISOString().split('T')[0]
 
-const mockHospitals = [
-  { id: 'h1', name: 'Test Clinic' },
-]
+const mockHospitals = [{ id: 'h1', name: 'Test Clinic' }]
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 1. GET /api/cron/briefing
@@ -107,9 +109,7 @@ describe('GET /api/cron/briefing', () => {
 
     // Insight + admin notifications
     vi.mocked(prisma.aIInsight.create).mockResolvedValue({} as any)
-    vi.mocked(prisma.user.findMany).mockResolvedValue([
-      { id: 'admin-1' },
-    ] as any)
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'admin-1' }] as any)
     vi.mocked(prisma.notification.create).mockResolvedValue({} as any)
 
     const res = await briefingGET(authedReq('briefing'))
@@ -157,10 +157,7 @@ describe('GET /api/cron/briefing', () => {
     vi.mocked(prisma.patientRiskScore.findMany).mockResolvedValue([])
     vi.mocked(prisma.treatment.findMany).mockResolvedValue([])
     vi.mocked(prisma.aIInsight.create).mockResolvedValue({} as any)
-    vi.mocked(prisma.user.findMany).mockResolvedValue([
-      { id: 'admin-1' },
-      { id: 'admin-2' },
-    ] as any)
+    vi.mocked(prisma.user.findMany).mockResolvedValue([{ id: 'admin-1' }, { id: 'admin-2' }] as any)
     vi.mocked(prisma.notification.create).mockResolvedValue({} as any)
 
     await briefingGET(authedReq('briefing'))
@@ -305,7 +302,9 @@ describe('GET /api/cron/reminders', () => {
     const body = await res.json()
     expect(body.checked).toBe(3)
     expect(body.created).toBe(1) // only apt-3 gets a new reminder
-    expect(vi.mocked(prisma.appointmentReminder.create).mock.calls[0][0].data.appointmentId).toBe('apt-3')
+    expect(vi.mocked(prisma.appointmentReminder.create).mock.calls[0][0].data.appointmentId).toBe(
+      'apt-3'
+    )
   })
 
   it('returns checked/created counts when no appointments found', async () => {
@@ -578,9 +577,7 @@ describe('GET /api/cron/recall', () => {
     ] as any)
 
     // Only p2 has a recent visit
-    vi.mocked(prisma.appointment.findMany).mockResolvedValue([
-      { patientId: 'p2' },
-    ] as any)
+    vi.mocked(prisma.appointment.findMany).mockResolvedValue([{ patientId: 'p2' }] as any)
 
     // No incomplete treatment plans or overdue follow-ups
     vi.mocked(prisma.treatmentPlan.findMany).mockResolvedValue([])
@@ -681,9 +678,7 @@ describe('GET /api/cron/recall', () => {
     vi.mocked(prisma.patient.findMany).mockResolvedValue([
       { id: 'p1', firstName: 'Active', lastName: 'Patient' },
     ] as any)
-    vi.mocked(prisma.appointment.findMany).mockResolvedValue([
-      { patientId: 'p1' },
-    ] as any)
+    vi.mocked(prisma.appointment.findMany).mockResolvedValue([{ patientId: 'p1' }] as any)
     vi.mocked(prisma.treatmentPlan.findMany).mockResolvedValue([])
     vi.mocked(prisma.treatment.findMany).mockResolvedValue([])
 
@@ -742,8 +737,22 @@ describe('GET /api/cron/inventory', () => {
     vi.mocked(prisma.hospital.findMany).mockResolvedValue([{ id: 'h1' }] as any)
 
     vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([
-      { id: 'item-1', name: 'Gloves', currentStock: 2, reorderLevel: 20, minimumStock: 5, unit: 'boxes' },
-      { id: 'item-2', name: 'Masks', currentStock: 0, reorderLevel: 10, minimumStock: 3, unit: 'packs' },
+      {
+        id: 'item-1',
+        name: 'Gloves',
+        currentStock: 2,
+        reorderLevel: 20,
+        minimumStock: 5,
+        unit: 'boxes',
+      },
+      {
+        id: 'item-2',
+        name: 'Masks',
+        currentStock: 0,
+        reorderLevel: 10,
+        minimumStock: 3,
+        unit: 'packs',
+      },
     ] as any)
     vi.mocked(prisma.inventoryBatch.findMany).mockResolvedValue([])
     vi.mocked(prisma.stockTransaction.groupBy).mockResolvedValue([] as any)
@@ -774,9 +783,23 @@ describe('GET /api/cron/inventory', () => {
 
     vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([
       // At reorder level but above minimum — should trigger WARNING
-      { id: 'item-1', name: 'Composite', currentStock: 8, reorderLevel: 10, minimumStock: 3, unit: 'syringes' },
+      {
+        id: 'item-1',
+        name: 'Composite',
+        currentStock: 8,
+        reorderLevel: 10,
+        minimumStock: 3,
+        unit: 'syringes',
+      },
       // Well stocked — should not trigger anything
-      { id: 'item-2', name: 'Cement', currentStock: 50, reorderLevel: 10, minimumStock: 3, unit: 'tubes' },
+      {
+        id: 'item-2',
+        name: 'Cement',
+        currentStock: 50,
+        reorderLevel: 10,
+        minimumStock: 3,
+        unit: 'tubes',
+      },
     ] as any)
     vi.mocked(prisma.inventoryBatch.findMany).mockResolvedValue([])
     vi.mocked(prisma.stockTransaction.groupBy).mockResolvedValue([] as any)
@@ -804,7 +827,14 @@ describe('GET /api/cron/inventory', () => {
 
     // All stock is fine
     vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([
-      { id: 'item-1', name: 'Cement', currentStock: 100, reorderLevel: 10, minimumStock: 5, unit: 'tubes' },
+      {
+        id: 'item-1',
+        name: 'Cement',
+        currentStock: 100,
+        reorderLevel: 10,
+        minimumStock: 5,
+        unit: 'tubes',
+      },
     ] as any)
 
     // But a batch is expiring
@@ -840,9 +870,23 @@ describe('GET /api/cron/inventory', () => {
 
     vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([
       // Critical: at minimum stock
-      { id: 'item-1', name: 'Gloves', currentStock: 2, reorderLevel: 20, minimumStock: 5, unit: 'boxes' },
+      {
+        id: 'item-1',
+        name: 'Gloves',
+        currentStock: 2,
+        reorderLevel: 20,
+        minimumStock: 5,
+        unit: 'boxes',
+      },
       // Approaching reorder but above minimum
-      { id: 'item-2', name: 'Composite', currentStock: 8, reorderLevel: 10, minimumStock: 3, unit: 'syringes' },
+      {
+        id: 'item-2',
+        name: 'Composite',
+        currentStock: 8,
+        reorderLevel: 10,
+        minimumStock: 3,
+        unit: 'syringes',
+      },
     ] as any)
 
     vi.mocked(prisma.inventoryBatch.findMany).mockResolvedValue([
@@ -874,7 +918,14 @@ describe('GET /api/cron/inventory', () => {
     vi.mocked(prisma.hospital.findMany).mockResolvedValue([{ id: 'h1' }] as any)
 
     vi.mocked(prisma.inventoryItem.findMany).mockResolvedValue([
-      { id: 'item-1', name: 'Cement', currentStock: 100, reorderLevel: 10, minimumStock: 5, unit: 'tubes' },
+      {
+        id: 'item-1',
+        name: 'Cement',
+        currentStock: 100,
+        reorderLevel: 10,
+        minimumStock: 5,
+        unit: 'tubes',
+      },
     ] as any)
     vi.mocked(prisma.inventoryBatch.findMany).mockResolvedValue([])
 

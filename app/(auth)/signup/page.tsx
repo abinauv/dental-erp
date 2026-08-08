@@ -1,29 +1,31 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Loader2, Building2, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Loader2, Building2, ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
 
-const signupSchema = z.object({
-  hospitalName: z.string().min(2, "Hospital name must be at least 2 characters"),
-  adminName: z.string().min(2, "Your name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-})
+const signupSchema = z
+  .object({
+    hospitalName: z.string().min(2, 'Hospital name must be at least 2 characters'),
+    adminName: z.string().min(2, 'Your name must be at least 2 characters'),
+    email: z.string().email('Please enter a valid email address'),
+    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 type SignupFormData = z.infer<typeof signupSchema>
 
@@ -44,9 +46,9 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/public/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/public/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hospitalName: data.hospitalName,
           adminName: data.adminName,
@@ -60,25 +62,25 @@ export default function SignupPage() {
 
       if (!response.ok) {
         toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: result.error || "Something went wrong. Please try again.",
+          variant: 'destructive',
+          title: 'Signup failed',
+          description: result.error || 'Something went wrong. Please try again.',
         })
         return
       }
 
       toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account.",
+        title: 'Account created!',
+        description: 'Please check your email to verify your account.',
       })
 
       // Redirect to verification pending page
       router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
     } catch {
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
       })
     } finally {
       setIsLoading(false)
@@ -94,9 +96,7 @@ export default function SignupPage() {
           </div>
         </div>
         <CardTitle className="text-2xl font-bold">Create your clinic</CardTitle>
-        <CardDescription>
-          Start your free trial with up to 100 patients
-        </CardDescription>
+        <CardDescription>Start your free trial with up to 100 patients</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -105,7 +105,7 @@ export default function SignupPage() {
             <Input
               id="hospitalName"
               placeholder="Dr. Smith's Dental Clinic"
-              {...register("hospitalName")}
+              {...register('hospitalName')}
               disabled={isLoading}
             />
             {errors.hospitalName && (
@@ -118,7 +118,7 @@ export default function SignupPage() {
             <Input
               id="adminName"
               placeholder="Dr. John Smith"
-              {...register("adminName")}
+              {...register('adminName')}
               disabled={isLoading}
             />
             {errors.adminName && (
@@ -132,12 +132,10 @@ export default function SignupPage() {
               id="email"
               type="email"
               placeholder="doctor@clinic.com"
-              {...register("email")}
+              {...register('email')}
               disabled={isLoading}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -146,12 +144,10 @@ export default function SignupPage() {
               id="phone"
               type="tel"
               placeholder="9876543210"
-              {...register("phone")}
+              {...register('phone')}
               disabled={isLoading}
             />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
           </div>
 
           <div className="space-y-2">
@@ -160,7 +156,7 @@ export default function SignupPage() {
               id="password"
               type="password"
               placeholder="At least 8 characters"
-              {...register("password")}
+              {...register('password')}
               disabled={isLoading}
             />
             {errors.password && (
@@ -174,7 +170,7 @@ export default function SignupPage() {
               id="confirmPassword"
               type="password"
               placeholder="Confirm your password"
-              {...register("confirmPassword")}
+              {...register('confirmPassword')}
               disabled={isLoading}
             />
             {errors.confirmPassword && (
@@ -189,7 +185,10 @@ export default function SignupPage() {
         </form>
 
         <div className="mt-6 text-center text-sm">
-          <Link href="/login" className="text-primary hover:underline inline-flex items-center gap-1">
+          <Link
+            href="/login"
+            className="text-primary hover:underline inline-flex items-center gap-1"
+          >
             <ArrowLeft className="h-3 w-3" />
             Already have an account? Sign in
           </Link>

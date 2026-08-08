@@ -22,17 +22,17 @@
  *   })
  */
 
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { dispatchEvent, type EventType } from "@/lib/ai/event-dispatcher"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { dispatchEvent, type EventType } from '@/lib/ai/event-dispatcher'
 
 const VALID_EVENTS: EventType[] = [
-  "treatment.completed",
-  "appointment.no_show",
-  "inventory.below_reorder",
-  "lab_order.delayed",
-  "payment.received",
-  "patient.created",
+  'treatment.completed',
+  'appointment.no_show',
+  'inventory.below_reorder',
+  'lab_order.delayed',
+  'payment.received',
+  'patient.created',
 ]
 
 export async function POST(req: NextRequest) {
@@ -43,12 +43,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   if (!body.type || !VALID_EVENTS.includes(body.type as EventType)) {
     return NextResponse.json(
-      { error: "Invalid event type", validEvents: VALID_EVENTS },
+      { error: 'Invalid event type', validEvents: VALID_EVENTS },
       { status: 400 }
     )
   }

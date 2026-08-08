@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 /**
  * GET: List patient's appointments (past + upcoming).
@@ -11,9 +11,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const filter = searchParams.get("filter") || "upcoming" // upcoming | past | all
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
+    const filter = searchParams.get('filter') || 'upcoming' // upcoming | past | all
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
     const today = new Date()
@@ -24,13 +24,13 @@ export async function GET(req: NextRequest) {
       hospitalId: patient!.hospitalId,
     }
 
-    if (filter === "upcoming") {
+    if (filter === 'upcoming') {
       where.scheduledDate = { gte: today }
-      where.status = { in: ["SCHEDULED", "CONFIRMED"] }
-    } else if (filter === "past") {
+      where.status = { in: ['SCHEDULED', 'CONFIRMED'] }
+    } else if (filter === 'past') {
       where.OR = [
         { scheduledDate: { lt: today } },
-        { status: { in: ["COMPLETED", "CANCELLED", "NO_SHOW"] } },
+        { status: { in: ['COMPLETED', 'CANCELLED', 'NO_SHOW'] } },
       ]
     }
 
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
             },
           },
         },
-        orderBy: { scheduledDate: filter === "upcoming" ? "asc" : "desc" },
+        orderBy: { scheduledDate: filter === 'upcoming' ? 'asc' : 'desc' },
         skip,
         take: limit,
       }),
@@ -58,11 +58,8 @@ export async function GET(req: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err: unknown) {
-    console.error("Patient appointments error:", err)
-    return NextResponse.json(
-      { error: "Failed to load appointments" },
-      { status: 500 }
-    )
+    console.error('Patient appointments error:', err)
+    return NextResponse.json({ error: 'Failed to load appointments' }, { status: 500 })
   }
 }
 
@@ -85,10 +82,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!doctorId || !date || !time) {
-      return NextResponse.json(
-        { error: "Doctor, date, and time are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Doctor, date, and time are required' }, { status: 400 })
     }
 
     // Verify doctor belongs to hospital
@@ -97,19 +91,17 @@ export async function POST(req: NextRequest) {
     })
 
     if (!doctor) {
-      return NextResponse.json({ error: "Doctor not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
     }
 
     // Generate appointment number
     const lastAppt = await prisma.appointment.findFirst({
       where: { hospitalId: patient!.hospitalId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: { appointmentNo: true },
     })
-    const lastNum = lastAppt
-      ? parseInt(lastAppt.appointmentNo.replace(/\D/g, "")) || 0
-      : 0
-    const appointmentNo = `APT${String(lastNum + 1).padStart(5, "0")}`
+    const lastNum = lastAppt ? parseInt(lastAppt.appointmentNo.replace(/\D/g, '')) || 0 : 0
+    const appointmentNo = `APT${String(lastNum + 1).padStart(5, '0')}`
 
     const appointment = await prisma.appointment.create({
       data: {
@@ -119,8 +111,8 @@ export async function POST(req: NextRequest) {
         doctorId,
         scheduledDate: new Date(date),
         scheduledTime: time,
-        appointmentType: (type as any) || "CONSULTATION",
-        status: "SCHEDULED",
+        appointmentType: (type as any) || 'CONSULTATION',
+        status: 'SCHEDULED',
         chiefComplaint: chiefComplaint || null,
       },
       include: {
@@ -132,10 +124,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, appointment }, { status: 201 })
   } catch (err: unknown) {
-    console.error("Patient book appointment error:", err)
-    return NextResponse.json(
-      { error: "Failed to book appointment" },
-      { status: 500 }
-    )
+    console.error('Patient book appointment error:', err)
+    return NextResponse.json({ error: 'Failed to book appointment' }, { status: 500 })
   }
 }

@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, use } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -32,8 +32,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   ArrowLeft,
   User,
@@ -55,7 +55,7 @@ import {
   Copy,
   Check,
   Loader2,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   invoiceStatusConfig,
   paymentMethodConfig,
@@ -66,8 +66,8 @@ import {
   getDueDays,
   numberToWords,
   gstConfig,
-} from "@/lib/billing-utils"
-import { PaymentCheckout } from "@/components/billing/payment-checkout"
+} from '@/lib/billing-utils'
+import { PaymentCheckout } from '@/components/billing/payment-checkout'
 
 interface Invoice {
   id: string
@@ -145,48 +145,42 @@ interface Invoice {
   } | null
 }
 
-export default function InvoiceDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const showPaymentDialog = searchParams.get("action") === "payment"
+  const showPaymentDialog = searchParams.get('action') === 'payment'
 
   const [loading, setLoading] = useState(true)
   const [invoice, setInvoice] = useState<Invoice | null>(null)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   // Payment dialog state
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(showPaymentDialog)
   const [paymentSubmitting, setPaymentSubmitting] = useState(false)
-  const [paymentAmount, setPaymentAmount] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState("")
-  const [paymentDate, setPaymentDate] = useState(
-    new Date().toISOString().split("T")[0]
-  )
-  const [transactionId, setTransactionId] = useState("")
-  const [paymentNotes, setPaymentNotes] = useState("")
+  const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('')
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0])
+  const [transactionId, setTransactionId] = useState('')
+  const [paymentNotes, setPaymentNotes] = useState('')
 
   // Payment link state
   const [linkLoading, setLinkLoading] = useState(false)
-  const [paymentLink, setPaymentLink] = useState("")
+  const [paymentLink, setPaymentLink] = useState('')
   const [linkCopied, setLinkCopied] = useState(false)
 
   const fetchInvoice = async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/invoices/${id}`)
-      if (!response.ok) throw new Error("Failed to fetch invoice")
+      if (!response.ok) throw new Error('Failed to fetch invoice')
       const data = await response.json()
       setInvoice(data)
       // Set default payment amount to balance
       setPaymentAmount(String(Number(data.balanceAmount)))
     } catch (error) {
-      console.error("Error fetching invoice:", error)
-      setError("Failed to load invoice")
+      console.error('Error fetching invoice:', error)
+      setError('Failed to load invoice')
     } finally {
       setLoading(false)
     }
@@ -198,21 +192,21 @@ export default function InvoiceDetailPage({
 
   const handleRecordPayment = async () => {
     if (!paymentAmount || Number(paymentAmount) <= 0) {
-      setError("Please enter a valid payment amount")
+      setError('Please enter a valid payment amount')
       return
     }
     if (!paymentMethod) {
-      setError("Please select a payment method")
+      setError('Please select a payment method')
       return
     }
 
     try {
       setPaymentSubmitting(true)
-      setError("")
+      setError('')
 
       const response = await fetch(`/api/invoices/${id}/payments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: Number(paymentAmount),
           paymentMethod,
@@ -224,17 +218,17 @@ export default function InvoiceDetailPage({
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to record payment")
+        throw new Error(data.error || 'Failed to record payment')
       }
 
       setPaymentDialogOpen(false)
       fetchInvoice()
 
       // Reset form
-      setPaymentAmount("")
-      setPaymentMethod("")
-      setTransactionId("")
-      setPaymentNotes("")
+      setPaymentAmount('')
+      setPaymentMethod('')
+      setTransactionId('')
+      setPaymentNotes('')
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -245,14 +239,14 @@ export default function InvoiceDetailPage({
   const handleSharePaymentLink = async () => {
     try {
       setLinkLoading(true)
-      const res = await fetch("/api/payments/link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/payments/link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoiceId: id }),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Failed to generate link")
+        throw new Error(data.error || 'Failed to generate link')
       }
       const data = await res.json()
       setPaymentLink(data.link.url)
@@ -269,38 +263,30 @@ export default function InvoiceDetailPage({
   const getStatusBadge = (status: string) => {
     const config = invoiceStatusConfig[status as keyof typeof invoiceStatusConfig] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const getPaymentStatusBadge = (status: string) => {
     const config = paymentStatusConfig[status as keyof typeof paymentStatusConfig] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const getPaymentMethodIcon = (method: string) => {
     switch (method) {
-      case "CASH":
+      case 'CASH':
         return <Banknote className="h-4 w-4" />
-      case "CARD":
+      case 'CARD':
         return <CreditCard className="h-4 w-4" />
-      case "UPI":
+      case 'UPI':
         return <Smartphone className="h-4 w-4" />
-      case "BANK_TRANSFER":
+      case 'BANK_TRANSFER':
         return <Building2 className="h-4 w-4" />
       default:
         return <CreditCard className="h-4 w-4" />
@@ -350,14 +336,10 @@ export default function InvoiceDetailPage({
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {invoice.invoiceNo}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">{invoice.invoiceNo}</h1>
               {getStatusBadge(invoice.status)}
             </div>
-            <p className="text-muted-foreground">
-              Created on {formatDate(invoice.invoiceDate)}
-            </p>
+            <p className="text-muted-foreground">Created on {formatDate(invoice.invoiceDate)}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -365,7 +347,7 @@ export default function InvoiceDetailPage({
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
-          {["PENDING", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
+          {['PENDING', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) && (
             <>
               <PaymentCheckout
                 invoiceId={invoice.id}
@@ -460,15 +442,17 @@ export default function InvoiceDetailPage({
                           <div className="text-sm text-muted-foreground">
                             {item.treatment.treatmentNo}
                             {item.treatment.doctor && (
-                              <> • Dr. {item.treatment.doctor.firstName} {item.treatment.doctor.lastName}</>
+                              <>
+                                {' '}
+                                • Dr. {item.treatment.doctor.firstName}{' '}
+                                {item.treatment.doctor.lastName}
+                              </>
                             )}
                           </div>
                         )}
                       </TableCell>
                       <TableCell className="text-center">{item.quantity}</TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(item.unitPrice)}
-                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(item.amount)}
                       </TableCell>
@@ -492,15 +476,11 @@ export default function InvoiceDetailPage({
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        CGST ({invoice.cgstRate}%)
-                      </span>
+                      <span className="text-muted-foreground">CGST ({invoice.cgstRate}%)</span>
                       <span>{formatCurrency(invoice.cgstAmount)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        SGST ({invoice.sgstRate}%)
-                      </span>
+                      <span className="text-muted-foreground">SGST ({invoice.sgstRate}%)</span>
                       <span>{formatCurrency(invoice.sgstAmount)}</span>
                     </div>
                     <Separator />
@@ -514,7 +494,7 @@ export default function InvoiceDetailPage({
                     </div>
                     <div className="flex justify-between font-bold">
                       <span>Balance Due</span>
-                      <span className={Number(invoice.balanceAmount) > 0 ? "text-red-600" : ""}>
+                      <span className={Number(invoice.balanceAmount) > 0 ? 'text-red-600' : ''}>
                         {formatCurrency(invoice.balanceAmount)}
                       </span>
                     </div>
@@ -529,9 +509,7 @@ export default function InvoiceDetailPage({
             <CardContent className="py-4">
               <div className="text-sm">
                 <span className="text-muted-foreground">Amount in words: </span>
-                <span className="font-medium">
-                  {numberToWords(Number(invoice.totalAmount))}
-                </span>
+                <span className="font-medium">{numberToWords(Number(invoice.totalAmount))}</span>
               </div>
             </CardContent>
           </Card>
@@ -568,15 +546,15 @@ export default function InvoiceDetailPage({
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getPaymentMethodIcon(payment.paymentMethod)}
-                            {paymentMethodConfig[payment.paymentMethod as keyof typeof paymentMethodConfig]?.label || payment.paymentMethod}
+                            {paymentMethodConfig[
+                              payment.paymentMethod as keyof typeof paymentMethodConfig
+                            ]?.label || payment.paymentMethod}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(payment.amount)}
                         </TableCell>
-                        <TableCell>
-                          {getPaymentStatusBadge(payment.status)}
-                        </TableCell>
+                        <TableCell>{getPaymentStatusBadge(payment.status)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -591,9 +569,7 @@ export default function InvoiceDetailPage({
               <CardContent className="py-4 space-y-4">
                 {invoice.notes && (
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">
-                      Notes
-                    </div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Notes</div>
                     <p className="text-sm">{invoice.notes}</p>
                   </div>
                 )}
@@ -602,9 +578,7 @@ export default function InvoiceDetailPage({
                     <div className="text-sm font-medium text-muted-foreground mb-1">
                       Terms & Conditions
                     </div>
-                    <p className="text-sm whitespace-pre-line">
-                      {invoice.termsAndConditions}
-                    </p>
+                    <p className="text-sm whitespace-pre-line">{invoice.termsAndConditions}</p>
                   </div>
                 )}
               </CardContent>
@@ -633,7 +607,7 @@ export default function InvoiceDetailPage({
                   <span className="text-muted-foreground">Due Date</span>
                   <div className="text-right">
                     <div>{formatDate(invoice.dueDate)}</div>
-                    {dueDays.isOverdue && invoice.status !== "PAID" && (
+                    {dueDays.isOverdue && invoice.status !== 'PAID' && (
                       <div className="text-xs text-red-600 flex items-center justify-end gap-1">
                         <Clock className="h-3 w-3" />
                         {dueDays.label}
@@ -645,9 +619,7 @@ export default function InvoiceDetailPage({
               <Separator />
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Total Amount</span>
-                <span className="font-semibold">
-                  {formatCurrency(invoice.totalAmount)}
-                </span>
+                <span className="font-semibold">{formatCurrency(invoice.totalAmount)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Amount Paid</span>
@@ -657,7 +629,9 @@ export default function InvoiceDetailPage({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Balance Due</span>
-                <span className={`font-semibold ${Number(invoice.balanceAmount) > 0 ? "text-red-600" : ""}`}>
+                <span
+                  className={`font-semibold ${Number(invoice.balanceAmount) > 0 ? 'text-red-600' : ''}`}
+                >
                   {formatCurrency(invoice.balanceAmount)}
                 </span>
               </div>
@@ -700,7 +674,7 @@ export default function InvoiceDetailPage({
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {["PENDING", "PARTIALLY_PAID", "OVERDUE"].includes(invoice.status) && (
+              {['PENDING', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) && (
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -714,10 +688,14 @@ export default function InvoiceDetailPage({
                   ) : (
                     <Share2 className="h-4 w-4 mr-2" />
                   )}
-                  {linkCopied ? "Link Copied!" : "Share Payment Link"}
+                  {linkCopied ? 'Link Copied!' : 'Share Payment Link'}
                 </Button>
               )}
-              <Button variant="outline" className="w-full justify-start" onClick={() => window.print()}>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => window.print()}
+              >
                 <Printer className="h-4 w-4 mr-2" />
                 Print Invoice
               </Button>
@@ -743,9 +721,7 @@ export default function InvoiceDetailPage({
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment for invoice {invoice.invoiceNo}
-            </DialogDescription>
+            <DialogDescription>Record a payment for invoice {invoice.invoiceNo}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -806,14 +782,11 @@ export default function InvoiceDetailPage({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPaymentDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleRecordPayment} disabled={paymentSubmitting}>
-              {paymentSubmitting ? "Recording..." : "Record Payment"}
+              {paymentSubmitting ? 'Recording...' : 'Record Payment'}
             </Button>
           </DialogFooter>
         </DialogContent>

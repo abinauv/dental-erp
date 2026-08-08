@@ -49,9 +49,24 @@ describe('Staff Performance & Attendance API', () => {
       ])
 
       ;(prisma.treatment.findMany as any).mockResolvedValue([
-        { id: 't1', status: 'COMPLETED', cost: 3000, procedure: { category: 'RESTORATIVE', name: 'Filling' } },
-        { id: 't2', status: 'COMPLETED', cost: 5000, procedure: { category: 'ORTHODONTIC', name: 'Braces' } },
-        { id: 't3', status: 'IN_PROGRESS', cost: 2000, procedure: { category: 'RESTORATIVE', name: 'Crown' } },
+        {
+          id: 't1',
+          status: 'COMPLETED',
+          cost: 3000,
+          procedure: { category: 'RESTORATIVE', name: 'Filling' },
+        },
+        {
+          id: 't2',
+          status: 'COMPLETED',
+          cost: 5000,
+          procedure: { category: 'ORTHODONTIC', name: 'Braces' },
+        },
+        {
+          id: 't3',
+          status: 'IN_PROGRESS',
+          cost: 2000,
+          procedure: { category: 'RESTORATIVE', name: 'Crown' },
+        },
       ])
 
       ;(prisma.treatment.groupBy as any).mockResolvedValue([
@@ -133,7 +148,12 @@ describe('Staff Performance & Attendance API', () => {
       })
       ;(prisma.appointment.findMany as any).mockResolvedValue([])
       ;(prisma.treatment.findMany as any).mockResolvedValue([
-        { id: 't1', status: 'IN_PROGRESS', cost: 1000, procedure: { category: 'RESTORATIVE', name: 'Filling' } },
+        {
+          id: 't1',
+          status: 'IN_PROGRESS',
+          cost: 1000,
+          procedure: { category: 'RESTORATIVE', name: 'Filling' },
+        },
       ])
       ;(prisma.treatment.groupBy as any).mockResolvedValue([])
       ;(prisma.attendance.findMany as any).mockResolvedValue([])
@@ -190,10 +210,34 @@ describe('Staff Performance & Attendance API', () => {
 
     it('handles all attendance statuses', async () => {
       ;(prisma.staff.findMany as any).mockResolvedValue([
-        { id: 's1', firstName: 'A', lastName: 'B', user: { role: 'DOCTOR' }, attendance: [{ status: 'PRESENT', clockIn: '09:00', clockOut: '17:00', notes: null }] },
-        { id: 's2', firstName: 'C', lastName: 'D', user: { role: 'DOCTOR' }, attendance: [{ status: 'ABSENT', clockIn: null, clockOut: null, notes: null }] },
-        { id: 's3', firstName: 'E', lastName: 'F', user: { role: 'DOCTOR' }, attendance: [{ status: 'HALF_DAY', clockIn: '09:00', clockOut: '13:00', notes: null }] },
-        { id: 's4', firstName: 'G', lastName: 'H', user: { role: 'DOCTOR' }, attendance: [{ status: 'ON_LEAVE', clockIn: null, clockOut: null, notes: null }] },
+        {
+          id: 's1',
+          firstName: 'A',
+          lastName: 'B',
+          user: { role: 'DOCTOR' },
+          attendance: [{ status: 'PRESENT', clockIn: '09:00', clockOut: '17:00', notes: null }],
+        },
+        {
+          id: 's2',
+          firstName: 'C',
+          lastName: 'D',
+          user: { role: 'DOCTOR' },
+          attendance: [{ status: 'ABSENT', clockIn: null, clockOut: null, notes: null }],
+        },
+        {
+          id: 's3',
+          firstName: 'E',
+          lastName: 'F',
+          user: { role: 'DOCTOR' },
+          attendance: [{ status: 'HALF_DAY', clockIn: '09:00', clockOut: '13:00', notes: null }],
+        },
+        {
+          id: 's4',
+          firstName: 'G',
+          lastName: 'H',
+          user: { role: 'DOCTOR' },
+          attendance: [{ status: 'ON_LEAVE', clockIn: null, clockOut: null, notes: null }],
+        },
       ])
 
       const req = new Request('http://localhost/api/staff/attendance/today') as any

@@ -1,12 +1,16 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const inventoryForecaster: Skill = {
-  name: "inventory-forecaster",
-  displayName: "Inventory Forecaster",
-  description: "Predicts inventory demand and generates reorder suggestions based on consumption history",
-  allowedRoles: ["ADMIN", "RECEPTIONIST"],
-  modelTier: "insights",
-  systemPrompt: (hospitalName, contextStr) => `You are an inventory demand forecasting AI for ${hospitalName}.
+  name: 'inventory-forecaster',
+  displayName: 'Inventory Forecaster',
+  description:
+    'Predicts inventory demand and generates reorder suggestions based on consumption history',
+  allowedRoles: ['ADMIN', 'RECEPTIONIST'],
+  modelTier: 'insights',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are an inventory demand forecasting AI for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

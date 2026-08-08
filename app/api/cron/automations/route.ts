@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 /**
  * POST /api/cron/automations
@@ -16,9 +16,9 @@ import { prisma } from "@/lib/prisma"
  *  - PAYMENT_OVERDUE: invoices overdue by X days
  */
 export async function POST(req: Request) {
-  const secret = req.headers.get("Authorization")?.replace("Bearer ", "")
+  const secret = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!secret || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const automations = await prisma.marketingAutomation.findMany({
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     try {
       switch (trigger.type) {
-        case "NO_VISIT": {
+        case 'NO_VISIT': {
           const days = Number(trigger.params.days) || 180
           const cutoff = new Date(now.getTime() - days * 86400000)
           // Find patients whose last appointment is before the cutoff
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
           break
         }
 
-        case "BIRTHDAY_UPCOMING": {
+        case 'BIRTHDAY_UPCOMING': {
           const daysAhead = Number(trigger.params.days) || 3
           const targetDate = new Date(now.getTime() + daysAhead * 86400000)
           const targetMonth = targetDate.getMonth() + 1
@@ -71,29 +71,29 @@ export async function POST(req: Request) {
           break
         }
 
-        case "TREATMENT_PLAN_PENDING": {
+        case 'TREATMENT_PLAN_PENDING': {
           const days = Number(trigger.params.days) || 14
           const cutoff = new Date(now.getTime() - days * 86400000)
           const treatments = await prisma.treatment.findMany({
             where: {
               hospitalId: auto.hospitalId,
-              status: "PLANNED",
+              status: 'PLANNED',
               createdAt: { lt: cutoff },
             },
             select: { patientId: true },
-            distinct: ["patientId"],
+            distinct: ['patientId'],
             take: 100,
           })
           matchedPatientIds = treatments.map((t) => t.patientId)
           break
         }
 
-        case "MEMBERSHIP_EXPIRING": {
+        case 'MEMBERSHIP_EXPIRING': {
           const days = Number(trigger.params.days) || 7
           const futureDate = new Date(now.getTime() + days * 86400000)
           const memberships = await prisma.patientMembership.findMany({
             where: {
-              status: "ACTIVE",
+              status: 'ACTIVE',
               endDate: { gte: now, lte: futureDate },
               patient: { hospitalId: auto.hospitalId },
             },
@@ -104,34 +104,34 @@ export async function POST(req: Request) {
           break
         }
 
-        case "POST_APPOINTMENT": {
+        case 'POST_APPOINTMENT': {
           const yesterday = new Date(now.getTime() - 86400000)
           const dayBefore = new Date(now.getTime() - 2 * 86400000)
           const appointments = await prisma.appointment.findMany({
             where: {
               hospitalId: auto.hospitalId,
-              status: "COMPLETED",
+              status: 'COMPLETED',
               scheduledDate: { gte: dayBefore, lt: yesterday },
             },
             select: { patientId: true },
-            distinct: ["patientId"],
+            distinct: ['patientId'],
             take: 100,
           })
           matchedPatientIds = appointments.map((a) => a.patientId)
           break
         }
 
-        case "PAYMENT_OVERDUE": {
+        case 'PAYMENT_OVERDUE': {
           const days = Number(trigger.params.days) || 30
           const cutoff = new Date(now.getTime() - days * 86400000)
           const invoices = await prisma.invoice.findMany({
             where: {
               hospitalId: auto.hospitalId,
-              status: { in: ["PENDING", "OVERDUE"] },
+              status: { in: ['PENDING', 'OVERDUE'] },
               dueDate: { lt: cutoff },
             },
             select: { patientId: true },
-            distinct: ["patientId"],
+            distinct: ['patientId'],
             take: 100,
           })
           matchedPatientIds = invoices.map((i) => i.patientId)
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
       // Execute action for matched patients
       if (matchedPatientIds.length > 0) {
         switch (action.type) {
-          case "SEND_SMS": {
+          case 'SEND_SMS': {
             const templateId = action.params.templateId
             if (!templateId) break
             const template = await prisma.communicationTemplate.findFirst({
@@ -168,14 +168,14 @@ export async function POST(req: Request) {
                   phone: patient.phone,
                   templateId,
                   message,
-                  status: "PENDING",
+                  status: 'PENDING',
                 },
               })
             }
             break
           }
 
-          case "SEND_EMAIL": {
+          case 'SEND_EMAIL': {
             const templateId = action.params.templateId
             if (!templateId) break
             const template = await prisma.communicationTemplate.findFirst({
@@ -193,8 +193,10 @@ export async function POST(req: Request) {
               const body = template.content
                 .replace(/\{\{patientName\}\}/g, `${patient.firstName} ${patient.lastName}`)
                 .replace(/\{\{firstName\}\}/g, patient.firstName)
-              const subject = (template.subject || template.name)
-                .replace(/\{\{patientName\}\}/g, `${patient.firstName} ${patient.lastName}`)
+              const subject = (template.subject || template.name).replace(
+                /\{\{patientName\}\}/g,
+                `${patient.firstName} ${patient.lastName}`
+              )
 
               await prisma.emailLog.create({
                 data: {
@@ -204,24 +206,25 @@ export async function POST(req: Request) {
                   templateId,
                   subject,
                   body,
-                  status: "PENDING",
+                  status: 'PENDING',
                 },
               })
             }
             break
           }
 
-          case "CREATE_NOTIFICATION": {
+          case 'CREATE_NOTIFICATION': {
             // Create in-app notifications (via AuditLog as notification mechanism)
             for (const patientId of matchedPatientIds) {
               await prisma.notification.create({
                 data: {
                   hospitalId: auto.hospitalId,
-                  userId: action.params.userId || "",
+                  userId: action.params.userId || '',
                   title: action.params.title || auto.name,
-                  message: action.params.message || `Automation "${auto.name}" triggered for patient`,
-                  type: "SYSTEM",
-                  entityType: "Patient",
+                  message:
+                    action.params.message || `Automation "${auto.name}" triggered for patient`,
+                  type: 'SYSTEM',
+                  entityType: 'Patient',
                   entityId: patientId,
                 },
               })
@@ -254,7 +257,7 @@ export async function POST(req: Request) {
         automationId: auto.id,
         name: auto.name,
         matched: 0,
-        action: "ERROR",
+        action: 'ERROR',
       })
     }
   }

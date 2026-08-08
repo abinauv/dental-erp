@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from 'react'
 
 interface Summary {
   summary: string
@@ -21,28 +21,31 @@ export function Patient360({ patientId }: { patientId: string }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  const load = useCallback(async (refresh = false) => {
-    setLoading(true)
-    setError(false)
-    try {
-      const res = await fetch("/api/ai/clinical", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "patient_summary", patientId, refresh }),
-      })
-      const json = await res.json()
-      if (json.success && json.data) {
-        setData(json.data)
-        setCached(!!json.cached)
-      } else {
+  const load = useCallback(
+    async (refresh = false) => {
+      setLoading(true)
+      setError(false)
+      try {
+        const res = await fetch('/api/ai/clinical', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'patient_summary', patientId, refresh }),
+        })
+        const json = await res.json()
+        if (json.success && json.data) {
+          setData(json.data)
+          setCached(!!json.cached)
+        } else {
+          setError(true)
+        }
+      } catch {
         setError(true)
+      } finally {
+        setLoading(false)
       }
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [patientId])
+    },
+    [patientId]
+  )
 
   useEffect(() => {
     load(false)

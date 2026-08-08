@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 /**
  * POST /api/devices/data — Receive sensor data from a device
@@ -12,10 +12,7 @@ export async function POST(request: NextRequest) {
     const { deviceId, data, eventType } = body
 
     if (!deviceId || !data) {
-      return NextResponse.json(
-        { error: "deviceId and data are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'deviceId and data are required' }, { status: 400 })
     }
 
     // Verify device exists
@@ -23,7 +20,7 @@ export async function POST(request: NextRequest) {
       where: { id: deviceId },
     })
     if (!device) {
-      return NextResponse.json({ error: "Device not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Device not found' }, { status: 404 })
     }
 
     // Record data log
@@ -31,7 +28,7 @@ export async function POST(request: NextRequest) {
       data: {
         deviceId,
         data,
-        eventType: eventType || "READING",
+        eventType: eventType || 'READING',
       },
     })
 
@@ -40,14 +37,14 @@ export async function POST(request: NextRequest) {
       where: { id: deviceId },
       data: {
         lastPingAt: new Date(),
-        status: eventType === "ERROR" ? "ERROR" : "ONLINE",
+        status: eventType === 'ERROR' ? 'ERROR' : 'ONLINE',
       },
     })
 
     return NextResponse.json({ id: log.id, recorded: true }, { status: 201 })
   } catch (err) {
-    console.error("Device data ingestion error:", err)
-    return NextResponse.json({ error: "Failed to record device data" }, { status: 500 })
+    console.error('Device data ingestion error:', err)
+    return NextResponse.json({ error: 'Failed to record device data' }, { status: 500 })
   }
 }
 
@@ -56,16 +53,16 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const { error, hospitalId } = await requireAuthAndRole(["ADMIN", "DOCTOR"])
+    const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
     if (error) return error
 
     const { searchParams } = new URL(request.url)
-    const deviceId = searchParams.get("deviceId")
-    const limit = parseInt(searchParams.get("limit") || "50")
-    const eventType = searchParams.get("eventType")
+    const deviceId = searchParams.get('deviceId')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const eventType = searchParams.get('eventType')
 
     if (!deviceId) {
-      return NextResponse.json({ error: "deviceId is required" }, { status: 400 })
+      return NextResponse.json({ error: 'deviceId is required' }, { status: 400 })
     }
 
     // Verify device belongs to this hospital
@@ -73,7 +70,7 @@ export async function GET(request: NextRequest) {
       where: { id: deviceId, hospitalId: hospitalId! },
     })
     if (!device) {
-      return NextResponse.json({ error: "Device not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Device not found' }, { status: 404 })
     }
 
     const where: Record<string, unknown> = { deviceId }
@@ -81,13 +78,13 @@ export async function GET(request: NextRequest) {
 
     const logs = await prisma.deviceDataLog.findMany({
       where,
-      orderBy: { timestamp: "desc" },
+      orderBy: { timestamp: 'desc' },
       take: Math.min(limit, 200),
     })
 
     return NextResponse.json({ logs, total: logs.length })
   } catch (err) {
-    console.error("Device data fetch error:", err)
-    return NextResponse.json({ error: "Failed to fetch device data" }, { status: 500 })
+    console.error('Device data fetch error:', err)
+    return NextResponse.json({ error: 'Failed to fetch device data' }, { status: 500 })
   }
 }

@@ -1,4 +1,4 @@
-import { createHash, createHmac } from "crypto"
+import { createHash, createHmac } from 'crypto'
 import type {
   PaymentGateway,
   CreateOrderParams,
@@ -9,21 +9,18 @@ import type {
   CheckoutConfig,
   RefundParams,
   RefundResult,
-} from "./types"
+} from './types'
 
 /**
  * Generate Paytm checksum (simplified — no paytmchecksum dependency).
  * Uses HMAC SHA256 of sorted params.
  */
-function generatePaytmChecksum(
-  params: Record<string, string>,
-  merchantKey: string
-): string {
+function generatePaytmChecksum(params: Record<string, string>, merchantKey: string): string {
   const sorted = Object.keys(params)
     .sort()
     .map((key) => `${key}=${params[key]}`)
-    .join("|")
-  return createHmac("sha256", merchantKey).update(sorted).digest("hex")
+    .join('|')
+  return createHmac('sha256', merchantKey).update(sorted).digest('hex')
 }
 
 function verifyPaytmChecksum(
@@ -43,14 +40,14 @@ export class PaytmGateway implements PaymentGateway {
 
   constructor(credentials: GatewayCredentials) {
     if (!credentials.paytmMid || !credentials.paytmMerchantKey) {
-      throw new Error("Paytm credentials (mid, merchantKey) are required")
+      throw new Error('Paytm credentials (mid, merchantKey) are required')
     }
     this.mid = credentials.paytmMid
     this.merchantKey = credentials.paytmMerchantKey
-    this.website = credentials.paytmWebsite || "DEFAULT"
+    this.website = credentials.paytmWebsite || 'DEFAULT'
     this.baseUrl = credentials.isLiveMode
-      ? "https://securegw.paytm.in"
-      : "https://securegw-stage.paytm.in"
+      ? 'https://securegw.paytm.in'
+      : 'https://securegw-stage.paytm.in'
   }
 
   async createOrder(params: CreateOrderParams): Promise<GatewayOrder> {
@@ -60,8 +57,8 @@ export class PaytmGateway implements PaymentGateway {
     const paytmParams: Record<string, string> = {
       MID: this.mid,
       WEBSITE: this.website,
-      INDUSTRY_TYPE_ID: "Retail",
-      CHANNEL_ID: "WEB",
+      INDUSTRY_TYPE_ID: 'Retail',
+      CHANNEL_ID: 'WEB',
       ORDER_ID: orderId,
       CUST_ID: params.invoiceId,
       TXN_AMOUNT: amountStr,
@@ -71,13 +68,13 @@ export class PaytmGateway implements PaymentGateway {
     // Initiate transaction to get txnToken
     const body = {
       body: {
-        requestType: "Payment",
+        requestType: 'Payment',
         mid: this.mid,
         websiteName: this.website,
         orderId,
         txnAmount: {
           value: amountStr,
-          currency: params.currency || "INR",
+          currency: params.currency || 'INR',
         },
         userInfo: {
           custId: params.invoiceId,
@@ -92,27 +89,25 @@ export class PaytmGateway implements PaymentGateway {
     const res = await fetch(
       `${this.baseUrl}/theia/api/v1/initiateTransaction?mid=${this.mid}&orderId=${orderId}`,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       }
     )
 
     const data = await res.json()
 
-    if (data.body?.resultInfo?.resultStatus !== "S") {
-      throw new Error(
-        data.body?.resultInfo?.resultMsg || "Paytm order creation failed"
-      )
+    if (data.body?.resultInfo?.resultStatus !== 'S') {
+      throw new Error(data.body?.resultInfo?.resultMsg || 'Paytm order creation failed')
     }
 
     return {
       orderId,
       amount: Math.round(params.amount * 100),
-      currency: params.currency || "INR",
+      currency: params.currency || 'INR',
       receipt: params.receipt,
-      provider: "paytm",
-      status: "CREATED",
+      provider: 'paytm',
+      status: 'CREATED',
       metadata: {
         txnToken: data.body.txnToken,
         mid: this.mid,
@@ -137,22 +132,19 @@ export class PaytmGateway implements PaymentGateway {
       },
     }
 
-    const res = await fetch(
-      `${this.baseUrl}/v3/order/status`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
-    )
+    const res = await fetch(`${this.baseUrl}/v3/order/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
 
     const data = await res.json()
 
-    if (data.body?.resultInfo?.resultStatus === "TXN_SUCCESS") {
+    if (data.body?.resultInfo?.resultStatus === 'TXN_SUCCESS') {
       return {
         verified: true,
-        transactionId: data.body.txnId || params.orderId as string,
-        status: "COMPLETED",
+        transactionId: data.body.txnId || (params.orderId as string),
+        status: 'COMPLETED',
         amount: parseFloat(data.body.txnAmount) || undefined,
         method: data.body.paymentMode,
       }
@@ -161,7 +153,7 @@ export class PaytmGateway implements PaymentGateway {
     return {
       verified: false,
       transactionId: params.orderId as string,
-      status: data.body?.resultInfo?.resultStatus || "FAILED",
+      status: data.body?.resultInfo?.resultStatus || 'FAILED',
     }
   }
 
@@ -174,7 +166,7 @@ export class PaytmGateway implements PaymentGateway {
       // Re-compute checksum from body params
       const txnParams: Record<string, string> = {}
       for (const [key, value] of Object.entries(data.body || {})) {
-        if (typeof value === "string") {
+        if (typeof value === 'string') {
           txnParams[key] = value
         }
       }
@@ -186,8 +178,8 @@ export class PaytmGateway implements PaymentGateway {
 
   getCheckoutConfig(order: GatewayOrder, _credentials: GatewayCredentials): CheckoutConfig {
     return {
-      provider: "paytm",
-      txnToken: (order.metadata?.txnToken as string) || "",
+      provider: 'paytm',
+      txnToken: (order.metadata?.txnToken as string) || '',
       orderId: order.orderId,
       mid: this.mid,
       amount: order.amount / 100, // Convert back to rupees for frontend display
@@ -203,13 +195,13 @@ export class PaytmGateway implements PaymentGateway {
       TXNID: params.paymentId,
       ORDERID: refundId,
       REFUNDAMOUNT: amountStr,
-      TXNTYPE: "REFUND",
+      TXNTYPE: 'REFUND',
     }
 
     const body = {
       body: {
         mid: this.mid,
-        txnType: "REFUND",
+        txnType: 'REFUND',
         orderId: refundId,
         txnId: params.paymentId,
         refId: refundId,
@@ -221,17 +213,19 @@ export class PaytmGateway implements PaymentGateway {
     }
 
     const res = await fetch(`${this.baseUrl}/refund/apply`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
 
     const data = await res.json()
 
     return {
-      success: data.body?.resultInfo?.resultStatus === "PENDING" || data.body?.resultInfo?.resultStatus === "TXN_SUCCESS",
+      success:
+        data.body?.resultInfo?.resultStatus === 'PENDING' ||
+        data.body?.resultInfo?.resultStatus === 'TXN_SUCCESS',
       refundId,
-      status: data.body?.resultInfo?.resultStatus || "FAILED",
+      status: data.body?.resultInfo?.resultStatus || 'FAILED',
       amount: params.amount,
     }
   }

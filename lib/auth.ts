@@ -1,9 +1,9 @@
-import NextAuth from "next-auth"
-import Credentials from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
-import { authConfig } from "./auth.config"
-import { prisma } from "./prisma"
-import { z } from "zod"
+import NextAuth from 'next-auth'
+import Credentials from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
+import { authConfig } from './auth.config'
+import { prisma } from './prisma'
+import { z } from 'zod'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -50,7 +50,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
     maxAge: 8 * 60 * 60, // 8 hours
   },
 })

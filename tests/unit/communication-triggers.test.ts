@@ -19,7 +19,8 @@ vi.mock('@/lib/services/sms.service', () => ({ smsService: mockSmsService }))
 vi.mock('@/lib/services/email.service', () => ({ emailService: mockEmailService }))
 vi.mock('@/lib/services/template.service', () => ({ templateService: mockTemplateService }))
 
-const { communicationTriggersService } = await import('@/lib/services/communication-triggers.service')
+const { communicationTriggersService } =
+  await import('@/lib/services/communication-triggers.service')
 
 describe('CommunicationTriggersService', () => {
   beforeEach(() => {
@@ -27,7 +28,7 @@ describe('CommunicationTriggersService', () => {
   })
 
   describe('sendAppointmentReminders24Hours', () => {
-    it('sends SMS and email reminders for tomorrow\'s appointments', async () => {
+    it("sends SMS and email reminders for tomorrow's appointments", async () => {
       ;(prisma.appointment.findMany as any).mockResolvedValue([
         {
           id: 'apt-1',
@@ -37,7 +38,12 @@ describe('CommunicationTriggersService', () => {
           scheduledDate: new Date('2026-03-04'),
           scheduledTime: '10:00',
           chairNumber: 2,
-          patient: { firstName: 'John', lastName: 'Doe', phone: '9876543210', email: 'john@test.com' },
+          patient: {
+            firstName: 'John',
+            lastName: 'Doe',
+            phone: '9876543210',
+            email: 'john@test.com',
+          },
           doctor: { firstName: 'Alice', lastName: 'Brown', user: {} },
         },
       ])
@@ -48,7 +54,10 @@ describe('CommunicationTriggersService', () => {
         emailEnabled: true,
       })
 
-      ;(prisma.hospital.findUnique as any).mockResolvedValue({ name: 'Test Clinic', phone: '1234567890' })
+      ;(prisma.hospital.findUnique as any).mockResolvedValue({
+        name: 'Test Clinic',
+        phone: '1234567890',
+      })
 
       mockTemplateService.getDefaultTemplate.mockResolvedValue({
         id: 'tmpl-1',
@@ -114,7 +123,9 @@ describe('CommunicationTriggersService', () => {
         },
       ])
 
-      ;(prisma.patientCommunicationPreference.findUnique as any).mockRejectedValue(new Error('DB error'))
+      ;(prisma.patientCommunicationPreference.findUnique as any).mockRejectedValue(
+        new Error('DB error')
+      )
 
       // Should not throw
       await communicationTriggersService.sendAppointmentReminders24Hours()
@@ -162,7 +173,15 @@ describe('CommunicationTriggersService', () => {
       const dob = new Date(1990, today.getMonth(), today.getDate())
 
       ;(prisma.patient.findMany as any).mockResolvedValue([
-        { id: 'pat-1', hospitalId: 'h1', firstName: 'John', lastName: 'Doe', phone: '9876543210', dateOfBirth: dob, isActive: true },
+        {
+          id: 'pat-1',
+          hospitalId: 'h1',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '9876543210',
+          dateOfBirth: dob,
+          isActive: true,
+        },
       ])
 
       ;(prisma.patientCommunicationPreference.findUnique as any).mockResolvedValue({
@@ -179,7 +198,15 @@ describe('CommunicationTriggersService', () => {
       const dob = new Date(1990, tomorrow.getMonth(), tomorrow.getDate())
 
       ;(prisma.patient.findMany as any).mockResolvedValue([
-        { id: 'pat-1', hospitalId: 'h1', firstName: 'John', lastName: 'Doe', phone: '9876543210', dateOfBirth: dob, isActive: true },
+        {
+          id: 'pat-1',
+          hospitalId: 'h1',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '9876543210',
+          dateOfBirth: dob,
+          isActive: true,
+        },
       ])
 
       await communicationTriggersService.sendBirthdayWishes()

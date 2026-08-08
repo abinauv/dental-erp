@@ -34,14 +34,15 @@ describe('GET /api/reports/export', () => {
     // Mock internal fetch to analytics endpoint
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({
-        newPatients: 10,
-        returningPatients: 50,
-        totalPatients: 60,
-        retentionRate: 83.33,
-        demographics: { male: 30, female: 28, other: 2 },
-        acquisitionSources: [{ source: 'Walk-in', count: 40, percentage: 66.67 }],
-      }),
+      json: () =>
+        Promise.resolve({
+          newPatients: 10,
+          returningPatients: 50,
+          totalPatients: 60,
+          retentionRate: 83.33,
+          demographics: { male: 30, female: 28, other: 2 },
+          acquisitionSources: [{ source: 'Walk-in', count: 40, percentage: 66.67 }],
+        }),
     })
 
     const req = makeRequest({ type: 'patient', format: 'excel', preset: 'this_month' })
@@ -55,14 +56,15 @@ describe('GET /api/reports/export', () => {
   it('returns HTML for PDF format export', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({
-        totalTreatments: 100,
-        completedTreatments: 80,
-        inProgressTreatments: 20,
-        completionRate: 80.0,
-        avgTreatmentDuration: 45,
-        commonProcedures: [],
-      }),
+      json: () =>
+        Promise.resolve({
+          totalTreatments: 100,
+          completedTreatments: 80,
+          inProgressTreatments: 20,
+          completionRate: 80.0,
+          avgTreatmentDuration: 45,
+          commonProcedures: [],
+        }),
     })
 
     const req = makeRequest({ type: 'clinical', format: 'pdf', preset: 'this_month' })
@@ -77,16 +79,17 @@ describe('GET /api/reports/export', () => {
   it('exports financial report with payment method breakdown', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({
-        totalRevenue: 500000,
-        totalExpenses: 200000,
-        profitMargin: 60.0,
-        avgBillValue: 5000,
-        collectionEfficiency: 85.0,
-        outstandingAmount: 75000,
-        paymentMethodBreakdown: [{ method: 'UPI', amount: 300000, percentage: 60.0 }],
-        revenueByMonth: [],
-      }),
+      json: () =>
+        Promise.resolve({
+          totalRevenue: 500000,
+          totalExpenses: 200000,
+          profitMargin: 60.0,
+          avgBillValue: 5000,
+          collectionEfficiency: 85.0,
+          outstandingAmount: 75000,
+          paymentMethodBreakdown: [{ method: 'UPI', amount: 300000, percentage: 60.0 }],
+          revenueByMonth: [],
+        }),
     })
 
     const req = makeRequest({ type: 'financial', format: 'pdf' })
@@ -100,18 +103,19 @@ describe('GET /api/reports/export', () => {
   it('exports operational report', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({
-        totalAppointments: 200,
-        completedAppointments: 180,
-        cancelledAppointments: 10,
-        noShowCount: 10,
-        noShowRate: 5.0,
-        appointmentUtilization: 90.0,
-        avgWaitTime: 15,
-        inventoryTurnover: 3.5,
-        lowStockItems: 5,
-        staffProductivity: [],
-      }),
+      json: () =>
+        Promise.resolve({
+          totalAppointments: 200,
+          completedAppointments: 180,
+          cancelledAppointments: 10,
+          noShowCount: 10,
+          noShowRate: 5.0,
+          appointmentUtilization: 90.0,
+          avgWaitTime: 15,
+          inventoryTurnover: 3.5,
+          lowStockItems: 5,
+          staffProductivity: [],
+        }),
     })
 
     const req = makeRequest({ type: 'operational', format: 'pdf' })
@@ -125,7 +129,15 @@ describe('GET /api/reports/export', () => {
   it('returns 400 for invalid export format', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ newPatients: 0, returningPatients: 0, totalPatients: 0, retentionRate: 0, demographics: { male: 0, female: 0, other: 0 }, acquisitionSources: [] }),
+      json: () =>
+        Promise.resolve({
+          newPatients: 0,
+          returningPatients: 0,
+          totalPatients: 0,
+          retentionRate: 0,
+          demographics: { male: 0, female: 0, other: 0 },
+          acquisitionSources: [],
+        }),
     })
 
     const req = makeRequest({ type: 'patient', format: 'csv' })

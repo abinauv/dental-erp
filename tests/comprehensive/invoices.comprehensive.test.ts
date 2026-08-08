@@ -145,7 +145,9 @@ describe('Invoices API - Comprehensive Tests', () => {
       mockPrisma.invoice.findMany.mockResolvedValue([])
       mockPrisma.invoice.count.mockResolvedValue(0)
 
-      const request = new NextRequest('http://localhost/api/invoices?dateFrom=2025-01-01&dateTo=2025-01-31')
+      const request = new NextRequest(
+        'http://localhost/api/invoices?dateFrom=2025-01-01&dateTo=2025-01-31'
+      )
       await GET(request)
 
       expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
@@ -207,9 +209,7 @@ describe('Invoices API - Comprehensive Tests', () => {
       expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            OR: expect.arrayContaining([
-              { invoiceNo: { contains: 'INV2025' } },
-            ]),
+            OR: expect.arrayContaining([{ invoiceNo: { contains: 'INV2025' } }]),
           }),
         })
       )
@@ -257,9 +257,7 @@ describe('Invoices API - Comprehensive Tests', () => {
         method: 'POST',
         body: JSON.stringify({
           patientId: mockPatientId,
-          items: [
-            { description: 'Root Canal Treatment', quantity: 1, unitPrice: 10000 },
-          ],
+          items: [{ description: 'Root Canal Treatment', quantity: 1, unitPrice: 10000 }],
           discountType: 'FIXED',
           discountValue: 500,
         }),
@@ -625,7 +623,15 @@ describe('Invoices API - Comprehensive Tests', () => {
   })
 
   describe('Invoice Status Lifecycle', () => {
-    const validStatuses = ['DRAFT', 'PENDING', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED', 'REFUNDED']
+    const validStatuses = [
+      'DRAFT',
+      'PENDING',
+      'PARTIALLY_PAID',
+      'PAID',
+      'OVERDUE',
+      'CANCELLED',
+      'REFUNDED',
+    ]
 
     it('should have defined statuses', () => {
       expect(validStatuses).toHaveLength(7)
@@ -844,21 +850,23 @@ describe('Invoices API - Comprehensive Tests', () => {
         .mockResolvedValueOnce({ id: 'inv-2', invoiceNo: 'INV202501290002' })
         .mockResolvedValueOnce({ id: 'inv-3', invoiceNo: 'INV202501290003' })
 
-      const requests = Array.from({ length: 3 }, () =>
-        new NextRequest('http://localhost/api/invoices', {
-          method: 'POST',
-          body: JSON.stringify({
-            patientId: mockPatientId,
-            items: [{ description: 'Service', quantity: 1, unitPrice: 100 }],
-          }),
-        })
+      const requests = Array.from(
+        { length: 3 },
+        () =>
+          new NextRequest('http://localhost/api/invoices', {
+            method: 'POST',
+            body: JSON.stringify({
+              patientId: mockPatientId,
+              items: [{ description: 'Service', quantity: 1, unitPrice: 100 }],
+            }),
+          })
       )
 
-      const responses = await Promise.all(requests.map(req => POST(req)))
-      const data = await Promise.all(responses.map(res => res.json()))
+      const responses = await Promise.all(requests.map((req) => POST(req)))
+      const data = await Promise.all(responses.map((res) => res.json()))
 
       // Each should get unique invoice number
-      const invoiceNos = data.map(d => d.invoiceNo)
+      const invoiceNos = data.map((d) => d.invoiceNo)
       expect(new Set(invoiceNos).size).toBe(3)
     })
   })

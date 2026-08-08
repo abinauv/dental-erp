@@ -71,9 +71,27 @@ describe('GET /api/reports/analytics?type=patient', () => {
     mockAuth()
     vi.mocked(prisma.patient.findMany)
       .mockResolvedValueOnce([
-        { id: 'p1', gender: 'MALE', dateOfBirth: new Date('1990-01-01'), referredBy: 'Google', createdAt: new Date() },
-        { id: 'p2', gender: 'FEMALE', dateOfBirth: new Date('1985-06-15'), referredBy: null, createdAt: new Date() },
-        { id: 'p3', gender: 'MALE', dateOfBirth: null, referredBy: 'Referral', createdAt: new Date() },
+        {
+          id: 'p1',
+          gender: 'MALE',
+          dateOfBirth: new Date('1990-01-01'),
+          referredBy: 'Google',
+          createdAt: new Date(),
+        },
+        {
+          id: 'p2',
+          gender: 'FEMALE',
+          dateOfBirth: new Date('1985-06-15'),
+          referredBy: null,
+          createdAt: new Date(),
+        },
+        {
+          id: 'p3',
+          gender: 'MALE',
+          dateOfBirth: null,
+          referredBy: 'Referral',
+          createdAt: new Date(),
+        },
       ] as any) // patients in range
       .mockResolvedValueOnce([
         { id: 'p1', _count: { appointments: 3 } },
@@ -123,18 +141,27 @@ describe('GET /api/reports/analytics?type=clinical', () => {
 
     vi.mocked(prisma.treatment.findMany).mockResolvedValue([
       {
-        id: 't1', status: 'COMPLETED', procedureId: 'proc1',
-        startTime: oneHourAgo, endTime: now,
+        id: 't1',
+        status: 'COMPLETED',
+        procedureId: 'proc1',
+        startTime: oneHourAgo,
+        endTime: now,
         procedure: { name: 'Root Canal', code: 'RC001', category: 'ENDODONTICS' },
       },
       {
-        id: 't2', status: 'IN_PROGRESS', procedureId: 'proc1',
-        startTime: null, endTime: null,
+        id: 't2',
+        status: 'IN_PROGRESS',
+        procedureId: 'proc1',
+        startTime: null,
+        endTime: null,
         procedure: { name: 'Root Canal', code: 'RC001', category: 'ENDODONTICS' },
       },
       {
-        id: 't3', status: 'COMPLETED', procedureId: 'proc2',
-        startTime: null, endTime: null,
+        id: 't3',
+        status: 'COMPLETED',
+        procedureId: 'proc2',
+        startTime: null,
+        endTime: null,
         procedure: { name: 'Filling', code: 'FL001', category: 'RESTORATIVE' },
       },
     ] as any)
@@ -241,15 +268,24 @@ describe('GET /api/reports/analytics?type=operational', () => {
     mockAuth()
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([
       {
-        id: 'a1', status: 'COMPLETED', doctorId: 'd1', waitTime: 10,
+        id: 'a1',
+        status: 'COMPLETED',
+        doctorId: 'd1',
+        waitTime: 10,
         doctor: { firstName: 'Dr', lastName: 'Smith', user: { role: 'DOCTOR' } },
       },
       {
-        id: 'a2', status: 'CANCELLED', doctorId: 'd1', waitTime: null,
+        id: 'a2',
+        status: 'CANCELLED',
+        doctorId: 'd1',
+        waitTime: null,
         doctor: { firstName: 'Dr', lastName: 'Smith', user: { role: 'DOCTOR' } },
       },
       {
-        id: 'a3', status: 'NO_SHOW', doctorId: 'd1', waitTime: null,
+        id: 'a3',
+        status: 'NO_SHOW',
+        doctorId: 'd1',
+        waitTime: null,
         doctor: { firstName: 'Dr', lastName: 'Smith', user: { role: 'DOCTOR' } },
       },
     ] as any)
@@ -257,7 +293,9 @@ describe('GET /api/reports/analytics?type=operational', () => {
       { doctorId: 'd1', status: 'COMPLETED', cost: 5000 },
     ] as any)
     vi.mocked(prisma.stockTransaction.findMany).mockResolvedValue([])
-    vi.mocked(prisma.inventoryItem.aggregate).mockResolvedValue({ _sum: { currentStock: 100 } } as any)
+    vi.mocked(prisma.inventoryItem.aggregate).mockResolvedValue({
+      _sum: { currentStock: 100 },
+    } as any)
     vi.mocked(prisma.inventoryItem.count).mockResolvedValue(5)
 
     const res = await analyticsGET(makeReq('/api/reports/analytics?type=operational'))
@@ -279,7 +317,9 @@ describe('GET /api/reports/analytics?type=operational', () => {
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([])
     vi.mocked(prisma.treatment.findMany).mockResolvedValue([])
     vi.mocked(prisma.stockTransaction.findMany).mockResolvedValue([])
-    vi.mocked(prisma.inventoryItem.aggregate).mockResolvedValue({ _sum: { currentStock: 0 } } as any)
+    vi.mocked(prisma.inventoryItem.aggregate).mockResolvedValue({
+      _sum: { currentStock: 0 },
+    } as any)
     vi.mocked(prisma.inventoryItem.count).mockResolvedValue(0)
 
     const res = await analyticsGET(makeReq('/api/reports/analytics?type=operational'))
@@ -302,7 +342,9 @@ describe('GET /api/reports/analytics — date presets', () => {
     mockAuth()
     vi.mocked(prisma.patient.findMany).mockResolvedValue([])
 
-    await analyticsGET(makeReq('/api/reports/analytics?type=patient&dateFrom=2026-01-01&dateTo=2026-01-31'))
+    await analyticsGET(
+      makeReq('/api/reports/analytics?type=patient&dateFrom=2026-01-01&dateTo=2026-01-31')
+    )
 
     expect(prisma.patient.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

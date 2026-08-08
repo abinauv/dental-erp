@@ -1,20 +1,19 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get staff member's performance statistics
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     const { id } = await params
     const { searchParams } = new URL(request.url)
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
 
     // Default to current month if no dates provided
     const now = new Date()
@@ -30,14 +29,14 @@ export async function GET(
       include: {
         user: {
           select: {
-            role: true
-          }
-        }
-      }
+            role: true,
+          },
+        },
+      },
     })
 
     if (!staff) {
-      return NextResponse.json({ error: "Staff not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
     }
 
     // Get appointments stats
@@ -47,29 +46,30 @@ export async function GET(
         doctorId: id,
         scheduledDate: {
           gte: start,
-          lte: end
-        }
+          lte: end,
+        },
       },
       select: {
         id: true,
         status: true,
         scheduledDate: true,
-        waitTime: true
-      }
+        waitTime: true,
+      },
     })
 
     const appointmentStats = {
       total: appointments.length,
-      completed: appointments.filter(a => a.status === 'COMPLETED').length,
-      cancelled: appointments.filter(a => a.status === 'CANCELLED').length,
-      noShow: appointments.filter(a => a.status === 'NO_SHOW').length,
-      avgWaitTime: 0
+      completed: appointments.filter((a) => a.status === 'COMPLETED').length,
+      cancelled: appointments.filter((a) => a.status === 'CANCELLED').length,
+      noShow: appointments.filter((a) => a.status === 'NO_SHOW').length,
+      avgWaitTime: 0,
     }
 
-    const completedWithWaitTime = appointments.filter(a => a.status === 'COMPLETED' && a.waitTime)
+    const completedWithWaitTime = appointments.filter((a) => a.status === 'COMPLETED' && a.waitTime)
     if (completedWithWaitTime.length > 0) {
       appointmentStats.avgWaitTime = Math.round(
-        completedWithWaitTime.reduce((sum, a) => sum + (a.waitTime || 0), 0) / completedWithWaitTime.length
+        completedWithWaitTime.reduce((sum, a) => sum + (a.waitTime || 0), 0) /
+          completedWithWaitTime.length
       )
     }
 
@@ -80,8 +80,8 @@ export async function GET(
         doctorId: id,
         createdAt: {
           gte: start,
-          lte: end
-        }
+          lte: end,
+        },
       },
       select: {
         id: true,
@@ -90,26 +90,26 @@ export async function GET(
         procedure: {
           select: {
             category: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     })
 
     const treatmentStats = {
       total: treatments.length,
-      completed: treatments.filter(t => t.status === 'COMPLETED').length,
-      inProgress: treatments.filter(t => t.status === 'IN_PROGRESS').length,
-      cancelled: treatments.filter(t => t.status === 'CANCELLED').length
+      completed: treatments.filter((t) => t.status === 'COMPLETED').length,
+      inProgress: treatments.filter((t) => t.status === 'IN_PROGRESS').length,
+      cancelled: treatments.filter((t) => t.status === 'CANCELLED').length,
     }
 
     // Revenue calculation
-    const completedTreatments = treatments.filter(t => t.status === 'COMPLETED')
+    const completedTreatments = treatments.filter((t) => t.status === 'COMPLETED')
     const totalRevenue = completedTreatments.reduce((sum, t) => sum + Number(t.cost), 0)
 
     // Procedure breakdown
     const procedureBreakdown: Record<string, { count: number; revenue: number }> = {}
-    completedTreatments.forEach(t => {
+    completedTreatments.forEach((t) => {
       const category = t.procedure.category
       if (!procedureBreakdown[category]) {
         procedureBreakdown[category] = { count: 0, revenue: 0 }
@@ -126,10 +126,10 @@ export async function GET(
         doctorId: id,
         createdAt: {
           gte: start,
-          lte: end
+          lte: end,
         },
-        status: 'COMPLETED'
-      }
+        status: 'COMPLETED',
+      },
     })
 
     // Get attendance stats
@@ -139,18 +139,18 @@ export async function GET(
         staff: { hospitalId },
         date: {
           gte: start,
-          lte: end
-        }
-      }
+          lte: end,
+        },
+      },
     })
 
     const attendanceStats = {
       totalDays: attendance.length,
-      present: attendance.filter(a => a.status === 'PRESENT').length,
-      absent: attendance.filter(a => a.status === 'ABSENT').length,
-      late: attendance.filter(a => a.status === 'LATE').length,
-      halfDay: attendance.filter(a => a.status === 'HALF_DAY').length,
-      onLeave: attendance.filter(a => a.status === 'ON_LEAVE').length
+      present: attendance.filter((a) => a.status === 'PRESENT').length,
+      absent: attendance.filter((a) => a.status === 'ABSENT').length,
+      late: attendance.filter((a) => a.status === 'LATE').length,
+      halfDay: attendance.filter((a) => a.status === 'HALF_DAY').length,
+      onLeave: attendance.filter((a) => a.status === 'ON_LEAVE').length,
     }
 
     // Get prescriptions count
@@ -160,9 +160,9 @@ export async function GET(
         doctorId: id,
         createdAt: {
           gte: start,
-          lte: end
-        }
-      }
+          lte: end,
+        },
+      },
     })
 
     return NextResponse.json({
@@ -171,33 +171,31 @@ export async function GET(
         employeeId: staff.employeeId,
         name: `${staff.firstName} ${staff.lastName}`,
         role: staff.user.role,
-        specialization: staff.specialization
+        specialization: staff.specialization,
       },
       period: {
         start: start.toISOString().split('T')[0],
-        end: end.toISOString().split('T')[0]
+        end: end.toISOString().split('T')[0],
       },
       appointments: appointmentStats,
       treatments: treatmentStats,
       revenue: {
         total: totalRevenue,
-        averagePerTreatment: completedTreatments.length > 0
-          ? Math.round(totalRevenue / completedTreatments.length)
-          : 0
+        averagePerTreatment:
+          completedTreatments.length > 0
+            ? Math.round(totalRevenue / completedTreatments.length)
+            : 0,
       },
       procedureBreakdown: Object.entries(procedureBreakdown).map(([category, data]) => ({
         category,
-        ...data
+        ...data,
       })),
       patientsTreated: uniquePatients.length,
       prescriptionsWritten: prescriptionsCount,
-      attendance: attendanceStats
+      attendance: attendanceStats,
     })
   } catch (error) {
-    console.error("Error fetching performance:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch performance statistics" },
-      { status: 500 }
-    )
+    console.error('Error fetching performance:', error)
+    return NextResponse.json({ error: 'Failed to fetch performance statistics' }, { status: 500 })
   }
 }

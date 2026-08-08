@@ -28,30 +28,46 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
+    <button onClick={onClick} disabled={disabled} {...props}>
+      {children}
+    </button>
   ),
 }))
 
 vi.mock('@/components/ui/card', () => ({
   Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-  CardContent: ({ children, className }: any) => <div data-testid="card-content" className={className}>{children}</div>,
+  CardContent: ({ children, className }: any) => (
+    <div data-testid="card-content" className={className}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
 }))
 
 vi.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, className }: any) => <span data-testid="badge" className={className}>{children}</span>,
+  Badge: ({ children, className }: any) => (
+    <span data-testid="badge" className={className}>
+      {children}
+    </span>
+  ),
 }))
 
 vi.mock('@/components/ui/select', () => ({
   Select: ({ children, value, onValueChange }: any) => (
     <div data-testid="view-mode-select">
       {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as any, { onValueChange, value }) : child
+        React.isValidElement(child)
+          ? React.cloneElement(child as any, { onValueChange, value })
+          : child
       )}
     </div>
   ),
-  SelectTrigger: ({ children, className }: any) => <div data-testid="select-trigger" className={className}>{children}</div>,
+  SelectTrigger: ({ children, className }: any) => (
+    <div data-testid="select-trigger" className={className}>
+      {children}
+    </div>
+  ),
   SelectValue: () => <span data-testid="select-value" />,
   SelectContent: ({ children, onValueChange }: any) => (
     <div data-testid="select-content">
@@ -162,17 +178,13 @@ describe('CalendarView', () => {
       expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
     })
     // Fetch should include view=week
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('view=week')
-    )
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('view=week'))
   })
 
   it('fetches appointments on mount', async () => {
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/api/appointments')
-      )
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/appointments'))
     })
   })
 
@@ -192,9 +204,7 @@ describe('CalendarView', () => {
     fireEvent.click(screen.getByTestId('select-item-day'))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('view=day')
-      )
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('view=day'))
     })
   })
 
@@ -207,9 +217,7 @@ describe('CalendarView', () => {
     fireEvent.click(screen.getByTestId('select-item-month'))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('view=month')
-      )
+      expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('view=month'))
     })
   })
 

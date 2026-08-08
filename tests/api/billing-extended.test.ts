@@ -282,7 +282,13 @@ describe('GET /api/billing/unbilled-treatments', () => {
         cost: 5000,
         toothNumbers: '11',
         endTime: new Date(),
-        procedure: { id: 'proc1', code: 'RCT', name: 'Root Canal', category: 'Endodontics', basePrice: 5000 },
+        procedure: {
+          id: 'proc1',
+          code: 'RCT',
+          name: 'Root Canal',
+          category: 'Endodontics',
+          basePrice: 5000,
+        },
         doctor: { id: 'd1', firstName: 'Dr', lastName: 'Smith' },
       },
     ] as any)
@@ -379,7 +385,9 @@ describe('GET /api/billing/reports', () => {
       },
     ] as any)
 
-    const req = makeRequest('http://localhost/api/billing/reports?type=revenue&dateFrom=2026-01-01&dateTo=2026-01-31')
+    const req = makeRequest(
+      'http://localhost/api/billing/reports?type=revenue&dateFrom=2026-01-01&dateTo=2026-01-31'
+    )
     const res = await GET(req)
     const data = await res.json()
 

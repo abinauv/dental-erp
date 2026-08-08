@@ -12,14 +12,8 @@ vi.mock('@/lib/api-helpers', () => ({
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
-import {
-  GET as medicationsGET,
-  POST as medicationsPOST,
-} from '@/app/api/medications/route'
-import {
-  GET as prescriptionsGET,
-  POST as prescriptionsPOST,
-} from '@/app/api/prescriptions/route'
+import { GET as medicationsGET, POST as medicationsPOST } from '@/app/api/medications/route'
+import { GET as prescriptionsGET, POST as prescriptionsPOST } from '@/app/api/prescriptions/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
@@ -178,13 +172,15 @@ describe('POST /api/medications', () => {
     }
     vi.mocked(prisma.medication.create).mockResolvedValue(mockMed as any)
 
-    const res = await medicationsPOST(makeReq('/api/medications', 'POST', {
-      name: 'Amoxicillin',
-      genericName: 'Amoxicillin',
-      category: 'ANTIBIOTIC',
-      form: 'CAPSULE',
-      strength: '500mg',
-    }))
+    const res = await medicationsPOST(
+      makeReq('/api/medications', 'POST', {
+        name: 'Amoxicillin',
+        genericName: 'Amoxicillin',
+        category: 'ANTIBIOTIC',
+        form: 'CAPSULE',
+        strength: '500mg',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -235,7 +231,14 @@ describe('GET /api/prescriptions', () => {
       {
         id: 'rx1',
         prescriptionNo: 'RX20260001',
-        patient: { id: 'p1', patientId: 'PT001', firstName: 'John', lastName: 'Doe', phone: '9876543210', dateOfBirth: null },
+        patient: {
+          id: 'p1',
+          patientId: 'PT001',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '9876543210',
+          dateOfBirth: null,
+        },
         doctor: { id: 's1', firstName: 'Dr', lastName: 'Smith' },
         medications: [
           { id: 'pm1', medication: { id: 'm1', name: 'Amoxicillin', genericName: 'Amoxicillin' } },
@@ -315,9 +318,11 @@ describe('POST /api/prescriptions', () => {
 
   it('returns 400 when patientId is missing', async () => {
     mockAuth()
-    const res = await prescriptionsPOST(makeReq('/api/prescriptions', 'POST', {
-      medications: [{ medicationName: 'Amox', dosage: '500mg' }],
-    }))
+    const res = await prescriptionsPOST(
+      makeReq('/api/prescriptions', 'POST', {
+        medications: [{ medicationName: 'Amox', dosage: '500mg' }],
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -326,10 +331,12 @@ describe('POST /api/prescriptions', () => {
 
   it('returns 400 when medications array is empty', async () => {
     mockAuth()
-    const res = await prescriptionsPOST(makeReq('/api/prescriptions', 'POST', {
-      patientId: 'p1',
-      medications: [],
-    }))
+    const res = await prescriptionsPOST(
+      makeReq('/api/prescriptions', 'POST', {
+        patientId: 'p1',
+        medications: [],
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -339,10 +346,14 @@ describe('POST /api/prescriptions', () => {
     mockAuth()
     vi.mocked(prisma.patient.findFirst).mockResolvedValue(null)
 
-    const res = await prescriptionsPOST(makeReq('/api/prescriptions', 'POST', {
-      patientId: 'p-nonexistent',
-      medications: [{ medicationName: 'Amox', dosage: '500mg', frequency: 'TID', duration: '7 days' }],
-    }))
+    const res = await prescriptionsPOST(
+      makeReq('/api/prescriptions', 'POST', {
+        patientId: 'p-nonexistent',
+        medications: [
+          { medicationName: 'Amox', dosage: '500mg', frequency: 'TID', duration: '7 days' },
+        ],
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(404)
@@ -355,10 +366,14 @@ describe('POST /api/prescriptions', () => {
     vi.mocked(prisma.prescription.findFirst).mockResolvedValue(null)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue(null)
 
-    const res = await prescriptionsPOST(makeReq('/api/prescriptions', 'POST', {
-      patientId: 'p1',
-      medications: [{ medicationName: 'Amox', dosage: '500mg', frequency: 'TID', duration: '7 days' }],
-    }))
+    const res = await prescriptionsPOST(
+      makeReq('/api/prescriptions', 'POST', {
+        patientId: 'p1',
+        medications: [
+          { medicationName: 'Amox', dosage: '500mg', frequency: 'TID', duration: '7 days' },
+        ],
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(400)
@@ -378,13 +393,15 @@ describe('POST /api/prescriptions', () => {
       medications: [{ medicationName: 'Amoxicillin' }],
     } as any)
 
-    const res = await prescriptionsPOST(makeReq('/api/prescriptions', 'POST', {
-      patientId: 'p1',
-      diagnosis: 'Dental infection',
-      medications: [
-        { medicationName: 'Amoxicillin', dosage: '500mg', frequency: 'TID', duration: '7 days' },
-      ],
-    }))
+    const res = await prescriptionsPOST(
+      makeReq('/api/prescriptions', 'POST', {
+        patientId: 'p1',
+        diagnosis: 'Dental infection',
+        medications: [
+          { medicationName: 'Amoxicillin', dosage: '500mg', frequency: 'TID', duration: '7 days' },
+        ],
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -409,14 +426,20 @@ describe('POST /api/prescriptions', () => {
   it('increments prescription number from last existing', async () => {
     mockAuth()
     vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'p1' } as any)
-    vi.mocked(prisma.prescription.findFirst).mockResolvedValue({ prescriptionNo: 'RX20260015' } as any)
+    vi.mocked(prisma.prescription.findFirst).mockResolvedValue({
+      prescriptionNo: 'RX20260015',
+    } as any)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 's1' } as any)
     vi.mocked(prisma.prescription.create).mockResolvedValue({ id: 'rx2' } as any)
 
-    await prescriptionsPOST(makeReq('/api/prescriptions', 'POST', {
-      patientId: 'p1',
-      medications: [{ medicationName: 'Ibuprofen', dosage: '400mg', frequency: 'BID', duration: '5 days' }],
-    }))
+    await prescriptionsPOST(
+      makeReq('/api/prescriptions', 'POST', {
+        patientId: 'p1',
+        medications: [
+          { medicationName: 'Ibuprofen', dosage: '400mg', frequency: 'BID', duration: '5 days' },
+        ],
+      })
+    )
 
     expect(prisma.prescription.create).toHaveBeenCalledWith(
       expect.objectContaining({

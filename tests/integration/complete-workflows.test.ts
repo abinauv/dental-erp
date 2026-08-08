@@ -163,7 +163,10 @@ describe('Complete Business Workflows', () => {
       const procedureId = 'procedure-rootcanal'
 
       mockPrisma.patient.findUnique.mockResolvedValue({ id: patientId, hospitalId: mockHospitalId })
-      mockPrisma.staff.findUnique.mockResolvedValue({ id: mockDoctorId, hospitalId: mockHospitalId })
+      mockPrisma.staff.findUnique.mockResolvedValue({
+        id: mockDoctorId,
+        hospitalId: mockHospitalId,
+      })
       mockPrisma.procedure.findUnique.mockResolvedValue({
         id: procedureId,
         hospitalId: mockHospitalId,
@@ -254,13 +257,15 @@ describe('Complete Business Workflows', () => {
         paidAmount: 0,
         balanceAmount: 5900,
         status: 'PENDING',
-        items: [{
-          description: 'Root Canal Treatment - Tooth 16',
-          quantity: 1,
-          unitPrice: 5000,
-          amount: 5000,
-          treatmentId,
-        }],
+        items: [
+          {
+            description: 'Root Canal Treatment - Tooth 16',
+            quantity: 1,
+            unitPrice: 5000,
+            amount: 5000,
+            treatmentId,
+          },
+        ],
       })
 
       const invoice = await mockPrisma.invoice.create({
@@ -278,13 +283,15 @@ describe('Complete Business Workflows', () => {
           balanceAmount: 5900,
           status: 'PENDING',
           items: {
-            create: [{
-              description: 'Root Canal Treatment - Tooth 16',
-              quantity: 1,
-              unitPrice: 5000,
-              amount: 5000,
-              treatmentId,
-            }],
+            create: [
+              {
+                description: 'Root Canal Treatment - Tooth 16',
+                quantity: 1,
+                unitPrice: 5000,
+                amount: 5000,
+                treatmentId,
+              },
+            ],
           },
         },
       })
@@ -498,7 +505,7 @@ describe('Complete Business Workflows', () => {
         sgstAmount: sgst,
         totalAmount: total,
         status: 'PENDING',
-        items: treatments.map(t => ({
+        items: treatments.map((t) => ({
           description: t.name,
           quantity: 1,
           unitPrice: t.cost,
@@ -520,7 +527,7 @@ describe('Complete Business Workflows', () => {
           totalAmount: total,
           status: 'PENDING',
           items: {
-            create: treatments.map(t => ({
+            create: treatments.map((t) => ({
               description: t.name,
               quantity: 1,
               unitPrice: t.cost,
@@ -549,7 +556,7 @@ describe('Complete Business Workflows', () => {
       ]
 
       // Calculate progress
-      const completedItems = planItems.filter(p => p.status === 'COMPLETED').length
+      const completedItems = planItems.filter((p) => p.status === 'COMPLETED').length
       const totalItems = planItems.length
       const progressPercentage = (completedItems / totalItems) * 100
 

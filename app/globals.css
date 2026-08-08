@@ -180,7 +180,7 @@
 /* Required field marker */
 @layer components {
   .label-required::after {
-    content: " *";
+    content: ' *';
     @apply text-destructive;
   }
 }

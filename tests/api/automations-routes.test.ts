@@ -64,8 +64,20 @@ describe('GET /api/communications/automations', () => {
   it('returns list of automations', async () => {
     mockAuth()
     vi.mocked(prisma.marketingAutomation.findMany).mockResolvedValue([
-      { id: 'ma1', name: 'Birthday Reminder', trigger: { type: 'BIRTHDAY_UPCOMING' }, action: { type: 'SEND_SMS' }, isActive: true },
-      { id: 'ma2', name: 'No Visit Follow-up', trigger: { type: 'NO_VISIT' }, action: { type: 'SEND_EMAIL' }, isActive: false },
+      {
+        id: 'ma1',
+        name: 'Birthday Reminder',
+        trigger: { type: 'BIRTHDAY_UPCOMING' },
+        action: { type: 'SEND_SMS' },
+        isActive: true,
+      },
+      {
+        id: 'ma2',
+        name: 'No Visit Follow-up',
+        trigger: { type: 'NO_VISIT' },
+        action: { type: 'SEND_EMAIL' },
+        isActive: false,
+      },
     ] as any)
 
     const res = await automationsGET(makeReq('/api/communications/automations'))
@@ -91,15 +103,21 @@ describe('POST /api/communications/automations', () => {
 
   it('returns 400 when required fields missing', async () => {
     mockAuth()
-    const res = await automationsPOST(makeReq('/api/communications/automations', 'POST', { name: 'Test' }))
+    const res = await automationsPOST(
+      makeReq('/api/communications/automations', 'POST', { name: 'Test' })
+    )
     expect(res.status).toBe(400)
   })
 
   it('returns 400 for invalid trigger type', async () => {
     mockAuth()
-    const res = await automationsPOST(makeReq('/api/communications/automations', 'POST', {
-      name: 'Test', trigger: { type: 'INVALID_TRIGGER' }, action: { type: 'SEND_SMS' },
-    }))
+    const res = await automationsPOST(
+      makeReq('/api/communications/automations', 'POST', {
+        name: 'Test',
+        trigger: { type: 'INVALID_TRIGGER' },
+        action: { type: 'SEND_SMS' },
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('Invalid trigger')
@@ -107,9 +125,13 @@ describe('POST /api/communications/automations', () => {
 
   it('returns 400 for invalid action type', async () => {
     mockAuth()
-    const res = await automationsPOST(makeReq('/api/communications/automations', 'POST', {
-      name: 'Test', trigger: { type: 'BIRTHDAY_UPCOMING' }, action: { type: 'DELETE_ALL' },
-    }))
+    const res = await automationsPOST(
+      makeReq('/api/communications/automations', 'POST', {
+        name: 'Test',
+        trigger: { type: 'BIRTHDAY_UPCOMING' },
+        action: { type: 'DELETE_ALL' },
+      })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('Invalid action')
@@ -118,16 +140,20 @@ describe('POST /api/communications/automations', () => {
   it('creates automation successfully', async () => {
     mockAuth()
     vi.mocked(prisma.marketingAutomation.create).mockResolvedValue({
-      id: 'ma1', name: 'Birthday SMS', isActive: true,
+      id: 'ma1',
+      name: 'Birthday SMS',
+      isActive: true,
       trigger: { type: 'BIRTHDAY_UPCOMING', daysBeforeEvent: 3 },
       action: { type: 'SEND_SMS', template: 'Happy Birthday!' },
     } as any)
 
-    const res = await automationsPOST(makeReq('/api/communications/automations', 'POST', {
-      name: 'Birthday SMS',
-      trigger: { type: 'BIRTHDAY_UPCOMING', daysBeforeEvent: 3 },
-      action: { type: 'SEND_SMS', template: 'Happy Birthday!' },
-    }))
+    const res = await automationsPOST(
+      makeReq('/api/communications/automations', 'POST', {
+        name: 'Birthday SMS',
+        trigger: { type: 'BIRTHDAY_UPCOMING', daysBeforeEvent: 3 },
+        action: { type: 'SEND_SMS', template: 'Happy Birthday!' },
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -137,8 +163,12 @@ describe('POST /api/communications/automations', () => {
 
   it('accepts all valid trigger types', async () => {
     const validTriggers = [
-      'NO_VISIT', 'BIRTHDAY_UPCOMING', 'TREATMENT_PLAN_PENDING',
-      'MEMBERSHIP_EXPIRING', 'POST_APPOINTMENT', 'PAYMENT_OVERDUE',
+      'NO_VISIT',
+      'BIRTHDAY_UPCOMING',
+      'TREATMENT_PLAN_PENDING',
+      'MEMBERSHIP_EXPIRING',
+      'POST_APPOINTMENT',
+      'PAYMENT_OVERDUE',
     ]
 
     for (const triggerType of validTriggers) {
@@ -146,9 +176,13 @@ describe('POST /api/communications/automations', () => {
       mockAuth()
       vi.mocked(prisma.marketingAutomation.create).mockResolvedValue({ id: 'ma1' } as any)
 
-      const res = await automationsPOST(makeReq('/api/communications/automations', 'POST', {
-        name: 'Test', trigger: { type: triggerType }, action: { type: 'SEND_SMS' },
-      }))
+      const res = await automationsPOST(
+        makeReq('/api/communications/automations', 'POST', {
+          name: 'Test',
+          trigger: { type: triggerType },
+          action: { type: 'SEND_SMS' },
+        })
+      )
       expect(res.status).toBe(201)
     }
   })
@@ -169,7 +203,9 @@ describe('PUT /api/communications/automations', () => {
 
   it('returns 400 when id missing', async () => {
     mockAuth()
-    const res = await automationsPUT(makeReq('/api/communications/automations', 'PUT', { name: 'Updated' }))
+    const res = await automationsPUT(
+      makeReq('/api/communications/automations', 'PUT', { name: 'Updated' })
+    )
     expect(res.status).toBe(400)
   })
 
@@ -177,7 +213,9 @@ describe('PUT /api/communications/automations', () => {
     mockAuth()
     vi.mocked(prisma.marketingAutomation.findFirst).mockResolvedValue(null)
 
-    const res = await automationsPUT(makeReq('/api/communications/automations', 'PUT', { id: 'ma-none', name: 'Updated' }))
+    const res = await automationsPUT(
+      makeReq('/api/communications/automations', 'PUT', { id: 'ma-none', name: 'Updated' })
+    )
     expect(res.status).toBe(404)
   })
 
@@ -185,12 +223,18 @@ describe('PUT /api/communications/automations', () => {
     mockAuth()
     vi.mocked(prisma.marketingAutomation.findFirst).mockResolvedValue({ id: 'ma1' } as any)
     vi.mocked(prisma.marketingAutomation.update).mockResolvedValue({
-      id: 'ma1', name: 'Updated Name', isActive: false,
+      id: 'ma1',
+      name: 'Updated Name',
+      isActive: false,
     } as any)
 
-    const res = await automationsPUT(makeReq('/api/communications/automations', 'PUT', {
-      id: 'ma1', name: 'Updated Name', isActive: false,
-    }))
+    const res = await automationsPUT(
+      makeReq('/api/communications/automations', 'PUT', {
+        id: 'ma1',
+        name: 'Updated Name',
+        isActive: false,
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)
@@ -221,7 +265,9 @@ describe('DELETE /api/communications/automations', () => {
     mockAuth()
     vi.mocked(prisma.marketingAutomation.findFirst).mockResolvedValue(null)
 
-    const res = await automationsDELETE(makeReq('/api/communications/automations', 'DELETE', { id: 'ma-none' }))
+    const res = await automationsDELETE(
+      makeReq('/api/communications/automations', 'DELETE', { id: 'ma-none' })
+    )
     expect(res.status).toBe(404)
   })
 
@@ -230,7 +276,9 @@ describe('DELETE /api/communications/automations', () => {
     vi.mocked(prisma.marketingAutomation.findFirst).mockResolvedValue({ id: 'ma1' } as any)
     vi.mocked(prisma.marketingAutomation.delete).mockResolvedValue({} as any)
 
-    const res = await automationsDELETE(makeReq('/api/communications/automations', 'DELETE', { id: 'ma1' }))
+    const res = await automationsDELETE(
+      makeReq('/api/communications/automations', 'DELETE', { id: 'ma1' })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(200)

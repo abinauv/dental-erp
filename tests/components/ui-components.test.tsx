@@ -12,7 +12,7 @@ const Button = ({
   onClick,
   disabled = false,
   variant = 'default',
-  className = ''
+  className = '',
 }: {
   children: React.ReactNode
   onClick?: () => void
@@ -56,7 +56,11 @@ const Input = ({
       data-testid="input"
       aria-invalid={!!error}
     />
-    {error && <span className="error" data-testid="error">{error}</span>}
+    {error && (
+      <span className="error" data-testid="error">
+        {error}
+      </span>
+    )}
   </div>
 )
 
@@ -64,23 +68,33 @@ const Input = ({
 const Card = ({
   title,
   children,
-  footer
+  footer,
 }: {
   title?: string
   children: React.ReactNode
   footer?: React.ReactNode
 }) => (
   <div className="card" data-testid="card">
-    {title && <div className="card-header" data-testid="card-header">{title}</div>}
-    <div className="card-body" data-testid="card-body">{children}</div>
-    {footer && <div className="card-footer" data-testid="card-footer">{footer}</div>}
+    {title && (
+      <div className="card-header" data-testid="card-header">
+        {title}
+      </div>
+    )}
+    <div className="card-body" data-testid="card-body">
+      {children}
+    </div>
+    {footer && (
+      <div className="card-footer" data-testid="card-footer">
+        {footer}
+      </div>
+    )}
   </div>
 )
 
 // Simple Badge component for testing
 const Badge = ({
   children,
-  variant = 'default'
+  variant = 'default',
 }: {
   children: React.ReactNode
   variant?: 'default' | 'success' | 'warning' | 'error'
@@ -111,7 +125,11 @@ describe('Button Component', () => {
 
   it('should not trigger onClick when disabled', () => {
     const handleClick = vi.fn()
-    render(<Button onClick={handleClick} disabled>Click me</Button>)
+    render(
+      <Button onClick={handleClick} disabled>
+        Click me
+      </Button>
+    )
 
     fireEvent.click(screen.getByTestId('button'))
     expect(handleClick).not.toHaveBeenCalled()

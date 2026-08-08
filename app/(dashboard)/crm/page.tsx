@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Users,
   Crown,
@@ -14,8 +14,8 @@ import {
   AlertTriangle,
   ArrowRight,
   IndianRupee,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface DashboardData {
   memberships: { active: number; total: number; revenue: number }
@@ -32,11 +32,11 @@ export default function CRMDashboardPage() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const res = await fetch("/api/crm/dashboard")
-        if (!res.ok) throw new Error("Failed to fetch")
+        const res = await fetch('/api/crm/dashboard')
+        if (!res.ok) throw new Error('Failed to fetch')
         setData(await res.json())
       } catch {
-        toast({ title: "Failed to load CRM dashboard", variant: "destructive" })
+        toast({ title: 'Failed to load CRM dashboard', variant: 'destructive' })
       } finally {
         setLoading(false)
       }
@@ -50,7 +50,11 @@ export default function CRMDashboardPage() {
         <h1 className="text-3xl font-bold">CRM Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i}><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -74,7 +78,7 @@ export default function CRMDashboardPage() {
             <div className="text-2xl font-bold">{data?.memberships.active || 0}</div>
             <p className="text-xs text-muted-foreground">
               <IndianRupee className="h-3 w-3 inline" />
-              {(data?.memberships.revenue || 0).toLocaleString("en-IN")} revenue
+              {(data?.memberships.revenue || 0).toLocaleString('en-IN')} revenue
             </p>
           </CardContent>
         </Card>
@@ -130,7 +134,8 @@ export default function CRMDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              {data?.memberships.active || 0} active / {data?.memberships.total || 0} total memberships
+              {data?.memberships.active || 0} active / {data?.memberships.total || 0} total
+              memberships
             </p>
             <Link href="/crm/memberships">
               <Button variant="outline" className="w-full">
@@ -168,7 +173,8 @@ export default function CRMDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              {data?.referrals.total || 0} referrals, {data?.referrals.conversionRate || 0}% conversion
+              {data?.referrals.total || 0} referrals, {data?.referrals.conversionRate || 0}%
+              conversion
             </p>
             <Link href="/crm/referrals">
               <Button variant="outline" className="w-full">
@@ -193,7 +199,10 @@ export default function CRMDashboardPage() {
               {data?.retention.atRisk} patients haven&apos;t visited in the last 6 months.
             </p>
             <Link href="/crm/segments">
-              <Button variant="outline" className="mt-3 border-amber-300 text-amber-700 hover:bg-amber-100">
+              <Button
+                variant="outline"
+                className="mt-3 border-amber-300 text-amber-700 hover:bg-amber-100"
+              >
                 View Segments <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>

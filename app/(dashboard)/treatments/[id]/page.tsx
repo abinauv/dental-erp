@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -15,11 +15,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   ArrowLeft,
   User,
@@ -37,8 +37,8 @@ import {
   AlertCircle,
   Pill,
   Receipt,
-} from "lucide-react"
-import { VoiceInput } from "@/components/clinical/voice-input"
+} from 'lucide-react'
+import { VoiceInput } from '@/components/clinical/voice-input'
 import {
   treatmentStatusConfig,
   procedureCategoryConfig,
@@ -48,7 +48,7 @@ import {
   formatToothNumbers,
   parseToothNumbers,
   toothNames,
-} from "@/lib/treatment-utils"
+} from '@/lib/treatment-utils'
 
 interface Treatment {
   id: string
@@ -108,11 +108,7 @@ interface Treatment {
   invoiceItems: any[]
 }
 
-export default function TreatmentDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function TreatmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const [treatment, setTreatment] = useState<Treatment | null>(null)
@@ -123,31 +119,31 @@ export default function TreatmentDetailPage({
 
   // Complete form state
   const [completeFormData, setCompleteFormData] = useState({
-    procedureNotes: "",
-    materialsUsed: "",
-    complications: "",
+    procedureNotes: '',
+    materialsUsed: '',
+    complications: '',
     followUpRequired: false,
-    followUpDate: "",
+    followUpDate: '',
   })
 
   const fetchTreatment = async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/treatments/${id}`)
-      if (!response.ok) throw new Error("Failed to fetch treatment")
+      if (!response.ok) throw new Error('Failed to fetch treatment')
       const data = await response.json()
       setTreatment(data)
 
       // Pre-fill complete form with existing data
       setCompleteFormData({
-        procedureNotes: data.procedureNotes || "",
-        materialsUsed: data.materialsUsed || "",
-        complications: data.complications || "",
+        procedureNotes: data.procedureNotes || '',
+        materialsUsed: data.materialsUsed || '',
+        complications: data.complications || '',
         followUpRequired: data.followUpRequired || false,
-        followUpDate: data.followUpDate ? data.followUpDate.split("T")[0] : "",
+        followUpDate: data.followUpDate ? data.followUpDate.split('T')[0] : '',
       })
     } catch (error) {
-      console.error("Error fetching treatment:", error)
+      console.error('Error fetching treatment:', error)
     } finally {
       setLoading(false)
     }
@@ -161,12 +157,12 @@ export default function TreatmentDetailPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/treatments/${id}/start`, {
-        method: "POST",
+        method: 'POST',
       })
-      if (!response.ok) throw new Error("Failed to start treatment")
+      if (!response.ok) throw new Error('Failed to start treatment')
       fetchTreatment()
     } catch (error) {
-      console.error("Error starting treatment:", error)
+      console.error('Error starting treatment:', error)
     } finally {
       setActionLoading(false)
     }
@@ -176,15 +172,15 @@ export default function TreatmentDetailPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/treatments/${id}/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(completeFormData),
       })
-      if (!response.ok) throw new Error("Failed to complete treatment")
+      if (!response.ok) throw new Error('Failed to complete treatment')
       setCompleteDialogOpen(false)
       fetchTreatment()
     } catch (error) {
-      console.error("Error completing treatment:", error)
+      console.error('Error completing treatment:', error)
     } finally {
       setActionLoading(false)
     }
@@ -194,15 +190,15 @@ export default function TreatmentDetailPage({
     try {
       setActionLoading(true)
       const response = await fetch(`/api/treatments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CANCELLED" }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' }),
       })
-      if (!response.ok) throw new Error("Failed to cancel treatment")
+      if (!response.ok) throw new Error('Failed to cancel treatment')
       setCancelDialogOpen(false)
       fetchTreatment()
     } catch (error) {
-      console.error("Error cancelling treatment:", error)
+      console.error('Error cancelling treatment:', error)
     } finally {
       setActionLoading(false)
     }
@@ -211,13 +207,11 @@ export default function TreatmentDetailPage({
   const getStatusBadge = (status: string) => {
     const config = treatmentStatusConfig[status] || {
       label: status,
-      color: "text-foreground",
-      bgColor: "bg-muted",
+      color: 'text-foreground',
+      bgColor: 'bg-muted',
     }
     return (
-      <Badge className={`${config.bgColor} ${config.color} border-0 text-sm`}>
-        {config.label}
-      </Badge>
+      <Badge className={`${config.bgColor} ${config.color} border-0 text-sm`}>{config.label}</Badge>
     )
   }
 
@@ -259,30 +253,26 @@ export default function TreatmentDetailPage({
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {treatment.treatmentNo}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">{treatment.treatmentNo}</h1>
               {getStatusBadge(treatment.status)}
             </div>
-            <p className="text-muted-foreground">
-              Created on {formatDate(treatment.createdAt)}
-            </p>
+            <p className="text-muted-foreground">Created on {formatDate(treatment.createdAt)}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {treatment.status === "PLANNED" && (
+          {treatment.status === 'PLANNED' && (
             <Button onClick={handleStartTreatment} disabled={actionLoading}>
               <Play className="h-4 w-4 mr-2" />
               Start Treatment
             </Button>
           )}
-          {treatment.status === "IN_PROGRESS" && (
+          {treatment.status === 'IN_PROGRESS' && (
             <Button onClick={() => setCompleteDialogOpen(true)}>
               <CheckCircle className="h-4 w-4 mr-2" />
               Complete Treatment
             </Button>
           )}
-          {treatment.status !== "COMPLETED" && treatment.status !== "CANCELLED" && (
+          {treatment.status !== 'COMPLETED' && treatment.status !== 'CANCELLED' && (
             <>
               <Link href={`/treatments/${id}/edit`}>
                 <Button variant="outline">
@@ -334,9 +324,7 @@ export default function TreatmentDetailPage({
               </div>
 
               {treatment.procedure.description && (
-                <p className="text-sm text-muted-foreground">
-                  {treatment.procedure.description}
-                </p>
+                <p className="text-sm text-muted-foreground">{treatment.procedure.description}</p>
               )}
 
               <Separator />
@@ -344,15 +332,11 @@ export default function TreatmentDetailPage({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">Treatment Cost</div>
-                  <div className="font-medium text-lg">
-                    {formatCurrency(treatment.cost)}
-                  </div>
+                  <div className="font-medium text-lg">{formatCurrency(treatment.cost)}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Base Price</div>
-                  <div className="font-medium">
-                    {formatCurrency(treatment.procedure.basePrice)}
-                  </div>
+                  <div className="font-medium">{formatCurrency(treatment.procedure.basePrice)}</div>
                 </div>
               </div>
 
@@ -382,13 +366,10 @@ export default function TreatmentDetailPage({
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {teeth.map((tooth) => (
-                    <div
-                      key={tooth}
-                      className="px-3 py-2 bg-muted rounded-lg text-sm"
-                    >
+                    <div key={tooth} className="px-3 py-2 bg-muted rounded-lg text-sm">
                       <span className="font-medium">{tooth}</span>
                       <span className="text-muted-foreground ml-1">
-                        - {toothNames[tooth]?.split(" ").slice(-2).join(" ")}
+                        - {toothNames[tooth]?.split(' ').slice(-2).join(' ')}
                       </span>
                     </div>
                   ))}
@@ -408,45 +389,35 @@ export default function TreatmentDetailPage({
             <CardContent className="space-y-4">
               {treatment.chiefComplaint && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Chief Complaint
-                  </div>
+                  <div className="text-sm font-medium text-muted-foreground">Chief Complaint</div>
                   <p className="mt-1">{treatment.chiefComplaint}</p>
                 </div>
               )}
 
               {treatment.diagnosis && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Diagnosis
-                  </div>
+                  <div className="text-sm font-medium text-muted-foreground">Diagnosis</div>
                   <p className="mt-1">{treatment.diagnosis}</p>
                 </div>
               )}
 
               {treatment.findings && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Clinical Findings
-                  </div>
+                  <div className="text-sm font-medium text-muted-foreground">Clinical Findings</div>
                   <p className="mt-1">{treatment.findings}</p>
                 </div>
               )}
 
               {treatment.procedureNotes && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Procedure Notes
-                  </div>
+                  <div className="text-sm font-medium text-muted-foreground">Procedure Notes</div>
                   <p className="mt-1">{treatment.procedureNotes}</p>
                 </div>
               )}
 
               {treatment.materialsUsed && (
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Materials Used
-                  </div>
+                  <div className="text-sm font-medium text-muted-foreground">Materials Used</div>
                   <p className="mt-1">{treatment.materialsUsed}</p>
                 </div>
               )}
@@ -472,8 +443,7 @@ export default function TreatmentDetailPage({
           </Card>
 
           {/* Pre/Post Instructions */}
-          {(treatment.procedure.preInstructions ||
-            treatment.procedure.postInstructions) && (
+          {(treatment.procedure.preInstructions || treatment.procedure.postInstructions) && (
             <Card>
               <CardHeader>
                 <CardTitle>Instructions</CardTitle>
@@ -519,9 +489,7 @@ export default function TreatmentDetailPage({
                   <div className="font-medium">
                     {treatment.patient.firstName} {treatment.patient.lastName}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {treatment.patient.patientId}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{treatment.patient.patientId}</div>
                 </div>
               </div>
 
@@ -592,7 +560,7 @@ export default function TreatmentDetailPage({
               <CardContent className="space-y-2">
                 <div className="font-medium">{treatment.appointment.appointmentNo}</div>
                 <div className="text-sm text-muted-foreground">
-                  {formatDate(treatment.appointment.scheduledDate)} at{" "}
+                  {formatDate(treatment.appointment.scheduledDate)} at{' '}
                   {treatment.appointment.scheduledTime}
                 </div>
                 <Link href={`/appointments/${treatment.appointment.id}`}>
@@ -620,9 +588,7 @@ export default function TreatmentDetailPage({
                     {formatDate(treatment.followUpDate)}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Date not scheduled
-                  </p>
+                  <p className="text-sm text-muted-foreground">Date not scheduled</p>
                 )}
                 <Button variant="outline" size="sm" className="w-full mt-4">
                   Schedule Follow-up
@@ -661,9 +627,7 @@ export default function TreatmentDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm">
-                  {treatment.invoiceItems.length} invoice item(s)
-                </div>
+                <div className="text-sm">{treatment.invoiceItems.length} invoice item(s)</div>
                 <Button variant="outline" size="sm" className="w-full mt-4">
                   View Invoices
                 </Button>
@@ -678,9 +642,7 @@ export default function TreatmentDetailPage({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Complete Treatment</DialogTitle>
-            <DialogDescription>
-              Add final notes and complete this treatment.
-            </DialogDescription>
+            <DialogDescription>Add final notes and complete this treatment.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -688,10 +650,12 @@ export default function TreatmentDetailPage({
               <div className="flex items-center gap-2">
                 <Label htmlFor="procedureNotes">Procedure Notes</Label>
                 <VoiceInput
-                  onTranscript={(text) => setCompleteFormData((prev) => ({
-                    ...prev,
-                    procedureNotes: prev.procedureNotes ? prev.procedureNotes + " " + text : text,
-                  }))}
+                  onTranscript={(text) =>
+                    setCompleteFormData((prev) => ({
+                      ...prev,
+                      procedureNotes: prev.procedureNotes ? prev.procedureNotes + ' ' + text : text,
+                    }))
+                  }
                 />
               </div>
               <Textarea
@@ -777,7 +741,7 @@ export default function TreatmentDetailPage({
               Cancel
             </Button>
             <Button onClick={handleCompleteTreatment} disabled={actionLoading}>
-              {actionLoading ? "Completing..." : "Complete Treatment"}
+              {actionLoading ? 'Completing...' : 'Complete Treatment'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -789,20 +753,15 @@ export default function TreatmentDetailPage({
           <DialogHeader>
             <DialogTitle>Cancel Treatment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to cancel this treatment? This action cannot be
-              undone.
+              Are you sure you want to cancel this treatment? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
               Keep Treatment
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCancelTreatment}
-              disabled={actionLoading}
-            >
-              {actionLoading ? "Cancelling..." : "Cancel Treatment"}
+            <Button variant="destructive" onClick={handleCancelTreatment} disabled={actionLoading}>
+              {actionLoading ? 'Cancelling...' : 'Cancel Treatment'}
             </Button>
           </DialogFooter>
         </DialogContent>

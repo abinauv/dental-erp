@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - List doctors only (for appointments)
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
-  if (error || !hospitalId) { return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  if (error || !hospitalId) {
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
   try {
     const doctors = await prisma.staff.findMany({
@@ -13,9 +15,9 @@ export async function GET(request: NextRequest) {
         hospitalId,
         isActive: true,
         user: {
-          role: "DOCTOR",
-          isActive: true
-        }
+          role: 'DOCTOR',
+          isActive: true,
+        },
       },
       select: {
         id: true,
@@ -26,15 +28,12 @@ export async function GET(request: NextRequest) {
         phone: true,
         email: true,
       },
-      orderBy: { firstName: 'asc' }
+      orderBy: { firstName: 'asc' },
     })
 
     return NextResponse.json({ doctors })
   } catch (error) {
-    console.error("Error fetching doctors:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch doctors" },
-      { status: 500 }
-    )
+    console.error('Error fetching doctors:', error)
+    return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 })
   }
 }

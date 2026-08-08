@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -13,22 +13,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
 import {
   Plus,
   Search,
@@ -40,7 +35,7 @@ import {
   Mail,
   Globe,
   Users,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface Provider {
   id: string
@@ -56,14 +51,14 @@ interface Provider {
 }
 
 const emptyForm = {
-  name: "",
-  code: "",
-  contactPhone: "",
-  contactEmail: "",
-  website: "",
-  claimSubmissionUrl: "",
-  portalUsername: "",
-  portalPassword: "",
+  name: '',
+  code: '',
+  contactPhone: '',
+  contactEmail: '',
+  website: '',
+  claimSubmissionUrl: '',
+  portalUsername: '',
+  portalPassword: '',
 }
 
 export default function InsuranceProvidersPage() {
@@ -71,7 +66,7 @@ export default function InsuranceProvidersPage() {
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -82,7 +77,7 @@ export default function InsuranceProvidersPage() {
       const res = await fetch(`/api/insurance-providers?search=${encodeURIComponent(search)}`)
       if (res.ok) setProviders(await res.json())
     } catch {
-      toast({ title: "Failed to load providers", variant: "destructive" })
+      toast({ title: 'Failed to load providers', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -102,55 +97,59 @@ export default function InsuranceProvidersPage() {
     setEditingId(p.id)
     setForm({
       name: p.name,
-      code: p.code || "",
-      contactPhone: p.contactPhone || "",
-      contactEmail: p.contactEmail || "",
-      website: p.website || "",
-      claimSubmissionUrl: p.claimSubmissionUrl || "",
-      portalUsername: p.portalUsername || "",
-      portalPassword: "",
+      code: p.code || '',
+      contactPhone: p.contactPhone || '',
+      contactEmail: p.contactEmail || '',
+      website: p.website || '',
+      claimSubmissionUrl: p.claimSubmissionUrl || '',
+      portalUsername: p.portalUsername || '',
+      portalPassword: '',
     })
     setDialogOpen(true)
   }
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      toast({ title: "Provider name is required", variant: "destructive" })
+      toast({ title: 'Provider name is required', variant: 'destructive' })
       return
     }
     setSaving(true)
     try {
-      const url = editingId ? `/api/insurance-providers/${editingId}` : "/api/insurance-providers"
+      const url = editingId ? `/api/insurance-providers/${editingId}` : '/api/insurance-providers'
       const res = await fetch(url, {
-        method: editingId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Failed to save")
+        throw new Error(data.error || 'Failed to save')
       }
-      toast({ title: editingId ? "Provider updated" : "Provider created" })
+      toast({ title: editingId ? 'Provider updated' : 'Provider created' })
       setDialogOpen(false)
       fetchProviders()
     } catch (err: any) {
-      toast({ title: err.message, variant: "destructive" })
+      toast({ title: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    const ok = await confirm({ title: "Delete Provider", description: "Are you sure you want to delete this provider?", confirmLabel: "Delete" })
+    const ok = await confirm({
+      title: 'Delete Provider',
+      description: 'Are you sure you want to delete this provider?',
+      confirmLabel: 'Delete',
+    })
     if (!ok) return
     try {
-      const res = await fetch(`/api/insurance-providers/${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/insurance-providers/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast({ title: "Provider removed" })
+        toast({ title: 'Provider removed' })
         fetchProviders()
       }
     } catch {
-      toast({ title: "Failed to delete provider", variant: "destructive" })
+      toast({ title: 'Failed to delete provider', variant: 'destructive' })
     }
   }
 
@@ -159,7 +158,9 @@ export default function InsuranceProvidersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Insurance Providers</h1>
-          <p className="text-muted-foreground">Manage insurance companies your hospital works with</p>
+          <p className="text-muted-foreground">
+            Manage insurance companies your hospital works with
+          </p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
@@ -218,7 +219,7 @@ export default function InsuranceProvidersPage() {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{p.code || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.code || '—'}</TableCell>
                     <TableCell>
                       <div className="space-y-0.5 text-sm">
                         {p.contactPhone && (
@@ -231,7 +232,9 @@ export default function InsuranceProvidersPage() {
                             <Mail className="h-3 w-3" /> {p.contactEmail}
                           </div>
                         )}
-                        {!p.contactPhone && !p.contactEmail && <span className="text-muted-foreground">—</span>}
+                        {!p.contactPhone && !p.contactEmail && (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -241,8 +244,8 @@ export default function InsuranceProvidersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={p.isActive ? "default" : "secondary"}>
-                        {p.isActive ? "Active" : "Inactive"}
+                      <Badge variant={p.isActive ? 'default' : 'secondary'}>
+                        {p.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -277,7 +280,7 @@ export default function InsuranceProvidersPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Provider" : "Add Insurance Provider"}</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Provider' : 'Add Insurance Provider'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -344,14 +347,16 @@ export default function InsuranceProvidersPage() {
                   type="password"
                   value={form.portalPassword}
                   onChange={(e) => setForm({ ...form, portalPassword: e.target.value })}
-                  placeholder={editingId ? "Leave blank to keep" : "Password"}
+                  placeholder={editingId ? 'Leave blank to keep' : 'Password'}
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving..." : editingId ? "Update" : "Create"}
+                {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
               </Button>
             </div>
           </div>

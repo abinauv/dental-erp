@@ -105,7 +105,10 @@ describe('AIProvider', () => {
   it('sendChat sets chatLoading during request', async () => {
     let resolveFetch: Function
     fetchMock.mockImplementation(
-      () => new Promise((resolve) => { resolveFetch = resolve })
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve
+        })
     )
     const { result } = renderHook(() => useAI(), { wrapper })
 
@@ -153,18 +156,35 @@ describe('AIProvider', () => {
     const { result } = renderHook(() => useAI(), { wrapper })
 
     await act(async () => {
-      await result.current.executeCommand('book appointment', { patientId: 'p-1', page: 'appointments' })
+      await result.current.executeCommand('book appointment', {
+        patientId: 'p-1',
+        page: 'appointments',
+      })
     })
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/ai/command', expect.objectContaining({
-      method: 'POST',
-      body: expect.stringContaining('"command":"book appointment"'),
-    }))
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/ai/command',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('"command":"book appointment"'),
+      })
+    )
   })
 
   // loadInsights
   it('loadInsights fetches and sets insights', async () => {
-    const mockInsights = [{ id: '1', title: 'Test', category: 'ops', severity: 'info', description: '', dismissed: false, actionTaken: false, createdAt: '' }]
+    const mockInsights = [
+      {
+        id: '1',
+        title: 'Test',
+        category: 'ops',
+        severity: 'info',
+        description: '',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
+    ]
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ insights: mockInsights }) })
     const { result } = renderHook(() => useAI(), { wrapper })
 
@@ -187,8 +207,26 @@ describe('AIProvider', () => {
   // dismissInsight
   it('dismissInsight removes insight from state', async () => {
     const mockInsights = [
-      { id: '1', title: 'A', category: '', severity: '', description: '', dismissed: false, actionTaken: false, createdAt: '' },
-      { id: '2', title: 'B', category: '', severity: '', description: '', dismissed: false, actionTaken: false, createdAt: '' },
+      {
+        id: '1',
+        title: 'A',
+        category: '',
+        severity: '',
+        description: '',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
+      {
+        id: '2',
+        title: 'B',
+        category: '',
+        severity: '',
+        description: '',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
     ]
     fetchMock
       .mockResolvedValueOnce({ ok: true, json: async () => ({ insights: mockInsights }) })
@@ -210,7 +248,18 @@ describe('AIProvider', () => {
 
   // generateInsights
   it('generateInsights appends new insights', async () => {
-    const newInsights = [{ id: '3', title: 'New', category: '', severity: '', description: '', dismissed: false, actionTaken: false, createdAt: '' }]
+    const newInsights = [
+      {
+        id: '3',
+        title: 'New',
+        category: '',
+        severity: '',
+        description: '',
+        dismissed: false,
+        actionTaken: false,
+        createdAt: '',
+      },
+    ]
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ insights: newInsights }) })
     const { result } = renderHook(() => useAI(), { wrapper })
 

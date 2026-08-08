@@ -13,8 +13,17 @@ import {
 
 describe('Appointment Utils - appointmentStatusConfig', () => {
   it('should have all required status types', () => {
-    const statuses = ['SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED']
-    statuses.forEach(status => {
+    const statuses = [
+      'SCHEDULED',
+      'CONFIRMED',
+      'CHECKED_IN',
+      'IN_PROGRESS',
+      'COMPLETED',
+      'CANCELLED',
+      'NO_SHOW',
+      'RESCHEDULED',
+    ]
+    statuses.forEach((status) => {
       expect(appointmentStatusConfig[status]).toBeDefined()
       expect(appointmentStatusConfig[status].label).toBeTruthy()
       expect(appointmentStatusConfig[status].color).toBeTruthy()
@@ -42,7 +51,7 @@ describe('Appointment Utils - appointmentStatusConfig', () => {
 describe('Appointment Utils - appointmentTypeConfig', () => {
   it('should have all required appointment types', () => {
     const types = ['CONSULTATION', 'PROCEDURE', 'FOLLOW_UP', 'EMERGENCY', 'CHECK_UP']
-    types.forEach(type => {
+    types.forEach((type) => {
       expect(appointmentTypeConfig[type]).toBeDefined()
       expect(appointmentTypeConfig[type].label).toBeTruthy()
     })
@@ -60,7 +69,7 @@ describe('Appointment Utils - appointmentTypeConfig', () => {
 describe('Appointment Utils - priorityConfig', () => {
   it('should have all required priority levels', () => {
     const priorities = ['LOW', 'NORMAL', 'HIGH', 'URGENT']
-    priorities.forEach(priority => {
+    priorities.forEach((priority) => {
       expect(priorityConfig[priority]).toBeDefined()
       expect(priorityConfig[priority].label).toBeTruthy()
     })

@@ -1,35 +1,32 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
 
 // GET - Get available time slots for a doctor on a specific date
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const { searchParams } = new URL(request.url)
-    const doctorId = searchParams.get("doctorId")
-    const date = searchParams.get("date")
-    const duration = parseInt(searchParams.get("duration") || "30")
+    const doctorId = searchParams.get('doctorId')
+    const date = searchParams.get('date')
+    const duration = parseInt(searchParams.get('duration') || '30')
 
     if (!doctorId || !date) {
-      return NextResponse.json(
-        { error: "Doctor ID and date are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Doctor ID and date are required' }, { status: 400 })
     }
 
     // Get hospital working hours (default 9 AM to 9 PM)
     const hospital = await prisma.hospital.findUnique({
       where: { id: hospitalId },
-      select: { workingHours: true }
+      select: { workingHours: true },
     })
 
-    let workingHours = { start: "09:00", end: "21:00", lunchStart: "13:00", lunchEnd: "14:00" }
+    let workingHours = { start: '09:00', end: '21:00', lunchStart: '13:00', lunchEnd: '14:00' }
 
     if (hospital?.workingHours) {
       try {
@@ -44,28 +41,25 @@ export async function GET(request: NextRequest) {
     const holiday = await prisma.holiday.findFirst({
       where: {
         hospitalId,
-        date: dateObj
-      }
+        date: dateObj,
+      },
     })
 
     if (holiday) {
       return NextResponse.json({
         available: false,
         reason: `Holiday: ${holiday.name}`,
-        slots: []
+        slots: [],
       })
     }
 
     // Verify doctor belongs to this hospital
     const doctor = await prisma.staff.findFirst({
-      where: { id: doctorId, hospitalId }
+      where: { id: doctorId, hospitalId },
     })
 
     if (!doctor) {
-      return NextResponse.json(
-        { error: "Doctor not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
     }
 
     // Get doctor's shift for the day of week
@@ -74,9 +68,9 @@ export async function GET(request: NextRequest) {
       where: {
         staffId_dayOfWeek: {
           staffId: doctorId,
-          dayOfWeek
-        }
-      }
+          dayOfWeek,
+        },
+      },
     })
 
     // Get existing appointments for the doctor on this date
@@ -86,20 +80,24 @@ export async function GET(request: NextRequest) {
         doctorId,
         scheduledDate: dateObj,
         status: {
-          notIn: ["CANCELLED", "NO_SHOW", "RESCHEDULED"]
-        }
+          notIn: ['CANCELLED', 'NO_SHOW', 'RESCHEDULED'],
+        },
       },
       select: {
         scheduledTime: true,
-        duration: true
-      }
+        duration: true,
+      },
     })
 
     // Generate all possible slots
     const slots: { time: string; available: boolean }[] = []
 
-    const startHour = parseInt(doctorShift?.startTime?.split(':')[0] || workingHours.start.split(':')[0])
-    const startMin = parseInt(doctorShift?.startTime?.split(':')[1] || workingHours.start.split(':')[1])
+    const startHour = parseInt(
+      doctorShift?.startTime?.split(':')[0] || workingHours.start.split(':')[0]
+    )
+    const startMin = parseInt(
+      doctorShift?.startTime?.split(':')[1] || workingHours.start.split(':')[1]
+    )
     const endHour = parseInt(doctorShift?.endTime?.split(':')[0] || workingHours.end.split(':')[0])
     const endMin = parseInt(doctorShift?.endTime?.split(':')[1] || workingHours.end.split(':')[1])
 
@@ -116,11 +114,13 @@ export async function GET(request: NextRequest) {
       const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`
 
       // Check if slot is during lunch break
-      const isLunchTime = (currentHour > lunchStartHour || (currentHour === lunchStartHour && currentMin >= lunchStartMin)) &&
-                          (currentHour < lunchEndHour || (currentHour === lunchEndHour && currentMin < lunchEndMin))
+      const isLunchTime =
+        (currentHour > lunchStartHour ||
+          (currentHour === lunchStartHour && currentMin >= lunchStartMin)) &&
+        (currentHour < lunchEndHour || (currentHour === lunchEndHour && currentMin < lunchEndMin))
 
       // Check if slot overlaps with existing appointments
-      const isBooked = existingAppointments.some(apt => {
+      const isBooked = existingAppointments.some((apt) => {
         const aptStartParts = apt.scheduledTime.split(':').map(Number)
         const aptStartMins = aptStartParts[0] * 60 + aptStartParts[1]
         const aptEndMins = aptStartMins + apt.duration
@@ -129,17 +129,20 @@ export async function GET(request: NextRequest) {
         const slotEndMins = slotStartMins + duration
 
         // Check for overlap
-        return (slotStartMins < aptEndMins && slotEndMins > aptStartMins)
+        return slotStartMins < aptEndMins && slotEndMins > aptStartMins
       })
 
       // Check if slot is in the past (for today)
       const now = new Date()
       const isToday = dateObj.toDateString() === now.toDateString()
-      const isPast = isToday && (currentHour < now.getHours() || (currentHour === now.getHours() && currentMin <= now.getMinutes()))
+      const isPast =
+        isToday &&
+        (currentHour < now.getHours() ||
+          (currentHour === now.getHours() && currentMin <= now.getMinutes()))
 
       slots.push({
         time: timeStr,
-        available: !isLunchTime && !isBooked && !isPast
+        available: !isLunchTime && !isBooked && !isPast,
       })
 
       // Increment by 30 minutes
@@ -155,16 +158,15 @@ export async function GET(request: NextRequest) {
       date,
       doctorId,
       slots,
-      workingHours: doctorShift ? {
-        start: doctorShift.startTime,
-        end: doctorShift.endTime
-      } : workingHours
+      workingHours: doctorShift
+        ? {
+            start: doctorShift.startTime,
+            end: doctorShift.endTime,
+          }
+        : workingHours,
     })
   } catch (error) {
-    console.error("Error fetching time slots:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch time slots" },
-      { status: 500 }
-    )
+    console.error('Error fetching time slots:', error)
+    return NextResponse.json({ error: 'Failed to fetch time slots' }, { status: 500 })
   }
 }

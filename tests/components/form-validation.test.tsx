@@ -51,7 +51,9 @@ vi.mock('@/components/ui/radio-group', () => ({
   RadioGroup: ({ children, value, onValueChange, disabled }: any) => (
     <div data-testid="radio-group" data-value={value}>
       {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as any, { onValueChange, disabled }) : child
+        React.isValidElement(child)
+          ? React.cloneElement(child as any, { onValueChange, disabled })
+          : child
       )}
     </div>
   ),
@@ -71,7 +73,9 @@ vi.mock('@/components/ui/select', () => ({
   Select: ({ children, value, onValueChange, disabled }: any) => (
     <div data-testid="select-root">
       {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as any, { onValueChange, disabled }) : child
+        React.isValidElement(child)
+          ? React.cloneElement(child as any, { onValueChange, disabled })
+          : child
       )}
     </div>
   ),
@@ -105,10 +109,7 @@ vi.mock('@/components/forms/signature-pad', () => ({
       >
         Sign
       </button>
-      <button
-        data-testid="mock-clear-btn"
-        onClick={() => onSignatureChange(null)}
-      >
+      <button data-testid="mock-clear-btn" onClick={() => onSignatureChange(null)}>
         Clear
       </button>
     </div>
@@ -146,9 +147,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
   // -----------------------------------------------------------------------
   describe('Required field validation', () => {
     it('shows error for empty required text field on submit', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Full Name', required: true },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Full Name', required: true }]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       submitForm()
       expect(screen.getByText('Full Name is required')).toBeInTheDocument()
@@ -156,9 +155,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('shows error for empty required number field on submit', () => {
-      const fields: FormField[] = [
-        { id: 'age', type: 'number', label: 'Age', required: true },
-      ]
+      const fields: FormField[] = [{ id: 'age', type: 'number', label: 'Age', required: true }]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       submitForm()
       expect(screen.getByText('Age is required')).toBeInTheDocument()
@@ -167,7 +164,13 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
 
     it('shows error for empty required select field on submit', () => {
       const fields: FormField[] = [
-        { id: 'gender', type: 'select', label: 'Gender', required: true, options: ['Male', 'Female'] },
+        {
+          id: 'gender',
+          type: 'select',
+          label: 'Gender',
+          required: true,
+          options: ['Male', 'Female'],
+        },
       ]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       submitForm()
@@ -197,7 +200,13 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
 
     it('shows error for empty required radio field on submit', () => {
       const fields: FormField[] = [
-        { id: 'priority', type: 'radio', label: 'Priority', required: true, options: ['Low', 'High'] },
+        {
+          id: 'priority',
+          type: 'radio',
+          label: 'Priority',
+          required: true,
+          options: ['Low', 'High'],
+        },
       ]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       submitForm()
@@ -335,9 +344,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     it('clears signature error after signing', () => {
       // Signature validation is handled separately via _signature key,
       // not via the field's required attribute
-      const fields: FormField[] = [
-        { id: 'sig', type: 'signature', label: 'Patient Signature' },
-      ]
+      const fields: FormField[] = [{ id: 'sig', type: 'signature', label: 'Patient Signature' }]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={true} />)
       submitForm()
       expect(screen.getByText('Signature is required')).toBeInTheDocument()
@@ -429,10 +436,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
       fireEvent.change(inputs[0], { target: { value: 'John' } })
       fireEvent.change(inputs[1], { target: { value: 'john@test.com' } })
       submitForm()
-      expect(onSubmit).toHaveBeenCalledWith(
-        { name: 'John', email: 'john@test.com' },
-        null
-      )
+      expect(onSubmit).toHaveBeenCalledWith({ name: 'John', email: 'john@test.com' }, null)
     })
 
     it('submits successfully when optional fields are left empty', () => {
@@ -457,16 +461,11 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
       fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Jane' } })
       fireEvent.click(screen.getByTestId('mock-sign-btn'))
       submitForm()
-      expect(onSubmit).toHaveBeenCalledWith(
-        { name: 'Jane' },
-        'data:image/png;base64,fakesig'
-      )
+      expect(onSubmit).toHaveBeenCalledWith({ name: 'Jane' }, 'data:image/png;base64,fakesig')
     })
 
     it('passes initialData values to onSubmit if not changed', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name', required: true },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name', required: true }]
       render(
         <FormRenderer
           fields={fields}
@@ -497,17 +496,15 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
   // -----------------------------------------------------------------------
   describe('ReadOnly mode', () => {
     it('does not render a submit button in readOnly mode', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name' },
-      ]
-      render(<FormRenderer fields={fields} onSubmit={onSubmit} readOnly={true} showSignature={false} />)
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name' }]
+      render(
+        <FormRenderer fields={fields} onSubmit={onSubmit} readOnly={true} showSignature={false} />
+      )
       expect(screen.queryByRole('button', { name: /submit form/i })).not.toBeInTheDocument()
     })
 
     it('renders text inputs as disabled in readOnly mode', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name' },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name' }]
       render(
         <FormRenderer
           fields={fields}
@@ -521,9 +518,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('renders number inputs as disabled in readOnly mode', () => {
-      const fields: FormField[] = [
-        { id: 'age', type: 'number', label: 'Age' },
-      ]
+      const fields: FormField[] = [{ id: 'age', type: 'number', label: 'Age' }]
       render(
         <FormRenderer fields={fields} onSubmit={onSubmit} readOnly={true} showSignature={false} />
       )
@@ -531,9 +526,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('renders date inputs as disabled in readOnly mode', () => {
-      const fields: FormField[] = [
-        { id: 'dob', type: 'date', label: 'DOB' },
-      ]
+      const fields: FormField[] = [{ id: 'dob', type: 'date', label: 'DOB' }]
       render(
         <FormRenderer fields={fields} onSubmit={onSubmit} readOnly={true} showSignature={false} />
       )
@@ -543,9 +536,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('renders textarea as disabled in readOnly mode', () => {
-      const fields: FormField[] = [
-        { id: 'notes', type: 'textarea', label: 'Notes' },
-      ]
+      const fields: FormField[] = [{ id: 'notes', type: 'textarea', label: 'Notes' }]
       render(
         <FormRenderer fields={fields} onSubmit={onSubmit} readOnly={true} showSignature={false} />
       )
@@ -553,9 +544,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('does not call onSubmit even if form submission is forced in readOnly mode', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name' },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name' }]
       render(
         <FormRenderer fields={fields} onSubmit={onSubmit} readOnly={true} showSignature={false} />
       )
@@ -566,9 +555,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('shows signature image in readOnly mode when signature exists', () => {
-      const fields: FormField[] = [
-        { id: 'sig', type: 'signature', label: 'Signature' },
-      ]
+      const fields: FormField[] = [{ id: 'sig', type: 'signature', label: 'Signature' }]
       render(
         <FormRenderer
           fields={fields}
@@ -588,9 +575,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
   // -----------------------------------------------------------------------
   describe('Error clearing on value change', () => {
     it('clears error for a text field when user types a value', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name', required: true },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name', required: true }]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       submitForm()
       expect(screen.getByText('Name is required')).toBeInTheDocument()
@@ -600,9 +585,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('clears error for a number field when user enters a value', () => {
-      const fields: FormField[] = [
-        { id: 'age', type: 'number', label: 'Age', required: true },
-      ]
+      const fields: FormField[] = [{ id: 'age', type: 'number', label: 'Age', required: true }]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       submitForm()
       expect(screen.getByText('Age is required')).toBeInTheDocument()
@@ -617,9 +600,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
   // -----------------------------------------------------------------------
   describe('Loading state', () => {
     it('disables submit button when loading is true', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name' },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name' }]
       render(
         <FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} loading={true} />
       )
@@ -627,9 +608,7 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
     })
 
     it('shows custom submit label', () => {
-      const fields: FormField[] = [
-        { id: 'name', type: 'text', label: 'Name' },
-      ]
+      const fields: FormField[] = [{ id: 'name', type: 'text', label: 'Name' }]
       render(
         <FormRenderer
           fields={fields}
@@ -668,7 +647,13 @@ describe('FormRenderer — Form Validation (Section 2.4)', () => {
 
     it('validates required number field with min/max constraints', () => {
       const fields: FormField[] = [
-        { id: 'score', type: 'number', label: 'Score', required: true, validation: { min: 0, max: 100 } },
+        {
+          id: 'score',
+          type: 'number',
+          label: 'Score',
+          required: true,
+          validation: { min: 0, max: 100 },
+        },
       ]
       render(<FormRenderer fields={fields} onSubmit={onSubmit} showSignature={false} />)
       // Empty — required error

@@ -1,11 +1,17 @@
-"use client"
+'use client'
 
-import { useEffect, useState, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useEffect, useState, useCallback } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Activity,
   Search,
@@ -17,12 +23,12 @@ import {
   CreditCard,
   Calendar,
   Download,
-} from "lucide-react"
-import { format } from "date-fns"
-import { useToast } from "@/hooks/use-toast"
-import { downloadCSV } from "@/lib/export-utils"
-import { TablePageSkeleton } from "@/components/ui/page-skeleton"
-import { EmptyState } from "@/components/ui/empty-state"
+} from 'lucide-react'
+import { format } from 'date-fns'
+import { useToast } from '@/hooks/use-toast'
+import { downloadCSV } from '@/lib/export-utils'
+import { TablePageSkeleton } from '@/components/ui/page-skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface AuditEntry {
   id: string
@@ -36,12 +42,12 @@ interface AuditEntry {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  CREATE: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  UPDATE: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  DELETE: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  LOGIN: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  LOGOUT: "bg-muted text-muted-foreground",
-  VIEW: "bg-muted text-muted-foreground",
+  CREATE: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  UPDATE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  LOGIN: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  LOGOUT: 'bg-muted text-muted-foreground',
+  VIEW: 'bg-muted text-muted-foreground',
 }
 
 const ENTITY_ICONS: Record<string, typeof Activity> = {
@@ -58,18 +64,18 @@ export default function AuditLogPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
-  const [search, setSearch] = useState("")
-  const [actionFilter, setActionFilter] = useState<string>("all")
-  const [entityFilter, setEntityFilter] = useState<string>("all")
+  const [search, setSearch] = useState('')
+  const [actionFilter, setActionFilter] = useState<string>('all')
+  const [entityFilter, setEntityFilter] = useState<string>('all')
   const { toast } = useToast()
 
   const fetchLogs = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ page: String(page), limit: "30" })
-      if (search) params.set("q", search)
-      if (actionFilter !== "all") params.set("action", actionFilter)
-      if (entityFilter !== "all") params.set("entity", entityFilter)
+      const params = new URLSearchParams({ page: String(page), limit: '30' })
+      if (search) params.set('q', search)
+      if (actionFilter !== 'all') params.set('action', actionFilter)
+      if (entityFilter !== 'all') params.set('entity', entityFilter)
       const res = await fetch(`/api/audit-log?${params}`)
       if (!res.ok) throw new Error()
       const data = await res.json()
@@ -77,27 +83,29 @@ export default function AuditLogPage() {
       setTotalPages(data.pagination.totalPages)
       setTotal(data.pagination.total)
     } catch {
-      toast({ title: "Error", description: "Failed to load audit logs", variant: "destructive" })
+      toast({ title: 'Error', description: 'Failed to load audit logs', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
   }, [page, search, actionFilter, entityFilter, toast])
 
-  useEffect(() => { fetchLogs() }, [fetchLogs])
+  useEffect(() => {
+    fetchLogs()
+  }, [fetchLogs])
 
   const exportLogs = () => {
     downloadCSV(
       logs.map((l) => ({
-        Date: format(new Date(l.createdAt), "yyyy-MM-dd HH:mm:ss"),
-        User: l.user?.name || "System",
-        Role: l.user?.role || "-",
+        Date: format(new Date(l.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+        User: l.user?.name || 'System',
+        Role: l.user?.role || '-',
         Action: l.action,
         Entity: l.entityType,
-        "Entity ID": l.entityId || "-",
-        Details: l.details || "-",
-        IP: l.ipAddress || "-",
+        'Entity ID': l.entityId || '-',
+        Details: l.details || '-',
+        IP: l.ipAddress || '-',
       })),
-      `audit-log-${format(new Date(), "yyyy-MM-dd")}`
+      `audit-log-${format(new Date(), 'yyyy-MM-dd')}`
     )
   }
 
@@ -125,11 +133,22 @@ export default function AuditLogPage() {
             placeholder="Search logs..."
             className="pl-9"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
           />
         </div>
-        <Select value={actionFilter} onValueChange={(v) => { setActionFilter(v); setPage(1) }}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Action" /></SelectTrigger>
+        <Select
+          value={actionFilter}
+          onValueChange={(v) => {
+            setActionFilter(v)
+            setPage(1)
+          }}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Action" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Actions</SelectItem>
             <SelectItem value="CREATE">Create</SelectItem>
@@ -138,8 +157,16 @@ export default function AuditLogPage() {
             <SelectItem value="LOGIN">Login</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={entityFilter} onValueChange={(v) => { setEntityFilter(v); setPage(1) }}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="Entity" /></SelectTrigger>
+        <Select
+          value={entityFilter}
+          onValueChange={(v) => {
+            setEntityFilter(v)
+            setPage(1)
+          }}
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Entity" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Entities</SelectItem>
             <SelectItem value="Patient">Patient</SelectItem>
@@ -165,14 +192,20 @@ export default function AuditLogPage() {
               {logs.map((log) => {
                 const Icon = ENTITY_ICONS[log.entityType] || ENTITY_ICONS.default
                 return (
-                  <div key={log.id} className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors">
+                  <div
+                    key={log.id}
+                    className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors"
+                  >
                     <div className="rounded-full bg-muted p-2 mt-0.5">
                       <Icon className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{log.user?.name || "System"}</span>
-                        <Badge variant="outline" className={ACTION_COLORS[log.action] || "bg-muted text-muted-foreground"}>
+                        <span className="font-medium text-sm">{log.user?.name || 'System'}</span>
+                        <Badge
+                          variant="outline"
+                          className={ACTION_COLORS[log.action] || 'bg-muted text-muted-foreground'}
+                        >
                           {log.action}
                         </Badge>
                         <Badge variant="outline">{log.entityType}</Badge>
@@ -181,7 +214,7 @@ export default function AuditLogPage() {
                         <p className="text-sm text-muted-foreground mt-1 truncate">{log.details}</p>
                       )}
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span>{format(new Date(log.createdAt), "MMM dd, yyyy HH:mm:ss")}</span>
+                        <span>{format(new Date(log.createdAt), 'MMM dd, yyyy HH:mm:ss')}</span>
                         {log.user?.role && <span>{log.user.role}</span>}
                         {log.ipAddress && <span>{log.ipAddress}</span>}
                       </div>
@@ -201,10 +234,20 @@ export default function AuditLogPage() {
             Page {page} of {totalPages}
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+            >
               <ChevronLeft className="h-4 w-4 mr-1" /> Previous
             </Button>
-            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage(page + 1)}
+            >
               Next <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>

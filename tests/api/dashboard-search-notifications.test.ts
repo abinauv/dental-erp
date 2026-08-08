@@ -15,10 +15,7 @@ vi.mock('@/lib/api-helpers', () => ({
 
 import { GET as dashboardGET } from '@/app/api/dashboard/stats/route'
 import { GET as searchGET } from '@/app/api/search/route'
-import {
-  GET as notificationsGET,
-  PUT as notificationsPUT,
-} from '@/app/api/notifications/route'
+import { GET as notificationsGET, PUT as notificationsPUT } from '@/app/api/notifications/route'
 
 import { requireAuthAndRole, getAuthenticatedHospital } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
@@ -84,24 +81,25 @@ describe('GET /api/dashboard/stats', () => {
     // Mock all the parallel queries (16 items)
     vi.mocked(prisma.patient.count)
       .mockResolvedValueOnce(250) // total patients
-      .mockResolvedValueOnce(12)  // new this month
-      .mockResolvedValueOnce(10)  // prev month patients
+      .mockResolvedValueOnce(12) // new this month
+      .mockResolvedValueOnce(10) // prev month patients
     vi.mocked(prisma.appointment.count)
-      .mockResolvedValueOnce(8)   // today
+      .mockResolvedValueOnce(8) // today
       .mockResolvedValueOnce(120) // this month
-      .mockResolvedValueOnce(15)  // pending
-      .mockResolvedValueOnce(5)   // completed today
+      .mockResolvedValueOnce(15) // pending
+      .mockResolvedValueOnce(5) // completed today
       .mockResolvedValueOnce(100) // prev month appointments
     vi.mocked(prisma.payment.aggregate)
       .mockResolvedValueOnce({ _sum: { amount: 45000 } } as any) // this month rev
-      .mockResolvedValueOnce({ _sum: { amount: 8500 } } as any)  // today rev
+      .mockResolvedValueOnce({ _sum: { amount: 8500 } } as any) // today rev
       .mockResolvedValueOnce({ _sum: { amount: 950000 } } as any) // total rev
       .mockResolvedValueOnce({ _sum: { amount: 40000 } } as any) // prev month rev
-    vi.mocked(prisma.invoice.aggregate)
-      .mockResolvedValueOnce({ _sum: { totalAmount: 12000 } } as any) // pending
+    vi.mocked(prisma.invoice.aggregate).mockResolvedValueOnce({
+      _sum: { totalAmount: 12000 },
+    } as any) // pending
     vi.mocked(prisma.$queryRaw)
       .mockResolvedValueOnce([{ date: '2026-02-14', revenue: 1200 }]) // last 7 days
-      .mockResolvedValueOnce([{ month: '2026-01', revenue: 40000 }])  // last 6 months
+      .mockResolvedValueOnce([{ month: '2026-01', revenue: 40000 }]) // last 6 months
       .mockResolvedValueOnce([{ name: 'Root Canal', count: 15, revenue: 75000 }]) // top procs
       .mockResolvedValueOnce([]) // low stock
     vi.mocked(prisma.appointment.groupBy).mockResolvedValue([
@@ -139,12 +137,9 @@ describe('GET /api/dashboard/stats', () => {
       .mockResolvedValueOnce(10)
       .mockResolvedValueOnce(5)
       .mockResolvedValueOnce(0) // prev month = 0
-    vi.mocked(prisma.appointment.count)
-      .mockResolvedValue(0)
-    vi.mocked(prisma.payment.aggregate)
-      .mockResolvedValue({ _sum: { amount: null } } as any)
-    vi.mocked(prisma.invoice.aggregate)
-      .mockResolvedValue({ _sum: { totalAmount: null } } as any)
+    vi.mocked(prisma.appointment.count).mockResolvedValue(0)
+    vi.mocked(prisma.payment.aggregate).mockResolvedValue({ _sum: { amount: null } } as any)
+    vi.mocked(prisma.invoice.aggregate).mockResolvedValue({ _sum: { totalAmount: null } } as any)
     vi.mocked(prisma.$queryRaw).mockResolvedValue([])
     vi.mocked(prisma.appointment.groupBy).mockResolvedValue([] as any)
     vi.mocked(prisma.appointment.findMany).mockResolvedValue([])
@@ -395,9 +390,11 @@ describe('PUT /api/notifications', () => {
     vi.mocked(prisma.notification.updateMany).mockResolvedValue({ count: 2 } as any)
     vi.mocked(prisma.notification.count).mockResolvedValue(3)
 
-    const res = await notificationsPUT(makeReq('/api/notifications', 'PUT', {
-      ids: ['n1', 'n2'],
-    }))
+    const res = await notificationsPUT(
+      makeReq('/api/notifications', 'PUT', {
+        ids: ['n1', 'n2'],
+      })
+    )
     const body = await res.json()
 
     expect(body.success).toBe(true)

@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -20,9 +20,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Calendar,
   Plus,
@@ -45,20 +45,15 @@ import {
   Brain,
   AlertTriangle,
   Loader2,
-} from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   appointmentStatusConfig,
   appointmentTypeConfig,
@@ -66,8 +61,8 @@ import {
   formatDate,
   getPatientName,
   getDoctorName,
-} from "@/lib/appointment-utils"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from '@/lib/appointment-utils'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface Appointment {
   id: string
@@ -118,21 +113,26 @@ export default function AppointmentsPage() {
   })
 
   // Filters
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [dateFilter, setDateFilter] = useState("")
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list")
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('')
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
 
   // AI no-show risk
-  const [riskMap, setRiskMap] = useState<Record<string, { riskScore: number; riskLevel: string; factors: string[]; recommendation: string }>>({})
+  const [riskMap, setRiskMap] = useState<
+    Record<
+      string,
+      { riskScore: number; riskLevel: string; factors: string[]; recommendation: string }
+    >
+  >({})
   const [riskLoading, setRiskLoading] = useState(false)
   const [showRisk, setShowRisk] = useState(false)
 
   const fetchNoShowRisk = async () => {
     try {
       setRiskLoading(true)
-      const res = await fetch("/api/ai/no-show-risk?days=14")
+      const res = await fetch('/api/ai/no-show-risk?days=14')
       if (!res.ok) return
       const data = await res.json()
       const map: typeof riskMap = {}
@@ -141,7 +141,7 @@ export default function AppointmentsPage() {
           riskScore: pred.riskScore,
           riskLevel: pred.riskLevel,
           factors: pred.factors || [],
-          recommendation: pred.recommendation || "",
+          recommendation: pred.recommendation || '',
         }
       }
       setRiskMap(map)
@@ -157,10 +157,14 @@ export default function AppointmentsPage() {
     const risk = riskMap[appointmentId]
     if (!risk) return null
     const config = {
-      LOW: { color: "text-green-700", bgColor: "bg-green-100", icon: CheckCircle },
-      MEDIUM: { color: "text-amber-700", bgColor: "bg-amber-100", icon: AlertTriangle },
-      HIGH: { color: "text-red-700", bgColor: "bg-red-100", icon: AlertTriangle },
-    }[risk.riskLevel] || { color: "text-muted-foreground", bgColor: "bg-muted", icon: AlertTriangle }
+      LOW: { color: 'text-green-700', bgColor: 'bg-green-100', icon: CheckCircle },
+      MEDIUM: { color: 'text-amber-700', bgColor: 'bg-amber-100', icon: AlertTriangle },
+      HIGH: { color: 'text-red-700', bgColor: 'bg-red-100', icon: AlertTriangle },
+    }[risk.riskLevel] || {
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
+      icon: AlertTriangle,
+    }
     const Icon = config.icon
     return (
       <Tooltip>
@@ -173,11 +177,11 @@ export default function AppointmentsPage() {
         <TooltipContent side="left" className="max-w-[250px]">
           <p className="font-medium mb-1">No-Show Risk: {risk.riskLevel}</p>
           {risk.factors.map((f, i) => (
-            <p key={i} className="text-xs">• {f}</p>
+            <p key={i} className="text-xs">
+              • {f}
+            </p>
           ))}
-          {risk.recommendation && (
-            <p className="text-xs mt-1 font-medium">{risk.recommendation}</p>
-          )}
+          {risk.recommendation && <p className="text-xs mt-1 font-medium">{risk.recommendation}</p>}
         </TooltipContent>
       </Tooltip>
     )
@@ -189,22 +193,22 @@ export default function AppointmentsPage() {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        view: "list",
+        view: 'list',
       })
 
-      if (search) params.append("search", search)
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter)
-      if (typeFilter && typeFilter !== "all") params.append("type", typeFilter)
-      if (dateFilter) params.append("date", dateFilter)
+      if (search) params.append('search', search)
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter)
+      if (typeFilter && typeFilter !== 'all') params.append('type', typeFilter)
+      if (dateFilter) params.append('date', dateFilter)
 
       const response = await fetch(`/api/appointments?${params}`)
-      if (!response.ok) throw new Error("Failed to fetch appointments")
+      if (!response.ok) throw new Error('Failed to fetch appointments')
 
       const data = await response.json()
       setAppointments(data.appointments)
       setPagination(data.pagination)
     } catch (error) {
-      console.error("Error fetching appointments:", error)
+      console.error('Error fetching appointments:', error)
     } finally {
       setLoading(false)
     }
@@ -217,59 +221,55 @@ export default function AppointmentsPage() {
   const handleCheckIn = async (id: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}/check-in`, {
-        method: "POST",
+        method: 'POST',
       })
-      if (!response.ok) throw new Error("Failed to check in")
+      if (!response.ok) throw new Error('Failed to check in')
       fetchAppointments()
     } catch (error) {
-      console.error("Error checking in:", error)
+      console.error('Error checking in:', error)
     }
   }
 
   const handleCheckOut = async (id: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}/check-out`, {
-        method: "POST",
+        method: 'POST',
       })
-      if (!response.ok) throw new Error("Failed to check out")
+      if (!response.ok) throw new Error('Failed to check out')
       fetchAppointments()
     } catch (error) {
-      console.error("Error checking out:", error)
+      console.error('Error checking out:', error)
     }
   }
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!response.ok) throw new Error("Failed to update status")
+      if (!response.ok) throw new Error('Failed to update status')
       fetchAppointments()
     } catch (error) {
-      console.error("Error updating status:", error)
+      console.error('Error updating status:', error)
     }
   }
 
   const getStatusBadge = (status: string) => {
     const config = appointmentStatusConfig[status] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const getTypeBadge = (type: string) => {
     const config = appointmentTypeConfig[type] || {
       label: type,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted/50",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted/50',
     }
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0`}>
@@ -280,335 +280,344 @@ export default function AppointmentsPage() {
 
   return (
     <TooltipProvider>
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
-          <p className="text-muted-foreground">
-            Manage and schedule patient appointments
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-          >
-            <List className="h-4 w-4 mr-2" />
-            List
-          </Button>
-          <Button
-            variant={viewMode === "calendar" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("calendar")}
-          >
-            <CalendarDays className="h-4 w-4 mr-2" />
-            Calendar
-          </Button>
-          <ExportMenu
-            filename="appointments"
-            getData={() => appointments.map(a => ({
-              "Appointment No": a.appointmentNo,
-              "Patient": getPatientName(a.patient),
-              "Patient Phone": a.patient.phone,
-              "Doctor": getDoctorName(a.doctor),
-              "Specialization": a.doctor.specialization || "",
-              "Date": formatDate(a.scheduledDate),
-              "Time": formatTime(a.scheduledTime),
-              "Duration (min)": a.duration,
-              "Chair": a.chairNumber || "",
-              "Type": a.appointmentType,
-              "Status": a.status,
-              "Priority": a.priority,
-              "Chief Complaint": a.chiefComplaint || "",
-            }))}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchNoShowRisk}
-            disabled={riskLoading}
-          >
-            {riskLoading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Brain className="h-4 w-4 mr-2" />
-            )}
-            {showRisk ? "Refresh Risk" : "AI Risk"}
-          </Button>
-          <Link href="/appointments/new">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Appointment
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by patient name, phone, or appointment number..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-                  <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                  <SelectItem value="CHECKED_IN">Checked In</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                  <SelectItem value="NO_SHOW">No Show</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="CONSULTATION">Consultation</SelectItem>
-                  <SelectItem value="PROCEDURE">Procedure</SelectItem>
-                  <SelectItem value="FOLLOW_UP">Follow Up</SelectItem>
-                  <SelectItem value="EMERGENCY">Emergency</SelectItem>
-                  <SelectItem value="CHECK_UP">Check Up</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-[160px]"
-              />
-            </div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
+            <p className="text-muted-foreground">Manage and schedule patient appointments</p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Appointments Table */}
-      <Card>
-        <CardContent className="p-0 overflow-x-auto">
-          <Table className="min-w-[900px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Appointment</TableHead>
-                <TableHead>Patient</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                {showRisk && <TableHead>Risk</TableHead>}
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                  </TableRow>
-                ))
-              ) : appointments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Calendar className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No appointments found</p>
-                      <Link href="/appointments/new">
-                        <Button variant="outline" size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Book New Appointment
-                        </Button>
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4 mr-2" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+            >
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Calendar
+            </Button>
+            <ExportMenu
+              filename="appointments"
+              getData={() =>
+                appointments.map((a) => ({
+                  'Appointment No': a.appointmentNo,
+                  Patient: getPatientName(a.patient),
+                  'Patient Phone': a.patient.phone,
+                  Doctor: getDoctorName(a.doctor),
+                  Specialization: a.doctor.specialization || '',
+                  Date: formatDate(a.scheduledDate),
+                  Time: formatTime(a.scheduledTime),
+                  'Duration (min)': a.duration,
+                  Chair: a.chairNumber || '',
+                  Type: a.appointmentType,
+                  Status: a.status,
+                  Priority: a.priority,
+                  'Chief Complaint': a.chiefComplaint || '',
+                }))
+              }
+            />
+            <Button variant="outline" size="sm" onClick={fetchNoShowRisk} disabled={riskLoading}>
+              {riskLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                appointments.map((appointment) => (
-                  <TableRow key={appointment.id}>
-                    <TableCell>
-                      <div className="font-medium">{appointment.appointmentNo}</div>
-                      {appointment.chairNumber && (
-                        <div className="text-sm text-muted-foreground">
-                          Chair {appointment.chairNumber}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {getPatientName(appointment.patient)}
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            {appointment.patient.phone}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">
-                        {getDoctorName(appointment.doctor)}
-                      </div>
-                      {appointment.doctor.specialization && (
-                        <div className="text-sm text-muted-foreground">
-                          {appointment.doctor.specialization}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium">
-                            {formatDate(appointment.scheduledDate)}
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {formatTime(appointment.scheduledTime)}
-                            <span className="text-xs">({appointment.duration} min)</span>
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getTypeBadge(appointment.appointmentType)}</TableCell>
-                    <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                    {showRisk && (
-                      <TableCell>
-                        {["SCHEDULED", "CONFIRMED"].includes(appointment.status)
-                          ? getRiskBadge(appointment.id)
-                          : <span className="text-xs text-muted-foreground">N/A</span>}
-                      </TableCell>
-                    )}
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/appointments/${appointment.id}`)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/appointments/${appointment.id}/edit`)}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {["SCHEDULED", "CONFIRMED"].includes(appointment.status) && (
-                            <DropdownMenuItem onClick={() => handleCheckIn(appointment.id)}>
-                              <LogIn className="h-4 w-4 mr-2" />
-                              Check In
-                            </DropdownMenuItem>
-                          )}
-                          {["CHECKED_IN", "IN_PROGRESS"].includes(appointment.status) && (
-                            <DropdownMenuItem onClick={() => handleCheckOut(appointment.id)}>
-                              <LogOut className="h-4 w-4 mr-2" />
-                              Check Out
-                            </DropdownMenuItem>
-                          )}
-                          {appointment.status === "SCHEDULED" && (
-                            <DropdownMenuItem
-                              onClick={() => handleStatusChange(appointment.id, "CONFIRMED")}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Confirm
-                            </DropdownMenuItem>
-                          )}
-                          {!["COMPLETED", "CANCELLED", "NO_SHOW"].includes(appointment.status) && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleStatusChange(appointment.id, "NO_SHOW")}
-                                className="text-amber-600"
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Mark No Show
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleStatusChange(appointment.id, "CANCELLED")}
-                                className="text-red-600"
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Cancel
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+                <Brain className="h-4 w-4 mr-2" />
               )}
-            </TableBody>
-          </Table>
+              {showRisk ? 'Refresh Risk' : 'AI Risk'}
+            </Button>
+            <Link href="/appointments/new">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Appointment
+              </Button>
+            </Link>
+          </div>
+        </div>
 
-          {/* Pagination */}
-          {!loading && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between border-t px-4 py-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-                {pagination.total} appointments
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search by patient name, phone, or appointment number..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
-                  disabled={pagination.page <= 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
-                  disabled={pagination.page >= pagination.totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+              <div className="flex flex-wrap gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                    <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                    <SelectItem value="CHECKED_IN">Checked In</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                    <SelectItem value="NO_SHOW">No Show</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="CONSULTATION">Consultation</SelectItem>
+                    <SelectItem value="PROCEDURE">Procedure</SelectItem>
+                    <SelectItem value="FOLLOW_UP">Follow Up</SelectItem>
+                    <SelectItem value="EMERGENCY">Emergency</SelectItem>
+                    <SelectItem value="CHECK_UP">Check Up</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-[160px]"
+                />
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+
+        {/* Appointments Table */}
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table className="min-w-[900px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Appointment</TableHead>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Doctor</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  {showRisk && <TableHead>Risk</TableHead>}
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-28" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-36" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-8" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : appointments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Calendar className="h-8 w-8 text-muted-foreground" />
+                        <p className="text-muted-foreground">No appointments found</p>
+                        <Link href="/appointments/new">
+                          <Button variant="outline" size="sm">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Book New Appointment
+                          </Button>
+                        </Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  appointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>
+                        <div className="font-medium">{appointment.appointmentNo}</div>
+                        {appointment.chairNumber && (
+                          <div className="text-sm text-muted-foreground">
+                            Chair {appointment.chairNumber}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{getPatientName(appointment.patient)}</div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Phone className="h-3 w-3" />
+                              {appointment.patient.phone}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{getDoctorName(appointment.doctor)}</div>
+                        {appointment.doctor.specialization && (
+                          <div className="text-sm text-muted-foreground">
+                            {appointment.doctor.specialization}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <div className="font-medium">
+                              {formatDate(appointment.scheduledDate)}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {formatTime(appointment.scheduledTime)}
+                              <span className="text-xs">({appointment.duration} min)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getTypeBadge(appointment.appointmentType)}</TableCell>
+                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                      {showRisk && (
+                        <TableCell>
+                          {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) ? (
+                            getRiskBadge(appointment.id)
+                          ) : (
+                            <span className="text-xs text-muted-foreground">N/A</span>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/appointments/${appointment.id}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/appointments/${appointment.id}/edit`)}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
+                              <DropdownMenuItem onClick={() => handleCheckIn(appointment.id)}>
+                                <LogIn className="h-4 w-4 mr-2" />
+                                Check In
+                              </DropdownMenuItem>
+                            )}
+                            {['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
+                              <DropdownMenuItem onClick={() => handleCheckOut(appointment.id)}>
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Check Out
+                              </DropdownMenuItem>
+                            )}
+                            {appointment.status === 'SCHEDULED' && (
+                              <DropdownMenuItem
+                                onClick={() => handleStatusChange(appointment.id, 'CONFIRMED')}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Confirm
+                              </DropdownMenuItem>
+                            )}
+                            {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(
+                              appointment.status
+                            ) && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusChange(appointment.id, 'NO_SHOW')}
+                                  className="text-amber-600"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Mark No Show
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusChange(appointment.id, 'CANCELLED')}
+                                  className="text-red-600"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Cancel
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            {!loading && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between border-t px-4 py-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
+                  {pagination.total} appointments
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
+                    disabled={pagination.page <= 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <div className="text-sm">
+                    Page {pagination.page} of {pagination.totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
+                    disabled={pagination.page >= pagination.totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </TooltipProvider>
   )
 }

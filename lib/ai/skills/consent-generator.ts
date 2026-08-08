@@ -1,12 +1,12 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const consentGenerator: Skill = {
-  name: "consent-generator",
-  displayName: "AI Consent Form Generator",
+  name: 'consent-generator',
+  displayName: 'AI Consent Form Generator',
   description:
-    "Generates formatted consent documents with procedure descriptions, risks, alternatives, and post-op instructions based on procedure name and patient details.",
-  allowedRoles: ["ADMIN", "DOCTOR"],
-  modelTier: "clinical",
+    'Generates formatted consent documents with procedure descriptions, risks, alternatives, and post-op instructions based on procedure name and patient details.',
+  allowedRoles: ['ADMIN', 'DOCTOR'],
+  modelTier: 'clinical',
   systemPrompt: (hospitalName: string, contextStr: string) => `
 You are a medical consent document generator for ${hospitalName}, a dental clinic.
 

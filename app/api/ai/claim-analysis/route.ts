@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { complete, extractJSON } from "@/lib/ai/openrouter"
-import { getModelByTier } from "@/lib/ai/models"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { complete, extractJSON } from '@/lib/ai/openrouter'
+import { getModelByTier } from '@/lib/ai/models'
 
 /**
  * POST /api/ai/claim-analysis
@@ -11,14 +11,14 @@ import { getModelByTier } from "@/lib/ai/models"
  */
 export async function POST(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(["ADMIN", "ACCOUNTANT"])
+    const { session, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
     if (!hospitalId || !session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { claimId } = await req.json()
     if (!claimId) {
-      return NextResponse.json({ error: "claimId is required" }, { status: 400 })
+      return NextResponse.json({ error: 'claimId is required' }, { status: 400 })
     }
 
     const claim = await prisma.insuranceClaim.findFirst({
@@ -34,14 +34,14 @@ export async function POST(req: Request) {
     })
 
     if (!claim) {
-      return NextResponse.json({ error: "Claim not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
     }
 
     // Gather denial history patterns for this hospital
     const denialHistory = await prisma.insuranceClaim.findMany({
       where: {
         hospitalId,
-        status: { in: ["REJECTED", "PARTIALLY_APPROVED"] },
+        status: { in: ['REJECTED', 'PARTIALLY_APPROVED'] },
       },
       select: {
         denialCode: true,
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         insuranceProvider: true,
       },
       take: 50,
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     })
 
     // Common denial codes in this hospital
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         claimAmount: Number(claim.claimAmount),
         approvedAmount: claim.approvedAmount ? Number(claim.approvedAmount) : null,
         status: claim.status,
-        submittedDate: claim.submittedDate?.toISOString().split("T")[0],
+        submittedDate: claim.submittedDate?.toISOString().split('T')[0],
         rejectionReason: claim.rejectionReason,
         denialCode: claim.denialCode,
         appealStatus: claim.appealStatus,
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       patient: {
         name: `${claim.patient.firstName} ${claim.patient.lastName}`,
         patientId: claim.patient.patientId,
-        dateOfBirth: claim.patient.dateOfBirth?.toISOString().split("T")[0],
+        dateOfBirth: claim.patient.dateOfBirth?.toISOString().split('T')[0],
       },
       invoices: claim.invoices.map((inv) => ({
         invoiceNo: inv.invoiceNo,
@@ -86,18 +86,21 @@ export async function POST(req: Request) {
       hospitalDenialPatterns: {
         commonDenialCodes: denialCodeCounts,
         totalDenials: denialHistory.length,
-        topProviderDenials: denialHistory.reduce((acc, d) => {
-          acc[d.insuranceProvider] = (acc[d.insuranceProvider] || 0) + 1
-          return acc
-        }, {} as Record<string, number>),
+        topProviderDenials: denialHistory.reduce(
+          (acc, d) => {
+            acc[d.insuranceProvider] = (acc[d.insuranceProvider] || 0) + 1
+            return acc
+          },
+          {} as Record<string, number>
+        ),
       },
     }
 
-    const model = getModelByTier("billing")
+    const model = getModelByTier('billing')
     const response = await complete(
       [
         {
-          role: "system",
+          role: 'system',
           content: `You are an insurance claim analysis AI for a dental clinic. Analyze the denied claim and provide actionable recovery suggestions.
 Return JSON: { analysis: { likelyCause, denialCategory, severityOfDenial }, suggestions: [{ action, priority }], appealLetter: string|null, preventionTips: string[] }.
 denialCategory: CODING/DOCUMENTATION/ELIGIBILITY/MEDICAL_NECESSITY/TIMELY_FILING/DUPLICATE/OTHER.
@@ -105,7 +108,7 @@ severityOfDenial: RECOVERABLE/PARTIAL/UNLIKELY.
 Return ONLY valid JSON, no markdown.`,
         },
         {
-          role: "user",
+          role: 'user',
           content: `Analyze this denied insurance claim:\n${JSON.stringify(contextData, null, 2)}`,
         },
       ],
@@ -119,17 +122,20 @@ Return ONLY valid JSON, no markdown.`,
     } catch {
       result = {
         analysis: {
-          likelyCause: "Unable to determine — please review the rejection reason manually",
-          denialCategory: "OTHER",
-          severityOfDenial: "PARTIAL",
+          likelyCause: 'Unable to determine — please review the rejection reason manually',
+          denialCategory: 'OTHER',
+          severityOfDenial: 'PARTIAL',
         },
         suggestions: [
-          { action: "Review the rejection reason and denial code", priority: "HIGH" },
-          { action: "Gather supporting documentation", priority: "HIGH" },
-          { action: "Contact the insurance provider for clarification", priority: "MEDIUM" },
+          { action: 'Review the rejection reason and denial code', priority: 'HIGH' },
+          { action: 'Gather supporting documentation', priority: 'HIGH' },
+          { action: 'Contact the insurance provider for clarification', priority: 'MEDIUM' },
         ],
         appealLetter: null,
-        preventionTips: ["Verify patient eligibility before treatment", "Submit claims within the filing deadline"],
+        preventionTips: [
+          'Verify patient eligibility before treatment',
+          'Submit claims within the filing deadline',
+        ],
       }
     }
 
@@ -138,7 +144,7 @@ Return ONLY valid JSON, no markdown.`,
       data: {
         hospitalId,
         userId: session.user.id,
-        skill: "claim-analyzer",
+        skill: 'claim-analyzer',
         input: { claimId },
         output: result,
         tokensUsed: response.usage.totalTokens,
@@ -147,10 +153,10 @@ Return ONLY valid JSON, no markdown.`,
 
     return NextResponse.json({ ...result, claimId, model: response.model })
   } catch (error: any) {
-    console.error("Claim analysis error:", error)
+    console.error('Claim analysis error:', error)
     return NextResponse.json(
-      { error: error.message || "Failed to analyze claim" },
-      { status: error.message?.includes("Unauthorized") ? 401 : 500 }
+      { error: error.message || 'Failed to analyze claim' },
+      { status: error.message?.includes('Unauthorized') ? 401 : 500 }
     )
   }
 }

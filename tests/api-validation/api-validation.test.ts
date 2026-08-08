@@ -12,12 +12,61 @@ vi.mock('@/lib/api-helpers', () => mockAuth)
 // ── Prisma mock ────────────────────────────────────────────────────────────────
 vi.mock('@/lib/prisma', () => {
   const prismaMock = {
-    patient: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
-    appointment: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
-    invoice: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn(), aggregate: vi.fn() },
-    inventoryItem: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
-    staff: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
-    treatment: { findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
+    patient: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    appointment: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    invoice: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+    },
+    inventoryItem: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    staff: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    treatment: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
     hospital: { findUnique: vi.fn(), findFirst: vi.fn() },
     videoConsultation: { create: vi.fn() },
     stockTransaction: { create: vi.fn() },
@@ -56,7 +105,10 @@ import { GET as getPatients, POST as postPatient } from '@/app/api/patients/rout
 import { GET as getPatientById } from '@/app/api/patients/[id]/route'
 import { GET as getAppointments, POST as postAppointment } from '@/app/api/appointments/route'
 import { GET as getInvoices, POST as postInvoice } from '@/app/api/invoices/route'
-import { GET as getInventoryItems, POST as postInventoryItem } from '@/app/api/inventory/items/route'
+import {
+  GET as getInventoryItems,
+  POST as postInventoryItem,
+} from '@/app/api/inventory/items/route'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function makeRequest(url: string, method: string = 'GET', body?: any) {
@@ -167,7 +219,11 @@ describe('5.1 Request/Response Validation', () => {
 
     it('POST /api/appointments with missing patientId → 400', async () => {
       const res = await postAppointment(
-        makeRequest('/api/appointments', 'POST', { doctorId: 'd-1', scheduledDate: '2027-01-01', scheduledTime: '10:00' })
+        makeRequest('/api/appointments', 'POST', {
+          doctorId: 'd-1',
+          scheduledDate: '2027-01-01',
+          scheduledTime: '10:00',
+        })
       )
       expect(res.status).toBe(400)
       const json = await res.json()
@@ -296,10 +352,19 @@ describe('5.2 Status Codes', () => {
 
   it('201 for successful POST /api/patients', async () => {
     prisma.patient.findFirst.mockResolvedValue(null) // no duplicate, no last patient
-    prisma.patient.create.mockResolvedValue({ id: 'p-1', firstName: 'Jane', lastName: 'Doe', phone: '1234567890' })
+    prisma.patient.create.mockResolvedValue({
+      id: 'p-1',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      phone: '1234567890',
+    })
 
     const res = await postPatient(
-      makeRequest('/api/patients', 'POST', { firstName: 'Jane', lastName: 'Doe', phone: '1234567890' })
+      makeRequest('/api/patients', 'POST', {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        phone: '1234567890',
+      })
     )
     expect(res.status).toBe(201)
   })
@@ -310,7 +375,10 @@ describe('5.2 Status Codes', () => {
 
     const res = await postInventoryItem(
       makeRequest('/api/inventory/items', 'POST', {
-        sku: 'SKU001', name: 'Gloves', unit: 'box', purchasePrice: 50,
+        sku: 'SKU001',
+        name: 'Gloves',
+        unit: 'box',
+        purchasePrice: 50,
       })
     )
     expect(res.status).toBe(201)
@@ -553,7 +621,9 @@ describe('5.4 Edge Cases', () => {
 
   it('POST /api/invoices with missing patientId → 400', async () => {
     const res = await postInvoice(
-      makeRequest('/api/invoices', 'POST', { items: [{ description: 'Cleaning', quantity: 1, unitPrice: 500 }] })
+      makeRequest('/api/invoices', 'POST', {
+        items: [{ description: 'Cleaning', quantity: 1, unitPrice: 500 }],
+      })
     )
     expect(res.status).toBe(400)
     const json = await res.json()

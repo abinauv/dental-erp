@@ -65,7 +65,7 @@ describe('parseFile — CSV', () => {
 
     // Empty rows should be skipped
     expect(result.rows.length).toBeGreaterThanOrEqual(2)
-    const names = result.rows.map(r => r.Name).filter(Boolean)
+    const names = result.rows.map((r) => r.Name).filter(Boolean)
     expect(names).toContain('Alice')
     expect(names).toContain('Bob')
   })
@@ -135,7 +135,9 @@ describe('parseFile — Excel', () => {
     workbook.addWorksheet('Empty')
 
     const buffer = await workbook.xlsx.writeBuffer()
-    await expect(parseFile(Buffer.from(buffer as ArrayBuffer), 'xlsx')).rejects.toThrow('no data rows')
+    await expect(parseFile(Buffer.from(buffer as ArrayBuffer), 'xlsx')).rejects.toThrow(
+      'no data rows'
+    )
   })
 
   it('handles Excel with null cells', async () => {

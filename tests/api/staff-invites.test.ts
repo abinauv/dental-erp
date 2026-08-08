@@ -15,8 +15,19 @@ vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
 vi.mock('@/lib/email-helpers', () => mockEmailHelpers)
 vi.mock('@prisma/client', () => ({
-  Role: { ADMIN: 'ADMIN', DOCTOR: 'DOCTOR', RECEPTIONIST: 'RECEPTIONIST', LAB_TECH: 'LAB_TECH', ACCOUNTANT: 'ACCOUNTANT' },
-  StaffInviteStatus: { PENDING: 'PENDING', ACCEPTED: 'ACCEPTED', EXPIRED: 'EXPIRED', CANCELLED: 'CANCELLED' },
+  Role: {
+    ADMIN: 'ADMIN',
+    DOCTOR: 'DOCTOR',
+    RECEPTIONIST: 'RECEPTIONIST',
+    LAB_TECH: 'LAB_TECH',
+    ACCOUNTANT: 'ACCOUNTANT',
+  },
+  StaffInviteStatus: {
+    PENDING: 'PENDING',
+    ACCEPTED: 'ACCEPTED',
+    EXPIRED: 'EXPIRED',
+    CANCELLED: 'CANCELLED',
+  },
 }))
 
 const invitesListModule = await import('@/app/api/staff-invites/route')
@@ -25,14 +36,18 @@ const inviteDetailModule = await import('@/app/api/staff-invites/[id]/route')
 function makeListRequest(method: string, body?: any) {
   return new Request('http://localhost/api/staff-invites', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
 function makeDetailRequest(method: string, body?: any) {
   return new Request('http://localhost/api/staff-invites/inv-1', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 
@@ -56,8 +71,20 @@ describe('Staff Invites API', () => {
   describe('GET /api/staff-invites', () => {
     it('returns all invites for the hospital', async () => {
       ;(prisma.staffInvite.findMany as any).mockResolvedValue([
-        { id: 'inv-1', email: 'doc@clinic.com', name: 'Dr John', role: 'DOCTOR', status: 'PENDING' },
-        { id: 'inv-2', email: 'rec@clinic.com', name: 'Jane', role: 'RECEPTIONIST', status: 'ACCEPTED' },
+        {
+          id: 'inv-1',
+          email: 'doc@clinic.com',
+          name: 'Dr John',
+          role: 'DOCTOR',
+          status: 'PENDING',
+        },
+        {
+          id: 'inv-2',
+          email: 'rec@clinic.com',
+          name: 'Jane',
+          role: 'RECEPTIONIST',
+          status: 'ACCEPTED',
+        },
       ])
 
       const res = await invitesListModule.GET()

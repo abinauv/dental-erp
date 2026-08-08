@@ -27,7 +27,7 @@ describe('Regression: Hospital Isolation', () => {
 
   it('should scope all entity lookups by hospitalId', () => {
     const entities = ['Patient', 'Appointment', 'Invoice', 'Staff', 'InventoryItem', 'LabOrder']
-    entities.forEach(entity => {
+    entities.forEach((entity) => {
       // Document that each entity must be scoped
       expect(entity).toBeTruthy()
     })
@@ -383,7 +383,7 @@ describe('Regression: Concurrency', () => {
     const decrement = async (amount: number) => {
       const current = stock
       // Simulate async delay
-      await new Promise(resolve => setTimeout(resolve, 1))
+      await new Promise((resolve) => setTimeout(resolve, 1))
       if (current >= amount) {
         stock = current - amount
         return true

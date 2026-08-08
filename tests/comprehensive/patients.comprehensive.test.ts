@@ -82,8 +82,20 @@ describe('Patients API - Comprehensive Tests', () => {
   describe('GET /api/patients', () => {
     it('should return paginated patients list', async () => {
       const mockPatients = [
-        { id: '1', patientId: 'PAT202500001', firstName: 'John', lastName: 'Doe', phone: '9876543210' },
-        { id: '2', patientId: 'PAT202500002', firstName: 'Jane', lastName: 'Smith', phone: '9876543211' },
+        {
+          id: '1',
+          patientId: 'PAT202500001',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '9876543210',
+        },
+        {
+          id: '2',
+          patientId: 'PAT202500002',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          phone: '9876543211',
+        },
       ]
 
       mockPrisma.patient.findMany.mockResolvedValue(mockPatients)

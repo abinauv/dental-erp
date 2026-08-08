@@ -12,14 +12,8 @@ vi.mock('@/lib/api-helpers', () => ({
 
 // ── Imports ──────────────────────────────────────────────────────────────────
 
-import {
-  GET as plansListGET,
-  POST as plansListPOST,
-} from '@/app/api/payment-plans/route'
-import {
-  GET as planDetailGET,
-  PUT as planDetailPUT,
-} from '@/app/api/payment-plans/[id]/route'
+import { GET as plansListGET, POST as plansListPOST } from '@/app/api/payment-plans/route'
+import { GET as planDetailGET, PUT as planDetailPUT } from '@/app/api/payment-plans/[id]/route'
 import { POST as planPayPOST } from '@/app/api/payment-plans/[id]/pay/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
@@ -73,7 +67,10 @@ describe('GET /api/payment-plans', () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findMany).mockResolvedValue([
       {
-        id: 'pp1', totalAmount: 10000, downPayment: 2000, interestRate: 0,
+        id: 'pp1',
+        totalAmount: 10000,
+        downPayment: 2000,
+        interestRate: 0,
         patient: { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe' },
         invoice: { id: 'inv1', invoiceNo: 'INV001', totalAmount: 10000 },
         schedules: [
@@ -105,7 +102,9 @@ describe('GET /api/payment-plans', () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findMany).mockResolvedValue([])
     vi.mocked(prisma.paymentPlan.count).mockResolvedValue(0)
-    vi.mocked(prisma.paymentPlanSchedule.aggregate).mockResolvedValue({ _sum: { amount: 0 } } as any)
+    vi.mocked(prisma.paymentPlanSchedule.aggregate).mockResolvedValue({
+      _sum: { amount: 0 },
+    } as any)
 
     await plansListGET(makeReq('/api/payment-plans?status=ACTIVE'))
     const call = vi.mocked(prisma.paymentPlan.findMany).mock.calls[0][0]
@@ -116,7 +115,9 @@ describe('GET /api/payment-plans', () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findMany).mockResolvedValue([])
     vi.mocked(prisma.paymentPlan.count).mockResolvedValue(0)
-    vi.mocked(prisma.paymentPlanSchedule.aggregate).mockResolvedValue({ _sum: { amount: 0 } } as any)
+    vi.mocked(prisma.paymentPlanSchedule.aggregate).mockResolvedValue({
+      _sum: { amount: 0 },
+    } as any)
 
     await plansListGET(makeReq('/api/payment-plans?patientId=p1'))
     const call = vi.mocked(prisma.paymentPlan.findMany).mock.calls[0][0]
@@ -133,17 +134,25 @@ describe('POST /api/payment-plans', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 3, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 3,
+        startDate: '2026-03-01',
+      })
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 403 for unauthorized roles', async () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 3, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 3,
+        startDate: '2026-03-01',
+      })
+    )
     expect(res.status).toBe(403)
   })
 
@@ -155,55 +164,83 @@ describe('POST /api/payment-plans', () => {
 
   it('returns 400 when installments out of range', async () => {
     mockAuth()
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 1, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 1,
+        startDate: '2026-03-01',
+      })
+    )
     expect(res.status).toBe(400)
   })
 
   it('returns 404 when invoice not found', async () => {
     mockAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue(null)
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 3, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 3,
+        startDate: '2026-03-01',
+      })
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns 400 when invoice is already paid', async () => {
     mockAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', status: 'PAID', balanceAmount: 0,
+      id: 'inv1',
+      status: 'PAID',
+      balanceAmount: 0,
     } as any)
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 3, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 3,
+        startDate: '2026-03-01',
+      })
+    )
     expect(res.status).toBe(400)
   })
 
   it('returns 409 when invoice already has active plan', async () => {
     mockAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', status: 'PENDING', balanceAmount: 10000, patientId: 'p1',
+      id: 'inv1',
+      status: 'PENDING',
+      balanceAmount: 10000,
+      patientId: 'p1',
     } as any)
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE',
+      id: 'pp1',
+      status: 'ACTIVE',
     } as any)
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 3, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 3,
+        startDate: '2026-03-01',
+      })
+    )
     expect(res.status).toBe(409)
   })
 
   it('creates payment plan with schedules', async () => {
     mockAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
-      id: 'inv1', status: 'PENDING', balanceAmount: 9000, patientId: 'p1',
+      id: 'inv1',
+      status: 'PENDING',
+      balanceAmount: 9000,
+      patientId: 'p1',
     } as any)
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue(null)
 
     const createdPlan = {
-      id: 'pp1', invoiceId: 'inv1', totalAmount: 9000, installments: 3,
+      id: 'pp1',
+      invoiceId: 'inv1',
+      totalAmount: 9000,
+      installments: 3,
       schedules: [
         { installmentNo: 1, amount: 3000, dueDate: new Date('2026-03-01') },
         { installmentNo: 2, amount: 3000, dueDate: new Date('2026-04-01') },
@@ -215,9 +252,13 @@ describe('POST /api/payment-plans', () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(prisma))
     vi.mocked(prisma.paymentPlan.create).mockResolvedValue(createdPlan as any)
 
-    const res = await plansListPOST(makeReq('/api/payment-plans', 'POST', {
-      invoiceId: 'inv1', installments: 3, startDate: '2026-03-01',
-    }))
+    const res = await plansListPOST(
+      makeReq('/api/payment-plans', 'POST', {
+        invoiceId: 'inv1',
+        installments: 3,
+        startDate: '2026-03-01',
+      })
+    )
 
     expect(res.status).toBe(201)
     const body = await res.json()
@@ -248,9 +289,19 @@ describe('GET /api/payment-plans/[id]', () => {
   it('returns plan detail with schedules and payment info', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', totalAmount: 10000, downPayment: 2000, interestRate: 0,
+      id: 'pp1',
+      totalAmount: 10000,
+      downPayment: 2000,
+      interestRate: 0,
       patient: { id: 'p1', firstName: 'John', lastName: 'Doe' },
-      invoice: { id: 'inv1', invoiceNo: 'INV001', totalAmount: 10000, paidAmount: 6000, balanceAmount: 4000, status: 'PARTIALLY_PAID' },
+      invoice: {
+        id: 'inv1',
+        invoiceNo: 'INV001',
+        totalAmount: 10000,
+        paidAmount: 6000,
+        balanceAmount: 4000,
+        status: 'PARTIALLY_PAID',
+      },
       schedules: [
         { installmentNo: 1, amount: 4000, status: 'PAID', paidAmount: 4000, paymentId: 'pay1' },
         { installmentNo: 2, amount: 4000, status: 'PENDING', paidAmount: null, paymentId: null },
@@ -280,7 +331,7 @@ describe('PUT /api/payment-plans/[id]', () => {
     mockAuthError()
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'cancel' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -289,7 +340,7 @@ describe('PUT /api/payment-plans/[id]', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'RECEPTIONIST' } } })
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'cancel' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -299,7 +350,7 @@ describe('PUT /api/payment-plans/[id]', () => {
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue(null)
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'cancel' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -307,13 +358,15 @@ describe('PUT /api/payment-plans/[id]', () => {
   it('cancels active plan and waives pending installments', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', schedules: [],
+      id: 'pp1',
+      status: 'ACTIVE',
+      schedules: [],
     } as any)
     vi.mocked(prisma.$transaction).mockResolvedValue(undefined)
 
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'cancel' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     const body = await res.json()
     expect(body.message).toContain('cancelled')
@@ -322,11 +375,13 @@ describe('PUT /api/payment-plans/[id]', () => {
   it('returns 400 when cancelling non-active plan', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'COMPLETED', schedules: [],
+      id: 'pp1',
+      status: 'COMPLETED',
+      schedules: [],
     } as any)
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'cancel' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(400)
   })
@@ -334,17 +389,24 @@ describe('PUT /api/payment-plans/[id]', () => {
   it('waives an installment', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', schedules: [],
+      id: 'pp1',
+      status: 'ACTIVE',
+      schedules: [],
     } as any)
     vi.mocked(prisma.paymentPlanSchedule.findFirst).mockResolvedValue({
-      id: 'sch1', planId: 'pp1', status: 'PENDING',
+      id: 'sch1',
+      planId: 'pp1',
+      status: 'PENDING',
     } as any)
-    vi.mocked(prisma.paymentPlanSchedule.update).mockResolvedValue({ id: 'sch1', status: 'WAIVED' } as any)
+    vi.mocked(prisma.paymentPlanSchedule.update).mockResolvedValue({
+      id: 'sch1',
+      status: 'WAIVED',
+    } as any)
     vi.mocked(prisma.paymentPlanSchedule.count).mockResolvedValue(1) // 1 remaining
 
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'waive', scheduleId: 'sch1' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     const body = await res.json()
     expect(body.message).toContain('waived')
@@ -353,15 +415,19 @@ describe('PUT /api/payment-plans/[id]', () => {
   it('returns 400 when waiving already paid installment', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', schedules: [],
+      id: 'pp1',
+      status: 'ACTIVE',
+      schedules: [],
     } as any)
     vi.mocked(prisma.paymentPlanSchedule.findFirst).mockResolvedValue({
-      id: 'sch1', planId: 'pp1', status: 'PAID',
+      id: 'sch1',
+      planId: 'pp1',
+      status: 'PAID',
     } as any)
 
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'waive', scheduleId: 'sch1' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(400)
   })
@@ -369,11 +435,13 @@ describe('PUT /api/payment-plans/[id]', () => {
   it('returns 400 for invalid action', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', schedules: [],
+      id: 'pp1',
+      status: 'ACTIVE',
+      schedules: [],
     } as any)
     const res = await planDetailPUT(
       makeReq('/api/payment-plans/pp1', 'PUT', { action: 'invalid' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(400)
   })
@@ -390,7 +458,7 @@ describe('POST /api/payment-plans/[id]/pay', () => {
     mockAuthError()
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', { scheduleId: 'sch1' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -399,7 +467,7 @@ describe('POST /api/payment-plans/[id]/pay', () => {
     mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', { scheduleId: 'sch1' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -408,7 +476,7 @@ describe('POST /api/payment-plans/[id]/pay', () => {
     mockAuth()
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', {}),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(400)
   })
@@ -418,7 +486,7 @@ describe('POST /api/payment-plans/[id]/pay', () => {
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue(null)
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', { scheduleId: 'sch1' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -426,13 +494,15 @@ describe('POST /api/payment-plans/[id]/pay', () => {
   it('returns 404 when installment not found', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', invoiceId: 'inv1',
+      id: 'pp1',
+      status: 'ACTIVE',
+      invoiceId: 'inv1',
       invoice: { id: 'inv1', paidAmount: 0, totalAmount: 10000 },
     } as any)
     vi.mocked(prisma.paymentPlanSchedule.findFirst).mockResolvedValue(null)
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', { scheduleId: 'sch999' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -440,15 +510,19 @@ describe('POST /api/payment-plans/[id]/pay', () => {
   it('returns 400 when installment already paid', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', invoiceId: 'inv1',
+      id: 'pp1',
+      status: 'ACTIVE',
+      invoiceId: 'inv1',
       invoice: { id: 'inv1', paidAmount: 4000, totalAmount: 10000 },
     } as any)
     vi.mocked(prisma.paymentPlanSchedule.findFirst).mockResolvedValue({
-      id: 'sch1', planId: 'pp1', status: 'PAID',
+      id: 'sch1',
+      planId: 'pp1',
+      status: 'PAID',
     } as any)
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', { scheduleId: 'sch1' }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     expect(res.status).toBe(400)
   })
@@ -456,11 +530,17 @@ describe('POST /api/payment-plans/[id]/pay', () => {
   it('records payment and updates invoice', async () => {
     mockAuth()
     vi.mocked(prisma.paymentPlan.findFirst).mockResolvedValue({
-      id: 'pp1', status: 'ACTIVE', invoiceId: 'inv1',
+      id: 'pp1',
+      status: 'ACTIVE',
+      invoiceId: 'inv1',
       invoice: { id: 'inv1', paidAmount: 2000, totalAmount: 10000, status: 'PARTIALLY_PAID' },
     } as any)
     vi.mocked(prisma.paymentPlanSchedule.findFirst).mockResolvedValue({
-      id: 'sch1', planId: 'pp1', status: 'PENDING', amount: 4000, installmentNo: 1,
+      id: 'sch1',
+      planId: 'pp1',
+      status: 'PENDING',
+      amount: 4000,
+      installmentNo: 1,
     } as any)
     vi.mocked(prisma.payment.findFirst).mockResolvedValue({
       paymentNo: 'PAY00010',
@@ -469,16 +549,25 @@ describe('POST /api/payment-plans/[id]/pay', () => {
     // Mock the $transaction to execute the callback
     vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(prisma))
     vi.mocked(prisma.payment.create).mockResolvedValue({
-      id: 'pay1', paymentNo: 'PAY00011', amount: 4000,
+      id: 'pay1',
+      paymentNo: 'PAY00011',
+      amount: 4000,
     } as any)
     vi.mocked(prisma.paymentPlanSchedule.update).mockResolvedValue({} as any)
     vi.mocked(prisma.invoice.update).mockResolvedValue({} as any)
     vi.mocked(prisma.paymentPlanSchedule.count).mockResolvedValue(1)
-    vi.mocked(prisma.paymentPlanSchedule.findFirst).mockResolvedValueOnce({
-      id: 'sch1', planId: 'pp1', status: 'PENDING', amount: 4000, installmentNo: 1,
-    } as any).mockResolvedValueOnce({
-      id: 'sch2', dueDate: new Date('2026-04-01'),
-    } as any)
+    vi.mocked(prisma.paymentPlanSchedule.findFirst)
+      .mockResolvedValueOnce({
+        id: 'sch1',
+        planId: 'pp1',
+        status: 'PENDING',
+        amount: 4000,
+        installmentNo: 1,
+      } as any)
+      .mockResolvedValueOnce({
+        id: 'sch2',
+        dueDate: new Date('2026-04-01'),
+      } as any)
     vi.mocked(prisma.paymentPlan.update).mockResolvedValue({} as any)
 
     const res = await planPayPOST(
@@ -486,7 +575,7 @@ describe('POST /api/payment-plans/[id]/pay', () => {
         scheduleId: 'sch1',
         paymentMethod: 'UPI',
       }),
-      makeParams('pp1') as any,
+      makeParams('pp1') as any
     )
     const body = await res.json()
 

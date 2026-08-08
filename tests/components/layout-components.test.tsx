@@ -15,14 +15,31 @@ const mockNavItems = [
   {
     title: 'Dashboard',
     items: [
-      { title: 'Overview', href: '/dashboard', icon: React.forwardRef((p: any, r: any) => <svg {...p} ref={r} data-testid="icon-overview" />) },
-      { title: 'Patients', href: '/patients', icon: React.forwardRef((p: any, r: any) => <svg {...p} ref={r} data-testid="icon-patients" />) },
+      {
+        title: 'Overview',
+        href: '/dashboard',
+        icon: React.forwardRef((p: any, r: any) => (
+          <svg {...p} ref={r} data-testid="icon-overview" />
+        )),
+      },
+      {
+        title: 'Patients',
+        href: '/patients',
+        icon: React.forwardRef((p: any, r: any) => (
+          <svg {...p} ref={r} data-testid="icon-patients" />
+        )),
+      },
     ],
   },
   {
     title: 'Operations',
     items: [
-      { title: 'Appointments', href: '/appointments', icon: React.forwardRef((p: any, r: any) => <svg {...p} ref={r} data-testid="icon-appts" />), badge: '3' },
+      {
+        title: 'Appointments',
+        href: '/appointments',
+        icon: React.forwardRef((p: any, r: any) => <svg {...p} ref={r} data-testid="icon-appts" />),
+        badge: '3',
+      },
     ],
   },
 ]
@@ -36,7 +53,7 @@ vi.mock('lucide-react', async (importOriginal) => {
     React.forwardRef((props: any, ref: any) =>
       React.createElement('svg', { ...props, ref, 'data-testid': `lucide-${name}` })
     )
-  const actual = await importOriginal() as any
+  const actual = (await importOriginal()) as any
   const handler = { get: (_: any, p: string) => actual[p] || icon(p) }
   return new Proxy(actual, handler)
 })
@@ -62,7 +79,9 @@ vi.mock('@/components/layout/sidebar-context', () => ({
 
 vi.mock('next/link', () => ({
   default: ({ children, href, onClick, ...props }: any) => (
-    <a href={href} onClick={onClick} {...props}>{children}</a>
+    <a href={href} onClick={onClick} {...props}>
+      {children}
+    </a>
   ),
 }))
 
@@ -81,7 +100,9 @@ vi.mock('@/components/ui/scroll-area', () => ({
 
 vi.mock('@/components/ui/button', () => ({
   Button: React.forwardRef(({ children, onClick, className, ...rest }: any, ref: any) => (
-    <button onClick={onClick} className={className} ref={ref} {...rest}>{children}</button>
+    <button onClick={onClick} className={className} ref={ref} {...rest}>
+      {children}
+    </button>
   )),
 }))
 
@@ -91,21 +112,31 @@ vi.mock('@/components/ui/badge', () => ({
 
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open, onOpenChange }: any) => (
-    <div data-testid="dialog" data-open={String(!!open)}>{open ? children : null}</div>
+    <div data-testid="dialog" data-open={String(!!open)}>
+      {open ? children : null}
+    </div>
   ),
   DialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
   DialogTitle: ({ children }: any) => <h2>{children}</h2>,
 }))
 
 vi.mock('@/components/ui/input', () => ({
-  Input: React.forwardRef((props: any, ref: any) => <input {...props} ref={ref} data-testid="input" />),
+  Input: React.forwardRef((props: any, ref: any) => (
+    <input {...props} ref={ref} data-testid="input" />
+  )),
 }))
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
-  DropdownMenu: ({ children, open, onOpenChange }: any) => <div data-testid="dropdown">{children}</div>,
+  DropdownMenu: ({ children, open, onOpenChange }: any) => (
+    <div data-testid="dropdown">{children}</div>
+  ),
   DropdownMenuTrigger: ({ children }: any) => <div data-testid="dropdown-trigger">{children}</div>,
   DropdownMenuContent: ({ children }: any) => <div data-testid="dropdown-content">{children}</div>,
-  DropdownMenuItem: ({ children, onClick }: any) => <div role="menuitem" onClick={onClick}>{children}</div>,
+  DropdownMenuItem: ({ children, onClick }: any) => (
+    <div role="menuitem" onClick={onClick}>
+      {children}
+    </div>
+  ),
   DropdownMenuSeparator: () => <hr />,
   DropdownMenuLabel: ({ children }: any) => <div>{children}</div>,
 }))
@@ -161,7 +192,7 @@ describe('Sidebar', () => {
   it('renders navigation links with correct hrefs', () => {
     render(<Sidebar role="ADMIN" hospitalName="X" />)
     const links = screen.getAllByRole('link')
-    const hrefs = links.map(l => l.getAttribute('href'))
+    const hrefs = links.map((l) => l.getAttribute('href'))
     expect(hrefs).toContain('/dashboard')
     expect(hrefs).toContain('/patients')
     expect(hrefs).toContain('/appointments')
@@ -294,7 +325,7 @@ describe('MobileSidebar', () => {
   it('renders navigation links with correct hrefs', () => {
     render(<MobileSidebar role="ADMIN" hospitalName="Test Clinic" />)
     const links = screen.getAllByRole('link')
-    const hrefs = links.map(l => l.getAttribute('href'))
+    const hrefs = links.map((l) => l.getAttribute('href'))
     expect(hrefs).toContain('/dashboard')
     expect(hrefs).toContain('/patients')
     expect(hrefs).toContain('/appointments')
@@ -321,7 +352,13 @@ describe('GlobalSearch', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
-      json: async () => ({ patients: [], appointments: [], invoices: [], staff: [], treatments: [] }),
+      json: async () => ({
+        patients: [],
+        appointments: [],
+        invoices: [],
+        staff: [],
+        treatments: [],
+      }),
     } as Response)
   })
 
@@ -337,7 +374,9 @@ describe('GlobalSearch', () => {
 
   it('opens dialog on "/" keypress', async () => {
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
     expect(screen.getByTestId('dialog')).toHaveAttribute('data-open', 'true')
   })
 
@@ -358,38 +397,52 @@ describe('GlobalSearch', () => {
   it('opens dialog on trigger button click', async () => {
     render(<GlobalSearch />)
     const buttons = screen.getAllByRole('button')
-    await act(() => { fireEvent.click(buttons[0]) })
+    await act(() => {
+      fireEvent.click(buttons[0])
+    })
     expect(screen.getByTestId('dialog')).toHaveAttribute('data-open', 'true')
   })
 
   it('shows hint text when query is short', async () => {
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
     expect(screen.getByText(/Type at least 2 characters/)).toBeInTheDocument()
   })
 
   it('fetches search results after debounce', async () => {
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
 
     const input = screen.getByPlaceholderText(/Search patients/)
-    await act(() => { fireEvent.change(input, { target: { value: 'John' } }) })
+    await act(() => {
+      fireEvent.change(input, { target: { value: 'John' } })
+    })
 
     // Advance past 300ms debounce
-    await act(() => { vi.advanceTimersByTime(350) })
+    await act(() => {
+      vi.advanceTimersByTime(350)
+    })
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/search?q=John')
-    )
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/search?q=John'))
   })
 
   it('does not fetch when query is less than 2 chars', async () => {
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
 
     const input = screen.getByPlaceholderText(/Search patients/)
-    await act(() => { fireEvent.change(input, { target: { value: 'J' } }) })
-    await act(() => { vi.advanceTimersByTime(350) })
+    await act(() => {
+      fireEvent.change(input, { target: { value: 'J' } })
+    })
+    await act(() => {
+      vi.advanceTimersByTime(350)
+    })
 
     expect(global.fetch).not.toHaveBeenCalled()
   })
@@ -398,7 +451,9 @@ describe('GlobalSearch', () => {
     vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       json: async () => ({
-        patients: [{ id: 'p1', label: 'John Doe', sublabel: '+91 9876543210', href: '/patients/p1' }],
+        patients: [
+          { id: 'p1', label: 'John Doe', sublabel: '+91 9876543210', href: '/patients/p1' },
+        ],
         appointments: [],
         invoices: [],
         staff: [],
@@ -407,11 +462,17 @@ describe('GlobalSearch', () => {
     } as Response)
 
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
 
     const input = screen.getByPlaceholderText(/Search patients/)
-    await act(() => { fireEvent.change(input, { target: { value: 'John' } }) })
-    await act(() => { vi.advanceTimersByTime(350) })
+    await act(() => {
+      fireEvent.change(input, { target: { value: 'John' } })
+    })
+    await act(() => {
+      vi.advanceTimersByTime(350)
+    })
 
     await waitFor(() => {
       expect(screen.getByText('John Doe')).toBeInTheDocument()
@@ -422,11 +483,17 @@ describe('GlobalSearch', () => {
 
   it('shows no results message', async () => {
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
 
     const input = screen.getByPlaceholderText(/Search patients/)
-    await act(() => { fireEvent.change(input, { target: { value: 'zzzzz' } }) })
-    await act(() => { vi.advanceTimersByTime(350) })
+    await act(() => {
+      fireEvent.change(input, { target: { value: 'zzzzz' } })
+    })
+    await act(() => {
+      vi.advanceTimersByTime(350)
+    })
 
     await waitFor(() => {
       expect(screen.getByText(/No results found/)).toBeInTheDocument()
@@ -438,15 +505,24 @@ describe('GlobalSearch', () => {
       ok: true,
       json: async () => ({
         patients: [{ id: 'p1', label: 'Jane', sublabel: 'test', href: '/patients/p1' }],
-        appointments: [], invoices: [], staff: [], treatments: [],
+        appointments: [],
+        invoices: [],
+        staff: [],
+        treatments: [],
       }),
     } as Response)
 
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
     const input = screen.getByPlaceholderText(/Search patients/)
-    await act(() => { fireEvent.change(input, { target: { value: 'Jane' } }) })
-    await act(() => { vi.advanceTimersByTime(350) })
+    await act(() => {
+      fireEvent.change(input, { target: { value: 'Jane' } })
+    })
+    await act(() => {
+      vi.advanceTimersByTime(350)
+    })
 
     await waitFor(() => expect(screen.getByText('Jane')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Jane').closest('button')!)
@@ -459,15 +535,24 @@ describe('GlobalSearch', () => {
       ok: true,
       json: async () => ({
         patients: [{ id: 'p1', label: 'Alice', sublabel: 's', href: '/patients/p1' }],
-        appointments: [], invoices: [], staff: [], treatments: [],
+        appointments: [],
+        invoices: [],
+        staff: [],
+        treatments: [],
       }),
     } as Response)
 
     render(<GlobalSearch />)
-    await act(() => { fireEvent.keyDown(document, { key: '/' }) })
+    await act(() => {
+      fireEvent.keyDown(document, { key: '/' })
+    })
     const input = screen.getByPlaceholderText(/Search patients/)
-    await act(() => { fireEvent.change(input, { target: { value: 'Alice' } }) })
-    await act(() => { vi.advanceTimersByTime(350) })
+    await act(() => {
+      fireEvent.change(input, { target: { value: 'Alice' } })
+    })
+    await act(() => {
+      vi.advanceTimersByTime(350)
+    })
 
     await waitFor(() => expect(screen.getByText('Alice')).toBeInTheDocument())
 
@@ -499,9 +584,7 @@ describe('NotificationTray', () => {
   it('fetches notifications on mount', async () => {
     render(<NotificationTray />)
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/notifications')
-      )
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/notifications'))
     })
   })
 
@@ -510,7 +593,14 @@ describe('NotificationTray', () => {
       ok: true,
       json: async () => ({
         notifications: [
-          { id: 'n1', title: 'New Appointment', message: 'Dr Smith at 3 PM', type: 'APPOINTMENT', isRead: false, createdAt: new Date().toISOString() },
+          {
+            id: 'n1',
+            title: 'New Appointment',
+            message: 'Dr Smith at 3 PM',
+            type: 'APPOINTMENT',
+            isRead: false,
+            createdAt: new Date().toISOString(),
+          },
         ],
         unreadCount: 1,
       }),
@@ -528,7 +618,14 @@ describe('NotificationTray', () => {
       ok: true,
       json: async () => ({
         notifications: [
-          { id: 'n1', title: 'Alert', message: 'msg', type: 'INFO', isRead: false, createdAt: new Date().toISOString() },
+          {
+            id: 'n1',
+            title: 'Alert',
+            message: 'msg',
+            type: 'INFO',
+            isRead: false,
+            createdAt: new Date().toISOString(),
+          },
         ],
         unreadCount: 1,
       }),
@@ -560,7 +657,14 @@ describe('NotificationTray', () => {
         ok: true,
         json: async () => ({
           notifications: [
-            { id: 'n1', title: 'Test', message: 'msg', type: 'INFO', isRead: false, createdAt: new Date().toISOString() },
+            {
+              id: 'n1',
+              title: 'Test',
+              message: 'msg',
+              type: 'INFO',
+              isRead: false,
+              createdAt: new Date().toISOString(),
+            },
           ],
           unreadCount: 1,
         }),
@@ -576,9 +680,12 @@ describe('NotificationTray', () => {
     fireEvent.click(screen.getByText('Test').closest('button')!)
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/notifications', expect.objectContaining({
-        method: 'PUT',
-      }))
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/notifications',
+        expect.objectContaining({
+          method: 'PUT',
+        })
+      )
     })
   })
 
@@ -588,7 +695,14 @@ describe('NotificationTray', () => {
         ok: true,
         json: async () => ({
           notifications: [
-            { id: 'n1', title: 'A', message: 'm', type: 'INFO', isRead: false, createdAt: new Date().toISOString() },
+            {
+              id: 'n1',
+              title: 'A',
+              message: 'm',
+              type: 'INFO',
+              isRead: false,
+              createdAt: new Date().toISOString(),
+            },
           ],
           unreadCount: 1,
         }),
@@ -604,7 +718,7 @@ describe('NotificationTray', () => {
     fireEvent.click(screen.getByText('Mark all read'))
 
     await waitFor(() => {
-      const putCalls = vi.mocked(global.fetch).mock.calls.filter(c => c[1]?.method === 'PUT')
+      const putCalls = vi.mocked(global.fetch).mock.calls.filter((c) => c[1]?.method === 'PUT')
       expect(putCalls.length).toBeGreaterThan(0)
       const body = JSON.parse(putCalls[0][1].body)
       expect(body.all).toBe(true)
@@ -616,7 +730,14 @@ describe('NotificationTray', () => {
       ok: true,
       json: async () => ({
         notifications: [
-          { id: 'n1', title: 'X', message: 'Y', type: 'SYSTEM', isRead: false, createdAt: new Date().toISOString() },
+          {
+            id: 'n1',
+            title: 'X',
+            message: 'Y',
+            type: 'SYSTEM',
+            isRead: false,
+            createdAt: new Date().toISOString(),
+          },
         ],
         unreadCount: 5,
       }),

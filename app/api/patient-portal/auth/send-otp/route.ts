@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { generateOTP } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { generateOTP } from '@/lib/patient-auth'
 
 /**
  * POST: Send OTP to patient's phone for portal login.
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     if (!phone || !hospitalSlug) {
       return NextResponse.json(
-        { error: "Phone number and clinic identifier are required" },
+        { error: 'Phone number and clinic identifier are required' },
         { status: 400 }
       )
     }
@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: "Clinic not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 })
     }
 
     if (!hospital.patientPortalEnabled) {
       return NextResponse.json(
-        { error: "Patient portal is not enabled for this clinic" },
+        { error: 'Patient portal is not enabled for this clinic' },
         { status: 403 }
       )
     }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     if (!patient) {
       return NextResponse.json(
-        { error: "No patient account found with this phone number" },
+        { error: 'No patient account found with this phone number' },
         { status: 404 }
       )
     }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     if (recentOTPs >= 5) {
       return NextResponse.json(
-        { error: "Too many OTP requests. Please try again in 10 minutes." },
+        { error: 'Too many OTP requests. Please try again in 10 minutes.' },
         { status: 429 }
       )
     }
@@ -81,21 +81,18 @@ export async function POST(req: NextRequest) {
 
     // TODO: Send OTP via SMS using existing SMS service
     // For now, log OTP in development
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`[Patient Portal OTP] ${phone}: ${otp}`)
     }
 
     return NextResponse.json({
       success: true,
-      message: "OTP sent to your phone number",
+      message: 'OTP sent to your phone number',
       // Include OTP in dev mode for testing
-      ...(process.env.NODE_ENV === "development" && { otp }),
+      ...(process.env.NODE_ENV === 'development' && { otp }),
     })
   } catch (err: unknown) {
-    console.error("Send OTP error:", err)
-    return NextResponse.json(
-      { error: "Failed to send OTP" },
-      { status: 500 }
-    )
+    console.error('Send OTP error:', err)
+    return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 })
   }
 }

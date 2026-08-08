@@ -11,12 +11,18 @@ vi.mock('@/lib/api-helpers', () => ({
 }))
 
 vi.mock('@/lib/services/video.service', () => ({
-  createRoom: vi.fn(() => ({ roomUrl: 'https://video.example.com/room-abc', roomName: 'room-abc' })),
+  createRoom: vi.fn(() => ({
+    roomUrl: 'https://video.example.com/room-abc',
+    roomName: 'room-abc',
+  })),
 }))
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
-import { GET as consultationsGET, POST as consultationsPOST } from '@/app/api/video/consultations/route'
+import {
+  GET as consultationsGET,
+  POST as consultationsPOST,
+} from '@/app/api/video/consultations/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 
@@ -64,7 +70,12 @@ describe('GET /api/video/consultations', () => {
   it('returns consultations with pagination and summary', async () => {
     mockAuth()
     vi.mocked(prisma.videoConsultation.findMany).mockResolvedValue([
-      { id: 'vc1', status: 'SCHEDULED', patient: { firstName: 'John' }, doctor: { firstName: 'Dr' } },
+      {
+        id: 'vc1',
+        status: 'SCHEDULED',
+        patient: { firstName: 'John' },
+        doctor: { firstName: 'Dr' },
+      },
     ] as any)
     vi.mocked(prisma.videoConsultation.count)
       .mockResolvedValueOnce(1) // total
@@ -90,7 +101,9 @@ describe('GET /api/video/consultations', () => {
     vi.mocked(prisma.videoConsultation.findMany).mockResolvedValue([])
     vi.mocked(prisma.videoConsultation.count).mockResolvedValue(0)
 
-    await consultationsGET(makeReq('/api/video/consultations?status=SCHEDULED&doctorId=d1&patientId=p1'))
+    await consultationsGET(
+      makeReq('/api/video/consultations?status=SCHEDULED&doctorId=d1&patientId=p1')
+    )
 
     expect(prisma.videoConsultation.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -138,7 +151,9 @@ describe('POST /api/video/consultations', () => {
 
   it('returns 400 when required fields missing', async () => {
     mockAuth()
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', { patientId: 'p1' }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', { patientId: 'p1' })
+    )
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.error).toContain('required')
@@ -148,9 +163,13 @@ describe('POST /api/video/consultations', () => {
     mockAuth()
     vi.mocked(prisma.patient.findFirst).mockResolvedValue(null)
 
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', {
-      patientId: 'p-none', doctorId: 'd1', scheduledAt: '2026-03-01T10:00:00Z',
-    }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', {
+        patientId: 'p-none',
+        doctorId: 'd1',
+        scheduledAt: '2026-03-01T10:00:00Z',
+      })
+    )
     expect(res.status).toBe(404)
     const body = await res.json()
     expect(body.error).toContain('Patient')
@@ -161,9 +180,13 @@ describe('POST /api/video/consultations', () => {
     vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue(null)
 
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', {
-      patientId: 'p1', doctorId: 'd-none', scheduledAt: '2026-03-01T10:00:00Z',
-    }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', {
+        patientId: 'p1',
+        doctorId: 'd-none',
+        scheduledAt: '2026-03-01T10:00:00Z',
+      })
+    )
     expect(res.status).toBe(404)
     const body = await res.json()
     expect(body.error).toContain('Doctor')
@@ -175,10 +198,14 @@ describe('POST /api/video/consultations', () => {
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 'd1' } as any)
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue(null)
 
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', {
-      patientId: 'p1', doctorId: 'd1', scheduledAt: '2026-03-01T10:00:00Z',
-      appointmentId: 'a-none',
-    }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', {
+        patientId: 'p1',
+        doctorId: 'd1',
+        scheduledAt: '2026-03-01T10:00:00Z',
+        appointmentId: 'a-none',
+      })
+    )
     expect(res.status).toBe(404)
     const body = await res.json()
     expect(body.error).toContain('Appointment')
@@ -191,10 +218,14 @@ describe('POST /api/video/consultations', () => {
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue({ id: 'a1' } as any)
     vi.mocked(prisma.videoConsultation.findUnique).mockResolvedValue({ id: 'vc-existing' } as any)
 
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', {
-      patientId: 'p1', doctorId: 'd1', scheduledAt: '2026-03-01T10:00:00Z',
-      appointmentId: 'a1',
-    }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', {
+        patientId: 'p1',
+        doctorId: 'd1',
+        scheduledAt: '2026-03-01T10:00:00Z',
+        appointmentId: 'a1',
+      })
+    )
     expect(res.status).toBe(409)
   })
 
@@ -203,14 +234,20 @@ describe('POST /api/video/consultations', () => {
     vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'p1' } as any)
     vi.mocked(prisma.staff.findFirst).mockResolvedValue({ id: 'd1' } as any)
     vi.mocked(prisma.videoConsultation.create).mockResolvedValue({
-      id: 'vc1', roomUrl: 'https://video.example.com/room-abc', roomName: 'room-abc',
+      id: 'vc1',
+      roomUrl: 'https://video.example.com/room-abc',
+      roomName: 'room-abc',
       patient: { id: 'p1', firstName: 'John' },
       doctor: { id: 'd1', firstName: 'Dr' },
     } as any)
 
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', {
-      patientId: 'p1', doctorId: 'd1', scheduledAt: '2026-03-01T10:00:00Z',
-    }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', {
+        patientId: 'p1',
+        doctorId: 'd1',
+        scheduledAt: '2026-03-01T10:00:00Z',
+      })
+    )
     const body = await res.json()
 
     expect(res.status).toBe(201)
@@ -224,15 +261,21 @@ describe('POST /api/video/consultations', () => {
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue({ id: 'a1' } as any)
     vi.mocked(prisma.videoConsultation.findUnique).mockResolvedValue(null)
     vi.mocked(prisma.videoConsultation.create).mockResolvedValue({
-      id: 'vc1', appointmentId: 'a1',
-      patient: { id: 'p1' }, doctor: { id: 'd1' },
+      id: 'vc1',
+      appointmentId: 'a1',
+      patient: { id: 'p1' },
+      doctor: { id: 'd1' },
     } as any)
     vi.mocked(prisma.appointment.update).mockResolvedValue({} as any)
 
-    const res = await consultationsPOST(makeReq('/api/video/consultations', 'POST', {
-      patientId: 'p1', doctorId: 'd1', scheduledAt: '2026-03-01T10:00:00Z',
-      appointmentId: 'a1',
-    }))
+    const res = await consultationsPOST(
+      makeReq('/api/video/consultations', 'POST', {
+        patientId: 'p1',
+        doctorId: 'd1',
+        scheduledAt: '2026-03-01T10:00:00Z',
+        appointmentId: 'a1',
+      })
+    )
 
     expect(res.status).toBe(201)
     expect(prisma.appointment.update).toHaveBeenCalledWith(

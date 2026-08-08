@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -12,9 +12,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
 import {
   Plus,
   CalendarClock,
@@ -25,8 +25,8 @@ import {
   ChevronRight,
   IndianRupee,
   Eye,
-} from "lucide-react"
-import { format } from "date-fns"
+} from 'lucide-react'
+import { format } from 'date-fns'
 
 interface PaymentPlan {
   id: string
@@ -71,7 +71,7 @@ export default function PaymentPlansPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [statusFilter, setStatusFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState('')
   const [summary, setSummary] = useState<Summary>({
     active: 0,
     completed: 0,
@@ -86,17 +86,17 @@ export default function PaymentPlansPage() {
   const fetchPlans = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ page: String(page), limit: "20" })
-      if (statusFilter) params.set("status", statusFilter)
+      const params = new URLSearchParams({ page: String(page), limit: '20' })
+      if (statusFilter) params.set('status', statusFilter)
 
       const res = await fetch(`/api/payment-plans?${params}`)
-      if (!res.ok) throw new Error("Failed to fetch")
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setPlans(data.plans)
       setTotalPages(data.totalPages)
       setSummary(data.summary)
     } catch {
-      toast({ variant: "destructive", title: "Failed to load payment plans" })
+      toast({ variant: 'destructive', title: 'Failed to load payment plans' })
     } finally {
       setLoading(false)
     }
@@ -104,13 +104,13 @@ export default function PaymentPlansPage() {
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "ACTIVE":
+      case 'ACTIVE':
         return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Active</Badge>
-      case "COMPLETED":
+      case 'COMPLETED':
         return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Completed</Badge>
-      case "DEFAULTED":
+      case 'DEFAULTED':
         return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Defaulted</Badge>
-      case "CANCELLED":
+      case 'CANCELLED':
         return <Badge variant="secondary">Cancelled</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -119,19 +119,19 @@ export default function PaymentPlansPage() {
 
   const frequencyLabel = (freq: string) => {
     switch (freq) {
-      case "WEEKLY":
-        return "Weekly"
-      case "BIWEEKLY":
-        return "Bi-weekly"
-      case "MONTHLY":
-        return "Monthly"
+      case 'WEEKLY':
+        return 'Weekly'
+      case 'BIWEEKLY':
+        return 'Bi-weekly'
+      case 'MONTHLY':
+        return 'Monthly'
       default:
         return freq
     }
   }
 
   const formatCurrency = (amount: number) => {
-    return `₹${amount.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+    return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   }
 
   return (
@@ -140,9 +140,7 @@ export default function PaymentPlansPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Payment Plans</h1>
-          <p className="text-muted-foreground">
-            Manage installment payment plans for invoices
-          </p>
+          <p className="text-muted-foreground">Manage installment payment plans for invoices</p>
         </div>
         <Link href="/billing/payment-plans/new">
           <Button>
@@ -213,15 +211,15 @@ export default function PaymentPlansPage() {
       {/* Status Filters */}
       <div className="flex gap-2">
         {[
-          { value: "", label: "All" },
-          { value: "ACTIVE", label: "Active" },
-          { value: "COMPLETED", label: "Completed" },
-          { value: "DEFAULTED", label: "Defaulted" },
-          { value: "CANCELLED", label: "Cancelled" },
+          { value: '', label: 'All' },
+          { value: 'ACTIVE', label: 'Active' },
+          { value: 'COMPLETED', label: 'Completed' },
+          { value: 'DEFAULTED', label: 'Defaulted' },
+          { value: 'CANCELLED', label: 'Cancelled' },
         ].map((f) => (
           <Button
             key={f.value}
-            variant={statusFilter === f.value ? "default" : "outline"}
+            variant={statusFilter === f.value ? 'default' : 'outline'}
             size="sm"
             onClick={() => {
               setStatusFilter(f.value)
@@ -298,7 +296,7 @@ export default function PaymentPlansPage() {
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[100px]">
                           <div
                             className={`h-full rounded-full ${
-                              plan.overdueInstallments > 0 ? "bg-red-500" : "bg-green-500"
+                              plan.overdueInstallments > 0 ? 'bg-red-500' : 'bg-green-500'
                             }`}
                             style={{
                               width: `${(plan.paidInstallments / plan.installments) * 100}%`,
@@ -316,9 +314,7 @@ export default function PaymentPlansPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {plan.nextDueDate
-                        ? format(new Date(plan.nextDueDate), "dd MMM yyyy")
-                        : "—"}
+                      {plan.nextDueDate ? format(new Date(plan.nextDueDate), 'dd MMM yyyy') : '—'}
                     </TableCell>
                     <TableCell>{statusBadge(plan.status)}</TableCell>
                     <TableCell>

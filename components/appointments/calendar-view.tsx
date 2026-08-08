@@ -1,30 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Clock,
-  User,
-} from "lucide-react"
+} from '@/components/ui/select'
+import { ChevronLeft, ChevronRight, Calendar, Clock, User } from 'lucide-react'
 import {
   appointmentStatusConfig,
   formatTime,
   getPatientName,
   getDoctorName,
-} from "@/lib/appointment-utils"
+} from '@/lib/appointment-utils'
 
 interface Appointment {
   id: string
@@ -52,23 +46,21 @@ interface CalendarViewProps {
 export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
   const router = useRouter()
   const [currentDate, setCurrentDate] = useState(initialDate)
-  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week")
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week')
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchAppointments = async () => {
     try {
       setLoading(true)
-      const dateStr = currentDate.toISOString().split("T")[0]
-      const response = await fetch(
-        `/api/appointments?view=${viewMode}&date=${dateStr}`
-      )
+      const dateStr = currentDate.toISOString().split('T')[0]
+      const response = await fetch(`/api/appointments?view=${viewMode}&date=${dateStr}`)
       if (response.ok) {
         const data = await response.json()
         setAppointments(data.appointments)
       }
     } catch (error) {
-      console.error("Error fetching appointments:", error)
+      console.error('Error fetching appointments:', error)
     } finally {
       setLoading(false)
     }
@@ -80,9 +72,9 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
 
   const navigatePrevious = () => {
     const newDate = new Date(currentDate)
-    if (viewMode === "day") {
+    if (viewMode === 'day') {
       newDate.setDate(newDate.getDate() - 1)
-    } else if (viewMode === "week") {
+    } else if (viewMode === 'week') {
       newDate.setDate(newDate.getDate() - 7)
     } else {
       newDate.setMonth(newDate.getMonth() - 1)
@@ -92,9 +84,9 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
 
   const navigateNext = () => {
     const newDate = new Date(currentDate)
-    if (viewMode === "day") {
+    if (viewMode === 'day') {
       newDate.setDate(newDate.getDate() + 1)
-    } else if (viewMode === "week") {
+    } else if (viewMode === 'week') {
       newDate.setDate(newDate.getDate() + 7)
     } else {
       newDate.setMonth(newDate.getMonth() + 1)
@@ -107,30 +99,30 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
   }
 
   const getDateLabel = () => {
-    if (viewMode === "day") {
-      return currentDate.toLocaleDateString("en-IN", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+    if (viewMode === 'day') {
+      return currentDate.toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       })
-    } else if (viewMode === "week") {
+    } else if (viewMode === 'week') {
       const weekStart = new Date(currentDate)
       weekStart.setDate(weekStart.getDate() - weekStart.getDay())
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
-      return `${weekStart.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-      })} - ${weekEnd.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
+      return `${weekStart.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+      })} - ${weekEnd.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
       })}`
     } else {
-      return currentDate.toLocaleDateString("en-IN", {
-        month: "long",
-        year: "numeric",
+      return currentDate.toLocaleDateString('en-IN', {
+        month: 'long',
+        year: 'numeric',
       })
     }
   }
@@ -181,21 +173,40 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
   }
 
   const getAppointmentsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0]
+    const dateStr = date.toISOString().split('T')[0]
     return appointments.filter(
-      (apt) => new Date(apt.scheduledDate).toISOString().split("T")[0] === dateStr
+      (apt) => new Date(apt.scheduledDate).toISOString().split('T')[0] === dateStr
     )
   }
 
   const timeSlots = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
-    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-    "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
+    '09:00',
+    '09:30',
+    '10:00',
+    '10:30',
+    '11:00',
+    '11:30',
+    '12:00',
+    '12:30',
+    '14:00',
+    '14:30',
+    '15:00',
+    '15:30',
+    '16:00',
+    '16:30',
+    '17:00',
+    '17:30',
+    '18:00',
+    '18:30',
+    '19:00',
+    '19:30',
+    '20:00',
+    '20:30',
   ]
 
   const getStatusColor = (status: string) => {
     const config = appointmentStatusConfig[status]
-    return config?.bgColor || "bg-muted"
+    return config?.bgColor || 'bg-muted'
   }
 
   const renderDayView = () => {
@@ -207,10 +218,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
           {/* Time column */}
           <div className="bg-muted/30">
             {timeSlots.map((time) => (
-              <div
-                key={time}
-                className="h-16 border-b px-2 py-1 text-xs text-muted-foreground"
-              >
+              <div key={time} className="h-16 border-b px-2 py-1 text-xs text-muted-foreground">
                 {formatTime(time)}
               </div>
             ))}
@@ -238,9 +246,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
                   style={{ top: `${top}px`, height: `${height - 4}px` }}
                   onClick={() => router.push(`/appointments/${apt.id}`)}
                 >
-                  <p className="font-medium text-sm truncate">
-                    {getPatientName(apt.patient)}
-                  </p>
+                  <p className="font-medium text-sm truncate">{getPatientName(apt.patient)}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {formatTime(apt.scheduledTime)} - {getDoctorName(apt.doctor)}
                   </p>
@@ -265,13 +271,11 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
             <div
               key={day.toISOString()}
               className={`p-2 text-center ${
-                day.toDateString() === new Date().toDateString()
-                  ? "bg-primary/10"
-                  : ""
+                day.toDateString() === new Date().toDateString() ? 'bg-primary/10' : ''
               }`}
             >
               <p className="text-xs text-muted-foreground">
-                {day.toLocaleDateString("en-IN", { weekday: "short" })}
+                {day.toLocaleDateString('en-IN', { weekday: 'short' })}
               </p>
               <p className="font-semibold">{day.getDate()}</p>
             </div>
@@ -283,10 +287,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
           {/* Time column */}
           <div className="bg-muted/30">
             {timeSlots.map((time) => (
-              <div
-                key={time}
-                className="h-12 border-b px-2 py-1 text-xs text-muted-foreground"
-              >
+              <div key={time} className="h-12 border-b px-2 py-1 text-xs text-muted-foreground">
                 {formatTime(time)}
               </div>
             ))}
@@ -317,9 +318,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
                       style={{ top: `${top}px`, height: `${height - 2}px` }}
                       onClick={() => router.push(`/appointments/${apt.id}`)}
                     >
-                      <p className="font-medium truncate">
-                        {apt.patient.firstName}
-                      </p>
+                      <p className="font-medium truncate">{apt.patient.firstName}</p>
                       <p className="text-muted-foreground truncate">
                         {formatTime(apt.scheduledTime)}
                       </p>
@@ -341,7 +340,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
       <div className="border rounded-lg overflow-hidden">
         {/* Header */}
         <div className="grid grid-cols-7 bg-muted/30">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
             <div key={day} className="p-2 text-center text-sm font-medium">
               {day}
             </div>
@@ -358,16 +357,16 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
               <div
                 key={index}
                 className={`min-h-24 border-b border-r p-1 ${
-                  !isCurrentMonth ? "bg-muted/20" : ""
-                } ${isToday ? "bg-primary/5" : ""}`}
+                  !isCurrentMonth ? 'bg-muted/20' : ''
+                } ${isToday ? 'bg-primary/5' : ''}`}
               >
                 <p
                   className={`text-sm mb-1 ${
                     !isCurrentMonth
-                      ? "text-muted-foreground"
+                      ? 'text-muted-foreground'
                       : isToday
-                      ? "font-bold text-primary"
-                      : ""
+                        ? 'font-bold text-primary'
+                        : ''
                   }`}
                 >
                   {date.getDate()}
@@ -415,7 +414,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
 
         <Select
           value={viewMode}
-          onValueChange={(value) => setViewMode(value as "day" | "week" | "month")}
+          onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}
         >
           <SelectTrigger className="w-[120px]">
             <SelectValue />
@@ -431,15 +430,13 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
       {/* Calendar Content */}
       {loading ? (
         <div className="flex items-center justify-center h-96">
-          <div className="animate-pulse text-muted-foreground">
-            Loading calendar...
-          </div>
+          <div className="animate-pulse text-muted-foreground">Loading calendar...</div>
         </div>
       ) : (
         <>
-          {viewMode === "day" && renderDayView()}
-          {viewMode === "week" && renderWeekView()}
-          {viewMode === "month" && renderMonthView()}
+          {viewMode === 'day' && renderDayView()}
+          {viewMode === 'week' && renderWeekView()}
+          {viewMode === 'month' && renderMonthView()}
         </>
       )}
 

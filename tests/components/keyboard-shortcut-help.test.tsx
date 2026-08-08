@@ -53,14 +53,18 @@ describe('KeyboardShortcutHelp', () => {
 
   it('opens dialog when "?" hotkey fires', () => {
     render(<KeyboardShortcutHelp />)
-    act(() => { hotkeyCallbacks['?']() })
+    act(() => {
+      hotkeyCallbacks['?']()
+    })
     expect(screen.getByTestId('dialog')).toBeInTheDocument()
     expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument()
   })
 
   it('shows Navigation section', () => {
     render(<KeyboardShortcutHelp />)
-    act(() => { hotkeyCallbacks['?']() })
+    act(() => {
+      hotkeyCallbacks['?']()
+    })
     expect(screen.getByText('Navigation')).toBeInTheDocument()
     expect(screen.getByText('Open search')).toBeInTheDocument()
     expect(screen.getByText('Show keyboard shortcuts')).toBeInTheDocument()
@@ -68,7 +72,9 @@ describe('KeyboardShortcutHelp', () => {
 
   it('shows Quick Actions section', () => {
     render(<KeyboardShortcutHelp />)
-    act(() => { hotkeyCallbacks['?']() })
+    act(() => {
+      hotkeyCallbacks['?']()
+    })
     expect(screen.getByText('Quick Actions')).toBeInTheDocument()
     expect(screen.getByText('New patient')).toBeInTheDocument()
     expect(screen.getByText('New appointment')).toBeInTheDocument()
@@ -77,7 +83,9 @@ describe('KeyboardShortcutHelp', () => {
 
   it('shows General section', () => {
     render(<KeyboardShortcutHelp />)
-    act(() => { hotkeyCallbacks['?']() })
+    act(() => {
+      hotkeyCallbacks['?']()
+    })
     expect(screen.getByText('General')).toBeInTheDocument()
     expect(screen.getByText('Close dialog / modal')).toBeInTheDocument()
     expect(screen.getByText('Open AI command bar')).toBeInTheDocument()
@@ -85,14 +93,18 @@ describe('KeyboardShortcutHelp', () => {
 
   it('renders kbd elements for keys', () => {
     render(<KeyboardShortcutHelp />)
-    act(() => { hotkeyCallbacks['?']() })
+    act(() => {
+      hotkeyCallbacks['?']()
+    })
     const kbds = screen.getAllByText('/', { selector: 'kbd' })
     expect(kbds.length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows "then" separator for multi-key shortcuts', () => {
     render(<KeyboardShortcutHelp />)
-    act(() => { hotkeyCallbacks['?']() })
+    act(() => {
+      hotkeyCallbacks['?']()
+    })
     const thenElements = screen.getAllByText('then')
     expect(thenElements.length).toBeGreaterThanOrEqual(3)
   })

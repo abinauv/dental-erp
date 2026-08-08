@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
-import VideoRoom from "@/components/video/video-room"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
+import VideoRoom from '@/components/video/video-room'
 import {
   ArrowLeft,
   Video,
@@ -19,8 +19,8 @@ import {
   Play,
   XCircle,
   Loader2,
-} from "lucide-react"
-import { format } from "date-fns"
+} from 'lucide-react'
+import { format } from 'date-fns'
 
 interface Consultation {
   id: string
@@ -66,11 +66,7 @@ interface Consultation {
   } | null
 }
 
-export default function DoctorVideoPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function DoctorVideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const { toast } = useToast()
@@ -80,7 +76,7 @@ export default function DoctorVideoPage({
   const [inCall, setInCall] = useState(false)
   const [tokenData, setTokenData] = useState<{
     token: string | null
-    provider: "daily" | "jitsi"
+    provider: 'daily' | 'jitsi'
     participantName: string
     isDoctor: boolean
   } | null>(null)
@@ -93,11 +89,11 @@ export default function DoctorVideoPage({
     try {
       setLoading(true)
       const res = await fetch(`/api/video/consultations/${id}`)
-      if (!res.ok) throw new Error("Failed to fetch consultation")
+      if (!res.ok) throw new Error('Failed to fetch consultation')
       const data = await res.json()
       setConsultation(data)
     } catch {
-      toast({ variant: "destructive", title: "Failed to load consultation" })
+      toast({ variant: 'destructive', title: 'Failed to load consultation' })
     } finally {
       setLoading(false)
     }
@@ -107,18 +103,20 @@ export default function DoctorVideoPage({
     try {
       setActionLoading(true)
       const res = await fetch(`/api/video/consultations/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || "Action failed")
+        throw new Error(data.error || 'Action failed')
       }
       await fetchConsultation()
-      toast({ title: `Consultation ${action === "start" ? "started" : action === "cancel" ? "cancelled" : "updated"}` })
+      toast({
+        title: `Consultation ${action === 'start' ? 'started' : action === 'cancel' ? 'cancelled' : 'updated'}`,
+      })
     } catch (err: any) {
-      toast({ variant: "destructive", title: err.message })
+      toast({ variant: 'destructive', title: err.message })
     } finally {
       setActionLoading(false)
     }
@@ -129,18 +127,18 @@ export default function DoctorVideoPage({
       setActionLoading(true)
       // Get token
       const tokenRes = await fetch(`/api/video/token?consultationId=${id}`)
-      if (!tokenRes.ok) throw new Error("Failed to get join token")
+      if (!tokenRes.ok) throw new Error('Failed to get join token')
       const data = await tokenRes.json()
       setTokenData(data)
 
       // Start consultation if still scheduled
-      if (consultation?.status === "SCHEDULED") {
-        await handleAction("start")
+      if (consultation?.status === 'SCHEDULED') {
+        await handleAction('start')
       }
 
       setInCall(true)
     } catch (err: any) {
-      toast({ variant: "destructive", title: err.message })
+      toast({ variant: 'destructive', title: err.message })
     } finally {
       setActionLoading(false)
     }
@@ -149,30 +147,34 @@ export default function DoctorVideoPage({
   const handleEndCall = async (notes: string) => {
     try {
       const res = await fetch(`/api/video/consultations/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "end", notes }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'end', notes }),
       })
-      if (!res.ok) throw new Error("Failed to end consultation")
+      if (!res.ok) throw new Error('Failed to end consultation')
       setInCall(false)
       await fetchConsultation()
-      toast({ title: "Consultation ended and notes saved" })
+      toast({ title: 'Consultation ended and notes saved' })
     } catch (err: any) {
-      toast({ variant: "destructive", title: err.message })
+      toast({ variant: 'destructive', title: err.message })
     }
   }
 
   const statusBadge = (status: string) => {
     switch (status) {
-      case "SCHEDULED":
+      case 'SCHEDULED':
         return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Scheduled</Badge>
-      case "IN_PROGRESS":
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 animate-pulse">In Progress</Badge>
-      case "COMPLETED":
+      case 'IN_PROGRESS':
+        return (
+          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 animate-pulse">
+            In Progress
+          </Badge>
+        )
+      case 'COMPLETED':
         return <Badge className="bg-muted text-muted-foreground hover:bg-muted">Completed</Badge>
-      case "CANCELLED":
+      case 'CANCELLED':
         return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Cancelled</Badge>
-      case "NO_SHOW":
+      case 'NO_SHOW':
         return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">No Show</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -193,7 +195,9 @@ export default function DoctorVideoPage({
       <div className="text-center py-12">
         <p className="text-muted-foreground">Consultation not found</p>
         <Link href="/appointments">
-          <Button variant="outline" className="mt-4">Back to Appointments</Button>
+          <Button variant="outline" className="mt-4">
+            Back to Appointments
+          </Button>
         </Link>
       </div>
     )
@@ -208,14 +212,18 @@ export default function DoctorVideoPage({
           roomName={consultation.roomName}
           token={tokenData.token}
           provider={tokenData.provider}
-          participantName={tokenData.participantName || "Doctor"}
+          participantName={tokenData.participantName || 'Doctor'}
           isDoctor={tokenData.isDoctor}
           consultationId={consultation.id}
           patient={consultation.patient}
-          appointment={consultation.appointment ? {
-            appointmentNo: consultation.appointment.appointmentNo,
-            chiefComplaint: consultation.appointment.chiefComplaint || undefined,
-          } : undefined}
+          appointment={
+            consultation.appointment
+              ? {
+                  appointmentNo: consultation.appointment.appointmentNo,
+                  chiefComplaint: consultation.appointment.chiefComplaint || undefined,
+                }
+              : undefined
+          }
           onEnd={handleEndCall}
         />
       </div>
@@ -237,32 +245,32 @@ export default function DoctorVideoPage({
             {statusBadge(consultation.status)}
           </div>
           <p className="text-sm text-muted-foreground">
-            {format(new Date(consultation.scheduledAt), "dd MMM yyyy, hh:mm a")}
+            {format(new Date(consultation.scheduledAt), 'dd MMM yyyy, hh:mm a')}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {(consultation.status === "SCHEDULED" || consultation.status === "IN_PROGRESS") && (
+          {(consultation.status === 'SCHEDULED' || consultation.status === 'IN_PROGRESS') && (
             <Button onClick={joinCall} disabled={actionLoading}>
               {actionLoading ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Video className="h-4 w-4 mr-2" />
               )}
-              {consultation.status === "IN_PROGRESS" ? "Rejoin Call" : "Start Call"}
+              {consultation.status === 'IN_PROGRESS' ? 'Rejoin Call' : 'Start Call'}
             </Button>
           )}
-          {consultation.status === "SCHEDULED" && (
+          {consultation.status === 'SCHEDULED' && (
             <>
               <Button
                 variant="outline"
-                onClick={() => handleAction("no_show")}
+                onClick={() => handleAction('no_show')}
                 disabled={actionLoading}
               >
                 No Show
               </Button>
               <Button
                 variant="destructive"
-                onClick={() => handleAction("cancel")}
+                onClick={() => handleAction('cancel')}
                 disabled={actionLoading}
               >
                 <XCircle className="h-4 w-4 mr-2" />
@@ -302,9 +310,13 @@ export default function DoctorVideoPage({
             )}
             {consultation.patient.medicalHistory && (
               <div className="pt-2 border-t space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase">Medical Alerts</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase">
+                  Medical Alerts
+                </p>
                 {consultation.patient.medicalHistory.hasAllergies && (
-                  <p className="text-xs text-red-600">Allergies: {consultation.patient.medicalHistory.drugAllergies || "Yes"}</p>
+                  <p className="text-xs text-red-600">
+                    Allergies: {consultation.patient.medicalHistory.drugAllergies || 'Yes'}
+                  </p>
                 )}
                 {consultation.patient.medicalHistory.hasDiabetes && (
                   <p className="text-xs text-orange-600">Diabetes</p>
@@ -338,7 +350,7 @@ export default function DoctorVideoPage({
               <div>
                 <p className="text-muted-foreground">Scheduled</p>
                 <p className="font-medium">
-                  {format(new Date(consultation.scheduledAt), "dd MMM yyyy, hh:mm a")}
+                  {format(new Date(consultation.scheduledAt), 'dd MMM yyyy, hh:mm a')}
                 </p>
               </div>
               <div>
@@ -351,16 +363,14 @@ export default function DoctorVideoPage({
                 <div>
                   <p className="text-muted-foreground">Started At</p>
                   <p className="font-medium">
-                    {format(new Date(consultation.startedAt), "hh:mm a")}
+                    {format(new Date(consultation.startedAt), 'hh:mm a')}
                   </p>
                 </div>
               )}
               {consultation.endedAt && (
                 <div>
                   <p className="text-muted-foreground">Ended At</p>
-                  <p className="font-medium">
-                    {format(new Date(consultation.endedAt), "hh:mm a")}
-                  </p>
+                  <p className="font-medium">{format(new Date(consultation.endedAt), 'hh:mm a')}</p>
                 </div>
               )}
               {consultation.duration != null && (
@@ -373,7 +383,10 @@ export default function DoctorVideoPage({
             {consultation.appointment && (
               <div className="pt-2 border-t">
                 <p className="text-muted-foreground">Linked Appointment</p>
-                <Link href={`/appointments/${consultation.appointment.id}`} className="text-blue-600 hover:underline">
+                <Link
+                  href={`/appointments/${consultation.appointment.id}`}
+                  className="text-blue-600 hover:underline"
+                >
                   {consultation.appointment.appointmentNo}
                 </Link>
                 {consultation.appointment.chiefComplaint && (

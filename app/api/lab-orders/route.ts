@@ -101,16 +101,13 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: [
-        { orderDate: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ orderDate: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: limit,
     })
 
     // Transform data to match expected format
-    const transformedOrders = orders.map(order => ({
+    const transformedOrders = orders.map((order) => ({
       ...order,
       vendorName: order.labVendor.name,
       vendorPhone: order.labVendor.phone,
@@ -164,7 +161,10 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!patientId || !labVendorId || !workType || !orderDate || estimatedCost === undefined) {
       return NextResponse.json(
-        { error: 'Missing required fields: patientId, labVendorId, workType, orderDate, estimatedCost' },
+        {
+          error:
+            'Missing required fields: patientId, labVendorId, workType, orderDate, estimatedCost',
+        },
         { status: 400 }
       )
     }
@@ -175,10 +175,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
     // Verify vendor exists and belongs to this hospital
@@ -187,10 +184,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!vendor) {
-      return NextResponse.json(
-        { error: 'Lab vendor not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Lab vendor not found' }, { status: 404 })
     }
 
     // Generate order number unique to this hospital
@@ -248,11 +242,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      data: labOrder,
-      message: 'Lab order created successfully',
-    }, { status: 201 })
+    return NextResponse.json(
+      {
+        success: true,
+        data: labOrder,
+        message: 'Lab order created successfully',
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
     console.error('Error creating lab order:', error)
     return NextResponse.json(

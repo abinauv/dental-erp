@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const treatmentAdvisor: Skill = {
-  name: "treatment-advisor",
-  displayName: "Treatment Advisor",
-  description: "AI-assisted treatment planning with contraindication checks",
-  allowedRoles: ["ADMIN", "DOCTOR"],
-  modelTier: "clinical",
-  systemPrompt: (hospitalName, contextStr) => `You assist dentists with treatment planning at ${hospitalName}.
+  name: 'treatment-advisor',
+  displayName: 'Treatment Advisor',
+  description: 'AI-assisted treatment planning with contraindication checks',
+  allowedRoles: ['ADMIN', 'DOCTOR'],
+  modelTier: 'clinical',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You assist dentists with treatment planning at ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

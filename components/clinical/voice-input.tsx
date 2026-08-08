@@ -1,14 +1,9 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Mic, MicOff, Loader2 } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { Mic, MicOff, Loader2 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void
@@ -16,14 +11,15 @@ interface VoiceInputProps {
   className?: string
 }
 
-export function VoiceInput({ onTranscript, language = "en-IN", className }: VoiceInputProps) {
+export function VoiceInput({ onTranscript, language = 'en-IN', className }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false)
   const [isSupported, setIsSupported] = useState(false)
-  const [interimText, setInterimText] = useState("")
+  const [interimText, setInterimText] = useState('')
   const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     setIsSupported(!!SpeechRecognition)
 
     return () => {
@@ -34,7 +30,8 @@ export function VoiceInput({ onTranscript, language = "en-IN", className }: Voic
   }, [])
 
   const startListening = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognition) return
 
     const recognition = new SpeechRecognition()
@@ -44,12 +41,12 @@ export function VoiceInput({ onTranscript, language = "en-IN", className }: Voic
 
     recognition.onstart = () => {
       setIsListening(true)
-      setInterimText("")
+      setInterimText('')
     }
 
     recognition.onresult = (event: any) => {
-      let interim = ""
-      let final = ""
+      let interim = ''
+      let final = ''
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript
@@ -62,23 +59,23 @@ export function VoiceInput({ onTranscript, language = "en-IN", className }: Voic
 
       if (final) {
         onTranscript(final)
-        setInterimText("")
+        setInterimText('')
       } else {
         setInterimText(interim)
       }
     }
 
     recognition.onerror = (event: any) => {
-      if (event.error !== "aborted") {
-        console.error("Speech recognition error:", event.error)
+      if (event.error !== 'aborted') {
+        console.error('Speech recognition error:', event.error)
       }
       setIsListening(false)
-      setInterimText("")
+      setInterimText('')
     }
 
     recognition.onend = () => {
       setIsListening(false)
-      setInterimText("")
+      setInterimText('')
     }
 
     recognitionRef.current = recognition
@@ -90,7 +87,7 @@ export function VoiceInput({ onTranscript, language = "en-IN", className }: Voic
       recognitionRef.current.stop()
     }
     setIsListening(false)
-    setInterimText("")
+    setInterimText('')
   }, [])
 
   const toggleListening = useCallback(() => {
@@ -105,25 +102,21 @@ export function VoiceInput({ onTranscript, language = "en-IN", className }: Voic
 
   return (
     <TooltipProvider>
-      <div className={`inline-flex items-center gap-2 ${className || ""}`}>
+      <div className={`inline-flex items-center gap-2 ${className || ''}`}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               type="button"
-              variant={isListening ? "destructive" : "outline"}
+              variant={isListening ? 'destructive' : 'outline'}
               size="icon"
-              className={`h-8 w-8 ${isListening ? "animate-pulse" : ""}`}
+              className={`h-8 w-8 ${isListening ? 'animate-pulse' : ''}`}
               onClick={toggleListening}
             >
-              {isListening ? (
-                <MicOff className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {isListening ? "Stop dictation" : "Start voice dictation"}
+            {isListening ? 'Stop dictation' : 'Start voice dictation'}
           </TooltipContent>
         </Tooltip>
 

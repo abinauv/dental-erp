@@ -1,16 +1,32 @@
-"use client"
+'use client'
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback } from 'react'
 import {
-  Upload, Columns3, Eye, CheckCircle2, DatabaseZap,
-  Users, UserCog, CalendarDays, Stethoscope, Receipt,
-  CreditCard, Package, AlertTriangle, ChevronLeft,
-  ChevronRight, FileSpreadsheet, Loader2, X, Check,
-  ArrowLeft, Info,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
-import { ENTITY_SCHEMAS } from "@/lib/import/schema-definitions"
+  Upload,
+  Columns3,
+  Eye,
+  CheckCircle2,
+  DatabaseZap,
+  Users,
+  UserCog,
+  CalendarDays,
+  Stethoscope,
+  Receipt,
+  CreditCard,
+  Package,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  FileSpreadsheet,
+  Loader2,
+  X,
+  Check,
+  ArrowLeft,
+  Info,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
+import { ENTITY_SCHEMAS } from '@/lib/import/schema-definitions'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,7 +36,7 @@ interface ValidationError {
   field: string
   value: string
   message: string
-  severity: "error" | "warning"
+  severity: 'error' | 'warning'
 }
 
 interface ValidationResult {
@@ -50,21 +66,63 @@ interface ImportResult {
 // Constants
 // ---------------------------------------------------------------------------
 const STEPS = [
-  { id: 1, title: "Upload File", icon: Upload },
-  { id: 2, title: "Map Columns", icon: Columns3 },
-  { id: 3, title: "Preview & Edit", icon: Eye },
-  { id: 4, title: "Validate", icon: CheckCircle2 },
-  { id: 5, title: "Confirm Import", icon: DatabaseZap },
+  { id: 1, title: 'Upload File', icon: Upload },
+  { id: 2, title: 'Map Columns', icon: Columns3 },
+  { id: 3, title: 'Preview & Edit', icon: Eye },
+  { id: 4, title: 'Validate', icon: CheckCircle2 },
+  { id: 5, title: 'Confirm Import', icon: DatabaseZap },
 ]
 
 const ENTITY_OPTIONS = [
-  { key: "patients", label: "Patients", desc: "Demographics, contact info", icon: Users, color: "text-blue-600 bg-blue-50" },
-  { key: "staff", label: "Staff", desc: "Doctors, nurses, admin", icon: UserCog, color: "text-purple-600 bg-purple-50" },
-  { key: "appointments", label: "Appointments", desc: "Scheduled visits", icon: CalendarDays, color: "text-green-600 bg-green-50" },
-  { key: "treatments", label: "Treatments", desc: "Procedures & records", icon: Stethoscope, color: "text-red-600 bg-red-50" },
-  { key: "invoices", label: "Invoices", desc: "Bills & amounts", icon: Receipt, color: "text-orange-600 bg-orange-50" },
-  { key: "payments", label: "Payments", desc: "Payment transactions", icon: CreditCard, color: "text-indigo-600 bg-indigo-50" },
-  { key: "inventory", label: "Inventory", desc: "Stock items & levels", icon: Package, color: "text-teal-600 bg-teal-50" },
+  {
+    key: 'patients',
+    label: 'Patients',
+    desc: 'Demographics, contact info',
+    icon: Users,
+    color: 'text-blue-600 bg-blue-50',
+  },
+  {
+    key: 'staff',
+    label: 'Staff',
+    desc: 'Doctors, nurses, admin',
+    icon: UserCog,
+    color: 'text-purple-600 bg-purple-50',
+  },
+  {
+    key: 'appointments',
+    label: 'Appointments',
+    desc: 'Scheduled visits',
+    icon: CalendarDays,
+    color: 'text-green-600 bg-green-50',
+  },
+  {
+    key: 'treatments',
+    label: 'Treatments',
+    desc: 'Procedures & records',
+    icon: Stethoscope,
+    color: 'text-red-600 bg-red-50',
+  },
+  {
+    key: 'invoices',
+    label: 'Invoices',
+    desc: 'Bills & amounts',
+    icon: Receipt,
+    color: 'text-orange-600 bg-orange-50',
+  },
+  {
+    key: 'payments',
+    label: 'Payments',
+    desc: 'Payment transactions',
+    icon: CreditCard,
+    color: 'text-indigo-600 bg-indigo-50',
+  },
+  {
+    key: 'inventory',
+    label: 'Inventory',
+    desc: 'Stock items & levels',
+    icon: Package,
+    color: 'text-teal-600 bg-teal-50',
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -79,7 +137,7 @@ export default function DataImportPage() {
   const [loading, setLoading] = useState(false)
 
   // Step 1
-  const [entityType, setEntityType] = useState("")
+  const [entityType, setEntityType] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
@@ -109,30 +167,41 @@ export default function DataImportPage() {
   // ---------------------------------------------------------------------------
   // Step 1: Upload
   // ---------------------------------------------------------------------------
-  const handleFileSelect = useCallback((file: File) => {
-    const ext = file.name.split(".").pop()?.toLowerCase()
-    if (!["csv", "xlsx", "xls", "pdf"].includes(ext || "")) {
-      toast({ variant: "destructive", title: "Unsupported file", description: "Please use CSV, Excel, or PDF files." })
-      return
-    }
-    if (file.size > 20 * 1024 * 1024) {
-      toast({ variant: "destructive", title: "File too large", description: "Maximum file size is 20MB." })
-      return
-    }
-    setSelectedFile(file)
-  }, [toast])
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      if (!['csv', 'xlsx', 'xls', 'pdf'].includes(ext || '')) {
+        toast({
+          variant: 'destructive',
+          title: 'Unsupported file',
+          description: 'Please use CSV, Excel, or PDF files.',
+        })
+        return
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'Maximum file size is 20MB.',
+        })
+        return
+      }
+      setSelectedFile(file)
+    },
+    [toast]
+  )
 
   const handleUpload = async () => {
     if (!selectedFile || !entityType) return
     setLoading(true)
     try {
       const fd = new FormData()
-      fd.append("file", selectedFile)
-      fd.append("entityType", entityType)
+      fd.append('file', selectedFile)
+      fd.append('entityType', entityType)
 
-      const res = await fetch("/api/data-import/upload", { method: "POST", body: fd })
+      const res = await fetch('/api/data-import/upload', { method: 'POST', body: fd })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Upload failed")
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
 
       setJobId(data.jobId)
       setSourceColumns(data.columns)
@@ -143,7 +212,7 @@ export default function DataImportPage() {
       // Auto-trigger AI mapping
       await runAiMapping(data.jobId)
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Upload Failed", description: err.message })
+      toast({ variant: 'destructive', title: 'Upload Failed', description: err.message })
     } finally {
       setLoading(false)
     }
@@ -156,13 +225,13 @@ export default function DataImportPage() {
     setLoading(true)
     setAiError(null)
     try {
-      const res = await fetch("/api/data-import/ai-mapping", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/data-import/ai-mapping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId: jId }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Mapping failed")
+      if (!res.ok) throw new Error(data.error || 'Mapping failed')
 
       setMapping(data.mapping || {})
       setConfidence(data.confidence || {})
@@ -172,7 +241,9 @@ export default function DataImportPage() {
       setAiError(err.message)
       // Initialize empty mappings
       const empty: Record<string, null> = {}
-      sourceColumns.forEach((col) => { empty[col] = null })
+      sourceColumns.forEach((col) => {
+        empty[col] = null
+      })
       setMapping(empty)
     } finally {
       setLoading(false)
@@ -209,7 +280,7 @@ export default function DataImportPage() {
         } else if (srcCol && row[srcCol] !== undefined) {
           transformed[f.name] = row[srcCol]
         } else {
-          transformed[f.name] = ""
+          transformed[f.name] = ''
         }
       })
       return transformed
@@ -237,16 +308,16 @@ export default function DataImportPage() {
     if (!jobId) return
     setLoading(true)
     try {
-      const res = await fetch("/api/data-import/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/data-import/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId, mapping, editedRows }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Validation failed")
+      if (!res.ok) throw new Error(data.error || 'Validation failed')
       setValidation(data)
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Validation Failed", description: err.message })
+      toast({ variant: 'destructive', title: 'Validation Failed', description: err.message })
     } finally {
       setLoading(false)
     }
@@ -259,16 +330,16 @@ export default function DataImportPage() {
     if (!jobId) return
     setLoading(true)
     try {
-      const res = await fetch("/api/data-import/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/data-import/commit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId, mapping, editedRows, skipErrorRows }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Import failed")
+      if (!res.ok) throw new Error(data.error || 'Import failed')
       setImportResult(data)
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Import Failed", description: err.message })
+      toast({ variant: 'destructive', title: 'Import Failed', description: err.message })
     } finally {
       setLoading(false)
     }
@@ -279,7 +350,7 @@ export default function DataImportPage() {
   // ---------------------------------------------------------------------------
   const resetWizard = () => {
     setStep(1)
-    setEntityType("")
+    setEntityType('')
     setSelectedFile(null)
     setJobId(null)
     setSourceColumns([])
@@ -320,13 +391,19 @@ export default function DataImportPage() {
           const isDone = step > s.id
           return (
             <div key={s.id} className="flex items-center gap-2">
-              {i > 0 && <div className={cn("h-px w-6 sm:w-10", isDone ? "bg-primary" : "bg-border")} />}
-              <div className={cn(
-                "flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
-                isActive ? "bg-primary text-primary-foreground" :
-                isDone ? "bg-primary/10 text-primary" :
-                "bg-muted text-muted-foreground"
-              )}>
+              {i > 0 && (
+                <div className={cn('h-px w-6 sm:w-10', isDone ? 'bg-primary' : 'bg-border')} />
+              )}
+              <div
+                className={cn(
+                  'flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : isDone
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                )}
+              >
                 {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                 <span className="hidden sm:inline">{s.title}</span>
               </div>
@@ -344,7 +421,9 @@ export default function DataImportPage() {
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-semibold mb-1">Select data type and upload file</h2>
-              <p className="text-sm text-muted-foreground">Choose what type of data you're importing, then upload your file.</p>
+              <p className="text-sm text-muted-foreground">
+                Choose what type of data you're importing, then upload your file.
+              </p>
             </div>
 
             {/* Entity selection */}
@@ -359,11 +438,18 @@ export default function DataImportPage() {
                       key={opt.key}
                       onClick={() => setEntityType(opt.key)}
                       className={cn(
-                        "rounded-lg border p-3 text-left transition-all hover:shadow-sm",
-                        selected ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "hover:bg-muted"
+                        'rounded-lg border p-3 text-left transition-all hover:shadow-sm',
+                        selected
+                          ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                          : 'hover:bg-muted'
                       )}
                     >
-                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-2", opt.color)}>
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center mb-2',
+                          opt.color
+                        )}
+                      >
                         <Icon className="h-4 w-4" />
                       </div>
                       <p className="text-sm font-medium">{opt.label}</p>
@@ -380,13 +466,18 @@ export default function DataImportPage() {
                 <label className="text-sm font-medium mb-3 block">Upload file</label>
                 <div
                   className={cn(
-                    "border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer",
-                    dragOver ? "border-primary bg-primary/5" :
-                    selectedFile ? "border-green-400 bg-green-50 dark:bg-green-950/20" :
-                    "border-muted-foreground/25 hover:border-muted-foreground/50"
+                    'border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
+                    dragOver
+                      ? 'border-primary bg-primary/5'
+                      : selectedFile
+                        ? 'border-green-400 bg-green-50 dark:bg-green-950/20'
+                        : 'border-muted-foreground/25 hover:border-muted-foreground/50'
                   )}
                   onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setDragOver(true)
+                  }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => {
                     e.preventDefault()
@@ -415,7 +506,10 @@ export default function DataImportPage() {
                         </p>
                       </div>
                       <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedFile(null) }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedFile(null)
+                        }}
                         className="ml-2 p-1 rounded hover:bg-muted"
                       >
                         <X className="h-4 w-4" />
@@ -425,17 +519,20 @@ export default function DataImportPage() {
                     <>
                       <Upload className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                       <p className="text-sm font-medium">Drop your file here or click to browse</p>
-                      <p className="text-xs text-muted-foreground mt-1">Supports CSV, Excel (.xlsx/.xls), and PDF — Max 20MB</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Supports CSV, Excel (.xlsx/.xls), and PDF — Max 20MB
+                      </p>
                     </>
                   )}
                 </div>
 
                 {/* PDF warning */}
-                {selectedFile?.name.toLowerCase().endsWith(".pdf") && (
+                {selectedFile?.name.toLowerCase().endsWith('.pdf') && (
                   <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                     <p className="text-xs text-amber-800 dark:text-amber-300">
-                      PDF table extraction is best-effort. For most reliable results, export your data as CSV or Excel from your old system.
+                      PDF table extraction is best-effort. For most reliable results, export your
+                      data as CSV or Excel from your old system.
                     </p>
                   </div>
                 )}
@@ -449,7 +546,11 @@ export default function DataImportPage() {
                 disabled={!entityType || !selectedFile || loading}
                 className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center gap-2"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
                 Upload & Continue
               </button>
             </div>
@@ -482,7 +583,9 @@ export default function DataImportPage() {
                   <p className="text-xs font-medium text-red-800 dark:text-red-300">
                     Required fields not yet mapped:
                   </p>
-                  <p className="text-xs text-red-700 dark:text-red-400">{unmappedRequired.join(", ")}</p>
+                  <p className="text-xs text-red-700 dark:text-red-400">
+                    {unmappedRequired.join(', ')}
+                  </p>
                 </div>
               </div>
             )}
@@ -491,7 +594,11 @@ export default function DataImportPage() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200">
                 <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-blue-800 dark:text-blue-300">
-                  AI detected columns that may need splitting: {splitFields.map((s: any) => `"${s.sourceColumn}" → ${s.targetFields.join(" + ")}`).join("; ")}. Name splitting will be handled automatically during import.
+                  AI detected columns that may need splitting:{' '}
+                  {splitFields
+                    .map((s: any) => `"${s.sourceColumn}" → ${s.targetFields.join(' + ')}`)
+                    .join('; ')}
+                  . Name splitting will be handled automatically during import.
                 </p>
               </div>
             )}
@@ -499,7 +606,9 @@ export default function DataImportPage() {
             {loading ? (
               <div className="flex items-center justify-center py-12 gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">AI is analyzing your columns...</span>
+                <span className="text-sm text-muted-foreground">
+                  AI is analyzing your columns...
+                </span>
               </div>
             ) : (
               <div className="border rounded-lg overflow-hidden">
@@ -516,14 +625,16 @@ export default function DataImportPage() {
                     {sourceColumns.map((col) => {
                       const target = mapping[col]
                       const conf = confidence[col] ?? 0
-                      const sample = sampleData[0]?.[col] || ""
+                      const sample = sampleData[0]?.[col] || ''
                       return (
                         <tr key={col} className="border-b last:border-0 hover:bg-muted/30">
                           <td className="px-4 py-2.5 font-medium">{col}</td>
-                          <td className="px-4 py-2.5 text-muted-foreground text-xs max-w-[200px] truncate">{sample}</td>
+                          <td className="px-4 py-2.5 text-muted-foreground text-xs max-w-[200px] truncate">
+                            {sample}
+                          </td>
                           <td className="px-4 py-2.5">
                             <select
-                              value={target || ""}
+                              value={target || ''}
                               onChange={(e) => updateMapping(col, e.target.value || null)}
                               className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary"
                             >
@@ -534,19 +645,24 @@ export default function DataImportPage() {
                                   value={f.name}
                                   disabled={usedTargets.has(f.name) && mapping[col] !== f.name}
                                 >
-                                  {f.name} {f.required ? "*" : ""} — {f.description}
+                                  {f.name} {f.required ? '*' : ''} — {f.description}
                                 </option>
                               ))}
                             </select>
                           </td>
                           <td className="px-4 py-2.5 text-center">
                             {target ? (
-                              <span className={cn(
-                                "inline-block w-2.5 h-2.5 rounded-full",
-                                conf >= 0.8 ? "bg-green-500" :
-                                conf >= 0.5 ? "bg-yellow-500" :
-                                "bg-red-500"
-                              )} title={`${Math.round(conf * 100)}% confidence`} />
+                              <span
+                                className={cn(
+                                  'inline-block w-2.5 h-2.5 rounded-full',
+                                  conf >= 0.8
+                                    ? 'bg-green-500'
+                                    : conf >= 0.5
+                                      ? 'bg-yellow-500'
+                                      : 'bg-red-500'
+                                )}
+                                title={`${Math.round(conf * 100)}% confidence`}
+                              />
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
@@ -560,11 +676,17 @@ export default function DataImportPage() {
             )}
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(1)} className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted">
+              <button
+                onClick={() => setStep(1)}
+                className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
+              >
                 <ChevronLeft className="h-4 w-4" /> Back
               </button>
               <button
-                onClick={() => { loadPreview(); setStep(3) }}
+                onClick={() => {
+                  loadPreview()
+                  setStep(3)
+                }}
                 disabled={loading || unmappedRequired.length > 0}
                 className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:opacity-90 flex items-center gap-2"
               >
@@ -582,7 +704,8 @@ export default function DataImportPage() {
             <div>
               <h2 className="text-lg font-semibold mb-1">Preview mapped data</h2>
               <p className="text-sm text-muted-foreground">
-                Showing first {Math.min(previewData.length, 5)} of {totalRows} rows. Click any cell to edit.
+                Showing first {Math.min(previewData.length, 5)} of {totalRows} rows. Click any cell
+                to edit.
               </p>
             </div>
 
@@ -591,30 +714,39 @@ export default function DataImportPage() {
                 <thead>
                   <tr className="bg-muted/50 border-b">
                     <th className="px-3 py-2 text-left font-medium text-xs">#</th>
-                    {schema.fields.filter((f) => Object.values(mapping).includes(f.name) || f.required).map((f) => (
-                      <th key={f.name} className="px-3 py-2 text-left font-medium text-xs whitespace-nowrap">
-                        {f.name} {f.required && <span className="text-red-500">*</span>}
-                      </th>
-                    ))}
+                    {schema.fields
+                      .filter((f) => Object.values(mapping).includes(f.name) || f.required)
+                      .map((f) => (
+                        <th
+                          key={f.name}
+                          className="px-3 py-2 text-left font-medium text-xs whitespace-nowrap"
+                        >
+                          {f.name} {f.required && <span className="text-red-500">*</span>}
+                        </th>
+                      ))}
                   </tr>
                 </thead>
                 <tbody>
                   {previewData.slice(0, 5).map((row, i) => (
                     <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="px-3 py-2 text-muted-foreground text-xs">{row._rowNum}</td>
-                      {schema.fields.filter((f) => Object.values(mapping).includes(f.name) || f.required).map((f) => (
-                        <td key={f.name} className="px-3 py-1.5">
-                          <input
-                            type="text"
-                            value={row[f.name] ?? ""}
-                            onChange={(e) => handleCellEdit(i, f.name, e.target.value)}
-                            className={cn(
-                              "w-full rounded border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary bg-transparent",
-                              f.required && !row[f.name] ? "border-red-300 bg-red-50 dark:bg-red-950/20" : "border-transparent hover:border-border"
-                            )}
-                          />
-                        </td>
-                      ))}
+                      {schema.fields
+                        .filter((f) => Object.values(mapping).includes(f.name) || f.required)
+                        .map((f) => (
+                          <td key={f.name} className="px-3 py-1.5">
+                            <input
+                              type="text"
+                              value={row[f.name] ?? ''}
+                              onChange={(e) => handleCellEdit(i, f.name, e.target.value)}
+                              className={cn(
+                                'w-full rounded border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary bg-transparent',
+                                f.required && !row[f.name]
+                                  ? 'border-red-300 bg-red-50 dark:bg-red-950/20'
+                                  : 'border-transparent hover:border-border'
+                              )}
+                            />
+                          </td>
+                        ))}
                     </tr>
                   ))}
                 </tbody>
@@ -622,11 +754,17 @@ export default function DataImportPage() {
             </div>
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(2)} className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted">
+              <button
+                onClick={() => setStep(2)}
+                className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
+              >
                 <ChevronLeft className="h-4 w-4" /> Back to Mapping
               </button>
               <button
-                onClick={() => { setStep(4); runValidation() }}
+                onClick={() => {
+                  setStep(4)
+                  runValidation()
+                }}
                 className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 flex items-center gap-2"
               >
                 Validate All <ChevronRight className="h-4 w-4" />
@@ -642,13 +780,17 @@ export default function DataImportPage() {
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold mb-1">Validation Results</h2>
-              <p className="text-sm text-muted-foreground">Review validation results before importing.</p>
+              <p className="text-sm text-muted-foreground">
+                Review validation results before importing.
+              </p>
             </div>
 
             {loading ? (
               <div className="flex items-center justify-center py-12 gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Validating {totalRows} rows...</span>
+                <span className="text-sm text-muted-foreground">
+                  Validating {totalRows} rows...
+                </span>
               </div>
             ) : validation ? (
               <>
@@ -673,40 +815,44 @@ export default function DataImportPage() {
                 </div>
 
                 {/* FK resolution */}
-                {validation.foreignKeyResolution && (validation.foreignKeyResolution.resolved > 0 || validation.foreignKeyResolution.unresolved.length > 0) && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-sm font-medium mb-2">Reference Resolution</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {validation.foreignKeyResolution.resolved} references resolved successfully.
-                      {validation.foreignKeyResolution.unresolved.length > 0 &&
-                        ` ${validation.foreignKeyResolution.unresolved.length} could not be resolved.`}
-                    </p>
-                    {validation.foreignKeyResolution.unresolved.length > 0 && (
-                      <div className="mt-2 max-h-32 overflow-auto">
-                        {validation.foreignKeyResolution.unresolved.slice(0, 10).map((u, i) => (
-                          <p key={i} className="text-xs text-red-600">
-                            Row {u.row}: {u.field} = "{u.value}" not found
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {validation.foreignKeyResolution &&
+                  (validation.foreignKeyResolution.resolved > 0 ||
+                    validation.foreignKeyResolution.unresolved.length > 0) && (
+                    <div className="border rounded-lg p-4">
+                      <h3 className="text-sm font-medium mb-2">Reference Resolution</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {validation.foreignKeyResolution.resolved} references resolved successfully.
+                        {validation.foreignKeyResolution.unresolved.length > 0 &&
+                          ` ${validation.foreignKeyResolution.unresolved.length} could not be resolved.`}
+                      </p>
+                      {validation.foreignKeyResolution.unresolved.length > 0 && (
+                        <div className="mt-2 max-h-32 overflow-auto">
+                          {validation.foreignKeyResolution.unresolved.slice(0, 10).map((u, i) => (
+                            <p key={i} className="text-xs text-red-600">
+                              Row {u.row}: {u.field} = "{u.value}" not found
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                 {/* Error list */}
                 {validation.errors.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-sm font-medium mb-2">
-                      Issues ({validation.errors.length}{validation.errors.length >= 200 ? "+" : ""})
+                      Issues ({validation.errors.length}
+                      {validation.errors.length >= 200 ? '+' : ''})
                     </h3>
                     <div className="max-h-48 overflow-auto space-y-1">
                       {validation.errors.slice(0, 50).map((e, i) => (
                         <div
                           key={i}
                           className={cn(
-                            "flex items-start gap-2 text-xs p-1.5 rounded",
-                            e.severity === "error" ? "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400" :
-                            "bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400"
+                            'flex items-start gap-2 text-xs p-1.5 rounded',
+                            e.severity === 'error'
+                              ? 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400'
+                              : 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400'
                           )}
                         >
                           <span className="font-mono shrink-0">Row {e.row}</span>
@@ -734,7 +880,10 @@ export default function DataImportPage() {
             ) : null}
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(3)} className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted">
+              <button
+                onClick={() => setStep(3)}
+                className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
+              >
                 <ChevronLeft className="h-4 w-4" /> Edit Data
               </button>
               <button
@@ -757,7 +906,9 @@ export default function DataImportPage() {
               <>
                 <div>
                   <h2 className="text-lg font-semibold mb-1">Confirm Import</h2>
-                  <p className="text-sm text-muted-foreground">Review the summary below and confirm to start the import.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Review the summary below and confirm to start the import.
+                  </p>
                 </div>
 
                 <div className="border rounded-lg p-6 max-w-lg mx-auto space-y-4">
@@ -787,7 +938,8 @@ export default function DataImportPage() {
                       <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                       <p className="text-xs text-amber-800 dark:text-amber-300">
                         This will create new {schema?.label.toLowerCase()} records in your database.
-                        {schema?.entityType === "staff" && " Imported staff will receive temporary passwords and must change them on first login."}
+                        {schema?.entityType === 'staff' &&
+                          ' Imported staff will receive temporary passwords and must change them on first login.'}
                       </p>
                     </div>
                   </div>
@@ -812,7 +964,10 @@ export default function DataImportPage() {
                 </div>
 
                 <div className="flex justify-start">
-                  <button onClick={() => setStep(4)} className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted">
+                  <button
+                    onClick={() => setStep(4)}
+                    className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
+                  >
                     <ChevronLeft className="h-4 w-4" /> Back
                   </button>
                 </div>
@@ -877,11 +1032,14 @@ export default function DataImportPage() {
                 )}
 
                 <div className="flex justify-center gap-3">
-                  <button onClick={resetWizard} className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
+                  <button
+                    onClick={resetWizard}
+                    className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                  >
                     Import Another File
                   </button>
                   <a
-                    href={`/${entityType === "inventory" ? "inventory" : entityType}`}
+                    href={`/${entityType === 'inventory' ? 'inventory' : entityType}`}
                     className="rounded-lg border px-6 py-2.5 text-sm font-medium hover:bg-muted inline-flex items-center gap-1"
                   >
                     View {schema?.label} <ChevronRight className="h-4 w-4" />

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getGateway } from "@/lib/payment-gateways"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getGateway } from '@/lib/payment-gateways'
 
 /**
  * POST: Verify payment from public pay page (no auth — uses token).
@@ -17,10 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!token || !orderId || !paymentId) {
-      return NextResponse.json(
-        { error: "token, orderId, paymentId are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'token, orderId, paymentId are required' }, { status: 400 })
     }
 
     // Look up payment link
@@ -32,7 +29,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!link) {
-      return NextResponse.json({ error: "Invalid payment link" }, { status: 404 })
+      return NextResponse.json({ error: 'Invalid payment link' }, { status: 404 })
     }
 
     const hospitalId = link.hospitalId
@@ -40,10 +37,7 @@ export async function POST(req: NextRequest) {
     // Get gateway
     const gatewayResult = await getGateway(hospitalId)
     if (!gatewayResult) {
-      return NextResponse.json(
-        { error: "Payment gateway not configured" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Payment gateway not configured' }, { status: 400 })
     }
 
     const { gateway } = gatewayResult
@@ -52,15 +46,12 @@ export async function POST(req: NextRequest) {
     const result = await gateway.verifyPayment({
       orderId,
       paymentId,
-      signature: signature || "",
+      signature: signature || '',
       ...extra,
     })
 
     if (!result.verified) {
-      return NextResponse.json(
-        { error: "Payment verification failed" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
 
     // Create Payment record and update Invoice
@@ -71,13 +62,11 @@ export async function POST(req: NextRequest) {
     // Generate payment number
     const lastPayment = await prisma.payment.findFirst({
       where: { hospitalId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: { paymentNo: true },
     })
-    const lastNum = lastPayment
-      ? parseInt(lastPayment.paymentNo.replace(/\D/g, "")) || 0
-      : 0
-    const paymentNo = `PAY${String(lastNum + 1).padStart(5, "0")}`
+    const lastNum = lastPayment ? parseInt(lastPayment.paymentNo.replace(/\D/g, '')) || 0 : 0
+    const paymentNo = `PAY${String(lastNum + 1).padStart(5, '0')}`
 
     await prisma.$transaction([
       prisma.payment.create({
@@ -86,10 +75,10 @@ export async function POST(req: NextRequest) {
           paymentNo,
           invoiceId: link.invoice.id,
           amount: paymentAmount,
-          paymentMethod: "ONLINE",
+          paymentMethod: 'ONLINE',
           paymentDate: new Date(),
           transactionId: result.transactionId,
-          status: "COMPLETED",
+          status: 'COMPLETED',
           gateway: gatewayResult.credentials.provider.toLowerCase(),
           gatewayOrderId: orderId,
           gatewayPaymentId: paymentId,
@@ -102,7 +91,7 @@ export async function POST(req: NextRequest) {
         data: {
           paidAmount: newPaidAmount,
           balanceAmount: Math.max(0, newBalance),
-          status: newBalance <= 0 ? "PAID" : "PARTIALLY_PAID",
+          status: newBalance <= 0 ? 'PAID' : 'PARTIALLY_PAID',
         },
       }),
       // Mark link as used
@@ -121,8 +110,8 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error("Public verify error:", err)
-    const message = err instanceof Error ? err.message : "Verification failed"
+    console.error('Public verify error:', err)
+    const message = err instanceof Error ? err.message : 'Verification failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

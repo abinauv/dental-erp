@@ -1,12 +1,15 @@
-import type { Skill } from "./types"
+import type { Skill } from './types'
 
 export const patientSegmentation: Skill = {
-  name: "patient-segmentation",
-  displayName: "Patient Segmentation",
-  description: "RFM analysis, patient segmentation, and churn risk prediction",
-  allowedRoles: ["ADMIN", "DOCTOR"],
-  modelTier: "insights",
-  systemPrompt: (hospitalName, contextStr) => `You are a patient segmentation and churn prediction AI for ${hospitalName}.
+  name: 'patient-segmentation',
+  displayName: 'Patient Segmentation',
+  description: 'RFM analysis, patient segmentation, and churn risk prediction',
+  allowedRoles: ['ADMIN', 'DOCTOR'],
+  modelTier: 'insights',
+  systemPrompt: (
+    hospitalName,
+    contextStr
+  ) => `You are a patient segmentation and churn prediction AI for ${hospitalName}.
 
 CONTEXT:
 ${contextStr}

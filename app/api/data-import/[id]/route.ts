@@ -1,13 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import { prisma } from '@/lib/prisma'
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
+  if (error || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
 
@@ -16,17 +14,15 @@ export async function GET(
     include: { user: { select: { name: true, email: true } } },
   })
 
-  if (!job) return NextResponse.json({ error: "Import job not found" }, { status: 404 })
+  if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
 
   return NextResponse.json({ job })
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { error, hospitalId } = await requireAuthAndRole(["ADMIN"])
-  if (error || !hospitalId) return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
+  if (error || !hospitalId)
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
 
@@ -34,11 +30,11 @@ export async function DELETE(
     where: { id, hospitalId },
   })
 
-  if (!job) return NextResponse.json({ error: "Import job not found" }, { status: 404 })
+  if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
 
   await prisma.dataImportJob.update({
     where: { id },
-    data: { status: "CANCELLED" },
+    data: { status: 'CANCELLED' },
   })
 
   return NextResponse.json({ success: true })

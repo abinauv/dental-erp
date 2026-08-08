@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 /**
  * GET: Patient dashboard data — upcoming appointments, recent treatments, outstanding balance.
@@ -21,14 +21,14 @@ export async function GET(req: NextRequest) {
             patientId: patient!.id,
             hospitalId: patient!.hospitalId,
             scheduledDate: { gte: today },
-            status: { in: ["SCHEDULED", "CONFIRMED"] },
+            status: { in: ['SCHEDULED', 'CONFIRMED'] },
           },
           include: {
             doctor: {
               select: { firstName: true, lastName: true, specialization: true },
             },
           },
-          orderBy: { scheduledDate: "asc" },
+          orderBy: { scheduledDate: 'asc' },
           take: 5,
         }),
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
             procedure: { select: { name: true, code: true } },
             doctor: { select: { firstName: true, lastName: true } },
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
           take: 5,
         }),
 
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
           where: {
             patientId: patient!.id,
             hospitalId: patient!.hospitalId,
-            status: { in: ["PENDING", "PARTIALLY_PAID"] },
+            status: { in: ['PENDING', 'PARTIALLY_PAID'] },
           },
           select: {
             id: true,
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
             status: true,
             dueDate: true,
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
           take: 5,
         }),
 
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
           where: {
             patientId: patient!.id,
             hospitalId: patient!.hospitalId,
-            status: "COMPLETED",
+            status: 'COMPLETED',
           },
         }),
       ])
@@ -93,10 +93,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error("Patient dashboard error:", err)
-    return NextResponse.json(
-      { error: "Failed to load dashboard" },
-      { status: 500 }
-    )
+    console.error('Patient dashboard error:', err)
+    return NextResponse.json({ error: 'Failed to load dashboard' }, { status: 500 })
   }
 }

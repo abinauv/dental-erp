@@ -1,27 +1,28 @@
-import prisma from "@/lib/prisma"
+import prisma from '@/lib/prisma'
 
 // Google Calendar OAuth2 and sync service
 // Uses Google Calendar API v3 via REST (no googleapis package needed)
 
-const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
+const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3'
 
 const SCOPES = [
-  "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.readonly",
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/calendar.readonly',
 ]
 
 function getClientId() {
-  return process.env.GOOGLE_CALENDAR_CLIENT_ID || ""
+  return process.env.GOOGLE_CALENDAR_CLIENT_ID || ''
 }
 
 function getClientSecret() {
-  return process.env.GOOGLE_CALENDAR_CLIENT_SECRET || ""
+  return process.env.GOOGLE_CALENDAR_CLIENT_SECRET || ''
 }
 
 function getRedirectUri() {
-  const base = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const base =
+    process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return `${base}/api/integrations/google-calendar/callback`
 }
 
@@ -30,10 +31,10 @@ export function getAuthUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: getClientId(),
     redirect_uri: getRedirectUri(),
-    response_type: "code",
-    scope: SCOPES.join(" "),
-    access_type: "offline",
-    prompt: "consent",
+    response_type: 'code',
+    scope: SCOPES.join(' '),
+    access_type: 'offline',
+    prompt: 'consent',
     state,
   })
   return `${GOOGLE_AUTH_URL}?${params.toString()}`
@@ -46,14 +47,14 @@ export async function exchangeCodeForTokens(code: string): Promise<{
   expires_in: number
 }> {
   const response = await fetch(GOOGLE_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
       client_id: getClientId(),
       client_secret: getClientSecret(),
       redirect_uri: getRedirectUri(),
-      grant_type: "authorization_code",
+      grant_type: 'authorization_code',
     }),
   })
 
@@ -71,13 +72,13 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
   expires_in: number
 }> {
   const response = await fetch(GOOGLE_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       refresh_token: refreshToken,
       client_id: getClientId(),
       client_secret: getClientSecret(),
-      grant_type: "refresh_token",
+      grant_type: 'refresh_token',
     }),
   })
 
@@ -121,7 +122,7 @@ export async function listCalendars(accessToken: string): Promise<any[]> {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
 
-  if (!response.ok) throw new Error("Failed to list calendars")
+  if (!response.ok) throw new Error('Failed to list calendars')
   const data = await response.json()
   return data.items || []
 }
@@ -141,12 +142,15 @@ export async function createCalendarEvent(
     appointmentType: string
   }
 ): Promise<{ eventId: string }> {
-  const date = typeof appointment.scheduledDate === "string"
-    ? appointment.scheduledDate.split("T")[0]
-    : appointment.scheduledDate.toISOString().split("T")[0]
+  const date =
+    typeof appointment.scheduledDate === 'string'
+      ? appointment.scheduledDate.split('T')[0]
+      : appointment.scheduledDate.toISOString().split('T')[0]
 
-  const [hours, minutes] = appointment.scheduledTime.split(":").map(Number)
-  const startDateTime = new Date(`${date}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`)
+  const [hours, minutes] = appointment.scheduledTime.split(':').map(Number)
+  const startDateTime = new Date(
+    `${date}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`
+  )
   const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60 * 1000)
 
   const event = {
@@ -155,16 +159,18 @@ export async function createCalendarEvent(
       `Patient: ${appointment.patientName}`,
       `Doctor: ${appointment.doctorName}`,
       `Type: ${appointment.appointmentType}`,
-      appointment.chiefComplaint ? `Chief Complaint: ${appointment.chiefComplaint}` : "",
+      appointment.chiefComplaint ? `Chief Complaint: ${appointment.chiefComplaint}` : '',
       `\nManaged by DentalERP`,
-    ].filter(Boolean).join("\n"),
+    ]
+      .filter(Boolean)
+      .join('\n'),
     start: {
       dateTime: startDateTime.toISOString(),
-      timeZone: "Asia/Kolkata",
+      timeZone: 'Asia/Kolkata',
     },
     end: {
       dateTime: endDateTime.toISOString(),
-      timeZone: "Asia/Kolkata",
+      timeZone: 'Asia/Kolkata',
     },
     extendedProperties: {
       private: {
@@ -176,10 +182,10 @@ export async function createCalendarEvent(
   const response = await fetch(
     `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events`,
     {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(event),
     }
@@ -203,14 +209,14 @@ export async function deleteCalendarEvent(
   const response = await fetch(
     `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`,
     {
-      method: "DELETE",
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${accessToken}` },
     }
   )
 
   // 404 or 410 means it's already deleted
   if (!response.ok && response.status !== 404 && response.status !== 410) {
-    throw new Error("Failed to delete calendar event")
+    throw new Error('Failed to delete calendar event')
   }
 }
 
@@ -225,7 +231,7 @@ export async function syncAppointments(
   })
 
   if (!integration || !integration.syncEnabled) {
-    throw new Error("Calendar integration not found or disabled")
+    throw new Error('Calendar integration not found or disabled')
   }
 
   const accessToken = await getValidAccessToken({
@@ -234,7 +240,7 @@ export async function syncAppointments(
     refreshToken: integration.refreshToken,
   })
 
-  const calendarId = integration.calendarId || "primary"
+  const calendarId = integration.calendarId || 'primary'
 
   // Get the user's staff record to find their doctor ID
   const user = await prisma.user.findUnique({
@@ -243,7 +249,7 @@ export async function syncAppointments(
   })
 
   if (!user?.staff) {
-    throw new Error("User has no staff record")
+    throw new Error('User has no staff record')
   }
 
   // Get upcoming appointments for this doctor
@@ -255,7 +261,7 @@ export async function syncAppointments(
       hospitalId,
       doctorId: user.staff.id,
       scheduledDate: { gte: today },
-      status: { in: ["SCHEDULED", "CONFIRMED"] },
+      status: { in: ['SCHEDULED', 'CONFIRMED'] },
     },
     include: {
       patient: {
@@ -266,7 +272,7 @@ export async function syncAppointments(
       },
     },
     take: 50,
-    orderBy: { scheduledDate: "asc" },
+    orderBy: { scheduledDate: 'asc' },
   })
 
   let synced = 0

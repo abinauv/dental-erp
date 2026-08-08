@@ -42,7 +42,12 @@ describe('GET /api/ai/suggestions', () => {
   it('returns suggestions for dashboard page', async () => {
     ;(prisma.hospital.findUnique as any).mockResolvedValue({ name: 'Test Clinic', plan: 'PRO' })
     const suggestions = [
-      { title: 'Check appointments', description: 'Review upcoming', action: 'view_patients', urgency: 'normal' },
+      {
+        title: 'Check appointments',
+        description: 'Review upcoming',
+        action: 'view_patients',
+        urgency: 'normal',
+      },
     ]
     mockOpenRouter.complete.mockResolvedValue({ content: JSON.stringify(suggestions) })
     mockOpenRouter.extractJSON.mockReturnValue(JSON.stringify(suggestions))
@@ -107,7 +112,12 @@ describe('GET /api/ai/briefing', () => {
 
   it('generates a morning briefing with all data sources', async () => {
     ;(prisma.appointment.findMany as any).mockResolvedValue([
-      { scheduledTime: '09:00', patient: { firstName: 'John', lastName: 'Doe' }, doctor: { firstName: 'Jane', lastName: 'Smith' }, appointmentType: 'CHECKUP' },
+      {
+        scheduledTime: '09:00',
+        patient: { firstName: 'John', lastName: 'Doe' },
+        doctor: { firstName: 'Jane', lastName: 'Smith' },
+        appointmentType: 'CHECKUP',
+      },
     ])
     ;(prisma.invoice.findMany as any).mockResolvedValue([])
     ;(prisma.inventoryItem.findMany as any).mockResolvedValue([])

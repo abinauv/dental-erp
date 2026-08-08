@@ -75,11 +75,16 @@ describe('GET /api/staff/leaves/[id]', () => {
   it('returns leave with staff details', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', leaveType: 'SICK', status: 'PENDING',
-      startDate: new Date('2026-03-01'), endDate: new Date('2026-03-02'),
+      id: 'lv1',
+      leaveType: 'SICK',
+      status: 'PENDING',
+      startDate: new Date('2026-03-01'),
+      endDate: new Date('2026-03-02'),
       staff: {
-        id: 'staff1', employeeId: 'EMP001',
-        firstName: 'Jane', lastName: 'Doe',
+        id: 'staff1',
+        employeeId: 'EMP001',
+        firstName: 'Jane',
+        lastName: 'Doe',
         user: { role: 'DOCTOR' },
       },
     } as any)
@@ -112,7 +117,7 @@ describe('PATCH /api/staff/leaves/[id]', () => {
     mockAuthError()
     const res = await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'APPROVED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
     expect(res.status).toBe(401)
   })
@@ -122,7 +127,7 @@ describe('PATCH /api/staff/leaves/[id]', () => {
     vi.mocked(prisma.leave.findFirst).mockResolvedValue(null)
     const res = await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'APPROVED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
     expect(res.status).toBe(404)
   })
@@ -132,13 +137,16 @@ describe('PATCH /api/staff/leaves/[id]', () => {
       session: { user: { id: 'u1', role: 'DOCTOR', staffId: 'staff1' } },
     })
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', staffId: 'staff2', status: 'PENDING',
-      startDate: new Date('2026-03-01'), endDate: new Date('2026-03-01'),
+      id: 'lv1',
+      staffId: 'staff2',
+      status: 'PENDING',
+      startDate: new Date('2026-03-01'),
+      endDate: new Date('2026-03-01'),
     } as any)
 
     const res = await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'APPROVED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -148,13 +156,16 @@ describe('PATCH /api/staff/leaves/[id]', () => {
       session: { user: { id: 'u1', role: 'STAFF', staffId: 'staff1' } },
     })
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', staffId: 'staff2', status: 'PENDING',
-      startDate: new Date('2026-03-01'), endDate: new Date('2026-03-01'),
+      id: 'lv1',
+      staffId: 'staff2',
+      status: 'PENDING',
+      startDate: new Date('2026-03-01'),
+      endDate: new Date('2026-03-01'),
     } as any)
 
     const res = await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'REJECTED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
     expect(res.status).toBe(403)
   })
@@ -162,20 +173,23 @@ describe('PATCH /api/staff/leaves/[id]', () => {
   it('approves leave and creates attendance records', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', staffId: 'staff2', status: 'PENDING',
+      id: 'lv1',
+      staffId: 'staff2',
+      status: 'PENDING',
       leaveType: 'SICK',
       startDate: new Date('2026-03-01'),
       endDate: new Date('2026-03-02'),
     } as any)
     vi.mocked(prisma.leave.update).mockResolvedValue({
-      id: 'lv1', status: 'APPROVED',
+      id: 'lv1',
+      status: 'APPROVED',
       staff: { employeeId: 'EMP002', firstName: 'Jane', lastName: 'Doe' },
     } as any)
     vi.mocked(prisma.attendance.upsert).mockResolvedValue({} as any)
 
     const res = await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'APPROVED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
     const body = await res.json()
 
@@ -187,7 +201,9 @@ describe('PATCH /api/staff/leaves/[id]', () => {
   it('sets approvedBy when admin approves', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', staffId: 'staff2', status: 'PENDING',
+      id: 'lv1',
+      staffId: 'staff2',
+      status: 'PENDING',
       leaveType: 'CASUAL',
       startDate: new Date('2026-03-01'),
       endDate: new Date('2026-03-01'),
@@ -197,7 +213,7 @@ describe('PATCH /api/staff/leaves/[id]', () => {
 
     await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'APPROVED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
 
     const updateCall = vi.mocked(prisma.leave.update).mock.calls[0][0]
@@ -207,17 +223,21 @@ describe('PATCH /api/staff/leaves/[id]', () => {
   it('rejects leave without creating attendance records', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', staffId: 'staff2', status: 'PENDING',
-      startDate: new Date('2026-03-01'), endDate: new Date('2026-03-02'),
+      id: 'lv1',
+      staffId: 'staff2',
+      status: 'PENDING',
+      startDate: new Date('2026-03-01'),
+      endDate: new Date('2026-03-02'),
     } as any)
     vi.mocked(prisma.leave.update).mockResolvedValue({
-      id: 'lv1', status: 'REJECTED',
+      id: 'lv1',
+      status: 'REJECTED',
       staff: { employeeId: 'EMP002', firstName: 'Jane', lastName: 'Doe' },
     } as any)
 
     await leavePATCH(
       makeReq('/api/staff/leaves/lv1', 'PATCH', { status: 'REJECTED' }),
-      makeParams('lv1') as any,
+      makeParams('lv1') as any
     )
 
     expect(prisma.attendance.upsert).not.toHaveBeenCalled()
@@ -233,24 +253,34 @@ describe('DELETE /api/staff/leaves/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockAuthError()
-    const res = await leaveDELETE(makeReq('/api/staff/leaves/lv1', 'DELETE'), makeParams('lv1') as any)
+    const res = await leaveDELETE(
+      makeReq('/api/staff/leaves/lv1', 'DELETE'),
+      makeParams('lv1') as any
+    )
     expect(res.status).toBe(401)
   })
 
   it('returns 404 when leave not found', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue(null)
-    const res = await leaveDELETE(makeReq('/api/staff/leaves/lv1', 'DELETE'), makeParams('lv1') as any)
+    const res = await leaveDELETE(
+      makeReq('/api/staff/leaves/lv1', 'DELETE'),
+      makeParams('lv1') as any
+    )
     expect(res.status).toBe(404)
   })
 
   it('returns 400 when trying to delete non-pending leave', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', status: 'APPROVED',
+      id: 'lv1',
+      status: 'APPROVED',
     } as any)
 
-    const res = await leaveDELETE(makeReq('/api/staff/leaves/lv1', 'DELETE'), makeParams('lv1') as any)
+    const res = await leaveDELETE(
+      makeReq('/api/staff/leaves/lv1', 'DELETE'),
+      makeParams('lv1') as any
+    )
     const body = await res.json()
     expect(res.status).toBe(400)
     expect(body.error).toContain('pending')
@@ -259,11 +289,15 @@ describe('DELETE /api/staff/leaves/[id]', () => {
   it('deletes pending leave request', async () => {
     mockAuth()
     vi.mocked(prisma.leave.findFirst).mockResolvedValue({
-      id: 'lv1', status: 'PENDING',
+      id: 'lv1',
+      status: 'PENDING',
     } as any)
     vi.mocked(prisma.leave.delete).mockResolvedValue({ id: 'lv1' } as any)
 
-    const res = await leaveDELETE(makeReq('/api/staff/leaves/lv1', 'DELETE'), makeParams('lv1') as any)
+    const res = await leaveDELETE(
+      makeReq('/api/staff/leaves/lv1', 'DELETE'),
+      makeParams('lv1') as any
+    )
     const body = await res.json()
 
     expect(body.message).toContain('deleted')

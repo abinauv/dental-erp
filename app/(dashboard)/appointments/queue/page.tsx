@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Clock,
   User,
@@ -27,14 +27,14 @@ import {
   Timer,
   Calendar,
   AlertCircle,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   appointmentStatusConfig,
   appointmentTypeConfig,
   formatTime,
   getPatientName,
   getDoctorName,
-} from "@/lib/appointment-utils"
+} from '@/lib/appointment-utils'
 
 interface Appointment {
   id: string
@@ -110,12 +110,12 @@ export default function QueueManagementPage() {
   })
 
   const [doctors, setDoctors] = useState<Doctor[]>([])
-  const [selectedDoctor, setSelectedDoctor] = useState("all")
+  const [selectedDoctor, setSelectedDoctor] = useState('all')
 
   const fetchQueue = async () => {
     try {
       const params = new URLSearchParams()
-      if (selectedDoctor) params.append("doctorId", selectedDoctor)
+      if (selectedDoctor) params.append('doctorId', selectedDoctor)
 
       const response = await fetch(`/api/appointments/today?${params}`)
       if (response.ok) {
@@ -124,7 +124,7 @@ export default function QueueManagementPage() {
         setStats(data.stats)
       }
     } catch (error) {
-      console.error("Error fetching queue:", error)
+      console.error('Error fetching queue:', error)
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -133,13 +133,13 @@ export default function QueueManagementPage() {
 
   const fetchDoctors = async () => {
     try {
-      const response = await fetch("/api/staff/doctors")
+      const response = await fetch('/api/staff/doctors')
       if (response.ok) {
         const data = await response.json()
         setDoctors(data.doctors)
       }
     } catch (error) {
-      console.error("Error fetching doctors:", error)
+      console.error('Error fetching doctors:', error)
     }
   }
 
@@ -162,69 +162,65 @@ export default function QueueManagementPage() {
   const handleCheckIn = async (id: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}/check-in`, {
-        method: "POST",
+        method: 'POST',
       })
       if (response.ok) fetchQueue()
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     }
   }
 
   const handleCheckOut = async (id: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}/check-out`, {
-        method: "POST",
+        method: 'POST',
       })
       if (response.ok) fetchQueue()
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     }
   }
 
   const handleStartProgress = async (id: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "IN_PROGRESS" }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'IN_PROGRESS' }),
       })
       if (response.ok) fetchQueue()
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     }
   }
 
   const handleNoShow = async (id: string) => {
     try {
       const response = await fetch(`/api/appointments/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "NO_SHOW" }),
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'NO_SHOW' }),
       })
       if (response.ok) fetchQueue()
     } catch (error) {
-      console.error("Error:", error)
+      console.error('Error:', error)
     }
   }
 
   const getStatusBadge = (status: string) => {
     const config = appointmentStatusConfig[status] || {
       label: status,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
-      </Badge>
-    )
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
   }
 
   const getTypeBadge = (type: string) => {
     const config = appointmentTypeConfig[type] || {
       label: type,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted/50",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted/50',
     }
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0 text-xs`}>
@@ -234,10 +230,10 @@ export default function QueueManagementPage() {
   }
 
   const getPriorityIndicator = (priority: string) => {
-    if (priority === "URGENT") {
+    if (priority === 'URGENT') {
       return <AlertCircle className="h-4 w-4 text-red-500" />
     }
-    if (priority === "HIGH") {
+    if (priority === 'HIGH') {
       return <AlertCircle className="h-4 w-4 text-orange-500" />
     }
     return null
@@ -259,19 +255,13 @@ export default function QueueManagementPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="font-semibold">
-                  {getPatientName(appointment.patient)}
-                </p>
+                <p className="font-semibold">{getPatientName(appointment.patient)}</p>
                 {getPriorityIndicator(appointment.priority)}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {appointment.patient.patientId}
-              </p>
+              <p className="text-sm text-muted-foreground">{appointment.patient.patientId}</p>
               <div className="flex items-center gap-2 mt-1">
                 <Phone className="h-3 w-3 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {appointment.patient.phone}
-                </span>
+                <span className="text-sm text-muted-foreground">{appointment.patient.phone}</span>
               </div>
             </div>
           </div>
@@ -284,9 +274,7 @@ export default function QueueManagementPage() {
               {getDoctorName(appointment.doctor)}
             </p>
             {appointment.chairNumber && (
-              <p className="text-xs text-muted-foreground">
-                Chair {appointment.chairNumber}
-              </p>
+              <p className="text-xs text-muted-foreground">Chair {appointment.chairNumber}</p>
             )}
           </div>
         </div>
@@ -310,42 +298,28 @@ export default function QueueManagementPage() {
 
         {showActions && (
           <div className="flex gap-2 mt-3">
-            {["SCHEDULED", "CONFIRMED"].includes(appointment.status) && (
+            {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
               <>
-                <Button
-                  size="sm"
-                  onClick={() => handleCheckIn(appointment.id)}
-                >
+                <Button size="sm" onClick={() => handleCheckIn(appointment.id)}>
                   <LogIn className="h-4 w-4 mr-1" />
                   Check In
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleNoShow(appointment.id)}
-                >
+                <Button size="sm" variant="outline" onClick={() => handleNoShow(appointment.id)}>
                   <XCircle className="h-4 w-4 mr-1" />
                   No Show
                 </Button>
               </>
             )}
-            {appointment.status === "CHECKED_IN" && (
+            {appointment.status === 'CHECKED_IN' && (
               <>
-                <Button
-                  size="sm"
-                  onClick={() => handleStartProgress(appointment.id)}
-                >
+                <Button size="sm" onClick={() => handleStartProgress(appointment.id)}>
                   <Play className="h-4 w-4 mr-1" />
                   Start
                 </Button>
               </>
             )}
-            {["CHECKED_IN", "IN_PROGRESS"].includes(appointment.status) && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleCheckOut(appointment.id)}
-              >
+            {['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
+              <Button size="sm" variant="outline" onClick={() => handleCheckOut(appointment.id)}>
                 <LogOut className="h-4 w-4 mr-1" />
                 Complete
               </Button>
@@ -363,11 +337,11 @@ export default function QueueManagementPage() {
     </Card>
   )
 
-  const today = new Date().toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+  const today = new Date().toLocaleDateString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   })
 
   return (
@@ -393,7 +367,7 @@ export default function QueueManagementPage() {
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Link href="/appointments/new">
@@ -474,9 +448,7 @@ export default function QueueManagementPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-muted-foreground">
-            Loading queue...
-          </div>
+          <div className="animate-pulse text-muted-foreground">Loading queue...</div>
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
@@ -487,19 +459,13 @@ export default function QueueManagementPage() {
                 <Clock className="h-5 w-5" />
                 Waiting ({queue.waiting.length})
               </CardTitle>
-              <CardDescription>
-                Patients checked in and waiting
-              </CardDescription>
+              <CardDescription>Patients checked in and waiting</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 max-h-[500px] overflow-y-auto">
               {queue.waiting.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No patients waiting
-                </p>
+                <p className="text-center text-muted-foreground py-8">No patients waiting</p>
               ) : (
-                queue.waiting.map((apt) => (
-                  <AppointmentCard key={apt.id} appointment={apt} />
-                ))
+                queue.waiting.map((apt) => <AppointmentCard key={apt.id} appointment={apt} />)
               )}
             </CardContent>
           </Card>
@@ -511,19 +477,13 @@ export default function QueueManagementPage() {
                 <Play className="h-5 w-5" />
                 In Progress ({queue.inProgress.length})
               </CardTitle>
-              <CardDescription>
-                Currently being attended
-              </CardDescription>
+              <CardDescription>Currently being attended</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 max-h-[500px] overflow-y-auto">
               {queue.inProgress.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No treatments in progress
-                </p>
+                <p className="text-center text-muted-foreground py-8">No treatments in progress</p>
               ) : (
-                queue.inProgress.map((apt) => (
-                  <AppointmentCard key={apt.id} appointment={apt} />
-                ))
+                queue.inProgress.map((apt) => <AppointmentCard key={apt.id} appointment={apt} />)
               )}
             </CardContent>
           </Card>
@@ -535,19 +495,13 @@ export default function QueueManagementPage() {
                 <Calendar className="h-5 w-5" />
                 Upcoming ({queue.upcoming.length})
               </CardTitle>
-              <CardDescription>
-                Scheduled appointments today
-              </CardDescription>
+              <CardDescription>Scheduled appointments today</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 max-h-[500px] overflow-y-auto">
               {queue.upcoming.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No more appointments today
-                </p>
+                <p className="text-center text-muted-foreground py-8">No more appointments today</p>
               ) : (
-                queue.upcoming.map((apt) => (
-                  <AppointmentCard key={apt.id} appointment={apt} />
-                ))
+                queue.upcoming.map((apt) => <AppointmentCard key={apt.id} appointment={apt} />)
               )}
             </CardContent>
           </Card>
@@ -566,19 +520,13 @@ export default function QueueManagementPage() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {queue.completed.slice(0, 6).map((apt) => (
-                <AppointmentCard
-                  key={apt.id}
-                  appointment={apt}
-                  showActions={false}
-                />
+                <AppointmentCard key={apt.id} appointment={apt} showActions={false} />
               ))}
             </div>
             {queue.completed.length > 6 && (
               <div className="text-center mt-4">
                 <Link href="/appointments?status=COMPLETED">
-                  <Button variant="outline">
-                    View All Completed ({queue.completed.length})
-                  </Button>
+                  <Button variant="outline">View All Completed ({queue.completed.length})</Button>
                 </Link>
               </div>
             )}

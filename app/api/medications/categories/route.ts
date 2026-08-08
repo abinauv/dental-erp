@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       orderBy: { category: 'asc' },
     })
 
-    const categories = rows.map(r => r.category).filter(Boolean)
+    const categories = rows.map((r) => r.category).filter(Boolean)
 
     return NextResponse.json({ success: true, data: categories })
   } catch (err: any) {

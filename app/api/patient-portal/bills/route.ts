@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { requirePatientAuth } from "@/lib/patient-auth"
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requirePatientAuth } from '@/lib/patient-auth'
 
 /**
  * GET: Patient's invoices with payment history.
@@ -11,9 +11,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get("status") || "" // all | PENDING | PAID etc.
-    const page = parseInt(searchParams.get("page") || "1")
-    const limit = parseInt(searchParams.get("limit") || "10")
+    const status = searchParams.get('status') || '' // all | PENDING | PAID etc.
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       hospitalId: patient!.hospitalId,
     }
 
-    if (status && status !== "all") {
+    if (status && status !== 'all') {
       where.status = status
     }
 
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
               paymentDate: true,
               status: true,
             },
-            orderBy: { paymentDate: "desc" },
+            orderBy: { paymentDate: 'desc' },
           },
           paymentLinks: {
             where: {
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
             take: 1,
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
@@ -69,10 +69,7 @@ export async function GET(req: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err: unknown) {
-    console.error("Patient bills error:", err)
-    return NextResponse.json(
-      { error: "Failed to load bills" },
-      { status: 500 }
-    )
+    console.error('Patient bills error:', err)
+    return NextResponse.json({ error: 'Failed to load bills' }, { status: 500 })
   }
 }

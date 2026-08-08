@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -18,8 +18,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
 import {
   BarChart3,
   Mail,
@@ -35,7 +35,7 @@ import {
   XCircle,
   CheckCircle2,
   Clock,
-} from "lucide-react"
+} from 'lucide-react'
 
 interface AnalyticsData {
   period: string
@@ -80,18 +80,18 @@ interface AnalyticsData {
 export default function CampaignAnalyticsPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState("30d")
+  const [period, setPeriod] = useState('30d')
   const [data, setData] = useState<AnalyticsData | null>(null)
 
   const fetchAnalytics = async (p: string) => {
     setLoading(true)
     try {
       const res = await fetch(`/api/communications/analytics?period=${p}`)
-      if (!res.ok) throw new Error("Failed to fetch analytics")
+      if (!res.ok) throw new Error('Failed to fetch analytics')
       const json = await res.json()
       setData(json)
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -128,7 +128,7 @@ export default function CampaignAnalyticsPage() {
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={() => fetchAnalytics(period)}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function CampaignAnalyticsPage() {
                   <p className="text-xs text-muted-foreground">
                     {data.sms.pending + data.sms.queued > 0
                       ? `${data.sms.pending + data.sms.queued} pending`
-                      : "All processed"}
+                      : 'All processed'}
                   </p>
                 </CardContent>
               </Card>
@@ -182,7 +182,7 @@ export default function CampaignAnalyticsPage() {
                   <p className="text-xs text-muted-foreground">
                     {data.sms.total > 0
                       ? `${((data.sms.failed / data.sms.total) * 100).toFixed(1)}% failure rate`
-                      : "No messages"}
+                      : 'No messages'}
                   </p>
                 </CardContent>
               </Card>
@@ -192,13 +192,11 @@ export default function CampaignAnalyticsPage() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    ₹{data.sms.totalCost.toFixed(2)}
-                  </div>
+                  <div className="text-2xl font-bold">₹{data.sms.totalCost.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">
                     {data.sms.total > 0
                       ? `₹${(data.sms.totalCost / data.sms.total).toFixed(4)}/msg`
-                      : "No cost data"}
+                      : 'No cost data'}
                   </p>
                 </CardContent>
               </Card>
@@ -258,7 +256,7 @@ export default function CampaignAnalyticsPage() {
                   <p className="text-xs text-muted-foreground">
                     {data.email.total > 0
                       ? `${((data.email.failed / data.email.total) * 100).toFixed(1)}% failure rate`
-                      : "No messages"}
+                      : 'No messages'}
                   </p>
                 </CardContent>
               </Card>
@@ -273,9 +271,7 @@ export default function CampaignAnalyticsPage() {
                   <BarChart3 className="h-5 w-5" />
                   Daily Message Volume
                 </CardTitle>
-                <CardDescription>
-                  SMS and email messages sent per day
-                </CardDescription>
+                <CardDescription>SMS and email messages sent per day</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end gap-1 h-[200px] overflow-x-auto pb-6">
@@ -305,7 +301,10 @@ export default function CampaignAnalyticsPage() {
                             />
                           )}
                           {total === 0 && (
-                            <div className="bg-muted rounded-t-sm w-full" style={{ height: "2px" }} />
+                            <div
+                              className="bg-muted rounded-t-sm w-full"
+                              style={{ height: '2px' }}
+                            />
                           )}
                         </div>
                         <span className="text-[9px] text-muted-foreground mt-1 rotate-45 origin-left">
@@ -358,11 +357,11 @@ export default function CampaignAnalyticsPage() {
                         <TableCell>
                           <Badge
                             variant={
-                              c.status === "COMPLETED"
-                                ? "default"
-                                : c.status === "FAILED"
-                                  ? "destructive"
-                                  : "secondary"
+                              c.status === 'COMPLETED'
+                                ? 'default'
+                                : c.status === 'FAILED'
+                                  ? 'destructive'
+                                  : 'secondary'
                             }
                           >
                             {c.status}

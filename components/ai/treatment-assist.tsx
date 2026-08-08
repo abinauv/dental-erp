@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from "react"
-import { cn } from "@/lib/utils"
+import { useState, useCallback } from 'react'
+import { cn } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Types & constants
 // ---------------------------------------------------------------------------
-type Tab = "drug_check" | "cost_estimate" | "consent_form" | "clinical_notes"
+type Tab = 'drug_check' | 'cost_estimate' | 'consent_form' | 'clinical_notes'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "drug_check",     label: "Drug Check",     icon: "💊" },
-  { id: "cost_estimate",  label: "Cost Estimate",  icon: "💰" },
-  { id: "consent_form",   label: "Consent Form",   icon: "📄" },
-  { id: "clinical_notes", label: "Notes",          icon: "📝" },
+  { id: 'drug_check', label: 'Drug Check', icon: '💊' },
+  { id: 'cost_estimate', label: 'Cost Estimate', icon: '💰' },
+  { id: 'consent_form', label: 'Consent Form', icon: '📄' },
+  { id: 'clinical_notes', label: 'Notes', icon: '📝' },
 ]
 
 export interface TreatmentAssistProps {
@@ -44,32 +44,32 @@ export function TreatmentAssist({
   procedureNotes,
   medications,
 }: TreatmentAssistProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("drug_check")
+  const [activeTab, setActiveTab] = useState<Tab>('drug_check')
   const [loading, setLoading] = useState<Tab | null>(null)
   const [results, setResults] = useState<Record<string, Record<string, any>>>({})
 
   // Drug-check input lives here so it persists across tab switches
-  const [drugInput, setDrugInput] = useState("")
+  const [drugInput, setDrugInput] = useState('')
   // Consent-form language selector
-  const [language, setLanguage] = useState("English")
+  const [language, setLanguage] = useState('English')
 
   // ---------------------------------------------------------------------------
   const callClinical = useCallback(
     async (type: string, body: Record<string, unknown>) => {
       setLoading(type as Tab)
       try {
-        const res = await fetch("/api/ai/clinical", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/ai/clinical', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type, patientId, ...body }),
         })
         const data = await res.json()
         setResults((prev) => ({
           ...prev,
-          [type]: data.success ? data.data : { error: data.error || "Request failed" },
+          [type]: data.success ? data.data : { error: data.error || 'Request failed' },
         }))
       } catch {
-        setResults((prev) => ({ ...prev, [type]: { error: "Network error" } }))
+        setResults((prev) => ({ ...prev, [type]: { error: 'Network error' } }))
       } finally {
         setLoading(null)
       }
@@ -80,14 +80,19 @@ export function TreatmentAssist({
   // Auto-fetch on tab switch (except drug_check which needs user input)
   const handleTab = (tab: Tab) => {
     setActiveTab(tab)
-    if (tab === "cost_estimate" && !results.cost_estimate && procedureId) {
-      callClinical("cost_estimate", { procedureIds: [procedureId], treatmentPlan: procedureNotes })
+    if (tab === 'cost_estimate' && !results.cost_estimate && procedureId) {
+      callClinical('cost_estimate', { procedureIds: [procedureId], treatmentPlan: procedureNotes })
     }
-    if (tab === "consent_form" && !results.consent_form) {
-      callClinical("consent_form", { procedureName, procedureId, language })
+    if (tab === 'consent_form' && !results.consent_form) {
+      callClinical('consent_form', { procedureName, procedureId, language })
     }
-    if (tab === "clinical_notes" && !results.clinical_notes) {
-      callClinical("clinical_notes", { briefNotes: procedureNotes, procedureName, diagnosis, findings })
+    if (tab === 'clinical_notes' && !results.clinical_notes) {
+      callClinical('clinical_notes', {
+        briefNotes: procedureNotes,
+        procedureName,
+        diagnosis,
+        findings,
+      })
     }
   }
 
@@ -110,10 +115,10 @@ export function TreatmentAssist({
             key={tab.id}
             onClick={() => handleTab(tab.id)}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs transition-colors",
+              'flex-1 flex items-center justify-center gap-1 px-2 py-2 text-xs transition-colors',
               activeTab === tab.id
-                ? "border-b-2 border-primary text-primary font-semibold"
-                : "text-muted-foreground hover:text-foreground"
+                ? 'border-b-2 border-primary text-primary font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <span>{tab.icon}</span>
@@ -124,42 +129,49 @@ export function TreatmentAssist({
 
       {/* panel body */}
       <div className="p-3">
-        {activeTab === "drug_check" && (
+        {activeTab === 'drug_check' && (
           <DrugCheck
             loading={isLoading}
             result={result}
             drugInput={drugInput}
             setDrugInput={setDrugInput}
-            onCheck={() => callClinical("drug_check", { medications, newMedication: drugInput })}
+            onCheck={() => callClinical('drug_check', { medications, newMedication: drugInput })}
           />
         )}
-        {activeTab === "cost_estimate" && (
+        {activeTab === 'cost_estimate' && (
           <CostEstimate
             loading={isLoading}
             result={result}
             onRetry={() =>
-              callClinical("cost_estimate", {
+              callClinical('cost_estimate', {
                 procedureIds: procedureId ? [procedureId] : [],
                 treatmentPlan: procedureNotes,
               })
             }
           />
         )}
-        {activeTab === "consent_form" && (
+        {activeTab === 'consent_form' && (
           <ConsentForm
             loading={isLoading}
             result={result}
             language={language}
             setLanguage={setLanguage}
-            onGenerate={() => callClinical("consent_form", { procedureName, procedureId, language })}
+            onGenerate={() =>
+              callClinical('consent_form', { procedureName, procedureId, language })
+            }
           />
         )}
-        {activeTab === "clinical_notes" && (
+        {activeTab === 'clinical_notes' && (
           <ClinicalNotes
             loading={isLoading}
             result={result}
             onExpand={() =>
-              callClinical("clinical_notes", { briefNotes: procedureNotes, procedureName, diagnosis, findings })
+              callClinical('clinical_notes', {
+                briefNotes: procedureNotes,
+                procedureName,
+                diagnosis,
+                findings,
+              })
             }
           />
         )}
@@ -206,7 +218,9 @@ function DrugCheck({
           type="text"
           value={drugInput}
           onChange={(e) => setDrugInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") onCheck() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onCheck()
+          }}
           placeholder="e.g. Amoxicillin 500 mg"
           className="flex-1 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary"
         />
@@ -224,20 +238,25 @@ function DrugCheck({
 
       {!loading && !result.error && result.safe !== undefined && (
         <div className="space-y-2">
-          <p className={cn("text-xs font-semibold", result.safe ? "text-emerald-700" : "text-red-700")}>
-            {result.safe ? "✓ No interactions detected" : "⚠ Interactions detected"}
+          <p
+            className={cn(
+              'text-xs font-semibold',
+              result.safe ? 'text-emerald-700' : 'text-red-700'
+            )}
+          >
+            {result.safe ? '✓ No interactions detected' : '⚠ Interactions detected'}
           </p>
 
           {(result.interactions as any[])?.map((interaction, i) => (
             <div
               key={i}
               className={cn(
-                "rounded p-2 text-xs",
-                interaction.severity === "high"
-                  ? "bg-red-50 text-red-800"
-                  : interaction.severity === "moderate"
-                    ? "bg-amber-50 text-amber-800"
-                    : "bg-muted"
+                'rounded p-2 text-xs',
+                interaction.severity === 'high'
+                  ? 'bg-red-50 text-red-800'
+                  : interaction.severity === 'moderate'
+                    ? 'bg-amber-50 text-amber-800'
+                    : 'bg-muted'
               )}
             >
               <p className="font-semibold">{interaction.drugs}</p>
@@ -253,11 +272,13 @@ function DrugCheck({
 
           {(result.recommendations as string[])?.length > 0 && (
             <p className="text-xs text-muted-foreground">
-              Recommendations: {(result.recommendations as string[]).join("; ")}
+              Recommendations: {(result.recommendations as string[]).join('; ')}
             </p>
           )}
 
-          <p className="text-xs text-muted-foreground italic mt-1">⚠ AI-generated — for doctor review only.</p>
+          <p className="text-xs text-muted-foreground italic mt-1">
+            ⚠ AI-generated — for doctor review only.
+          </p>
         </div>
       )}
     </div>
@@ -292,7 +313,9 @@ function CostEstimate({
             <div key={i} className="flex justify-between text-xs border-b pb-1">
               <span>
                 {item.description}
-                {item.quantity > 1 && <span className="text-muted-foreground ml-1">×{item.quantity}</span>}
+                {item.quantity > 1 && (
+                  <span className="text-muted-foreground ml-1">×{item.quantity}</span>
+                )}
               </span>
               <span className="font-medium">₹{Number(item.total).toLocaleString()}</span>
             </div>
@@ -309,8 +332,12 @@ function CostEstimate({
             <span>Total</span>
             <span>₹{Number(result.grandTotal || 0).toLocaleString()}</span>
           </div>
-          {result.notes && <p className="text-xs text-muted-foreground italic mt-1">{String(result.notes)}</p>}
-          <p className="text-xs text-muted-foreground italic">⚠ AI estimate — subject to change at billing.</p>
+          {result.notes && (
+            <p className="text-xs text-muted-foreground italic mt-1">{String(result.notes)}</p>
+          )}
+          <p className="text-xs text-muted-foreground italic">
+            ⚠ AI estimate — subject to change at billing.
+          </p>
         </div>
       )}
     </div>
@@ -335,30 +362,30 @@ function ConsentForm({
 }) {
   const downloadText = () => {
     const lines = [
-      String(result.title || "Consent Form"),
-      "",
+      String(result.title || 'Consent Form'),
+      '',
       `Patient: ${result.patientName}`,
       `Hospital: ${result.hospitalName}`,
       `Procedure: ${result.procedureName}`,
-      "",
-      String(result.description || ""),
-      "",
-      "Risks:",
+      '',
+      String(result.description || ''),
+      '',
+      'Risks:',
       ...((result.risks as string[]) || []).map((r) => `  • ${r}`),
-      "",
-      "Benefits:",
+      '',
+      'Benefits:',
       ...((result.benefits as string[]) || []).map((b) => `  • ${b}`),
-      "",
-      "Alternatives:",
+      '',
+      'Alternatives:',
       ...((result.alternatives as string[]) || []).map((a) => `  • ${a}`),
-      "",
-      String(result.acknowledgement || ""),
+      '',
+      String(result.acknowledgement || ''),
     ]
-    const blob = new Blob([lines.join("\n")], { type: "text/plain" })
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
+    const a = document.createElement('a')
     a.href = url
-    a.download = "consent-form.txt"
+    a.download = 'consent-form.txt'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -381,7 +408,7 @@ function ConsentForm({
           disabled={loading}
           className="ml-auto text-xs text-primary hover:underline disabled:opacity-40"
         >
-          {result.title ? "Regenerate" : "Generate"}
+          {result.title ? 'Regenerate' : 'Generate'}
         </button>
       </div>
 
@@ -392,32 +419,49 @@ function ConsentForm({
         <>
           <div className="rounded border bg-muted/30 p-3 max-h-48 overflow-auto text-xs space-y-2">
             <p className="font-bold text-center text-sm">{result.title}</p>
-            <p><strong>Patient:</strong> {String(result.patientName)}</p>
-            <p><strong>Hospital:</strong> {String(result.hospitalName)}</p>
-            <p><strong>Procedure:</strong> {String(result.procedureName)}</p>
+            <p>
+              <strong>Patient:</strong> {String(result.patientName)}
+            </p>
+            <p>
+              <strong>Hospital:</strong> {String(result.hospitalName)}
+            </p>
+            <p>
+              <strong>Procedure:</strong> {String(result.procedureName)}
+            </p>
             <p>{String(result.description)}</p>
 
             {(result.risks as string[])?.length > 0 && (
               <>
                 <p className="font-semibold mt-2">Risks:</p>
-                {(result.risks as string[]).map((r, i) => <p key={i}>• {r}</p>)}
+                {(result.risks as string[]).map((r, i) => (
+                  <p key={i}>• {r}</p>
+                ))}
               </>
             )}
             {(result.benefits as string[])?.length > 0 && (
               <>
                 <p className="font-semibold mt-2">Benefits:</p>
-                {(result.benefits as string[]).map((b, i) => <p key={i}>• {b}</p>)}
+                {(result.benefits as string[]).map((b, i) => (
+                  <p key={i}>• {b}</p>
+                ))}
               </>
             )}
             {(result.alternatives as string[])?.length > 0 && (
               <>
                 <p className="font-semibold mt-2">Alternatives:</p>
-                {(result.alternatives as string[]).map((a, i) => <p key={i}>• {a}</p>)}
+                {(result.alternatives as string[]).map((a, i) => (
+                  <p key={i}>• {a}</p>
+                ))}
               </>
             )}
-            {result.acknowledgement && <p className="mt-2 italic">{String(result.acknowledgement)}</p>}
+            {result.acknowledgement && (
+              <p className="mt-2 italic">{String(result.acknowledgement)}</p>
+            )}
           </div>
-          <button onClick={downloadText} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          <button
+            onClick={downloadText}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
             ⬇ Download
           </button>
         </>
@@ -441,9 +485,15 @@ function ClinicalNotes({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">Expand brief notes into structured clinical documentation.</p>
-        <button onClick={onExpand} disabled={loading} className="text-xs text-primary hover:underline disabled:opacity-40">
-          {result.expandedNotes ? "Re-expand" : "Expand notes"}
+        <p className="text-xs text-muted-foreground">
+          Expand brief notes into structured clinical documentation.
+        </p>
+        <button
+          onClick={onExpand}
+          disabled={loading}
+          className="text-xs text-primary hover:underline disabled:opacity-40"
+        >
+          {result.expandedNotes ? 'Re-expand' : 'Expand notes'}
         </button>
       </div>
 
@@ -476,7 +526,9 @@ function ClinicalNotes({
               <p className="bg-muted rounded p-2">{String(result.recommendations)}</p>
             </div>
           )}
-          <p className="text-muted-foreground italic">⚠ AI-assisted — review and edit before saving.</p>
+          <p className="text-muted-foreground italic">
+            ⚠ AI-assisted — review and edit before saving.
+          </p>
         </div>
       )}
     </div>

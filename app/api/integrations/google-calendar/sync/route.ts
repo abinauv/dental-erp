@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
-import { requireAuthAndRole } from "@/lib/api-helpers"
-import prisma from "@/lib/prisma"
-import { syncAppointments } from "@/lib/services/google-calendar"
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
+import { syncAppointments } from '@/lib/services/google-calendar'
 
 // POST /api/integrations/google-calendar/sync — Trigger sync
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId || !session) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -15,37 +15,31 @@ export async function POST(req: NextRequest) {
       where: {
         userId_provider: {
           userId: session.user.id,
-          provider: "GOOGLE",
+          provider: 'GOOGLE',
         },
       },
     })
 
     if (!integration) {
       return NextResponse.json(
-        { error: "Google Calendar not connected. Please connect first." },
+        { error: 'Google Calendar not connected. Please connect first.' },
         { status: 400 }
       )
     }
 
     if (!integration.syncEnabled) {
-      return NextResponse.json(
-        { error: "Calendar sync is disabled" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Calendar sync is disabled' }, { status: 400 })
     }
 
     const result = await syncAppointments(integration.id, hospitalId, session.user.id)
 
     return NextResponse.json({
-      message: `Synced ${result.synced} appointments${result.errors > 0 ? ` (${result.errors} errors)` : ""}`,
+      message: `Synced ${result.synced} appointments${result.errors > 0 ? ` (${result.errors} errors)` : ''}`,
       ...result,
     })
   } catch (err) {
-    console.error("Calendar sync error:", err)
-    return NextResponse.json(
-      { error: "Failed to sync calendar" },
-      { status: 500 }
-    )
+    console.error('Calendar sync error:', err)
+    return NextResponse.json({ error: 'Failed to sync calendar' }, { status: 500 })
   }
 }
 
@@ -53,7 +47,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { error, session } = await requireAuthAndRole()
   if (error || !session) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
@@ -61,7 +55,7 @@ export async function GET(req: NextRequest) {
       where: {
         userId_provider: {
           userId: session.user.id,
-          provider: "GOOGLE",
+          provider: 'GOOGLE',
         },
       },
       select: {
@@ -79,10 +73,7 @@ export async function GET(req: NextRequest) {
       integration,
     })
   } catch (err) {
-    console.error("Error fetching sync status:", err)
-    return NextResponse.json(
-      { error: "Failed to fetch sync status" },
-      { status: 500 }
-    )
+    console.error('Error fetching sync status:', err)
+    return NextResponse.json({ error: 'Failed to fetch sync status' }, { status: 500 })
   }
 }

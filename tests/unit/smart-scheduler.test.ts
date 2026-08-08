@@ -3,7 +3,8 @@ import prisma from '@/tests/__mocks__/prisma'
 
 vi.mock('@/lib/prisma', () => ({ default: prisma }))
 
-const { findMatchingWaitlistPatients, handleCancellationWaitlist, bookFromWaitlist } = await import('@/lib/services/smart-scheduler')
+const { findMatchingWaitlistPatients, handleCancellationWaitlist, bookFromWaitlist } =
+  await import('@/lib/services/smart-scheduler')
 
 describe('Smart Scheduler Service', () => {
   beforeEach(() => {

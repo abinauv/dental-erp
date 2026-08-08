@@ -5,210 +5,225 @@ import {
   PaymentMethod,
   PaymentStatus,
   InsuranceClaimStatus,
-  DiscountType
-} from "@prisma/client"
+  DiscountType,
+} from '@prisma/client'
 import {
   formatCurrency as baseFormatCurrency,
   formatDate as baseFormatDate,
   formatDateTime as baseFormatDateTime,
-} from "@/lib/i18n/format"
+} from '@/lib/i18n/format'
 
 // Invoice Status Configuration
-export const invoiceStatusConfig: Record<InvoiceStatus, {
-  label: string
-  color: string
-  bgColor: string
-  description: string
-}> = {
+export const invoiceStatusConfig: Record<
+  InvoiceStatus,
+  {
+    label: string
+    color: string
+    bgColor: string
+    description: string
+  }
+> = {
   DRAFT: {
-    label: "Draft",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted",
-    description: "Invoice is being prepared"
+    label: 'Draft',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+    description: 'Invoice is being prepared',
   },
   PENDING: {
-    label: "Pending",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-    description: "Invoice sent, awaiting payment"
+    label: 'Pending',
+    color: 'text-yellow-700',
+    bgColor: 'bg-yellow-100',
+    description: 'Invoice sent, awaiting payment',
   },
   PARTIALLY_PAID: {
-    label: "Partially Paid",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-    description: "Partial payment received"
+    label: 'Partially Paid',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
+    description: 'Partial payment received',
   },
   PAID: {
-    label: "Paid",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-    description: "Full payment received"
+    label: 'Paid',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
+    description: 'Full payment received',
   },
   OVERDUE: {
-    label: "Overdue",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-    description: "Payment past due date"
+    label: 'Overdue',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
+    description: 'Payment past due date',
   },
   CANCELLED: {
-    label: "Cancelled",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted",
-    description: "Invoice has been cancelled"
+    label: 'Cancelled',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+    description: 'Invoice has been cancelled',
   },
   REFUNDED: {
-    label: "Refunded",
-    color: "text-purple-700",
-    bgColor: "bg-purple-100",
-    description: "Payment has been refunded"
-  }
+    label: 'Refunded',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-100',
+    description: 'Payment has been refunded',
+  },
 }
 
 // Payment Method Configuration
-export const paymentMethodConfig: Record<PaymentMethod, {
-  label: string
-  icon: string
-  description: string
-}> = {
+export const paymentMethodConfig: Record<
+  PaymentMethod,
+  {
+    label: string
+    icon: string
+    description: string
+  }
+> = {
   CASH: {
-    label: "Cash",
-    icon: "Banknote",
-    description: "Cash payment"
+    label: 'Cash',
+    icon: 'Banknote',
+    description: 'Cash payment',
   },
   CARD: {
-    label: "Card",
-    icon: "CreditCard",
-    description: "Debit/Credit card"
+    label: 'Card',
+    icon: 'CreditCard',
+    description: 'Debit/Credit card',
   },
   UPI: {
-    label: "UPI",
-    icon: "Smartphone",
-    description: "UPI payment (GPay, PhonePe, etc.)"
+    label: 'UPI',
+    icon: 'Smartphone',
+    description: 'UPI payment (GPay, PhonePe, etc.)',
   },
   BANK_TRANSFER: {
-    label: "Bank Transfer",
-    icon: "Building2",
-    description: "NEFT/RTGS/IMPS"
+    label: 'Bank Transfer',
+    icon: 'Building2',
+    description: 'NEFT/RTGS/IMPS',
   },
   CHEQUE: {
-    label: "Cheque",
-    icon: "FileText",
-    description: "Cheque payment"
+    label: 'Cheque',
+    icon: 'FileText',
+    description: 'Cheque payment',
   },
   INSURANCE: {
-    label: "Insurance",
-    icon: "Shield",
-    description: "Insurance claim payment"
+    label: 'Insurance',
+    icon: 'Shield',
+    description: 'Insurance claim payment',
   },
   WALLET: {
-    label: "Wallet",
-    icon: "Wallet",
-    description: "Digital wallet"
+    label: 'Wallet',
+    icon: 'Wallet',
+    description: 'Digital wallet',
   },
   ONLINE: {
-    label: "Online",
-    icon: "Globe",
-    description: "Online payment gateway"
-  }
+    label: 'Online',
+    icon: 'Globe',
+    description: 'Online payment gateway',
+  },
 }
 
 // Payment Status Configuration
-export const paymentStatusConfig: Record<PaymentStatus, {
-  label: string
-  color: string
-  bgColor: string
-}> = {
+export const paymentStatusConfig: Record<
+  PaymentStatus,
+  {
+    label: string
+    color: string
+    bgColor: string
+  }
+> = {
   PENDING: {
-    label: "Pending",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100"
+    label: 'Pending',
+    color: 'text-yellow-700',
+    bgColor: 'bg-yellow-100',
   },
   COMPLETED: {
-    label: "Completed",
-    color: "text-green-700",
-    bgColor: "bg-green-100"
+    label: 'Completed',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
   },
   FAILED: {
-    label: "Failed",
-    color: "text-red-700",
-    bgColor: "bg-red-100"
+    label: 'Failed',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
   },
   REFUNDED: {
-    label: "Refunded",
-    color: "text-purple-700",
-    bgColor: "bg-purple-100"
+    label: 'Refunded',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-100',
   },
   CANCELLED: {
-    label: "Cancelled",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted"
-  }
+    label: 'Cancelled',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+  },
 }
 
 // Insurance Claim Status Configuration
-export const insuranceClaimStatusConfig: Record<InsuranceClaimStatus, {
-  label: string
-  color: string
-  bgColor: string
-  description: string
-}> = {
+export const insuranceClaimStatusConfig: Record<
+  InsuranceClaimStatus,
+  {
+    label: string
+    color: string
+    bgColor: string
+    description: string
+  }
+> = {
   DRAFT: {
-    label: "Draft",
-    color: "text-muted-foreground",
-    bgColor: "bg-muted",
-    description: "Claim is being prepared"
+    label: 'Draft',
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted',
+    description: 'Claim is being prepared',
   },
   SUBMITTED: {
-    label: "Submitted",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-    description: "Claim submitted to insurer"
+    label: 'Submitted',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
+    description: 'Claim submitted to insurer',
   },
   UNDER_REVIEW: {
-    label: "Under Review",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-    description: "Insurer is reviewing the claim"
+    label: 'Under Review',
+    color: 'text-yellow-700',
+    bgColor: 'bg-yellow-100',
+    description: 'Insurer is reviewing the claim',
   },
   APPROVED: {
-    label: "Approved",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-    description: "Claim approved by insurer"
+    label: 'Approved',
+    color: 'text-green-700',
+    bgColor: 'bg-green-100',
+    description: 'Claim approved by insurer',
   },
   PARTIALLY_APPROVED: {
-    label: "Partially Approved",
-    color: "text-orange-700",
-    bgColor: "bg-orange-100",
-    description: "Claim partially approved"
+    label: 'Partially Approved',
+    color: 'text-orange-700',
+    bgColor: 'bg-orange-100',
+    description: 'Claim partially approved',
   },
   REJECTED: {
-    label: "Rejected",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-    description: "Claim rejected by insurer"
+    label: 'Rejected',
+    color: 'text-red-700',
+    bgColor: 'bg-red-100',
+    description: 'Claim rejected by insurer',
   },
   SETTLED: {
-    label: "Settled",
-    color: "text-emerald-700",
-    bgColor: "bg-emerald-100",
-    description: "Payment received from insurer"
-  }
+    label: 'Settled',
+    color: 'text-emerald-700',
+    bgColor: 'bg-emerald-100',
+    description: 'Payment received from insurer',
+  },
 }
 
 // Discount Type Configuration
-export const discountTypeConfig: Record<DiscountType, {
-  label: string
-  symbol: string
-}> = {
+export const discountTypeConfig: Record<
+  DiscountType,
+  {
+    label: string
+    symbol: string
+  }
+> = {
   PERCENTAGE: {
-    label: "Percentage",
-    symbol: "%"
+    label: 'Percentage',
+    symbol: '%',
   },
   FIXED: {
-    label: "Fixed Amount",
-    symbol: "₹"
-  }
+    label: 'Fixed Amount',
+    symbol: '₹',
+  },
 }
 
 // GST Configuration (Indian Tax)
@@ -216,7 +231,7 @@ export const gstConfig = {
   cgstRate: 9, // Central GST
   sgstRate: 9, // State GST
   igstRate: 18, // Integrated GST (for inter-state)
-  defaultTaxable: true
+  defaultTaxable: true,
 }
 
 // Calculate GST breakdown
@@ -241,7 +256,7 @@ export function calculateGST(
     cgstAmount: Math.round(cgstAmount * 100) / 100,
     sgstAmount: Math.round(sgstAmount * 100) / 100,
     totalTax: Math.round(totalTax * 100) / 100,
-    grandTotal: Math.round(grandTotal * 100) / 100
+    grandTotal: Math.round(grandTotal * 100) / 100,
   }
 }
 
@@ -256,7 +271,7 @@ export function calculateDiscount(
 } {
   let discountAmount: number
 
-  if (discountType === "PERCENTAGE") {
+  if (discountType === 'PERCENTAGE') {
     discountAmount = (subtotal * discountValue) / 100
   } else {
     discountAmount = discountValue
@@ -267,14 +282,14 @@ export function calculateDiscount(
 
   return {
     discountAmount: Math.round(discountAmount * 100) / 100,
-    afterDiscount: Math.round((subtotal - discountAmount) * 100) / 100
+    afterDiscount: Math.round((subtotal - discountAmount) * 100) / 100,
   }
 }
 
 // Calculate invoice totals
 export function calculateInvoiceTotals(
   items: Array<{ quantity: number; unitPrice: number; taxable: boolean }>,
-  discountType: DiscountType = "FIXED",
+  discountType: DiscountType = 'FIXED',
   discountValue: number = 0,
   cgstRate: number = gstConfig.cgstRate,
   sgstRate: number = gstConfig.sgstRate
@@ -292,7 +307,7 @@ export function calculateInvoiceTotals(
   let taxableSubtotal = 0
   let nonTaxableSubtotal = 0
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const itemTotal = item.quantity * item.unitPrice
     if (item.taxable) {
       taxableSubtotal += itemTotal
@@ -327,7 +342,7 @@ export function calculateInvoiceTotals(
     cgstAmount: Math.round(cgstAmount * 100) / 100,
     sgstAmount: Math.round(sgstAmount * 100) / 100,
     totalTax: Math.round(totalTax * 100) / 100,
-    totalAmount: Math.round(totalAmount * 100) / 100
+    totalAmount: Math.round(totalAmount * 100) / 100,
   }
 }
 
@@ -355,130 +370,117 @@ export function formatDateTime(date: Date | string | null | undefined, locale?: 
 }
 
 // Generate Invoice Number
-export async function generateInvoiceNo(
-  prisma: any,
-  prefix: string = "INV"
-): Promise<string> {
+export async function generateInvoiceNo(prisma: any, prefix: string = 'INV'): Promise<string> {
   const now = new Date()
   const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const month = String(now.getMonth() + 1).padStart(2, '0')
   const datePrefix = `${prefix}-${year}${month}-`
 
   const lastInvoice = await prisma.invoice.findFirst({
     where: {
       invoiceNo: {
-        startsWith: datePrefix
-      }
+        startsWith: datePrefix,
+      },
     },
     orderBy: {
-      invoiceNo: "desc"
+      invoiceNo: 'desc',
     },
     select: {
-      invoiceNo: true
-    }
+      invoiceNo: true,
+    },
   })
 
   if (lastInvoice) {
     const lastNumber = parseInt(lastInvoice.invoiceNo.slice(-4))
-    return `${datePrefix}${String(lastNumber + 1).padStart(4, "0")}`
+    return `${datePrefix}${String(lastNumber + 1).padStart(4, '0')}`
   }
 
   return `${datePrefix}0001`
 }
 
 // Generate Payment Number
-export async function generatePaymentNo(
-  prisma: any,
-  prefix: string = "PAY"
-): Promise<string> {
+export async function generatePaymentNo(prisma: any, prefix: string = 'PAY'): Promise<string> {
   const now = new Date()
   const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const month = String(now.getMonth() + 1).padStart(2, '0')
   const datePrefix = `${prefix}-${year}${month}-`
 
   const lastPayment = await prisma.payment.findFirst({
     where: {
       paymentNo: {
-        startsWith: datePrefix
-      }
+        startsWith: datePrefix,
+      },
     },
     orderBy: {
-      paymentNo: "desc"
+      paymentNo: 'desc',
     },
     select: {
-      paymentNo: true
-    }
+      paymentNo: true,
+    },
   })
 
   if (lastPayment) {
     const lastNumber = parseInt(lastPayment.paymentNo.slice(-4))
-    return `${datePrefix}${String(lastNumber + 1).padStart(4, "0")}`
+    return `${datePrefix}${String(lastNumber + 1).padStart(4, '0')}`
   }
 
   return `${datePrefix}0001`
 }
 
 // Generate Insurance Claim Number
-export async function generateClaimNo(
-  prisma: any,
-  prefix: string = "CLM"
-): Promise<string> {
+export async function generateClaimNo(prisma: any, prefix: string = 'CLM'): Promise<string> {
   const now = new Date()
   const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const month = String(now.getMonth() + 1).padStart(2, '0')
   const datePrefix = `${prefix}-${year}${month}-`
 
   const lastClaim = await prisma.insuranceClaim.findFirst({
     where: {
       claimNumber: {
-        startsWith: datePrefix
-      }
+        startsWith: datePrefix,
+      },
     },
     orderBy: {
-      claimNumber: "desc"
+      claimNumber: 'desc',
     },
     select: {
-      claimNumber: true
-    }
+      claimNumber: true,
+    },
   })
 
   if (lastClaim) {
     const lastNumber = parseInt(lastClaim.claimNumber.slice(-4))
-    return `${datePrefix}${String(lastNumber + 1).padStart(4, "0")}`
+    return `${datePrefix}${String(lastNumber + 1).padStart(4, '0')}`
   }
 
   return `${datePrefix}0001`
 }
 
 // Get patient display name
-export function getPatientName(patient: {
-  firstName: string
-  lastName: string
-  patientId?: string
-} | null): string {
-  if (!patient) return "Unknown Patient"
+export function getPatientName(
+  patient: {
+    firstName: string
+    lastName: string
+    patientId?: string
+  } | null
+): string {
+  if (!patient) return 'Unknown Patient'
   return `${patient.firstName} ${patient.lastName}`
 }
 
 // Calculate balance amount
-export function calculateBalance(
-  totalAmount: number,
-  paidAmount: number
-): number {
+export function calculateBalance(totalAmount: number, paidAmount: number): number {
   return Math.round((totalAmount - paidAmount) * 100) / 100
 }
 
 // Check if invoice is overdue
-export function isInvoiceOverdue(
-  dueDate: Date | string | null,
-  status: InvoiceStatus
-): boolean {
+export function isInvoiceOverdue(dueDate: Date | string | null, status: InvoiceStatus): boolean {
   if (!dueDate) return false
-  if (status === "PAID" || status === "CANCELLED" || status === "REFUNDED") {
+  if (status === 'PAID' || status === 'CANCELLED' || status === 'REFUNDED') {
     return false
   }
 
-  const due = typeof dueDate === "string" ? new Date(dueDate) : dueDate
+  const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   due.setHours(0, 0, 0, 0)
@@ -492,9 +494,9 @@ export function getDueDays(dueDate: Date | string | null): {
   isOverdue: boolean
   label: string
 } {
-  if (!dueDate) return { days: 0, isOverdue: false, label: "No due date" }
+  if (!dueDate) return { days: 0, isOverdue: false, label: 'No due date' }
 
-  const due = typeof dueDate === "string" ? new Date(dueDate) : dueDate
+  const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   due.setHours(0, 0, 0, 0)
@@ -506,46 +508,43 @@ export function getDueDays(dueDate: Date | string | null): {
     return {
       days: Math.abs(diffDays),
       isOverdue: true,
-      label: `${Math.abs(diffDays)} days overdue`
+      label: `${Math.abs(diffDays)} days overdue`,
     }
   } else if (diffDays === 0) {
-    return { days: 0, isOverdue: false, label: "Due today" }
+    return { days: 0, isOverdue: false, label: 'Due today' }
   } else {
     return {
       days: diffDays,
       isOverdue: false,
-      label: `Due in ${diffDays} days`
+      label: `Due in ${diffDays} days`,
     }
   }
 }
 
 // Payment method icons mapping for Lucide icons
 export const paymentMethodIcons = {
-  CASH: "Banknote",
-  CARD: "CreditCard",
-  UPI: "Smartphone",
-  BANK_TRANSFER: "Building2",
-  CHEQUE: "FileText",
-  INSURANCE: "Shield",
-  WALLET: "Wallet",
-  ONLINE: "Globe"
+  CASH: 'Banknote',
+  CARD: 'CreditCard',
+  UPI: 'Smartphone',
+  BANK_TRANSFER: 'Building2',
+  CHEQUE: 'FileText',
+  INSURANCE: 'Shield',
+  WALLET: 'Wallet',
+  ONLINE: 'Globe',
 } as const
 
 // Common payment terms
 export const paymentTermsOptions = [
-  { value: 0, label: "Due on Receipt" },
-  { value: 7, label: "Net 7 Days" },
-  { value: 15, label: "Net 15 Days" },
-  { value: 30, label: "Net 30 Days" },
-  { value: 45, label: "Net 45 Days" },
-  { value: 60, label: "Net 60 Days" }
+  { value: 0, label: 'Due on Receipt' },
+  { value: 7, label: 'Net 7 Days' },
+  { value: 15, label: 'Net 15 Days' },
+  { value: 30, label: 'Net 30 Days' },
+  { value: 45, label: 'Net 45 Days' },
+  { value: 60, label: 'Net 60 Days' },
 ]
 
 // Calculate due date from invoice date
-export function calculateDueDate(
-  invoiceDate: Date,
-  paymentTermDays: number
-): Date {
+export function calculateDueDate(invoiceDate: Date, paymentTermDays: number): Date {
   const dueDate = new Date(invoiceDate)
   dueDate.setDate(dueDate.getDate() + paymentTermDays)
   return dueDate
@@ -553,48 +552,74 @@ export function calculateDueDate(
 
 // Number to words (Indian format) for invoice amounts
 export function numberToWords(num: number): string {
-  if (num === 0) return "Zero"
+  if (num === 0) return 'Zero'
 
   const ones = [
-    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
-    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
-    "Seventeen", "Eighteen", "Nineteen"
+    '',
+    'One',
+    'Two',
+    'Three',
+    'Four',
+    'Five',
+    'Six',
+    'Seven',
+    'Eight',
+    'Nine',
+    'Ten',
+    'Eleven',
+    'Twelve',
+    'Thirteen',
+    'Fourteen',
+    'Fifteen',
+    'Sixteen',
+    'Seventeen',
+    'Eighteen',
+    'Nineteen',
   ]
 
   const tens = [
-    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+    '',
+    '',
+    'Twenty',
+    'Thirty',
+    'Forty',
+    'Fifty',
+    'Sixty',
+    'Seventy',
+    'Eighty',
+    'Ninety',
   ]
 
-  const scales = ["", "Thousand", "Lakh", "Crore"]
+  const scales = ['', 'Thousand', 'Lakh', 'Crore']
 
   function convertGroup(n: number): string {
-    if (n === 0) return ""
+    if (n === 0) return ''
     if (n < 20) return ones[n]
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "")
-    return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " " + convertGroup(n % 100) : "")
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '')
+    return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convertGroup(n % 100) : '')
   }
 
   // Handle Indian numbering system
   const rupees = Math.floor(num)
   const paise = Math.round((num - rupees) * 100)
 
-  let result = ""
+  let result = ''
 
   // Crores (10,000,000+)
   if (rupees >= 10000000) {
-    result += convertGroup(Math.floor(rupees / 10000000)) + " Crore "
+    result += convertGroup(Math.floor(rupees / 10000000)) + ' Crore '
   }
 
   // Lakhs (100,000 - 9,999,999)
   const afterCrore = rupees % 10000000
   if (afterCrore >= 100000) {
-    result += convertGroup(Math.floor(afterCrore / 100000)) + " Lakh "
+    result += convertGroup(Math.floor(afterCrore / 100000)) + ' Lakh '
   }
 
   // Thousands (1,000 - 99,999)
   const afterLakh = afterCrore % 100000
   if (afterLakh >= 1000) {
-    result += convertGroup(Math.floor(afterLakh / 1000)) + " Thousand "
+    result += convertGroup(Math.floor(afterLakh / 1000)) + ' Thousand '
   }
 
   // Hundreds and below
@@ -603,30 +628,30 @@ export function numberToWords(num: number): string {
     result += convertGroup(afterThousand)
   }
 
-  result = result.trim() + " Rupees"
+  result = result.trim() + ' Rupees'
 
   if (paise > 0) {
-    result += " and " + convertGroup(paise) + " Paise"
+    result += ' and ' + convertGroup(paise) + ' Paise'
   }
 
-  result += " Only"
+  result += ' Only'
 
-  return result.replace(/\s+/g, " ").trim()
+  return result.replace(/\s+/g, ' ').trim()
 }
 
 // Report date range presets
 export const dateRangePresets = [
-  { label: "Today", value: "today" },
-  { label: "Yesterday", value: "yesterday" },
-  { label: "This Week", value: "this_week" },
-  { label: "Last Week", value: "last_week" },
-  { label: "This Month", value: "this_month" },
-  { label: "Last Month", value: "last_month" },
-  { label: "This Quarter", value: "this_quarter" },
-  { label: "Last Quarter", value: "last_quarter" },
-  { label: "This Year", value: "this_year" },
-  { label: "Last Year", value: "last_year" },
-  { label: "Custom Range", value: "custom" }
+  { label: 'Today', value: 'today' },
+  { label: 'Yesterday', value: 'yesterday' },
+  { label: 'This Week', value: 'this_week' },
+  { label: 'Last Week', value: 'last_week' },
+  { label: 'This Month', value: 'this_month' },
+  { label: 'Last Month', value: 'last_month' },
+  { label: 'This Quarter', value: 'this_quarter' },
+  { label: 'Last Quarter', value: 'last_quarter' },
+  { label: 'This Year', value: 'this_year' },
+  { label: 'Last Year', value: 'last_year' },
+  { label: 'Custom Range', value: 'custom' },
 ]
 
 // Get date range from preset
@@ -641,10 +666,10 @@ export function getDateRangeFromPreset(preset: string): {
   endOfDay.setHours(23, 59, 59, 999)
 
   switch (preset) {
-    case "today":
+    case 'today':
       return { startDate: today, endDate: endOfDay }
 
-    case "yesterday": {
+    case 'yesterday': {
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
       const endYesterday = new Date(yesterday)
@@ -652,13 +677,13 @@ export function getDateRangeFromPreset(preset: string): {
       return { startDate: yesterday, endDate: endYesterday }
     }
 
-    case "this_week": {
+    case 'this_week': {
       const startOfWeek = new Date(today)
       startOfWeek.setDate(today.getDate() - today.getDay())
       return { startDate: startOfWeek, endDate: endOfDay }
     }
 
-    case "last_week": {
+    case 'last_week': {
       const startOfLastWeek = new Date(today)
       startOfLastWeek.setDate(today.getDate() - today.getDay() - 7)
       const endOfLastWeek = new Date(startOfLastWeek)
@@ -667,25 +692,25 @@ export function getDateRangeFromPreset(preset: string): {
       return { startDate: startOfLastWeek, endDate: endOfLastWeek }
     }
 
-    case "this_month": {
+    case 'this_month': {
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
       return { startDate: startOfMonth, endDate: endOfDay }
     }
 
-    case "last_month": {
+    case 'last_month': {
       const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
       const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
       endOfLastMonth.setHours(23, 59, 59, 999)
       return { startDate: startOfLastMonth, endDate: endOfLastMonth }
     }
 
-    case "this_quarter": {
+    case 'this_quarter': {
       const quarter = Math.floor(today.getMonth() / 3)
       const startOfQuarter = new Date(today.getFullYear(), quarter * 3, 1)
       return { startDate: startOfQuarter, endDate: endOfDay }
     }
 
-    case "last_quarter": {
+    case 'last_quarter': {
       const currentQuarter = Math.floor(today.getMonth() / 3)
       const lastQuarter = currentQuarter - 1
       const year = lastQuarter < 0 ? today.getFullYear() - 1 : today.getFullYear()
@@ -696,12 +721,12 @@ export function getDateRangeFromPreset(preset: string): {
       return { startDate: startOfLastQuarter, endDate: endOfLastQuarter }
     }
 
-    case "this_year": {
+    case 'this_year': {
       const startOfYear = new Date(today.getFullYear(), 0, 1)
       return { startDate: startOfYear, endDate: endOfDay }
     }
 
-    case "last_year": {
+    case 'last_year': {
       const startOfLastYear = new Date(today.getFullYear() - 1, 0, 1)
       const endOfLastYear = new Date(today.getFullYear() - 1, 11, 31)
       endOfLastYear.setHours(23, 59, 59, 999)

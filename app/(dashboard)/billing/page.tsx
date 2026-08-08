@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Plus,
   Receipt,
@@ -30,10 +30,10 @@ import {
   CalendarClock,
   Brain,
   Loader2,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { formatCurrency, dateRangePresets, getDateRangeFromPreset } from "@/lib/billing-utils"
-import { ExportMenu } from "@/components/ui/export-menu"
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { formatCurrency, dateRangePresets, getDateRangeFromPreset } from '@/lib/billing-utils'
+import { ExportMenu } from '@/components/ui/export-menu'
 
 interface SummaryData {
   summary: {
@@ -83,7 +83,7 @@ interface PlanSummary {
 export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SummaryData | null>(null)
-  const [datePreset, setDatePreset] = useState("this_month")
+  const [datePreset, setDatePreset] = useState('this_month')
   const [error, setError] = useState<string | null>(null)
   const [agingData, setAgingData] = useState<AgingData | null>(null)
   const [planSummary, setPlanSummary] = useState<PlanSummary | null>(null)
@@ -95,7 +95,7 @@ export default function BillingPage() {
   const fetchCashFlowForecast = async () => {
     try {
       setCashFlowLoading(true)
-      const res = await fetch("/api/ai/cashflow-forecast")
+      const res = await fetch('/api/ai/cashflow-forecast')
       if (!res.ok) return
       setCashFlowData(await res.json())
     } catch {
@@ -114,14 +114,14 @@ export default function BillingPage() {
         const errorData = await response.json()
         const errorMessage = errorData.details
           ? `${errorData.error}: ${errorData.details}`
-          : errorData.error || "Failed to fetch summary"
+          : errorData.error || 'Failed to fetch summary'
         throw new Error(errorMessage)
       }
       const result = await response.json()
       setData(result)
     } catch (error) {
-      console.error("Error fetching billing summary:", error)
-      setError(error instanceof Error ? error.message : "Failed to fetch summary")
+      console.error('Error fetching billing summary:', error)
+      setError(error instanceof Error ? error.message : 'Failed to fetch summary')
     } finally {
       setLoading(false)
     }
@@ -130,8 +130,8 @@ export default function BillingPage() {
   const fetchRevenueCycle = async () => {
     try {
       const [agingRes, plansRes] = await Promise.all([
-        fetch("/api/billing/reports?type=outstanding"),
-        fetch("/api/payment-plans?limit=1"),
+        fetch('/api/billing/reports?type=outstanding'),
+        fetch('/api/payment-plans?limit=1'),
       ])
       if (agingRes.ok) {
         const d = await agingRes.json()
@@ -152,23 +152,23 @@ export default function BillingPage() {
   }, [datePreset])
 
   const paymentMethodLabels: Record<string, string> = {
-    CASH: "Cash",
-    CARD: "Card",
-    UPI: "UPI",
-    BANK_TRANSFER: "Bank Transfer",
-    CHEQUE: "Cheque",
-    INSURANCE: "Insurance",
-    WALLET: "Wallet",
+    CASH: 'Cash',
+    CARD: 'Card',
+    UPI: 'UPI',
+    BANK_TRANSFER: 'Bank Transfer',
+    CHEQUE: 'Cheque',
+    INSURANCE: 'Insurance',
+    WALLET: 'Wallet',
   }
 
   const invoiceStatusLabels: Record<string, { label: string; color: string }> = {
-    DRAFT: { label: "Draft", color: "text-muted-foreground" },
-    PENDING: { label: "Pending", color: "text-yellow-600" },
-    PARTIALLY_PAID: { label: "Partially Paid", color: "text-blue-600" },
-    PAID: { label: "Paid", color: "text-green-600" },
-    OVERDUE: { label: "Overdue", color: "text-red-600" },
-    CANCELLED: { label: "Cancelled", color: "text-muted-foreground" },
-    REFUNDED: { label: "Refunded", color: "text-purple-600" },
+    DRAFT: { label: 'Draft', color: 'text-muted-foreground' },
+    PENDING: { label: 'Pending', color: 'text-yellow-600' },
+    PARTIALLY_PAID: { label: 'Partially Paid', color: 'text-blue-600' },
+    PAID: { label: 'Paid', color: 'text-green-600' },
+    OVERDUE: { label: 'Overdue', color: 'text-red-600' },
+    CANCELLED: { label: 'Cancelled', color: 'text-muted-foreground' },
+    REFUNDED: { label: 'Refunded', color: 'text-purple-600' },
   }
 
   return (
@@ -177,9 +177,7 @@ export default function BillingPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Billing & Finance</h1>
-          <p className="text-muted-foreground">
-            Manage invoices, payments, and financial reports
-          </p>
+          <p className="text-muted-foreground">Manage invoices, payments, and financial reports</p>
         </div>
         <div className="flex gap-2">
           <Select value={datePreset} onValueChange={setDatePreset}>
@@ -187,11 +185,13 @@ export default function BillingPage() {
               <SelectValue placeholder="Select period" />
             </SelectTrigger>
             <SelectContent>
-              {dateRangePresets.filter(p => p.value !== "custom").map((preset) => (
-                <SelectItem key={preset.value} value={preset.value}>
-                  {preset.label}
-                </SelectItem>
-              ))}
+              {dateRangePresets
+                .filter((p) => p.value !== 'custom')
+                .map((preset) => (
+                  <SelectItem key={preset.value} value={preset.value}>
+                    {preset.label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
           <ExportMenu
@@ -200,47 +200,47 @@ export default function BillingPage() {
               const rows: Record<string, unknown>[] = []
               if (data) {
                 rows.push({
-                  "Metric": "Total Billed",
-                  "Amount": data.summary.totalBilled,
-                  "Count": data.summary.invoiceCount,
+                  Metric: 'Total Billed',
+                  Amount: data.summary.totalBilled,
+                  Count: data.summary.invoiceCount,
                 })
                 rows.push({
-                  "Metric": "Total Collected",
-                  "Amount": data.summary.totalCollected,
-                  "Count": data.summary.paymentCount,
+                  Metric: 'Total Collected',
+                  Amount: data.summary.totalCollected,
+                  Count: data.summary.paymentCount,
                 })
                 rows.push({
-                  "Metric": "Total Outstanding",
-                  "Amount": data.summary.totalOutstanding,
-                  "Count": data.summary.outstandingInvoices,
+                  Metric: 'Total Outstanding',
+                  Amount: data.summary.totalOutstanding,
+                  Count: data.summary.outstandingInvoices,
                 })
                 rows.push({
-                  "Metric": "Total Discounts",
-                  "Amount": data.summary.totalDiscounts,
-                  "Count": "",
+                  Metric: 'Total Discounts',
+                  Amount: data.summary.totalDiscounts,
+                  Count: '',
                 })
                 rows.push({
-                  "Metric": "Insurance Claimed",
-                  "Amount": data.summary.insuranceClaimed,
-                  "Count": data.summary.insuranceClaimCount,
+                  Metric: 'Insurance Claimed',
+                  Amount: data.summary.insuranceClaimed,
+                  Count: data.summary.insuranceClaimCount,
                 })
                 rows.push({
-                  "Metric": "Insurance Settled",
-                  "Amount": data.summary.insuranceSettled,
-                  "Count": "",
+                  Metric: 'Insurance Settled',
+                  Amount: data.summary.insuranceSettled,
+                  Count: '',
                 })
-                data.breakdowns.byPaymentMethod.forEach(m => {
+                data.breakdowns.byPaymentMethod.forEach((m) => {
                   rows.push({
-                    "Metric": `Payment Method: ${m.method}`,
-                    "Amount": m.amount,
-                    "Count": m.count,
+                    Metric: `Payment Method: ${m.method}`,
+                    Amount: m.amount,
+                    Count: m.count,
                   })
                 })
-                data.breakdowns.byInvoiceStatus.forEach(s => {
+                data.breakdowns.byInvoiceStatus.forEach((s) => {
                   rows.push({
-                    "Metric": `Invoice Status: ${s.status}`,
-                    "Amount": s.amount,
-                    "Count": s.count,
+                    Metric: `Invoice Status: ${s.status}`,
+                    Amount: s.amount,
+                    Count: s.count,
                   })
                 })
               }
@@ -265,7 +265,7 @@ export default function BillingPage() {
               <div>
                 <p className="font-medium text-red-900">Error loading billing data</p>
                 <p className="text-sm text-red-700">{error}</p>
-                {error.includes("permission") && (
+                {error.includes('permission') && (
                   <p className="text-xs text-red-600 mt-1">
                     Your account needs ADMIN or ACCOUNTANT role to view billing reports.
                   </p>
@@ -451,9 +451,7 @@ export default function BillingPage() {
                       </div>
                       <div className="text-right">
                         <div className="font-medium">{formatCurrency(method.amount)}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {method.count} payments
-                        </div>
+                        <div className="text-xs text-muted-foreground">{method.count} payments</div>
                       </div>
                     </div>
                   ))
@@ -486,29 +484,27 @@ export default function BillingPage() {
                   data?.breakdowns.byInvoiceStatus.map((status) => {
                     const config = invoiceStatusLabels[status.status] || {
                       label: status.status,
-                      color: "text-muted-foreground",
+                      color: 'text-muted-foreground',
                     }
                     return (
                       <div key={status.status} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          {status.status === "PAID" && (
+                          {status.status === 'PAID' && (
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           )}
-                          {status.status === "PENDING" && (
+                          {status.status === 'PENDING' && (
                             <Clock className="h-4 w-4 text-yellow-500" />
                           )}
-                          {status.status === "OVERDUE" && (
+                          {status.status === 'OVERDUE' && (
                             <AlertCircle className="h-4 w-4 text-red-500" />
                           )}
-                          {status.status === "CANCELLED" && (
+                          {status.status === 'CANCELLED' && (
                             <XCircle className="h-4 w-4 text-muted-foreground" />
                           )}
-                          {!["PAID", "PENDING", "OVERDUE", "CANCELLED"].includes(status.status) && (
+                          {!['PAID', 'PENDING', 'OVERDUE', 'CANCELLED'].includes(status.status) && (
                             <FileText className="h-4 w-4 text-muted-foreground" />
                           )}
-                          <span className={`text-sm ${config.color}`}>
-                            {config.label}
-                          </span>
+                          <span className={`text-sm ${config.color}`}>{config.label}</span>
                         </div>
                         <div className="text-right">
                           <div className="font-medium">{formatCurrency(status.amount)}</div>
@@ -541,7 +537,8 @@ export default function BillingPage() {
                   <span className="text-sm font-medium">
                     {data.summary.totalBilled > 0
                       ? Math.round((data.summary.totalCollected / data.summary.totalBilled) * 100)
-                      : 0}%
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -550,7 +547,12 @@ export default function BillingPage() {
                     style={{
                       width: `${
                         data.summary.totalBilled > 0
-                          ? Math.min(100, Math.round((data.summary.totalCollected / data.summary.totalBilled) * 100))
+                          ? Math.min(
+                              100,
+                              Math.round(
+                                (data.summary.totalCollected / data.summary.totalBilled) * 100
+                              )
+                            )
                           : 0
                       }%`,
                     }}
@@ -602,7 +604,7 @@ export default function BillingPage() {
               ) : (
                 <Brain className="h-4 w-4 mr-2" />
               )}
-              {cashFlowData ? "Refresh" : "Generate Forecast"}
+              {cashFlowData ? 'Refresh' : 'Generate Forecast'}
             </Button>
           </div>
         </CardHeader>
@@ -629,17 +631,21 @@ export default function BillingPage() {
                 </div>
                 <div className="text-center p-3 rounded-lg bg-purple-50">
                   <div className="text-lg font-bold text-purple-700">
-                    {cashFlowData.summary?.bestDay || "N/A"}
+                    {cashFlowData.summary?.bestDay || 'N/A'}
                   </div>
                   <div className="text-xs text-purple-600">Best Day</div>
                 </div>
                 <div className="text-center p-3 rounded-lg bg-amber-50">
-                  <Badge className={
-                    cashFlowData.summary?.trend === "GROWING" ? "bg-green-100 text-green-700 border-0" :
-                    cashFlowData.summary?.trend === "DECLINING" ? "bg-red-100 text-red-700 border-0" :
-                    "bg-muted text-muted-foreground border-0"
-                  }>
-                    {cashFlowData.summary?.trend || "STABLE"}
+                  <Badge
+                    className={
+                      cashFlowData.summary?.trend === 'GROWING'
+                        ? 'bg-green-100 text-green-700 border-0'
+                        : cashFlowData.summary?.trend === 'DECLINING'
+                          ? 'bg-red-100 text-red-700 border-0'
+                          : 'bg-muted text-muted-foreground border-0'
+                    }
+                  >
+                    {cashFlowData.summary?.trend || 'STABLE'}
                   </Badge>
                   <div className="text-xs text-amber-600 mt-1">Trend</div>
                 </div>
@@ -651,7 +657,9 @@ export default function BillingPage() {
                   <h4 className="text-sm font-medium">Weekly Breakdown</h4>
                   {cashFlowData.weeklyTotals.map((week: any) => (
                     <div key={week.week} className="flex items-center justify-between text-sm">
-                      <span>Week {week.week}: {week.startDate} — {week.endDate}</span>
+                      <span>
+                        Week {week.week}: {week.startDate} — {week.endDate}
+                      </span>
                       <span className="font-medium">{formatCurrency(week.projected)}</span>
                     </div>
                   ))}
@@ -666,7 +674,9 @@ export default function BillingPage() {
                     Potential Shortfalls
                   </div>
                   {cashFlowData.summary.potentialShortfalls.map((s: string, i: number) => (
-                    <p key={i} className="text-xs text-amber-600">• {s}</p>
+                    <p key={i} className="text-xs text-amber-600">
+                      • {s}
+                    </p>
                   ))}
                 </div>
               )}
@@ -693,11 +703,11 @@ export default function BillingPage() {
             ) : (
               <div className="space-y-3">
                 {[
-                  { label: "Current", data: agingData.aging.current, color: "bg-green-500" },
-                  { label: "1–30 days", data: agingData.aging.days1_30, color: "bg-yellow-500" },
-                  { label: "31–60 days", data: agingData.aging.days31_60, color: "bg-orange-500" },
-                  { label: "61–90 days", data: agingData.aging.days61_90, color: "bg-red-400" },
-                  { label: "90+ days", data: agingData.aging.over90, color: "bg-red-600" },
+                  { label: 'Current', data: agingData.aging.current, color: 'bg-green-500' },
+                  { label: '1–30 days', data: agingData.aging.days1_30, color: 'bg-yellow-500' },
+                  { label: '31–60 days', data: agingData.aging.days31_60, color: 'bg-orange-500' },
+                  { label: '61–90 days', data: agingData.aging.days61_90, color: 'bg-red-400' },
+                  { label: '90+ days', data: agingData.aging.over90, color: 'bg-red-600' },
                 ].map((bucket) => {
                   const total = agingData.totals.totalOutstanding || 1
                   const pct = Math.round((bucket.data.amount / total) * 100)
@@ -707,9 +717,7 @@ export default function BillingPage() {
                         <span>{bucket.label}</span>
                         <div className="text-right">
                           <span className="font-medium">{formatCurrency(bucket.data.amount)}</span>
-                          <span className="text-muted-foreground ml-2">
-                            ({bucket.data.count})
-                          </span>
+                          <span className="text-muted-foreground ml-2">({bucket.data.count})</span>
                         </div>
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden">

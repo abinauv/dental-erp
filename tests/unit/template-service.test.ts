@@ -45,7 +45,7 @@ describe('TemplateService - getStandardVariables', () => {
 
   it('includes essential patient variables', () => {
     const vars = templateService.getStandardVariables()
-    const keys = vars.map(v => v.key)
+    const keys = vars.map((v) => v.key)
     expect(keys).toContain('patientName')
     expect(keys).toContain('firstName')
     expect(keys).toContain('lastName')
@@ -55,7 +55,7 @@ describe('TemplateService - getStandardVariables', () => {
 
   it('includes appointment variables', () => {
     const vars = templateService.getStandardVariables()
-    const keys = vars.map(v => v.key)
+    const keys = vars.map((v) => v.key)
     expect(keys).toContain('appointmentDate')
     expect(keys).toContain('appointmentTime')
     expect(keys).toContain('doctorName')
@@ -63,7 +63,7 @@ describe('TemplateService - getStandardVariables', () => {
 
   it('includes billing variables', () => {
     const vars = templateService.getStandardVariables()
-    const keys = vars.map(v => v.key)
+    const keys = vars.map((v) => v.key)
     expect(keys).toContain('invoiceNo')
     expect(keys).toContain('invoiceAmount')
     expect(keys).toContain('balanceAmount')
@@ -72,7 +72,7 @@ describe('TemplateService - getStandardVariables', () => {
 
   it('includes clinic variables', () => {
     const vars = templateService.getStandardVariables()
-    const keys = vars.map(v => v.key)
+    const keys = vars.map((v) => v.key)
     expect(keys).toContain('clinicName')
     expect(keys).toContain('clinicPhone')
     expect(keys).toContain('clinicEmail')
@@ -109,35 +109,29 @@ describe('TemplateService - replaceVariables', () => {
   })
 
   it('replaces with empty string for missing values', () => {
-    const result = templateService.replaceVariables(
-      'Hello {{patientName}}',
-      { patientName: '' }
-    )
+    const result = templateService.replaceVariables('Hello {{patientName}}', { patientName: '' })
     expect(result).toBe('Hello ')
   })
 
   it('leaves unmatched variables as-is', () => {
-    const result = templateService.replaceVariables(
-      'Hello {{patientName}}, ref: {{unknownVar}}',
-      { patientName: 'Alice' }
-    )
+    const result = templateService.replaceVariables('Hello {{patientName}}, ref: {{unknownVar}}', {
+      patientName: 'Alice',
+    })
     expect(result).toContain('Alice')
     expect(result).toContain('{{unknownVar}}')
   })
 
   it('handles special characters in values', () => {
-    const result = templateService.replaceVariables(
-      'Patient: {{patientName}}',
-      { patientName: "Dr. O'Brien & Partners <test>" }
-    )
+    const result = templateService.replaceVariables('Patient: {{patientName}}', {
+      patientName: "Dr. O'Brien & Partners <test>",
+    })
     expect(result).toBe("Patient: Dr. O'Brien & Partners <test>")
   })
 
   it('handles currency symbols', () => {
-    const result = templateService.replaceVariables(
-      'Amount: ₹{{invoiceAmount}}',
-      { invoiceAmount: '5,000' }
-    )
+    const result = templateService.replaceVariables('Amount: ₹{{invoiceAmount}}', {
+      invoiceAmount: '5,000',
+    })
     expect(result).toBe('Amount: ₹5,000')
   })
 
@@ -147,10 +141,9 @@ describe('TemplateService - replaceVariables', () => {
   })
 
   it('handles template with no variables', () => {
-    const result = templateService.replaceVariables(
-      'This is a static message',
-      { patientName: 'Test' }
-    )
+    const result = templateService.replaceVariables('This is a static message', {
+      patientName: 'Test',
+    })
     expect(result).toBe('This is a static message')
   })
 })
@@ -205,7 +198,7 @@ describe('TemplateService - validateTemplate', () => {
     const longContent = 'A'.repeat(501)
     const result = templateService.validateTemplate(longContent)
     expect(result.isValid).toBe(false)
-    expect(result.errors.some(e => e.includes('too long'))).toBe(true)
+    expect(result.errors.some((e) => e.includes('too long'))).toBe(true)
   })
 
   it('allows content under 500 chars', () => {
@@ -334,9 +327,9 @@ describe('TemplateService - deleteTemplate', () => {
   it('throws when template not found for hospital', async () => {
     vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue(null)
 
-    await expect(
-      templateService.deleteTemplate('tpl-1', 'hosp-1')
-    ).rejects.toThrow('Template not found')
+    await expect(templateService.deleteTemplate('tpl-1', 'hosp-1')).rejects.toThrow(
+      'Template not found'
+    )
   })
 })
 

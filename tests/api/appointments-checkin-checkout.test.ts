@@ -14,7 +14,9 @@ const checkOutModule = await import('@/app/api/appointments/[id]/check-out/route
 function makeRequest(method: string, body?: any) {
   return new Request('http://localhost/api/appointments/apt-1/check-in', {
     method,
-    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+    ...(body
+      ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }
+      : {}),
   }) as any
 }
 

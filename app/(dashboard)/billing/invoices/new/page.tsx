@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table'
 import {
   ArrowLeft,
   User,
@@ -36,13 +36,13 @@ import {
   IndianRupee,
   Calculator,
   FileText,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   formatCurrency,
   calculateInvoiceTotals,
   gstConfig,
   paymentTermsOptions,
-} from "@/lib/billing-utils"
+} from '@/lib/billing-utils'
 
 interface Patient {
   id: string
@@ -80,16 +80,16 @@ interface InvoiceItem {
 export default function NewInvoicePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const preSelectedPatientId = searchParams.get("patientId")
+  const preSelectedPatientId = searchParams.get('patientId')
 
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   // Patient selection
   const [patients, setPatients] = useState<Patient[]>([])
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
-  const [patientSearch, setPatientSearch] = useState("")
+  const [patientSearch, setPatientSearch] = useState('')
   const [showPatientDropdown, setShowPatientDropdown] = useState(false)
 
   // Unbilled treatments
@@ -100,12 +100,12 @@ export default function NewInvoicePage() {
   const [items, setItems] = useState<InvoiceItem[]>([])
 
   // Invoice settings
-  const [discountType, setDiscountType] = useState<"PERCENTAGE" | "FIXED">("FIXED")
+  const [discountType, setDiscountType] = useState<'PERCENTAGE' | 'FIXED'>('FIXED')
   const [discountValue, setDiscountValue] = useState(0)
   const [paymentTermDays, setPaymentTermDays] = useState(0)
-  const [notes, setNotes] = useState("")
+  const [notes, setNotes] = useState('')
   const [termsAndConditions, setTermsAndConditions] = useState(
-    "1. Payment is due within the specified payment terms.\n2. Please bring this invoice for reference during your next visit."
+    '1. Payment is due within the specified payment terms.\n2. Please bring this invoice for reference during your next visit.'
   )
 
   // Calculated totals
@@ -125,11 +125,11 @@ export default function NewInvoicePage() {
     const fetchPatients = async () => {
       try {
         const response = await fetch(`/api/patients?search=${patientSearch}&limit=10`)
-        if (!response.ok) throw new Error("Failed to fetch patients")
+        if (!response.ok) throw new Error('Failed to fetch patients')
         const data = await response.json()
         setPatients(data.patients)
       } catch (error) {
-        console.error("Error fetching patients:", error)
+        console.error('Error fetching patients:', error)
       }
     }
 
@@ -149,13 +149,13 @@ export default function NewInvoicePage() {
         try {
           setLoading(true)
           const response = await fetch(`/api/patients?search=${preSelectedPatientId}`)
-          if (!response.ok) throw new Error("Failed to fetch patient")
+          if (!response.ok) throw new Error('Failed to fetch patient')
           const data = await response.json()
           if (data.patients.length > 0) {
             setSelectedPatient(data.patients[0])
           }
         } catch (error) {
-          console.error("Error fetching patient:", error)
+          console.error('Error fetching patient:', error)
         } finally {
           setLoading(false)
         }
@@ -177,11 +177,11 @@ export default function NewInvoicePage() {
     try {
       setLoadingTreatments(true)
       const response = await fetch(`/api/billing/unbilled-treatments?patientId=${patientId}`)
-      if (!response.ok) throw new Error("Failed to fetch unbilled treatments")
+      if (!response.ok) throw new Error('Failed to fetch unbilled treatments')
       const data = await response.json()
       setUnbilledTreatments(data.treatments)
     } catch (error) {
-      console.error("Error fetching unbilled treatments:", error)
+      console.error('Error fetching unbilled treatments:', error)
     } finally {
       setLoadingTreatments(false)
     }
@@ -203,7 +203,7 @@ export default function NewInvoicePage() {
 
   const selectPatient = (patient: Patient) => {
     setSelectedPatient(patient)
-    setPatientSearch("")
+    setPatientSearch('')
     setShowPatientDropdown(false)
     setItems([]) // Clear items when patient changes
   }
@@ -224,7 +224,7 @@ export default function NewInvoicePage() {
     const newItem: InvoiceItem = {
       id: `item-${Date.now()}`,
       treatmentId: null,
-      description: "",
+      description: '',
       quantity: 1,
       unitPrice: 0,
       taxable: true,
@@ -233,51 +233,47 @@ export default function NewInvoicePage() {
   }
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    )
+    setItems(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
   }
 
   const removeItem = (id: string) => {
     setItems(items.filter((item) => item.id !== id))
   }
 
-  const handleSubmit = async (status: "DRAFT" | "PENDING") => {
+  const handleSubmit = async (status: 'DRAFT' | 'PENDING') => {
     if (!selectedPatient) {
-      setError("Please select a patient")
+      setError('Please select a patient')
       return
     }
 
     if (items.length === 0) {
-      setError("Please add at least one item to the invoice")
+      setError('Please add at least one item to the invoice')
       return
     }
 
     // Validate items
     for (const item of items) {
       if (!item.description.trim()) {
-        setError("All items must have a description")
+        setError('All items must have a description')
         return
       }
       if (item.quantity <= 0) {
-        setError("Quantity must be greater than 0")
+        setError('Quantity must be greater than 0')
         return
       }
       if (item.unitPrice < 0) {
-        setError("Unit price cannot be negative")
+        setError('Unit price cannot be negative')
         return
       }
     }
 
     try {
       setSubmitting(true)
-      setError("")
+      setError('')
 
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
           items: items.map((item) => ({
@@ -298,7 +294,7 @@ export default function NewInvoicePage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to create invoice")
+        throw new Error(data.error || 'Failed to create invoice')
       }
 
       const invoice = await response.json()
@@ -321,9 +317,7 @@ export default function NewInvoicePage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">New Invoice</h1>
-          <p className="text-muted-foreground">
-            Create a new invoice for a patient
-          </p>
+          <p className="text-muted-foreground">Create a new invoice for a patient</p>
         </div>
       </div>
 
@@ -410,9 +404,7 @@ export default function NewInvoicePage() {
             <Card>
               <CardHeader>
                 <CardTitle>Unbilled Treatments</CardTitle>
-                <CardDescription>
-                  Select treatments to add to the invoice
-                </CardDescription>
+                <CardDescription>Select treatments to add to the invoice</CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingTreatments ? (
@@ -439,22 +431,16 @@ export default function NewInvoicePage() {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <div className="font-medium">
-                              {formatCurrency(treatment.unitPrice)}
-                            </div>
+                            <div className="font-medium">{formatCurrency(treatment.unitPrice)}</div>
                           </div>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => addTreatmentToInvoice(treatment)}
-                            disabled={items.some(
-                              (i) => i.treatmentId === treatment.treatmentId
-                            )}
+                            disabled={items.some((i) => i.treatmentId === treatment.treatmentId)}
                           >
-                            {items.some(
-                              (i) => i.treatmentId === treatment.treatmentId
-                            ) ? (
-                              "Added"
+                            {items.some((i) => i.treatmentId === treatment.treatmentId) ? (
+                              'Added'
                             ) : (
                               <>
                                 <Plus className="h-4 w-4 mr-1" />
@@ -477,9 +463,7 @@ export default function NewInvoicePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Invoice Items</CardTitle>
-                  <CardDescription>
-                    Items to be included in the invoice
-                  </CardDescription>
+                  <CardDescription>Items to be included in the invoice</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={addCustomItem}>
                   <Plus className="h-4 w-4 mr-1" />
@@ -492,9 +476,7 @@ export default function NewInvoicePage() {
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2" />
                   <p>No items added yet</p>
-                  <p className="text-sm">
-                    Add treatments from above or add a custom item
-                  </p>
+                  <p className="text-sm">Add treatments from above or add a custom item</p>
                 </div>
               ) : (
                 <Table>
@@ -514,9 +496,7 @@ export default function NewInvoicePage() {
                         <TableCell>
                           <Input
                             value={item.description}
-                            onChange={(e) =>
-                              updateItem(item.id, "description", e.target.value)
-                            }
+                            onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                             placeholder="Item description"
                           />
                         </TableCell>
@@ -526,7 +506,7 @@ export default function NewInvoicePage() {
                             min="1"
                             value={item.quantity}
                             onChange={(e) =>
-                              updateItem(item.id, "quantity", parseInt(e.target.value) || 1)
+                              updateItem(item.id, 'quantity', parseInt(e.target.value) || 1)
                             }
                             className="w-20 text-center"
                           />
@@ -538,7 +518,7 @@ export default function NewInvoicePage() {
                             step="0.01"
                             value={item.unitPrice}
                             onChange={(e) =>
-                              updateItem(item.id, "unitPrice", parseFloat(e.target.value) || 0)
+                              updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)
                             }
                             className="w-28 text-right"
                           />
@@ -549,17 +529,11 @@ export default function NewInvoicePage() {
                         <TableCell className="text-center">
                           <Checkbox
                             checked={item.taxable}
-                            onCheckedChange={(checked) =>
-                              updateItem(item.id, "taxable", checked)
-                            }
+                            onCheckedChange={(checked) => updateItem(item.id, 'taxable', checked)}
                           />
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeItem(item.id)}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)}>
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </TableCell>
@@ -614,9 +588,7 @@ export default function NewInvoicePage() {
                 <div className="flex gap-2">
                   <Select
                     value={discountType}
-                    onValueChange={(value: "PERCENTAGE" | "FIXED") =>
-                      setDiscountType(value)
-                    }
+                    onValueChange={(value: 'PERCENTAGE' | 'FIXED') => setDiscountType(value)}
                   >
                     <SelectTrigger className="w-[100px]">
                       <SelectValue />
@@ -630,9 +602,7 @@ export default function NewInvoicePage() {
                     type="number"
                     min="0"
                     value={discountValue}
-                    onChange={(e) =>
-                      setDiscountValue(parseFloat(e.target.value) || 0)
-                    }
+                    onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
                   />
                 </div>
               </div>
@@ -679,9 +649,7 @@ export default function NewInvoicePage() {
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total</span>
-                  <span className="text-primary">
-                    {formatCurrency(totals.totalAmount)}
-                  </span>
+                  <span className="text-primary">{formatCurrency(totals.totalAmount)}</span>
                 </div>
               </div>
 
@@ -689,15 +657,15 @@ export default function NewInvoicePage() {
               <div className="space-y-2 pt-4">
                 <Button
                   className="w-full"
-                  onClick={() => handleSubmit("PENDING")}
+                  onClick={() => handleSubmit('PENDING')}
                   disabled={submitting || !selectedPatient || items.length === 0}
                 >
-                  {submitting ? "Creating..." : "Create & Send Invoice"}
+                  {submitting ? 'Creating...' : 'Create & Send Invoice'}
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => handleSubmit("DRAFT")}
+                  onClick={() => handleSubmit('DRAFT')}
                   disabled={submitting || !selectedPatient || items.length === 0}
                 >
                   Save as Draft

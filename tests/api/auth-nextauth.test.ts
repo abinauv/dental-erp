@@ -293,9 +293,16 @@ describe('NextAuth — POST /api/auth/[...nextauth]', () => {
 
     it('should accept valid email with 6+ char password', async () => {
       vi.mocked(mockPrisma.user.findUnique).mockResolvedValue({
-        id: 'u1', email: 'valid@test.com', name: 'Test', password: 'hashed',
-        role: 'DOCTOR', isActive: true, isHospitalAdmin: false, hospitalId: 'h1',
-        staff: { id: 's1' }, hospital: { id: 'h1', isActive: true },
+        id: 'u1',
+        email: 'valid@test.com',
+        name: 'Test',
+        password: 'hashed',
+        role: 'DOCTOR',
+        isActive: true,
+        isHospitalAdmin: false,
+        hospitalId: 'h1',
+        staff: { id: 's1' },
+        hospital: { id: 'h1', isActive: true },
       })
       vi.mocked(mockBcrypt.compare).mockResolvedValue(true)
 

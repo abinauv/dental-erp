@@ -1,27 +1,22 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { FormRenderer, type FormField } from "./form-renderer"
-import { FileText, Eye, CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react"
-import { toast } from "sonner"
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { FormRenderer, type FormField } from './form-renderer'
+import { FileText, Eye, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface FormSubmission {
   id: string
@@ -44,11 +39,18 @@ interface FormSubmission {
   }
 }
 
-const statusConfig: Record<string, { icon: React.ReactNode; label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: "Pending Review", variant: "secondary" },
-  REVIEWED: { icon: <Eye className="h-3 w-3" />, label: "Reviewed", variant: "outline" },
-  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: "Approved", variant: "default" },
-  REJECTED: { icon: <XCircle className="h-3 w-3" />, label: "Rejected", variant: "destructive" },
+const statusConfig: Record<
+  string,
+  {
+    icon: React.ReactNode
+    label: string
+    variant: 'default' | 'secondary' | 'destructive' | 'outline'
+  }
+> = {
+  SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: 'Pending Review', variant: 'secondary' },
+  REVIEWED: { icon: <Eye className="h-3 w-3" />, label: 'Reviewed', variant: 'outline' },
+  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Approved', variant: 'default' },
+  REJECTED: { icon: <XCircle className="h-3 w-3" />, label: 'Rejected', variant: 'destructive' },
 }
 
 interface PatientFormSubmissionsProps {
@@ -59,8 +61,8 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
   const [submissions, setSubmissions] = useState<FormSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [viewSubmission, setViewSubmission] = useState<FormSubmission | null>(null)
-  const [reviewStatus, setReviewStatus] = useState("")
-  const [reviewNotes, setReviewNotes] = useState("")
+  const [reviewStatus, setReviewStatus] = useState('')
+  const [reviewNotes, setReviewNotes] = useState('')
   const [reviewing, setReviewing] = useState(false)
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
       const data = await res.json()
       if (data.submissions) setSubmissions(data.submissions)
     } catch {
-      toast.error("Failed to load form submissions")
+      toast.error('Failed to load form submissions')
     } finally {
       setLoading(false)
     }
@@ -87,10 +89,10 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
       if (data.submission) {
         setViewSubmission(data.submission)
         setReviewStatus(data.submission.status)
-        setReviewNotes(data.submission.reviewNotes || "")
+        setReviewNotes(data.submission.reviewNotes || '')
       }
     } catch {
-      toast.error("Failed to load submission details")
+      toast.error('Failed to load submission details')
     }
   }
 
@@ -99,20 +101,20 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
     setReviewing(true)
     try {
       const res = await fetch(`/api/forms/${viewSubmission.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: reviewStatus, reviewNotes }),
       })
       if (res.ok) {
-        toast.success("Review saved")
+        toast.success('Review saved')
         setViewSubmission(null)
         fetchSubmissions()
       } else {
         const err = await res.json()
-        toast.error(err.error || "Failed to save review")
+        toast.error(err.error || 'Failed to save review')
       }
     } catch {
-      toast.error("Failed to save review")
+      toast.error('Failed to save review')
     } finally {
       setReviewing(false)
     }
@@ -154,14 +156,14 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{s.template.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {new Date(s.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        {new Date(s.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
-                        {s.signedAt && " (Signed)"}
+                        {s.signedAt && ' (Signed)'}
                       </div>
                     </div>
                     <Badge variant={sc.variant} className="flex items-center gap-1">
