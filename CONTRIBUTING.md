@@ -76,6 +76,9 @@ npm run dev
 ### Code Style
 
 - ESLint config is provided — run `npm run lint` before committing
+- Prettier owns formatting — don't hand-format, and don't argue with it. The
+  pre-commit hook formats staged files for you; `npm run format` does the whole
+  repo and `npm run format:check` is what CI runs
 - Use Zod for input validation on all API routes
 - Use `requireAuthAndRole()` from `lib/api-helpers.ts` for auth checks
 - All database queries should be scoped to `hospitalId` for multi-tenancy

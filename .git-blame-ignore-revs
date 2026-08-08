@@ -1,0 +1,10 @@
+# Commits that changed formatting only, and would otherwise bury every line of
+# real history under one author and one date in `git blame`.
+#
+# GitHub's blame view honours this file automatically. Locally you have to opt
+# in once:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: format the whole codebase with prettier
+86bfdd8a4203eb90ec6f9db27ec3e3c7a96f4b21

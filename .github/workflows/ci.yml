@@ -46,6 +46,14 @@ jobs:
         working-directory: .
         run: npx eslint .
 
+      # The pre-commit hook formats staged files, so this only fires for commits
+      # made with the hook bypassed or absent. It is here because the cost of
+      # letting formatting drift is paid by whoever touches the file next: their
+      # diff arrives full of reformatting they did not write.
+      - name: Format check
+        working-directory: .
+        run: npx prettier --check .
+
   unit-tests:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
