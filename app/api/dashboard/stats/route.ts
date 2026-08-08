@@ -1,160 +1,161 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuthAndRole } from '@/lib/api-helpers';
-import prisma from '@/lib/prisma';
-import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuthAndRole } from '@/lib/api-helpers'
+import prisma from '@/lib/prisma'
+import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns'
 
 // Helper function to convert BigInt to Number in query results
 function convertBigIntToNumber(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
-  if (typeof obj === 'bigint') return Number(obj);
-  if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+  if (obj === null || obj === undefined) return obj
+  if (obj instanceof Date) return obj // Preserve Date objects
+  if (typeof obj === 'bigint') return Number(obj)
+  if (Array.isArray(obj)) return obj.map(convertBigIntToNumber)
   if (typeof obj === 'object') {
-    const converted: any = {};
+    const converted: any = {}
     for (const key in obj) {
-      converted[key] = convertBigIntToNumber(obj[key]);
+      converted[key] = convertBigIntToNumber(obj[key])
     }
-    return converted;
+    return converted
   }
-  return obj;
+  return obj
 }
 
 // GET /api/dashboard/stats - Get dashboard statistics
 export async function GET(req: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole();
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const now = new Date();
-    const todayStart = startOfDay(now);
-    const todayEnd = endOfDay(now);
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
-    const last7DaysStart = subDays(now, 6);
-    const last6MonthsStart = subMonths(monthStart, 5);
+    const now = new Date()
+    const todayStart = startOfDay(now)
+    const todayEnd = endOfDay(now)
+    const monthStart = startOfMonth(now)
+    const monthEnd = endOfMonth(now)
+    const last7DaysStart = subDays(now, 6)
+    const last6MonthsStart = subMonths(monthStart, 5)
 
     // Fetch all statistics in parallel with error handling
-    let results;
+    let results
     try {
       results = await Promise.all([
-      // Total patients
-      prisma.patient.count({
-        where: { isActive: true, hospitalId },
-      }),
+        // Total patients
+        prisma.patient.count({
+          where: { isActive: true, hospitalId },
+        }),
 
-      // New patients this month
-      prisma.patient.count({
-        where: {
-          isActive: true,
-          hospitalId,
-          createdAt: {
-            gte: monthStart,
-            lte: monthEnd,
+        // New patients this month
+        prisma.patient.count({
+          where: {
+            isActive: true,
+            hospitalId,
+            createdAt: {
+              gte: monthStart,
+              lte: monthEnd,
+            },
           },
-        },
-      }),
+        }),
 
-      // Today's appointments
-      prisma.appointment.count({
-        where: {
-          hospitalId,
-          scheduledDate: {
-            gte: todayStart,
-            lte: todayEnd,
+        // Today's appointments
+        prisma.appointment.count({
+          where: {
+            hospitalId,
+            scheduledDate: {
+              gte: todayStart,
+              lte: todayEnd,
+            },
           },
-        },
-      }),
+        }),
 
-      // This month's appointments
-      prisma.appointment.count({
-        where: {
-          hospitalId,
-          scheduledDate: {
-            gte: monthStart,
-            lte: monthEnd,
+        // This month's appointments
+        prisma.appointment.count({
+          where: {
+            hospitalId,
+            scheduledDate: {
+              gte: monthStart,
+              lte: monthEnd,
+            },
           },
-        },
-      }),
+        }),
 
-      // Pending appointments (upcoming)
-      prisma.appointment.count({
-        where: {
-          hospitalId,
-          status: { in: ['SCHEDULED', 'CONFIRMED'] },
-          scheduledDate: {
-            gte: now,
+        // Pending appointments (upcoming)
+        prisma.appointment.count({
+          where: {
+            hospitalId,
+            status: { in: ['SCHEDULED', 'CONFIRMED'] },
+            scheduledDate: {
+              gte: now,
+            },
           },
-        },
-      }),
+        }),
 
-      // Completed appointments today
-      prisma.appointment.count({
-        where: {
-          hospitalId,
-          status: 'COMPLETED',
-          scheduledDate: {
-            gte: todayStart,
-            lte: todayEnd,
+        // Completed appointments today
+        prisma.appointment.count({
+          where: {
+            hospitalId,
+            status: 'COMPLETED',
+            scheduledDate: {
+              gte: todayStart,
+              lte: todayEnd,
+            },
           },
-        },
-      }),
+        }),
 
-      // This month's revenue
-      prisma.payment.aggregate({
-        where: {
-          hospitalId,
-          createdAt: {
-            gte: monthStart,
-            lte: monthEnd,
+        // This month's revenue
+        prisma.payment.aggregate({
+          where: {
+            hospitalId,
+            createdAt: {
+              gte: monthStart,
+              lte: monthEnd,
+            },
+            status: 'COMPLETED',
           },
-          status: 'COMPLETED',
-        },
-        _sum: {
-          amount: true,
-        },
-      }),
-
-      // Today's revenue
-      prisma.payment.aggregate({
-        where: {
-          hospitalId,
-          createdAt: {
-            gte: todayStart,
-            lte: todayEnd,
+          _sum: {
+            amount: true,
           },
-          status: 'COMPLETED',
-        },
-        _sum: {
-          amount: true,
-        },
-      }),
+        }),
 
-      // Pending payments
-      prisma.invoice.aggregate({
-        where: {
-          hospitalId,
-          status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-        },
-        _sum: {
-          totalAmount: true,
-        },
-      }),
+        // Today's revenue
+        prisma.payment.aggregate({
+          where: {
+            hospitalId,
+            createdAt: {
+              gte: todayStart,
+              lte: todayEnd,
+            },
+            status: 'COMPLETED',
+          },
+          _sum: {
+            amount: true,
+          },
+        }),
 
-      // Total revenue (all time)
-      prisma.payment.aggregate({
-        where: {
-          hospitalId,
-          status: 'COMPLETED',
-        },
-        _sum: {
-          amount: true,
-        },
-      }),
+        // Pending payments
+        prisma.invoice.aggregate({
+          where: {
+            hospitalId,
+            status: { in: ['PENDING', 'PARTIALLY_PAID'] },
+          },
+          _sum: {
+            totalAmount: true,
+          },
+        }),
 
-      // Last 7 days revenue (daily breakdown)
-      prisma.$queryRaw`
+        // Total revenue (all time)
+        prisma.payment.aggregate({
+          where: {
+            hospitalId,
+            status: 'COMPLETED',
+          },
+          _sum: {
+            amount: true,
+          },
+        }),
+
+        // Last 7 days revenue (daily breakdown)
+        prisma.$queryRaw`
         SELECT
           DATE(createdAt) as date,
           CAST(COALESCE(SUM(amount), 0) AS DECIMAL(10,2)) as revenue
@@ -166,8 +167,8 @@ export async function GET(req: NextRequest) {
         ORDER BY date ASC
       `,
 
-      // Last 6 months revenue (monthly breakdown)
-      prisma.$queryRaw`
+        // Last 6 months revenue (monthly breakdown)
+        prisma.$queryRaw`
         SELECT
           DATE_FORMAT(createdAt, '%Y-%m') as month,
           CAST(COALESCE(SUM(amount), 0) AS DECIMAL(10,2)) as revenue
@@ -179,23 +180,23 @@ export async function GET(req: NextRequest) {
         ORDER BY month ASC
       `,
 
-      // Appointments by status
-      prisma.appointment.groupBy({
-        by: ['status'],
-        _count: {
-          status: true,
-        },
-        where: {
-          hospitalId,
-          scheduledDate: {
-            gte: monthStart,
-            lte: monthEnd,
+        // Appointments by status
+        prisma.appointment.groupBy({
+          by: ['status'],
+          _count: {
+            status: true,
           },
-        },
-      }),
+          where: {
+            hospitalId,
+            scheduledDate: {
+              gte: monthStart,
+              lte: monthEnd,
+            },
+          },
+        }),
 
-      // Top 5 procedures this month
-      prisma.$queryRaw`
+        // Top 5 procedures this month
+        prisma.$queryRaw`
         SELECT
           p.name,
           CAST(COUNT(*) AS UNSIGNED) as count,
@@ -210,37 +211,37 @@ export async function GET(req: NextRequest) {
         LIMIT 5
       `,
 
-      // Recent appointments (next 5)
-      prisma.appointment.findMany({
-        where: {
-          hospitalId,
-          scheduledDate: {
-            gte: now,
+        // Recent appointments (next 5)
+        prisma.appointment.findMany({
+          where: {
+            hospitalId,
+            scheduledDate: {
+              gte: now,
+            },
+            status: { in: ['SCHEDULED', 'CONFIRMED'] },
           },
-          status: { in: ['SCHEDULED', 'CONFIRMED'] },
-        },
-        include: {
-          patient: {
-            select: {
-              firstName: true,
-              lastName: true,
+          include: {
+            patient: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+            doctor: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
             },
           },
-          doctor: {
-            select: {
-              firstName: true,
-              lastName: true,
-            },
+          orderBy: {
+            scheduledDate: 'asc',
           },
-        },
-        orderBy: {
-          scheduledDate: 'asc',
-        },
-        take: 5,
-      }),
+          take: 5,
+        }),
 
-      // Low stock items (using raw query to compare fields)
-      prisma.$queryRaw`
+        // Low stock items (using raw query to compare fields)
+        prisma.$queryRaw`
         SELECT
           id,
           name,
@@ -255,14 +256,14 @@ export async function GET(req: NextRequest) {
         ORDER BY (minimumStock - currentStock) DESC
         LIMIT 10
       `,
-    ]);
+      ])
     } catch (queryError: any) {
       console.error('Database query error:', {
         message: queryError.message,
         stack: queryError.stack,
         code: queryError.code,
-      });
-      throw new Error(`Database query failed: ${queryError.message}`);
+      })
+      throw new Error(`Database query failed: ${queryError.message}`)
     }
 
     // Destructure results and convert BigInt values
@@ -283,17 +284,17 @@ export async function GET(req: NextRequest) {
       rawTopProcedures,
       recentAppointments,
       rawLowStockItems,
-    ] = results;
+    ] = results
 
     // Convert BigInt values from raw SQL queries
-    const last7DaysRevenue = convertBigIntToNumber(rawLast7DaysRevenue);
-    const last6MonthsRevenue = convertBigIntToNumber(rawLast6MonthsRevenue);
-    const topProcedures = convertBigIntToNumber(rawTopProcedures);
-    const lowStockItems = convertBigIntToNumber(rawLowStockItems);
+    const last7DaysRevenue = convertBigIntToNumber(rawLast7DaysRevenue)
+    const last6MonthsRevenue = convertBigIntToNumber(rawLast6MonthsRevenue)
+    const topProcedures = convertBigIntToNumber(rawTopProcedures)
+    const lowStockItems = convertBigIntToNumber(rawLowStockItems)
 
     // Calculate growth percentages
-    const prevMonthStart = subMonths(monthStart, 1);
-    const prevMonthEnd = subDays(monthStart, 1);
+    const prevMonthStart = subMonths(monthStart, 1)
+    const prevMonthEnd = subDays(monthStart, 1)
 
     const [prevMonthRevenue, prevMonthPatients, prevMonthAppointments] = await Promise.all([
       prisma.payment.aggregate({
@@ -328,19 +329,21 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-    ]);
+    ])
 
     const revenueGrowth = prevMonthRevenue._sum.amount
-      ? ((Number(thisMonthRevenue._sum.amount || 0) - Number(prevMonthRevenue._sum.amount)) / Number(prevMonthRevenue._sum.amount)) * 100
-      : 0;
+      ? ((Number(thisMonthRevenue._sum.amount || 0) - Number(prevMonthRevenue._sum.amount)) /
+          Number(prevMonthRevenue._sum.amount)) *
+        100
+      : 0
 
     const patientGrowth = prevMonthPatients
       ? ((newPatientsThisMonth - prevMonthPatients) / prevMonthPatients) * 100
-      : 0;
+      : 0
 
     const appointmentGrowth = prevMonthAppointments
       ? ((thisMonthAppointments - prevMonthAppointments) / prevMonthAppointments) * 100
-      : 0;
+      : 0
 
     // Format response
     const stats = {
@@ -372,32 +375,34 @@ export async function GET(req: NextRequest) {
         upcomingAppointments: recentAppointments.map((apt: any) => ({
           id: apt.id,
           patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
-          doctorName: apt.doctor ? `${apt.doctor.firstName} ${apt.doctor.lastName}` : 'Not assigned',
+          doctorName: apt.doctor
+            ? `${apt.doctor.firstName} ${apt.doctor.lastName}`
+            : 'Not assigned',
           date: apt.scheduledDate,
           type: apt.appointmentType,
           status: apt.status,
         })),
         lowStockItems,
       },
-    };
+    }
 
     return NextResponse.json({
       success: true,
       data: stats,
-    });
+    })
   } catch (error: any) {
     console.error('Dashboard stats error details:', {
       message: error.message,
       stack: error.stack,
       code: error.code,
       meta: error.meta,
-    });
+    })
     return NextResponse.json(
       {
         error: 'Failed to fetch dashboard statistics',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       },
       { status: 500 }
-    );
+    )
   }
 }
