@@ -1,4 +1,4 @@
-const createNextIntlPlugin = require('next-intl/plugin')
+import createNextIntlPlugin from 'next-intl/plugin'
 
 // Locale comes from the clinic record, not the URL, so there is no routing
 // config here — just the pointer to the request config. See docs/LOCALIZATION.md.
@@ -15,25 +15,20 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  // Production optimizations
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
-  // Ignore TypeScript errors in test files during build
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Logging
   logging: {
     fetches: {
       fullUrl: false,
     },
   },
-  // CORS for mobile app
   async headers() {
     return [
       {
-        // CORS headers for API routes (mobile app access)
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
@@ -46,7 +41,6 @@ const nextConfig = {
         ],
       },
       {
-        // Security headers for all routes
         source: '/(.*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -60,4 +54,4 @@ const nextConfig = {
   },
 }
 
-module.exports = withNextIntl(nextConfig)
+export default withNextIntl(nextConfig)

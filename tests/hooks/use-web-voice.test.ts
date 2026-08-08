@@ -19,11 +19,15 @@ const mockRecognition = {
   dispatchEvent: vi.fn(),
 }
 
-const MockSpeechRecognition = vi.fn(() => ({ ...mockRecognition }))
+const MockSpeechRecognition = vi.fn(function MockSpeechRecognition() {
+  return { ...mockRecognition }
+})
 
 // Mock speechSynthesis
 const mockUtterance: any = {}
-const MockSpeechSynthesisUtterance = vi.fn(() => mockUtterance)
+const MockSpeechSynthesisUtterance = vi.fn(function MockSpeechSynthesisUtterance() {
+  return mockUtterance
+})
 
 const mockSpeechSynthesis = {
   cancel: vi.fn(),
@@ -72,7 +76,9 @@ describe('useWebVoice', () => {
       writable: true,
       configurable: true,
     })
-    ;(window as any).AudioContext = vi.fn(() => mockAudioContext)
+    ;(window as any).AudioContext = vi.fn(function MockAudioContext() {
+      return mockAudioContext
+    })
     // Stub requestAnimationFrame to avoid infinite loop
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       // Don't call cb to avoid infinite tick loop

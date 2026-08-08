@@ -222,7 +222,7 @@ function DrugCheck({
             if (e.key === 'Enter') onCheck()
           }}
           placeholder="e.g. Amoxicillin 500 mg"
-          className="flex-1 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+          className="flex-1 rounded-md border px-3 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-primary"
         />
         <button
           onClick={onCheck}
@@ -397,7 +397,7 @@ function ConsentForm({
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
-          className="text-xs border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary"
+          className="text-xs border rounded px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary"
         >
           <option value="English">English</option>
           <option value="Tamil">Tamil</option>

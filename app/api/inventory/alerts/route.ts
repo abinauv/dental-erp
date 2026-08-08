@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { Prisma, StockAlertType } from '@prisma/client'
+import { Prisma, StockAlertType } from '@/prisma/generated/client'
 
 const ALERT_TYPES = Object.values(StockAlertType) as string[]
 

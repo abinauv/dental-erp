@@ -289,7 +289,7 @@ export default function AppointmentsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
+              variant={viewMode === 'list' ? 'default' : 'outline-solid'}
               size="sm"
               onClick={() => setViewMode('list')}
             >
@@ -297,7 +297,7 @@ export default function AppointmentsPage() {
               List
             </Button>
             <Button
-              variant={viewMode === 'calendar' ? 'default' : 'outline'}
+              variant={viewMode === 'calendar' ? 'default' : 'outline-solid'}
               size="sm"
               onClick={() => setViewMode('calendar')}
             >

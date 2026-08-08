@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
-import { LabOrderStatus, LabVendorStatus } from '@prisma/client'
+import { LabOrderStatus, LabVendorStatus } from '@/prisma/generated/client'
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 

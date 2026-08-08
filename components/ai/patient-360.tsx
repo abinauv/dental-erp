@@ -54,7 +54,7 @@ export function Patient360({ patientId }: { patientId: string }) {
   /* ---- loading skeleton ---- */
   if (loading) {
     return (
-      <div className="rounded-lg border p-4 bg-gradient-to-r from-primary/5 to-transparent">
+      <div className="rounded-lg border p-4 bg-linear-to-r from-primary/5 to-transparent">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">🤖</span>
           <span className="text-sm font-semibold">AI Patient Summary</span>
@@ -71,7 +71,7 @@ export function Patient360({ patientId }: { patientId: string }) {
   if (error || !data) return null
 
   return (
-    <div className="rounded-lg border p-4 bg-gradient-to-r from-primary/5 to-transparent">
+    <div className="rounded-lg border p-4 bg-linear-to-r from-primary/5 to-transparent">
       {/* header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function Patient360({ patientId }: { patientId: string }) {
               key={i}
               className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 rounded px-2.5 py-1.5"
             >
-              <span className="flex-shrink-0">⚠</span>
+              <span className="shrink-0">⚠</span>
               <span>{f}</span>
             </div>
           ))}

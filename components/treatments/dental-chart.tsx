@@ -225,7 +225,7 @@ export function DentalChart({
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
-          className="drop-shadow-sm"
+          className="drop-shadow-xs"
         >
           {/* Tooth shape - simplified representation */}
           {toothType === 'molar' ? (

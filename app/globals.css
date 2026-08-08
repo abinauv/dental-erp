@@ -1,6 +1,138 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility card-interactive {
+  @apply transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer;
+}
+
+/* Responsive table wrapper */
+
+@utility table-responsive {
+  @apply w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0;
+  & table {
+    @apply min-w-[640px];
+  }
+}
+
+/* Mobile-friendly form layout */
+
+@utility form-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+}
+
+@utility form-grid-3 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+}
+
+/* Stacked layout for mobile stat cards */
+
+@utility stat-grid {
+  @apply grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4;
+}
+
+/* Mobile header actions */
+
+@utility page-header {
+  @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4;
+}
+
+@utility page-actions {
+  @apply flex flex-wrap items-center gap-2;
+}
+
+/* Required field marker */
+
+@utility label-required {
+  &::after {
+    content: ' *';
+    @apply text-destructive;
+  }
+}
 
 @layer base {
   :root {
@@ -72,117 +204,69 @@
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+@layer utilities {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-}
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
 
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 4px;
-}
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
 
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+
+    body {
+      background: white !important;
+    }
   }
 
   .print-only {
-    display: block !important;
+    display: none;
   }
 
-  body {
-    background: white !important;
+  /* Recharts dark mode */
+  .recharts-default-tooltip {
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--popover-foreground)) !important;
   }
-}
 
-.print-only {
-  display: none;
-}
-
-/* Recharts dark mode */
-.recharts-default-tooltip {
-  background-color: hsl(var(--popover)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--popover-foreground)) !important;
-}
-
-.recharts-tooltip-label {
-  color: hsl(var(--popover-foreground)) !important;
-}
-
-.recharts-cartesian-grid line {
-  stroke: hsl(var(--border));
-}
-
-.recharts-text {
-  fill: hsl(var(--muted-foreground));
-}
-
-.recharts-legend-item-text {
-  color: hsl(var(--foreground)) !important;
-}
-
-/* Card hover consistency */
-@layer components {
-  .card-interactive {
-    @apply transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer;
+  .recharts-tooltip-label {
+    color: hsl(var(--popover-foreground)) !important;
   }
-}
 
-/* Responsive table wrapper */
-@layer components {
-  .table-responsive {
-    @apply w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0;
+  .recharts-cartesian-grid line {
+    stroke: hsl(var(--border));
   }
-  .table-responsive table {
-    @apply min-w-[640px];
-  }
-}
 
-/* Mobile-friendly form layout */
-@layer components {
-  .form-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  .recharts-text {
+    fill: hsl(var(--muted-foreground));
   }
-  .form-grid-3 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
-  }
-}
 
-/* Stacked layout for mobile stat cards */
-@layer components {
-  .stat-grid {
-    @apply grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4;
+  .recharts-legend-item-text {
+    color: hsl(var(--foreground)) !important;
   }
-}
 
-/* Mobile header actions */
-@layer components {
-  .page-header {
-    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4;
-  }
-  .page-actions {
-    @apply flex flex-wrap items-center gap-2;
-  }
-}
-
-/* Required field marker */
-@layer components {
-  .label-required::after {
-    content: ' *';
-    @apply text-destructive;
-  }
+  /* Card hover consistency */
 }
 
 /* Focus ring improvement */
@@ -190,6 +274,6 @@
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-hidden ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }

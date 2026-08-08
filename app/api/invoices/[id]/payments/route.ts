@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generatePaymentNo } from '@/lib/billing-utils'
-import { PaymentMethod, PaymentStatus } from '@prisma/client'
+import { PaymentMethod, PaymentStatus } from '@/prisma/generated/client'
 
 // GET - Get payments for an invoice
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

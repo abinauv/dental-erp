@@ -438,7 +438,7 @@ export default function DataImportPage() {
                       key={opt.key}
                       onClick={() => setEntityType(opt.key)}
                       className={cn(
-                        'rounded-lg border p-3 text-left transition-all hover:shadow-sm',
+                        'rounded-lg border p-3 text-left transition-all hover:shadow-xs',
                         selected
                           ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
                           : 'hover:bg-muted'
@@ -739,7 +739,7 @@ export default function DataImportPage() {
                               value={row[f.name] ?? ''}
                               onChange={(e) => handleCellEdit(i, f.name, e.target.value)}
                               className={cn(
-                                'w-full rounded border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary bg-transparent',
+                                'w-full rounded border px-2 py-1 text-xs outline-hidden focus:ring-1 focus:ring-primary bg-transparent',
                                 f.required && !row[f.name]
                                   ? 'border-red-300 bg-red-50 dark:bg-red-950/20'
                                   : 'border-transparent hover:border-border'

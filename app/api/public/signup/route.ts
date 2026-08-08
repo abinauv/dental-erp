@@ -3,7 +3,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { generateUniqueSlug, generateToken, PLAN_LIMITS } from '@/lib/api-helpers'
-import { Plan, Role } from '@prisma/client'
+import { Plan, Role } from '@/prisma/generated/client'
 import { sendVerificationEmail } from '@/lib/email-helpers'
 
 const signupSchema = z.object({
