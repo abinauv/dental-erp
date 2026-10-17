@@ -19,11 +19,17 @@ const mockRecognition = {
   dispatchEvent: vi.fn(),
 }
 
-const MockSpeechRecognition = vi.fn(() => ({ ...mockRecognition }))
+// Regular functions, not arrows: these are invoked with `new`, and under
+// vitest 5 the mock implementation runs as a constructor (arrows can't).
+const MockSpeechRecognition = vi.fn(function () {
+  return { ...mockRecognition }
+})
 
 // Mock speechSynthesis
 const mockUtterance: any = {}
-const MockSpeechSynthesisUtterance = vi.fn(() => mockUtterance)
+const MockSpeechSynthesisUtterance = vi.fn(function () {
+  return mockUtterance
+})
 
 const mockSpeechSynthesis = {
   cancel: vi.fn(),

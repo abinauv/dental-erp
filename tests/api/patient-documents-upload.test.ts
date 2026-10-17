@@ -26,7 +26,10 @@ vi.mock('path', async (importOriginal) => {
 })
 vi.mock('crypto', async (importOriginal) => {
   const actual = (await importOriginal()) as any
-  return { ...actual, randomUUID: () => 'mock-uuid-1234' }
+  // A uuid-shaped value: the route builds the storage key from randomUUID(), and
+  // the key assertions below check it matches /[0-9a-f-]+/ (i.e. a uuid, not the
+  // caller's filename).
+  return { ...actual, randomUUID: () => 'abcdef12-3456-7890-abcd-ef1234567890' }
 })
 
 const mod = await import('@/app/api/patients/[id]/documents/route')
@@ -55,7 +58,7 @@ describe('POST /api/patients/[id]/documents', () => {
     ;(prisma.patient.findFirst as any).mockResolvedValue({ id: 'p1', hospitalId: 'hospital-1' })
     ;(prisma.document.create as any).mockResolvedValue({
       id: 'doc-1',
-      fileName: 'mock-uuid-1234.pdf',
+      fileName: 'abcdef12-3456-7890-abcd-ef1234567890.pdf',
       originalName: 'report.pdf',
       documentType: 'REPORT',
     })
