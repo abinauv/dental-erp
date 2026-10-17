@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
+import { reservePendingPayment } from '@/lib/payment-gateways/settle'
 
 /**
  * POST: Create a payment order using a payment link token (no auth required).
@@ -69,6 +70,20 @@ export async function POST(req: NextRequest) {
       customerEmail: link.invoice.patient.email || undefined,
       customerPhone: link.invoice.patient.phone,
     })
+
+    // Reserve a PENDING payment so a webhook can settle this order even if the
+    // payer never returns to the page. Best-effort — don't block checkout.
+    try {
+      await reservePendingPayment({
+        hospitalId: link.hospitalId,
+        invoiceId: link.invoice.id,
+        gatewayOrderId: order.orderId,
+        amount: payAmount,
+        provider: order.provider,
+      })
+    } catch (reserveErr) {
+      console.error('Failed to reserve pending payment for order', order.orderId, reserveErr)
+    }
 
     const checkoutConfig = gateway.getCheckoutConfig(order, credentials)
 

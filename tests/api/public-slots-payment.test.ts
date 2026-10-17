@@ -373,12 +373,12 @@ describe('POST /api/payments/public-verify', () => {
     expect(res.status).toBe(400)
   })
 
-  it('verifies payment and creates record with $transaction', async () => {
+  it('verifies payment and settles the invoice via settlePayment', async () => {
     vi.mocked(prisma.paymentLink.findUnique).mockResolvedValue({
       id: 'pl1',
       hospitalId: 'h1',
       amount: 5000,
-      invoice: { id: 'inv1', paidAmount: 0, totalAmount: 5000 },
+      invoice: { id: 'inv1', paidAmount: 0, totalAmount: 5000, balanceAmount: 5000 },
     } as any)
     mockGetGateway.mockResolvedValue({
       gateway: {
@@ -391,8 +391,20 @@ describe('POST /api/payments/public-verify', () => {
       },
       credentials: { provider: 'RAZORPAY' },
     })
-    vi.mocked(prisma.payment.findFirst).mockResolvedValue({ paymentNo: 'PAY00050' } as any)
-    vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}, {}])
+    vi.mocked(prisma.payment.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
+      id: 'inv1',
+      paidAmount: 0,
+      totalAmount: 5000,
+      balanceAmount: 5000,
+    } as any)
+    vi.mocked(prisma.payment.create).mockResolvedValue({
+      id: 'p1',
+      paymentNo: 'PAY00051',
+      amount: 5000,
+    } as any)
+    vi.mocked(prisma.invoice.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.paymentLink.update).mockResolvedValue({} as any)
 
     const res = await publicVerifyPOST(
       makeReq('/api/payments/public-verify', 'POST', {
@@ -409,15 +421,19 @@ describe('POST /api/payments/public-verify', () => {
     expect(body.payment.paymentNo).toBe('PAY00051')
     expect(body.payment.amount).toBe(5000)
     expect(body.payment.transactionId).toBe('txn_123')
-    expect(prisma.$transaction).toHaveBeenCalled()
+    // The payment link is consumed.
+    expect(prisma.paymentLink.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'pl1' } })
+    )
   })
 
   it('handles partial payment correctly', async () => {
+    // Paying 3000 of a 10000 invoice that already had 2000 paid → 5000 outstanding.
     vi.mocked(prisma.paymentLink.findUnique).mockResolvedValue({
       id: 'pl1',
       hospitalId: 'h1',
       amount: 3000,
-      invoice: { id: 'inv1', paidAmount: 2000, totalAmount: 5000 },
+      invoice: { id: 'inv1', paidAmount: 2000, totalAmount: 10000, balanceAmount: 8000 },
     } as any)
     mockGetGateway.mockResolvedValue({
       gateway: {
@@ -430,8 +446,20 @@ describe('POST /api/payments/public-verify', () => {
       },
       credentials: { provider: 'RAZORPAY' },
     })
-    vi.mocked(prisma.payment.findFirst).mockResolvedValue(null) // no previous payments
-    vi.mocked(prisma.$transaction).mockResolvedValue([{}, {}, {}])
+    vi.mocked(prisma.payment.findFirst).mockResolvedValue(null) // no reserved/previous payments
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
+      id: 'inv1',
+      paidAmount: 2000,
+      totalAmount: 10000,
+      balanceAmount: 8000,
+    } as any)
+    vi.mocked(prisma.payment.create).mockResolvedValue({
+      id: 'p1',
+      paymentNo: 'PAY00001',
+      amount: 3000,
+    } as any)
+    vi.mocked(prisma.invoice.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.paymentLink.update).mockResolvedValue({} as any)
 
     const res = await publicVerifyPOST(
       makeReq('/api/payments/public-verify', 'POST', {
@@ -443,6 +471,11 @@ describe('POST /api/payments/public-verify', () => {
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.payment.paymentNo).toBe('PAY00001') // first payment since findFirst returned null
+    expect(body.payment.paymentNo).toBe('PAY00001')
+    expect(body.payment.amount).toBe(3000)
+    // Partial payment leaves a balance.
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'PARTIALLY_PAID' }) })
+    )
   })
 })
