@@ -2,11 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { isSupportedLocale } from '@/lib/i18n/config'
 
 const optionalString = z.preprocess(
   (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
   z.string().optional()
 )
+
+/** A string that parses to a real IANA time zone (e.g. "Asia/Kolkata"). */
+function isValidTimeZone(tz: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
 
 const clinicInfoSchema = z.object({
   name: z.string().min(1),
@@ -35,6 +46,20 @@ const clinicInfoSchema = z.object({
   bankIfsc: optionalString,
   upiId: optionalString,
   patientPortalEnabled: z.boolean().optional(),
+  // Regional settings. All have non-null DB defaults, so each is optional here
+  // and an omitted field leaves the stored value unchanged.
+  locale: optionalString.refine((v) => v === undefined || isSupportedLocale(v), {
+    message: 'Unsupported locale',
+  }),
+  country: optionalString.refine((v) => v === undefined || /^[A-Z]{2}$/.test(v), {
+    message: 'Country must be a 2-letter ISO 3166-1 code',
+  }),
+  currency: optionalString.refine((v) => v === undefined || /^[A-Z]{3}$/.test(v), {
+    message: 'Currency must be a 3-letter ISO 4217 code',
+  }),
+  timezone: optionalString.refine((v) => v === undefined || isValidTimeZone(v), {
+    message: 'Unknown time zone',
+  }),
 })
 
 // GET /api/settings/clinic - Get clinic information
@@ -70,6 +95,10 @@ export async function GET(req: NextRequest) {
         upiId: true,
         slug: true,
         patientPortalEnabled: true,
+        locale: true,
+        country: true,
+        currency: true,
+        timezone: true,
       },
     })
 

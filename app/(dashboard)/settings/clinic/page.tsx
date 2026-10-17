@@ -7,9 +7,47 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { Separator } from '@/components/ui/separator'
-import { Building2, Save, Upload, Trash2, Loader2, Copy } from 'lucide-react'
+import { Building2, Save, Upload, Trash2, Loader2, Copy, Globe } from 'lucide-react'
+import { locales, localeDefaults, getLocaleLabel, type Locale } from '@/lib/i18n/config'
+
+// Small curated option sets for the regional selectors. The clinic's current
+// stored value is always merged in, so a hand-set value outside these lists is
+// never silently dropped.
+const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP', 'AED', 'SGD', 'AUD', 'CAD', 'JPY']
+const COUNTRIES = ['IN', 'US', 'GB', 'AE', 'SG', 'AU', 'CA', 'DE', 'JP']
+const TIME_ZONES: string[] = (() => {
+  try {
+    return (Intl as unknown as { supportedValuesOf: (k: string) => string[] }).supportedValuesOf(
+      'timeZone'
+    )
+  } catch {
+    return [
+      'Asia/Kolkata',
+      'America/New_York',
+      'Europe/London',
+      'Europe/Berlin',
+      'Asia/Dubai',
+      'UTC',
+    ]
+  }
+})()
+
+function regionName(code: string): string {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code
+  } catch {
+    return code
+  }
+}
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 const DAY_LABELS: Record<string, string> = {
@@ -94,6 +132,10 @@ export default function ClinicSettingsPage() {
     bankAccountNo: '',
     bankIfsc: '',
     upiId: '',
+    locale: 'en-IN',
+    country: 'IN',
+    currency: 'INR',
+    timezone: 'Asia/Kolkata',
   })
 
   useEffect(() => {
@@ -130,6 +172,10 @@ export default function ClinicSettingsPage() {
           bankAccountNo: result.data.bankAccountNo || '',
           bankIfsc: result.data.bankIfsc || '',
           upiId: result.data.upiId || '',
+          locale: result.data.locale || 'en-IN',
+          country: result.data.country || 'IN',
+          currency: result.data.currency || 'INR',
+          timezone: result.data.timezone || 'Asia/Kolkata',
         })
       }
     } catch (error: any) {
@@ -240,6 +286,19 @@ export default function ClinicSettingsPage() {
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  // Picking a language pulls the region's usual currency, country and time zone
+  // along with it; each can still be adjusted individually below.
+  const handleLocaleChange = (value: string) => {
+    const defaults = localeDefaults[value as Locale]
+    setFormData((prev) => ({
+      ...prev,
+      locale: value,
+      ...(defaults
+        ? { currency: defaults.currency, country: defaults.country, timezone: defaults.timezone }
+        : {}),
+    }))
   }
 
   if (loading) {
@@ -460,6 +519,104 @@ export default function ClinicSettingsPage() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Regional Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Regional Settings
+            </CardTitle>
+            <CardDescription>
+              Language, currency and time zone for this clinic. These control how dates and amounts
+              are formatted and which currency you bill in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="locale">Language / Locale</Label>
+                <Select value={formData.locale} onValueChange={handleLocaleChange}>
+                  <SelectTrigger id="locale">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locales.map((l) => (
+                      <SelectItem key={l} value={l}>
+                        {getLocaleLabel(l)} ({l})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="currency">Currency</Label>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(v) => handleChange('currency', v)}
+                >
+                  <SelectTrigger id="currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from(new Set([formData.currency, ...CURRENCIES].filter(Boolean))).map(
+                      (c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="country">Country</Label>
+                <Select value={formData.country} onValueChange={(v) => handleChange('country', v)}>
+                  <SelectTrigger id="country">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from(new Set([formData.country, ...COUNTRIES].filter(Boolean))).map(
+                      (c) => (
+                        <SelectItem key={c} value={c}>
+                          {regionName(c)} ({c})
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="timezone">Time Zone</Label>
+                <Select
+                  value={formData.timezone}
+                  onValueChange={(v) => handleChange('timezone', v)}
+                >
+                  <SelectTrigger id="timezone">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {Array.from(new Set([formData.timezone, ...TIME_ZONES].filter(Boolean))).map(
+                      (tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {tz}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The interface language itself does not switch yet — only number, date and currency
+              formatting. Staff and patients can override the language for themselves in their own
+              profile.
+            </p>
           </CardContent>
         </Card>
 

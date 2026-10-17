@@ -313,6 +313,69 @@ describe('POST /api/settings/clinic', () => {
     })
   })
 
+  it('persists regional settings (locale, currency, country, timezone)', async () => {
+    mockAuth()
+    vi.mocked(prisma.hospital.update).mockResolvedValue({ id: 'h1' } as any)
+
+    await clinicPOST(
+      makeReq('/api/settings/clinic', 'POST', {
+        name: 'Clinic',
+        phone: '9876543210',
+        address: 'Addr',
+        city: 'City',
+        state: 'State',
+        pincode: '110001',
+        locale: 'en-US',
+        currency: 'USD',
+        country: 'US',
+        timezone: 'America/New_York',
+      })
+    )
+
+    expect(prisma.hospital.update).toHaveBeenCalledWith({
+      where: { id: 'h1' },
+      data: expect.objectContaining({
+        locale: 'en-US',
+        currency: 'USD',
+        country: 'US',
+        timezone: 'America/New_York',
+      }),
+    })
+  })
+
+  it('rejects an unsupported locale', async () => {
+    mockAuth()
+    const res = await clinicPOST(
+      makeReq('/api/settings/clinic', 'POST', {
+        name: 'Clinic',
+        phone: '9876543210',
+        address: 'Addr',
+        city: 'City',
+        state: 'State',
+        pincode: '110001',
+        locale: 'xx-YY',
+      })
+    )
+    // Zod validation error → catch block → 500
+    expect(res.status).toBe(500)
+  })
+
+  it('rejects a malformed currency code', async () => {
+    mockAuth()
+    const res = await clinicPOST(
+      makeReq('/api/settings/clinic', 'POST', {
+        name: 'Clinic',
+        phone: '9876543210',
+        address: 'Addr',
+        city: 'City',
+        state: 'State',
+        pincode: '110001',
+        currency: 'dollars',
+      })
+    )
+    expect(res.status).toBe(500)
+  })
+
   it('returns 500 for validation error (missing name)', async () => {
     mockAuth()
     const res = await clinicPOST(
