@@ -18,6 +18,10 @@ export interface SMSPayload {
   patientId?: string
   templateId?: string
   scheduledFor?: Date
+  // Transactional messages (OTPs, booking confirmations) are exempt from the
+  // promotional 9 AM–9 PM window and from marketing DND/consent checks under
+  // TRAI rules. Set this for those; leave it off for marketing messages.
+  transactional?: boolean
 }
 
 class SMSService {
@@ -69,8 +73,8 @@ class SMSService {
       }
     }
 
-    // Check time restrictions (9 AM to 9 PM IST)
-    if (!this.isWithinAllowedTime()) {
+    // Check time restrictions (9 AM to 9 PM IST) — promotional only.
+    if (!payload.transactional && !this.isWithinAllowedTime()) {
       throw new Error('SMS cannot be sent outside 9 AM - 9 PM IST')
     }
 
