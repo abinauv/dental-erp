@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,6 +25,8 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const t = useTranslations('auth.login')
+  const tCommon = useTranslations('common')
   const [isLoading, setIsLoading] = useState(false)
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
 
@@ -48,8 +51,8 @@ function LoginForm() {
       if (result?.error) {
         toast({
           variant: 'destructive',
-          title: 'Login failed',
-          description: 'Invalid email or password. Please try again.',
+          title: t('loginFailed'),
+          description: t('invalidCredentials'),
         })
       } else {
         router.push(callbackUrl)
@@ -58,8 +61,8 @@ function LoginForm() {
     } catch {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        title: t('errorTitle'),
+        description: tCommon('states.error'),
       })
     } finally {
       setIsLoading(false)
@@ -74,28 +77,28 @@ function LoginForm() {
             D
           </div>
         </div>
-        <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-        <CardDescription>Sign in to your DentalERP account</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('heading')}</CardTitle>
+        <CardDescription>{t('subheading')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="admin@demo-dental.com"
+              placeholder={t('emailPlaceholder')}
               {...register('email')}
               disabled={isLoading}
             />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('password')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder={t('passwordPlaceholder')}
               {...register('password')}
               disabled={isLoading}
             />
@@ -105,21 +108,21 @@ function LoginForm() {
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign in
+            {t('submit')}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm">
           <p className="text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            {t('noAccount')}{' '}
             <a href="/signup" className="text-primary hover:underline">
-              Sign up for free
+              {t('signUp')}
             </a>
           </p>
         </div>
 
         <div className="mt-4 text-center text-xs text-muted-foreground border-t pt-4">
-          <p>Demo credentials:</p>
+          <p>{t('demoCredentials')}</p>
           <p className="font-mono mt-1">admin@demo-dental.com / Admin@123</p>
         </div>
       </CardContent>
@@ -128,6 +131,7 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const t = useTranslations('auth.login')
   return (
     <Suspense
       fallback={
@@ -138,8 +142,8 @@ export default function LoginPage() {
                 D
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-            <CardDescription>Loading...</CardDescription>
+            <CardTitle className="text-2xl font-bold">{t('heading')}</CardTitle>
+            <CardDescription>{t('loading')}</CardDescription>
           </CardHeader>
         </Card>
       }

@@ -22,9 +22,16 @@
       "subheading": "Sign in to your DentalERP account",
       "email": "Email",
       "password": "Password",
+      "emailPlaceholder": "admin@demo-dental.com",
+      "passwordPlaceholder": "Enter your password",
       "submit": "Sign in",
+      "loading": "Loading…",
       "noAccount": "Don't have an account?",
-      "signUp": "Sign up for free"
+      "signUp": "Sign up for free",
+      "demoCredentials": "Demo credentials:",
+      "loginFailed": "Login failed",
+      "invalidCredentials": "Invalid email or password. Please try again.",
+      "errorTitle": "Error"
     }
   },
   "billing": {

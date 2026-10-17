@@ -36,6 +36,45 @@ vi.mock('next/headers', () => ({
   headers: () => new Headers(),
 }))
 
+// next-intl without a provider: resolve translations against the real en-IN
+// catalogue so components render their actual English text (keeping text-based
+// assertions valid), and make the client provider a passthrough.
+vi.mock('next-intl', async () => {
+  const messages = (await import('../messages/en-IN.json')).default as Record<string, unknown>
+  const resolve = (namespace: string | undefined, key: string): unknown => {
+    const path = namespace ? `${namespace}.${key}` : key
+    return path
+      .split('.')
+      .reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as any)[k] : undefined), messages)
+  }
+  const makeT = (namespace?: string) => {
+    const t = (key: string, values?: Record<string, unknown>) => {
+      const msg = resolve(namespace, key)
+      if (typeof msg !== 'string') return namespace ? `${namespace}.${key}` : key
+      return values
+        ? msg.replace(/\{(\w+)\}/g, (_, k) => (k in values ? String(values[k]) : `{${k}}`))
+        : msg
+    }
+    ;(t as any).rich = (key: string) => resolve(namespace, key)
+    ;(t as any).raw = (key: string) => resolve(namespace, key)
+    ;(t as any).has = (key: string) => resolve(namespace, key) !== undefined
+    return t
+  }
+  return {
+    useTranslations: (namespace?: string) => makeT(namespace),
+    useLocale: () => 'en-IN',
+    useMessages: () => messages,
+    useFormatter: () => ({
+      number: (v: number) => String(v),
+      dateTime: (d: Date) => String(d),
+      relativeTime: (d: Date) => String(d),
+    }),
+    useNow: () => new Date(),
+    useTimeZone: () => 'Asia/Kolkata',
+    NextIntlClientProvider: ({ children }: { children: unknown }) => children,
+  }
+})
+
 // Mock environment variables
 process.env.DATABASE_URL = 'mysql://test:test@localhost:3306/dental_erp_test'
 process.env.NEXTAUTH_SECRET = 'test-secret-key-for-testing'
