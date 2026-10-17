@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
+import { ClinicLocaleProvider } from '@/components/i18n/clinic-locale-provider'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -20,6 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           name: true,
           plan: true,
           logo: true,
+          currency: true,
           onboardingCompleted: true,
         },
       })
@@ -45,8 +47,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     : undefined
 
   return (
-    <DashboardShell user={user} hospital={hospitalInfo}>
-      {children}
-    </DashboardShell>
+    <ClinicLocaleProvider currency={hospital?.currency || 'INR'}>
+      <DashboardShell user={user} hospital={hospitalInfo}>
+        {children}
+      </DashboardShell>
+    </ClinicLocaleProvider>
   )
 }

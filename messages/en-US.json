@@ -8,7 +8,9 @@
       "create": "Create",
       "search": "Search",
       "export": "Export",
-      "back": "Back"
+      "back": "Back",
+      "previous": "Previous",
+      "next": "Next"
     },
     "states": {
       "loading": "Loading…",
@@ -45,6 +47,52 @@
       "cgst": "CGST",
       "sgst": "SGST",
       "igst": "IGST"
+    },
+    "status": {
+      "all": "All Status",
+      "DRAFT": "Draft",
+      "PENDING": "Pending",
+      "PARTIALLY_PAID": "Partially Paid",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "invoices": {
+      "title": "Invoices",
+      "subtitle": "Manage patient invoices and billing",
+      "new": "New Invoice",
+      "searchPlaceholder": "Search by invoice number, patient name, or phone…",
+      "overdueOnly": "Overdue Only",
+      "empty": "No invoices found",
+      "createNew": "Create New Invoice",
+      "columns": {
+        "invoice": "Invoice",
+        "patient": "Patient",
+        "amount": "Amount",
+        "paid": "Paid",
+        "balance": "Balance",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View Details",
+        "edit": "Edit",
+        "recordPayment": "Record Payment",
+        "print": "Print Invoice",
+        "sendEmail": "Send via Email",
+        "cancel": "Cancel Invoice"
+      },
+      "cancelDialog": {
+        "title": "Cancel Invoice",
+        "description": "Are you sure you want to delete/cancel this invoice?",
+        "confirm": "Cancel Invoice"
+      },
+      "pagination": {
+        "showing": "Showing {from} to {to} of {total} invoices",
+        "page": "Page {page} of {totalPages}"
+      }
     }
   }
 }
