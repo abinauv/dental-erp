@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 
+// Parse a query-string date, returning null for empty values, the "all" sentinel,
+// or anything that isn't a valid date — so a bad value never reaches Prisma.
+function parseDate(value: string): Date | null {
+  if (!value || value === 'all') return null
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? null : d
+}
+
 // GET - List all payments with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
@@ -48,15 +56,19 @@ export async function GET(request: NextRequest) {
       where.invoiceId = invoiceId
     }
 
-    if ((dateFrom && dateFrom !== 'all') || (dateTo && dateTo !== 'all')) {
+    // Only apply a date filter for values that parse to a real date. This also
+    // covers the "all" sentinel and any junk (e.g. ?dateFrom=banana), which must
+    // be ignored rather than producing an Invalid Date that makes Prisma throw.
+    const from = parseDate(dateFrom)
+    const to = parseDate(dateTo)
+    if (from || to) {
       where.paymentDate = {}
-      if (dateFrom && dateFrom !== 'all') {
-        where.paymentDate.gte = new Date(dateFrom)
+      if (from) {
+        where.paymentDate.gte = from
       }
-      if (dateTo && dateTo !== 'all') {
-        const endDate = new Date(dateTo)
-        endDate.setHours(23, 59, 59, 999)
-        where.paymentDate.lte = endDate
+      if (to) {
+        to.setHours(23, 59, 59, 999)
+        where.paymentDate.lte = to
       }
     }
 
