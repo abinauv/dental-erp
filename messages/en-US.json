@@ -96,6 +96,41 @@
       "processRefund": "Process Refund",
       "showing": "Showing {from} to {to} of {total} payments"
     },
+    "planStatus": {
+      "all": "All",
+      "ACTIVE": "Active",
+      "COMPLETED": "Completed",
+      "DEFAULTED": "Defaulted",
+      "CANCELLED": "Cancelled"
+    },
+    "frequency": {
+      "WEEKLY": "Weekly",
+      "BIWEEKLY": "Bi-weekly",
+      "MONTHLY": "Monthly"
+    },
+    "paymentPlans": {
+      "title": "Payment Plans",
+      "subtitle": "Manage installment payment plans for invoices",
+      "new": "New Payment Plan",
+      "activePlans": "Active Plans",
+      "completed": "Completed",
+      "defaulted": "Defaulted",
+      "outstanding": "Outstanding",
+      "loadError": "Failed to load payment plans",
+      "cols": {
+        "patient": "Patient",
+        "invoice": "Invoice",
+        "totalAmount": "Total Amount",
+        "installments": "Installments",
+        "frequency": "Frequency",
+        "progress": "Progress",
+        "nextDue": "Next Due",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "empty": "No payment plans found",
+      "overdue": "{count} overdue"
+    },
     "invoices": {
       "title": "Invoices",
       "subtitle": "Manage patient invoices and billing",
