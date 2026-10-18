@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -37,12 +38,8 @@ import {
   Calculator,
   FileText,
 } from 'lucide-react'
-import {
-  formatCurrency,
-  calculateInvoiceTotals,
-  gstConfig,
-  paymentTermsOptions,
-} from '@/lib/billing-utils'
+import { calculateInvoiceTotals, gstConfig, paymentTermsOptions } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Patient {
   id: string
@@ -81,6 +78,12 @@ export default function NewInvoicePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preSelectedPatientId = searchParams.get('patientId')
+
+  const t = useTranslations('billing.invoiceNew')
+  const tInv = useTranslations('billing.invoice')
+  const { formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
 
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -242,27 +245,27 @@ export default function NewInvoicePage() {
 
   const handleSubmit = async (status: 'DRAFT' | 'PENDING') => {
     if (!selectedPatient) {
-      setError('Please select a patient')
+      setError(t('errPatient'))
       return
     }
 
     if (items.length === 0) {
-      setError('Please add at least one item to the invoice')
+      setError(t('errNoItems'))
       return
     }
 
     // Validate items
     for (const item of items) {
       if (!item.description.trim()) {
-        setError('All items must have a description')
+        setError(t('errDescription'))
         return
       }
       if (item.quantity <= 0) {
-        setError('Quantity must be greater than 0')
+        setError(t('errQuantity'))
         return
       }
       if (item.unitPrice < 0) {
-        setError('Unit price cannot be negative')
+        setError(t('errUnitPrice'))
         return
       }
     }
@@ -316,8 +319,8 @@ export default function NewInvoicePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Invoice</h1>
-          <p className="text-muted-foreground">Create a new invoice for a patient</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -334,8 +337,8 @@ export default function NewInvoicePage() {
           {/* Patient Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Patient Details</CardTitle>
-              <CardDescription>Search and select a patient</CardDescription>
+              <CardTitle>{t('patientDetails')}</CardTitle>
+              <CardDescription>{t('patientDetailsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {selectedPatient ? (
@@ -364,14 +367,14 @@ export default function NewInvoicePage() {
                       setItems([])
                     }}
                   >
-                    Change
+                    {t('change')}
                   </Button>
                 </div>
               ) : (
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search by name, ID, or phone..."
+                    placeholder={t('searchPlaceholder')}
                     value={patientSearch}
                     onChange={(e) => setPatientSearch(e.target.value)}
                     className="pl-9"
@@ -403,18 +406,16 @@ export default function NewInvoicePage() {
           {selectedPatient && (
             <Card>
               <CardHeader>
-                <CardTitle>Unbilled Treatments</CardTitle>
-                <CardDescription>Select treatments to add to the invoice</CardDescription>
+                <CardTitle>{t('unbilled')}</CardTitle>
+                <CardDescription>{t('unbilledDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingTreatments ? (
                   <div className="text-center py-4 text-muted-foreground">
-                    Loading treatments...
+                    {t('loadingTreatments')}
                   </div>
                 ) : unbilledTreatments.length === 0 ? (
-                  <div className="text-center py-4 text-muted-foreground">
-                    No unbilled treatments found
-                  </div>
+                  <div className="text-center py-4 text-muted-foreground">{t('noUnbilled')}</div>
                 ) : (
                   <div className="space-y-2">
                     {unbilledTreatments.map((treatment) => (
@@ -440,11 +441,11 @@ export default function NewInvoicePage() {
                             disabled={items.some((i) => i.treatmentId === treatment.treatmentId)}
                           >
                             {items.some((i) => i.treatmentId === treatment.treatmentId) ? (
-                              'Added'
+                              t('added')
                             ) : (
                               <>
                                 <Plus className="h-4 w-4 mr-1" />
-                                Add
+                                {t('add')}
                               </>
                             )}
                           </Button>
@@ -462,12 +463,12 @@ export default function NewInvoicePage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Invoice Items</CardTitle>
-                  <CardDescription>Items to be included in the invoice</CardDescription>
+                  <CardTitle>{t('items')}</CardTitle>
+                  <CardDescription>{t('itemsDesc')}</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={addCustomItem}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Add Custom Item
+                  {t('addCustom')}
                 </Button>
               </div>
             </CardHeader>
@@ -475,18 +476,18 @@ export default function NewInvoicePage() {
               {items.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-8 w-8 mx-auto mb-2" />
-                  <p>No items added yet</p>
-                  <p className="text-sm">Add treatments from above or add a custom item</p>
+                  <p>{t('noItems')}</p>
+                  <p className="text-sm">{t('noItemsHint')}</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[40%]">Description</TableHead>
-                      <TableHead className="text-center">Qty</TableHead>
-                      <TableHead className="text-right">Unit Price</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead className="text-center">Taxable</TableHead>
+                      <TableHead className="w-[40%]">{t('cols.description')}</TableHead>
+                      <TableHead className="text-center">{t('cols.qty')}</TableHead>
+                      <TableHead className="text-right">{t('cols.unitPrice')}</TableHead>
+                      <TableHead className="text-right">{t('cols.amount')}</TableHead>
+                      <TableHead className="text-center">{t('cols.taxable')}</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -497,7 +498,7 @@ export default function NewInvoicePage() {
                           <Input
                             value={item.description}
                             onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                            placeholder="Item description"
+                            placeholder={t('itemDescPlaceholder')}
                           />
                         </TableCell>
                         <TableCell className="text-center">
@@ -548,20 +549,20 @@ export default function NewInvoicePage() {
           {/* Notes */}
           <Card>
             <CardHeader>
-              <CardTitle>Additional Information</CardTitle>
+              <CardTitle>{t('additionalInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Notes (visible on invoice)</Label>
+                <Label>{t('notesLabel')}</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any additional notes for the patient..."
+                  placeholder={t('notesPlaceholder')}
                   rows={3}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Terms & Conditions</Label>
+                <Label>{t('terms')}</Label>
                 <Textarea
                   value={termsAndConditions}
                   onChange={(e) => setTermsAndConditions(e.target.value)}
@@ -578,13 +579,13 @@ export default function NewInvoicePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calculator className="h-5 w-5" />
-                Invoice Summary
+                {t('summary')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Discount */}
               <div className="space-y-2">
-                <Label>Discount</Label>
+                <Label>{tInv('discount')}</Label>
                 <div className="flex gap-2">
                   <Select
                     value={discountType}
@@ -594,8 +595,8 @@ export default function NewInvoicePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="FIXED">₹ Fixed</SelectItem>
-                      <SelectItem value="PERCENTAGE">% Percent</SelectItem>
+                      <SelectItem value="FIXED">{t('discountFixed')}</SelectItem>
+                      <SelectItem value="PERCENTAGE">{t('discountPercent')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Input
@@ -609,7 +610,7 @@ export default function NewInvoicePage() {
 
               {/* Payment Terms */}
               <div className="space-y-2">
-                <Label>Payment Terms</Label>
+                <Label>{t('paymentTerms')}</Label>
                 <Select
                   value={paymentTermDays.toString()}
                   onValueChange={(value) => setPaymentTermDays(parseInt(value))}
@@ -630,25 +631,29 @@ export default function NewInvoicePage() {
               {/* Totals */}
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
+                  <span>{tInv('subtotal')}</span>
                   <span>{formatCurrency(totals.subtotal)}</span>
                 </div>
                 {totals.discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Discount</span>
+                    <span>{tInv('discount')}</span>
                     <span>-{formatCurrency(totals.discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span>CGST ({gstConfig.cgstRate}%)</span>
+                  <span>
+                    {tInv('cgst')} ({gstConfig.cgstRate}%)
+                  </span>
                   <span>{formatCurrency(totals.cgstAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>SGST ({gstConfig.sgstRate}%)</span>
+                  <span>
+                    {tInv('sgst')} ({gstConfig.sgstRate}%)
+                  </span>
                   <span>{formatCurrency(totals.sgstAmount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
-                  <span>Total</span>
+                  <span>{tInv('total')}</span>
                   <span className="text-primary">{formatCurrency(totals.totalAmount)}</span>
                 </div>
               </div>
@@ -660,7 +665,7 @@ export default function NewInvoicePage() {
                   onClick={() => handleSubmit('PENDING')}
                   disabled={submitting || !selectedPatient || items.length === 0}
                 >
-                  {submitting ? 'Creating...' : 'Create & Send Invoice'}
+                  {submitting ? t('creating') : t('createSend')}
                 </Button>
                 <Button
                   variant="outline"
@@ -668,7 +673,7 @@ export default function NewInvoicePage() {
                   onClick={() => handleSubmit('DRAFT')}
                   disabled={submitting || !selectedPatient || items.length === 0}
                 >
-                  Save as Draft
+                  {t('saveDraft')}
                 </Button>
               </div>
             </CardContent>
