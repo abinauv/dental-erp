@@ -1,3 +1,5 @@
+import { formatDate as formatDateI18n } from '@/lib/i18n/format'
+
 // Appointment status colors and labels
 export const appointmentStatusConfig: Record<
   string,
@@ -107,14 +109,12 @@ export function formatTime(time: string): string {
   return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`
 }
 
-// Format date for display
-export function formatDate(date: Date | string): string {
-  const d = new Date(date)
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+// Format date for display. Delegates to the locale-aware formatter (defaults to
+// the app default locale) so there is no hardcoded locale here; call sites in
+// client components should prefer useClinicFormatters().formatDate for the
+// viewer's locale.
+export function formatDate(date: Date | string, locale?: string): string {
+  return formatDateI18n(date, { locale, fallback: '' })
 }
 
 // Format date for API

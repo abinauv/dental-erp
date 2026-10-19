@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,6 +20,7 @@ import {
   getPatientName,
   getDoctorName,
 } from '@/lib/appointment-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Appointment {
   id: string
@@ -45,6 +47,9 @@ interface CalendarViewProps {
 
 export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
   const router = useRouter()
+  const t = useTranslations('appointments.calendar')
+  const tStatus = useTranslations('appointments.status')
+  const fmt = useClinicFormatters()
   const [currentDate, setCurrentDate] = useState(initialDate)
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week')
   const [appointments, setAppointments] = useState<Appointment[]>([])
@@ -100,7 +105,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
 
   const getDateLabel = () => {
     if (viewMode === 'day') {
-      return currentDate.toLocaleDateString('en-IN', {
+      return fmt.formatDate(currentDate, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -111,16 +116,18 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
       weekStart.setDate(weekStart.getDate() - weekStart.getDay())
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
-      return `${weekStart.toLocaleDateString('en-IN', {
+      return `${fmt.formatDate(weekStart, {
         day: 'numeric',
         month: 'short',
-      })} - ${weekEnd.toLocaleDateString('en-IN', {
+        year: undefined,
+      })} - ${fmt.formatDate(weekEnd, {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
       })}`
     } else {
-      return currentDate.toLocaleDateString('en-IN', {
+      return fmt.formatDate(currentDate, {
+        day: undefined,
         month: 'long',
         year: 'numeric',
       })
@@ -275,7 +282,12 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
               }`}
             >
               <p className="text-xs text-muted-foreground">
-                {day.toLocaleDateString('en-IN', { weekday: 'short' })}
+                {fmt.formatDate(day, {
+                  weekday: 'short',
+                  day: undefined,
+                  month: undefined,
+                  year: undefined,
+                })}
               </p>
               <p className="font-semibold">{day.getDate()}</p>
             </div>
@@ -340,9 +352,9 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
       <div className="border rounded-lg overflow-hidden">
         {/* Header */}
         <div className="grid grid-cols-7 bg-muted/30">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          {['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].map((day) => (
             <div key={day} className="p-2 text-center text-sm font-medium">
-              {day}
+              {t(`weekdays.${day}`)}
             </div>
           ))}
         </div>
@@ -383,7 +395,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
                   ))}
                   {dayAppointments.length > 3 && (
                     <p className="text-xs text-muted-foreground pl-1">
-                      +{dayAppointments.length - 3} more
+                      {t('moreCount', { count: dayAppointments.length - 3 })}
                     </p>
                   )}
                 </div>
@@ -407,7 +419,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={goToToday}>
-            Today
+            {t('today')}
           </Button>
           <h2 className="text-lg font-semibold ml-2">{getDateLabel()}</h2>
         </div>
@@ -420,9 +432,9 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="day">Day</SelectItem>
-            <SelectItem value="week">Week</SelectItem>
-            <SelectItem value="month">Month</SelectItem>
+            <SelectItem value="day">{t('day')}</SelectItem>
+            <SelectItem value="week">{t('week')}</SelectItem>
+            <SelectItem value="month">{t('month')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -430,7 +442,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
       {/* Calendar Content */}
       {loading ? (
         <div className="flex items-center justify-center h-96">
-          <div className="animate-pulse text-muted-foreground">Loading calendar...</div>
+          <div className="animate-pulse text-muted-foreground">{t('loading')}</div>
         </div>
       ) : (
         <>
@@ -447,7 +459,7 @@ export function CalendarView({ initialDate = new Date() }: CalendarViewProps) {
             {Object.entries(appointmentStatusConfig).map(([key, config]) => (
               <div key={key} className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded ${config.bgColor}`} />
-                <span>{config.label}</span>
+                <span>{tStatus.has(key) ? tStatus(key) : config.label}</span>
               </div>
             ))}
           </div>

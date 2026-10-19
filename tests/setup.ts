@@ -60,8 +60,22 @@ vi.mock('next-intl', async () => {
     ;(t as any).has = (key: string) => resolve(namespace, key) !== undefined
     return t
   }
+  // Real next-intl returns a stable `t` per namespace across renders, so
+  // components can safely list it in effect/callback dependency arrays. Cache
+  // here too — a fresh function each render would make such effects re-run every
+  // render and spin into an infinite update loop.
+  const tCache = new Map<string, ReturnType<typeof makeT>>()
+  const getT = (namespace?: string) => {
+    const cacheKey = namespace ?? ''
+    let cached = tCache.get(cacheKey)
+    if (!cached) {
+      cached = makeT(namespace)
+      tCache.set(cacheKey, cached)
+    }
+    return cached
+  }
   return {
-    useTranslations: (namespace?: string) => makeT(namespace),
+    useTranslations: (namespace?: string) => getT(namespace),
     useLocale: () => 'en-IN',
     useMessages: () => messages,
     useFormatter: () => ({
