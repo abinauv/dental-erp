@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -67,6 +68,9 @@ interface PaginationInfo {
 
 export default function PatientsPage() {
   const router = useRouter()
+  const t = useTranslations('patients.list')
+  const tGender = useTranslations('patients.gender')
+  const tCommon = useTranslations('common')
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -117,11 +121,12 @@ export default function PatientsPage() {
       FEMALE: 'bg-pink-100 text-pink-700',
       OTHER: 'bg-purple-100 text-purple-700',
     }
+    const label = tGender.has(gender) ? tGender(gender) : gender
     return (
       <Badge
         className={`${colors[gender as keyof typeof colors] || 'bg-muted text-muted-foreground'} border-0`}
       >
-        {gender}
+        {label}
       </Badge>
     )
   }
@@ -131,8 +136,8 @@ export default function PatientsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Patients</h1>
-          <p className="text-muted-foreground">Manage patient records and information</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <ExportMenu
@@ -154,7 +159,7 @@ export default function PatientsPage() {
           <Link href="/patients/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Patient
+              {t('new')}
             </Button>
           </Link>
         </div>
@@ -167,7 +172,7 @@ export default function PatientsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name, patient ID, phone, or email..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -176,21 +181,21 @@ export default function PatientsPage() {
             <div className="flex gap-2">
               <Select value={genderFilter} onValueChange={setGenderFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Gender" />
+                  <SelectValue placeholder={t('genderFilter')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="MALE">Male</SelectItem>
-                  <SelectItem value="FEMALE">Female</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
+                  <SelectItem value="all">{tGender('all')}</SelectItem>
+                  <SelectItem value="MALE">{tGender('MALE')}</SelectItem>
+                  <SelectItem value="FEMALE">{tGender('FEMALE')}</SelectItem>
+                  <SelectItem value="OTHER">{tGender('OTHER')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={bloodGroupFilter} onValueChange={setBloodGroupFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Blood Group" />
+                  <SelectValue placeholder={t('bloodGroupFilter')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Blood Groups</SelectItem>
+                  <SelectItem value="all">{t('allBloodGroups')}</SelectItem>
                   <SelectItem value="A+">A+</SelectItem>
                   <SelectItem value="A-">A-</SelectItem>
                   <SelectItem value="B+">B+</SelectItem>
@@ -212,14 +217,14 @@ export default function PatientsPage() {
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Patient ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Blood Group</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('cols.patientId')}</TableHead>
+                <TableHead>{t('cols.name')}</TableHead>
+                <TableHead>{t('cols.contact')}</TableHead>
+                <TableHead>{t('cols.gender')}</TableHead>
+                <TableHead>{t('cols.age')}</TableHead>
+                <TableHead>{t('cols.bloodGroup')}</TableHead>
+                <TableHead>{t('cols.location')}</TableHead>
+                <TableHead className="text-right">{t('cols.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -257,11 +262,11 @@ export default function PatientsPage() {
                   <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <User className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No patients found</p>
+                      <p className="text-muted-foreground">{t('empty')}</p>
                       <Link href="/patients/new">
                         <Button variant="outline" size="sm">
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Patient
+                          {t('add')}
                         </Button>
                       </Link>
                     </div>
@@ -299,13 +304,13 @@ export default function PatientsPage() {
                     </TableCell>
                     <TableCell>{getGenderBadge(patient.gender)}</TableCell>
                     <TableCell>
-                      <div className="text-sm">{patient.age} years</div>
+                      <div className="text-sm">{t('ageYears', { age: patient.age })}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{patient.bloodGroup || 'N/A'}</Badge>
+                      <Badge variant="outline">{patient.bloodGroup || t('na')}</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-muted-foreground">{patient.city || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">{patient.city || t('na')}</div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -317,20 +322,20 @@ export default function PatientsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => router.push(`/patients/${patient.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            {t('viewDetails')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => router.push(`/patients/${patient.id}/edit`)}
                           >
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => router.push(`/patients/${patient.id}/medical-history`)}
                           >
                             <FileText className="h-4 w-4 mr-2" />
-                            Medical History
+                            {t('medicalHistory')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -345,9 +350,11 @@ export default function PatientsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} patients
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -357,10 +364,13 @@ export default function PatientsPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {tCommon('actions.previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {tCommon('pagination.page', {
+                    page: pagination.page,
+                    totalPages: pagination.totalPages,
+                  })}
                 </div>
                 <Button
                   variant="outline"
@@ -368,7 +378,7 @@ export default function PatientsPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {tCommon('actions.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

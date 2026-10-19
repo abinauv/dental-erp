@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,9 @@ const BLOOD_GROUPS = [
 export default function NewPatientPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const t = useTranslations('patients.new')
+  const tGender = useTranslations('patients.gender')
+  const tCommon = useTranslations('common')
   const [submitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
@@ -68,8 +72,8 @@ export default function NewPatientPage() {
     if (!form.firstName || !form.lastName || !form.phone) {
       toast({
         variant: 'destructive',
-        title: 'Validation Error',
-        description: 'First name, last name, and phone are required.',
+        title: t('validationError'),
+        description: t('requiredFields'),
       })
       return
     }
@@ -108,23 +112,23 @@ export default function NewPatientPage() {
       })
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(data.error || `Failed to create patient (${response.status})`)
+        const data = await response.json().catch(() => ({ error: t('unknownError') }))
+        throw new Error(data.error || t('createErrorStatus', { status: response.status }))
       }
 
       const patient = await response.json()
 
       toast({
-        title: 'Patient Created',
-        description: `Patient ${form.firstName} ${form.lastName} has been registered successfully.`,
+        title: t('created'),
+        description: t('createdDesc', { name: `${form.firstName} ${form.lastName}` }),
       })
 
       router.push(`/patients/${patient.id}`)
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to create patient',
+        title: t('errorTitle'),
+        description: error.message || t('createError'),
       })
     } finally {
       setSubmitting(false)
@@ -140,8 +144,8 @@ export default function NewPatientPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">New Patient</h1>
-          <p className="text-muted-foreground">Register a new patient</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -149,32 +153,32 @@ export default function NewPatientPage() {
         {/* Personal Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Basic details of the patient</CardDescription>
+            <CardTitle>{t('personalInfo')}</CardTitle>
+            <CardDescription>{t('personalInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name *</Label>
+              <Label htmlFor="firstName">{t('firstName')}</Label>
               <Input
                 id="firstName"
                 value={form.firstName}
                 onChange={(e) => updateField('firstName', e.target.value)}
-                placeholder="Enter first name"
+                placeholder={t('firstNamePlaceholder')}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name *</Label>
+              <Label htmlFor="lastName">{t('lastName')}</Label>
               <Input
                 id="lastName"
                 value={form.lastName}
                 onChange={(e) => updateField('lastName', e.target.value)}
-                placeholder="Enter last name"
+                placeholder={t('lastNamePlaceholder')}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Label htmlFor="dateOfBirth">{t('dateOfBirth')}</Label>
               <Input
                 id="dateOfBirth"
                 type="date"
@@ -183,35 +187,35 @@ export default function NewPatientPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
+              <Label htmlFor="age">{t('age')}</Label>
               <Input
                 id="age"
                 type="number"
                 value={form.age}
                 onChange={(e) => updateField('age', e.target.value)}
-                placeholder="Age"
+                placeholder={t('agePlaceholder')}
                 min="0"
                 max="150"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="gender">Gender</Label>
+              <Label htmlFor="gender">{t('gender')}</Label>
               <Select value={form.gender} onValueChange={(v) => updateField('gender', v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
+                  <SelectValue placeholder={t('selectGender')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="MALE">Male</SelectItem>
-                  <SelectItem value="FEMALE">Female</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
+                  <SelectItem value="MALE">{tGender('MALE')}</SelectItem>
+                  <SelectItem value="FEMALE">{tGender('FEMALE')}</SelectItem>
+                  <SelectItem value="OTHER">{tGender('OTHER')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bloodGroup">Blood Group</Label>
+              <Label htmlFor="bloodGroup">{t('bloodGroup')}</Label>
               <Select value={form.bloodGroup} onValueChange={(v) => updateField('bloodGroup', v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select blood group" />
+                  <SelectValue placeholder={t('selectBloodGroup')} />
                 </SelectTrigger>
                 <SelectContent>
                   {BLOOD_GROUPS.map((bg) => (
@@ -228,74 +232,74 @@ export default function NewPatientPage() {
         {/* Contact Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
-            <CardDescription>Phone, email, and address details</CardDescription>
+            <CardTitle>{t('contactInfo')}</CardTitle>
+            <CardDescription>{t('contactInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone *</Label>
+              <Label htmlFor="phone">{t('phone')}</Label>
               <Input
                 id="phone"
                 value={form.phone}
                 onChange={(e) => updateField('phone', e.target.value)}
-                placeholder="Enter phone number"
+                placeholder={t('phonePlaceholder')}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="alternatePhone">Alternate Phone</Label>
+              <Label htmlFor="alternatePhone">{t('alternatePhone')}</Label>
               <Input
                 id="alternatePhone"
                 value={form.alternatePhone}
                 onChange={(e) => updateField('alternatePhone', e.target.value)}
-                placeholder="Alternate phone number"
+                placeholder={t('alternatePhonePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
                 id="email"
                 type="email"
                 value={form.email}
                 onChange={(e) => updateField('email', e.target.value)}
-                placeholder="Enter email address"
+                placeholder={t('emailPlaceholder')}
               />
             </div>
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">{t('address')}</Label>
               <Textarea
                 id="address"
                 value={form.address}
                 onChange={(e) => updateField('address', e.target.value)}
-                placeholder="Enter full address"
+                placeholder={t('addressPlaceholder')}
                 rows={2}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">{t('city')}</Label>
               <Input
                 id="city"
                 value={form.city}
                 onChange={(e) => updateField('city', e.target.value)}
-                placeholder="City"
+                placeholder={t('cityPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
+              <Label htmlFor="state">{t('state')}</Label>
               <Input
                 id="state"
                 value={form.state}
                 onChange={(e) => updateField('state', e.target.value)}
-                placeholder="State"
+                placeholder={t('statePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pincode">Pincode</Label>
+              <Label htmlFor="pincode">{t('pincode')}</Label>
               <Input
                 id="pincode"
                 value={form.pincode}
                 onChange={(e) => updateField('pincode', e.target.value)}
-                placeholder="Pincode"
+                placeholder={t('pincodePlaceholder')}
               />
             </div>
           </CardContent>
@@ -304,44 +308,44 @@ export default function NewPatientPage() {
         {/* Additional Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Additional Details</CardTitle>
-            <CardDescription>ID, occupation, and referral information</CardDescription>
+            <CardTitle>{t('additionalDetails')}</CardTitle>
+            <CardDescription>{t('additionalDetailsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="aadharNumber">Aadhar Number</Label>
+              <Label htmlFor="aadharNumber">{t('aadharNumber')}</Label>
               <Input
                 id="aadharNumber"
                 value={form.aadharNumber}
                 onChange={(e) => updateField('aadharNumber', e.target.value)}
-                placeholder="Enter Aadhar number"
+                placeholder={t('aadharPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="occupation">Occupation</Label>
+              <Label htmlFor="occupation">{t('occupation')}</Label>
               <Input
                 id="occupation"
                 value={form.occupation}
                 onChange={(e) => updateField('occupation', e.target.value)}
-                placeholder="Enter occupation"
+                placeholder={t('occupationPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="referredBy">Referred By</Label>
+              <Label htmlFor="referredBy">{t('referredBy')}</Label>
               <Input
                 id="referredBy"
                 value={form.referredBy}
                 onChange={(e) => updateField('referredBy', e.target.value)}
-                placeholder="Referral source"
+                placeholder={t('referredByPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="referralCode">Referral Code</Label>
+              <Label htmlFor="referralCode">{t('referralCode')}</Label>
               <Input
                 id="referralCode"
                 value={form.referralCode}
                 onChange={(e) => updateField('referralCode', e.target.value)}
-                placeholder="e.g. REF-A3B2K9"
+                placeholder={t('referralCodePlaceholder')}
               />
             </div>
           </CardContent>
@@ -350,35 +354,35 @@ export default function NewPatientPage() {
         {/* Emergency Contact */}
         <Card>
           <CardHeader>
-            <CardTitle>Emergency Contact</CardTitle>
-            <CardDescription>Emergency contact information</CardDescription>
+            <CardTitle>{t('emergencyContact')}</CardTitle>
+            <CardDescription>{t('emergencyContactDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="emergencyContactName">Contact Name</Label>
+              <Label htmlFor="emergencyContactName">{t('contactName')}</Label>
               <Input
                 id="emergencyContactName"
                 value={form.emergencyContactName}
                 onChange={(e) => updateField('emergencyContactName', e.target.value)}
-                placeholder="Emergency contact name"
+                placeholder={t('contactNamePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
+              <Label htmlFor="emergencyContactPhone">{t('contactPhone')}</Label>
               <Input
                 id="emergencyContactPhone"
                 value={form.emergencyContactPhone}
                 onChange={(e) => updateField('emergencyContactPhone', e.target.value)}
-                placeholder="Emergency contact phone"
+                placeholder={t('contactPhonePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="emergencyContactRelation">Relation</Label>
+              <Label htmlFor="emergencyContactRelation">{t('relation')}</Label>
               <Input
                 id="emergencyContactRelation"
                 value={form.emergencyContactRelation}
                 onChange={(e) => updateField('emergencyContactRelation', e.target.value)}
-                placeholder="e.g. Spouse, Parent"
+                placeholder={t('relationPlaceholder')}
               />
             </div>
           </CardContent>
@@ -398,19 +402,19 @@ export default function NewPatientPage() {
         <div className="flex justify-end gap-3">
           <Link href="/patients">
             <Button type="button" variant="outline">
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                {t('creating')}
               </>
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Create Patient
+                {t('create')}
               </>
             )}
           </Button>

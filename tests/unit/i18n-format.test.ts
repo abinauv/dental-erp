@@ -13,6 +13,7 @@ import {
   formatDate,
   formatDateTime,
   formatNumber,
+  formatTime,
 } from '@/lib/i18n/format'
 
 describe('i18n config', () => {
@@ -132,6 +133,27 @@ describe('formatDate / formatDateTime', () => {
     const date = new Date('2026-03-04T00:00:00Z')
     expect(formatDate(date, { locale: 'en-US', timeZone: 'UTC' })).toMatch(/Mar 04, 2026/)
     expect(formatDate(date, { locale: 'en-IN', timeZone: 'UTC' })).toMatch(/04 Mar 2026/)
+  })
+})
+
+describe('formatTime', () => {
+  it('formats the time of day without a date', () => {
+    const result = formatTime(new Date('2026-01-15T13:30:00Z'), { timeZone: 'UTC' })
+    expect(result).toMatch(/\d{1,2}:\d{2}/)
+    expect(result).not.toContain('2026')
+  })
+
+  it('returns the fallback for missing or invalid input', () => {
+    expect(formatTime(null)).toBe('-')
+    expect(formatTime('not a time')).toBe('-')
+    expect(formatTime(undefined, { fallback: '—' })).toBe('—')
+  })
+
+  it('is exposed on the bound formatter set', () => {
+    const fmt = createFormatters('en-IN')
+    expect(fmt.formatTime(new Date('2026-01-15T13:30:00Z'), { timeZone: 'UTC' })).toMatch(
+      /\d{1,2}:\d{2}/
+    )
   })
 })
 

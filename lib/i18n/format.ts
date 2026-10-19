@@ -120,6 +120,26 @@ export function formatDateTime(
   }).format(value)
 }
 
+const TIME_DEFAULTS: Intl.DateTimeFormatOptions = {
+  hour: '2-digit',
+  minute: '2-digit',
+}
+
+/** Format the time-of-day only, with locale conventions (12h vs 24h). */
+export function formatTime(
+  date: Date | string | number | null | undefined,
+  options: DateFormatOptions = {}
+): string {
+  const { locale, fallback = '-', ...dateTimeOptions } = options
+  const value = toDate(date)
+  if (value === null) return fallback
+
+  return new Intl.DateTimeFormat(resolveLocale(locale), {
+    ...TIME_DEFAULTS,
+    ...dateTimeOptions,
+  }).format(value)
+}
+
 /**
  * Build a set of formatters bound to one clinic's locale, so call sites in a
  * request handler do not have to thread the locale through every call.
@@ -147,5 +167,7 @@ export function createFormatters(
       formatDate(date, { locale: resolved, ...o }),
     formatDateTime: (date: Date | string | number | null | undefined, o: DateFormatOptions = {}) =>
       formatDateTime(date, { locale: resolved, ...o }),
+    formatTime: (date: Date | string | number | null | undefined, o: DateFormatOptions = {}) =>
+      formatTime(date, { locale: resolved, ...o }),
   }
 }
