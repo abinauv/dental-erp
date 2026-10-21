@@ -1686,6 +1686,98 @@
       "listening": "Listening…"
     }
   },
+  "settings": {
+    "home": {
+      "title": "Settings & Configuration",
+      "subtitle": "Manage all system settings and configurations",
+      "cat": {
+        "setupGuide": {
+          "title": "Setup Guide",
+          "desc": "Step-by-step instructions to set up everything — start here!"
+        },
+        "clinic": {
+          "title": "Clinic Information",
+          "desc": "Manage clinic details, contact information, and branding"
+        },
+        "appointments": {
+          "title": "Appointment Settings",
+          "desc": "Configure time slots, working hours, and holiday calendar"
+        },
+        "billing": {
+          "title": "Billing Settings",
+          "desc": "Set up tax rates, invoice format, and payment terms"
+        },
+        "communications": {
+          "title": "Communication Settings",
+          "desc": "Configure SMS gateways, email SMTP, and notifications"
+        },
+        "procedures": {
+          "title": "Procedure Settings",
+          "desc": "Manage dental procedures and default pricing"
+        },
+        "users": {
+          "title": "User Management",
+          "desc": "Manage staff accounts, roles, and permissions"
+        },
+        "system": {
+          "title": "System Settings",
+          "desc": "Backup, export data, and view audit logs"
+        },
+        "security": {
+          "title": "Security Settings",
+          "desc": "Password policies, session timeout, and security logs"
+        },
+        "integrations": {
+          "title": "Integrations",
+          "desc": "Connect Google Calendar and other external services"
+        },
+        "import": {
+          "title": "Data Import",
+          "desc": "Import data from CSV, Excel, or PDF files from your previous ERP"
+        },
+        "profile": {
+          "title": "My Profile",
+          "desc": "Your own language and formatting preferences — affects nobody else"
+        }
+      },
+      "appearance": "Appearance",
+      "appearanceDesc": "Choose how the application looks for you",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "systemInformation": "System Information",
+      "version": "Version:",
+      "database": "Database:",
+      "environment": "Environment:",
+      "environmentProduction": "Production",
+      "quickTips": "Quick Tips",
+      "tip1": "Regular backups are crucial for data safety",
+      "tip2": "Review audit logs periodically for security",
+      "tip3": "Keep clinic information updated",
+      "tip4": "Configure SMS/Email for automated reminders"
+    },
+    "profile": {
+      "title": "My Profile",
+      "subtitle": "Preferences that apply to your account only — {name} ({email})"
+    },
+    "languageCard": {
+      "title": "Language & Formatting",
+      "defaultDescription": "Choose how dates, numbers and amounts are formatted for you. Everyone else at this clinic is unaffected.",
+      "language": "Language",
+      "useClinicDefault": "Use clinic default",
+      "useClinicDefaultWith": "Use clinic default ({label})",
+      "inheritHint": "Leaving this on the clinic default means it follows the clinic if the clinic's language is ever changed.",
+      "preview": "Preview",
+      "amount": "Amount",
+      "date": "Date",
+      "save": "Save",
+      "saveFailed": "Failed to save language",
+      "languageUpdated": "Language updated",
+      "followingDefault": "You are now following the clinic default.",
+      "formattingNow": "Formatting now uses {label}.",
+      "error": "Error"
+    }
+  },
   "staff": {
     "role": {
       "ADMIN": "Admin",

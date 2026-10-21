@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,92 +25,56 @@ import {
 
 const settingsCategories = [
   {
-    title: 'Setup Guide',
-    description: 'Step-by-step instructions to set up everything — start here!',
+    key: 'setupGuide',
     icon: BookOpen,
     href: '/settings/setup-guide',
     color: 'text-amber-600 bg-amber-50',
   },
+  { key: 'clinic', icon: Building2, href: '/settings/clinic', color: 'text-blue-600 bg-blue-50' },
   {
-    title: 'Clinic Information',
-    description: 'Manage clinic details, contact information, and branding',
-    icon: Building2,
-    href: '/settings/clinic',
-    color: 'text-blue-600 bg-blue-50',
-  },
-  {
-    title: 'Appointment Settings',
-    description: 'Configure time slots, working hours, and holiday calendar',
+    key: 'appointments',
     icon: Calendar,
     href: '/settings/appointments',
     color: 'text-green-600 bg-green-50',
   },
   {
-    title: 'Billing Settings',
-    description: 'Set up tax rates, invoice format, and payment terms',
+    key: 'billing',
     icon: Receipt,
     href: '/settings/billing',
     color: 'text-purple-600 bg-purple-50',
   },
   {
-    title: 'Communication Settings',
-    description: 'Configure SMS gateways, email SMTP, and notifications',
+    key: 'communications',
     icon: MessageSquare,
     href: '/settings/communications',
     color: 'text-orange-600 bg-orange-50',
   },
   {
-    title: 'Procedure Settings',
-    description: 'Manage dental procedures and default pricing',
+    key: 'procedures',
     icon: SettingsIcon,
     href: '/settings/procedures',
     color: 'text-pink-600 bg-pink-50',
   },
+  { key: 'users', icon: Users, href: '/staff', color: 'text-indigo-600 bg-indigo-50' },
+  { key: 'system', icon: Database, href: '/settings/system', color: 'text-red-600 bg-red-50' },
+  { key: 'security', icon: Shield, href: '/settings/security', color: 'text-teal-600 bg-teal-50' },
   {
-    title: 'User Management',
-    description: 'Manage staff accounts, roles, and permissions',
-    icon: Users,
-    href: '/staff',
-    color: 'text-indigo-600 bg-indigo-50',
-  },
-  {
-    title: 'System Settings',
-    description: 'Backup, export data, and view audit logs',
-    icon: Database,
-    href: '/settings/system',
-    color: 'text-red-600 bg-red-50',
-  },
-  {
-    title: 'Security Settings',
-    description: 'Password policies, session timeout, and security logs',
-    icon: Shield,
-    href: '/settings/security',
-    color: 'text-teal-600 bg-teal-50',
-  },
-  {
-    title: 'Integrations',
-    description: 'Connect Google Calendar and other external services',
+    key: 'integrations',
     icon: Link2,
     href: '/settings/integrations',
     color: 'text-cyan-600 bg-cyan-50',
   },
   {
-    title: 'Data Import',
-    description: 'Import data from CSV, Excel, or PDF files from your previous ERP',
+    key: 'import',
     icon: Upload,
     href: '/settings/import',
     color: 'text-emerald-600 bg-emerald-50',
   },
-  {
-    title: 'My Profile',
-    description: 'Your own language and formatting preferences — affects nobody else',
-    icon: Languages,
-    href: '/settings/profile',
-    color: 'text-sky-600 bg-sky-50',
-  },
+  { key: 'profile', icon: Languages, href: '/settings/profile', color: 'text-sky-600 bg-sky-50' },
 ]
 
 export default function SettingsPage() {
+  const t = useTranslations('settings.home')
   const { theme, setTheme } = useTheme()
 
   return (
@@ -117,9 +82,9 @@ export default function SettingsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <SettingsIcon className="w-8 h-8" />
-          Settings & Configuration
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground mt-2">Manage all system settings and configurations</p>
+        <p className="text-muted-foreground mt-2">{t('subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -132,8 +97,10 @@ export default function SettingsPage() {
                 >
                   <category.icon className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-xl">{category.title}</CardTitle>
-                <CardDescription className="text-sm">{category.description}</CardDescription>
+                <CardTitle className="text-xl">{t(`cat.${category.key}.title`)}</CardTitle>
+                <CardDescription className="text-sm">
+                  {t(`cat.${category.key}.desc`)}
+                </CardDescription>
               </CardHeader>
             </Card>
           </Link>
@@ -146,17 +113,17 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sun className="w-5 h-5" />
-              Appearance
+              {t('appearance')}
             </CardTitle>
-            <CardDescription>Choose how the application looks for you</CardDescription>
+            <CardDescription>{t('appearanceDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3">
               {(
                 [
-                  { value: 'light', label: 'Light', icon: Sun },
-                  { value: 'dark', label: 'Dark', icon: Moon },
-                  { value: 'system', label: 'System', icon: Monitor },
+                  { value: 'light', label: t('light'), icon: Sun },
+                  { value: 'dark', label: t('dark'), icon: Moon },
+                  { value: 'system', label: t('system'), icon: Monitor },
                 ] as const
               ).map((opt) => (
                 <Button
@@ -178,33 +145,33 @@ export default function SettingsPage() {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>System Information</CardTitle>
+            <CardTitle>{t('systemInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Version:</span>
+              <span className="text-muted-foreground">{t('version')}</span>
               <span className="font-medium">1.0.0</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Database:</span>
+              <span className="text-muted-foreground">{t('database')}</span>
               <span className="font-medium">MySQL</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Environment:</span>
-              <span className="font-medium">Production</span>
+              <span className="text-muted-foreground">{t('environment')}</span>
+              <span className="font-medium">{t('environmentProduction')}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick Tips</CardTitle>
+            <CardTitle>{t('quickTips')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• Regular backups are crucial for data safety</p>
-            <p>• Review audit logs periodically for security</p>
-            <p>• Keep clinic information updated</p>
-            <p>• Configure SMS/Email for automated reminders</p>
+            <p>• {t('tip1')}</p>
+            <p>• {t('tip2')}</p>
+            <p>• {t('tip3')}</p>
+            <p>• {t('tip4')}</p>
           </CardContent>
         </Card>
       </div>

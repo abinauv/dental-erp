@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Languages, Loader2 } from 'lucide-react'
 
@@ -54,9 +55,10 @@ export function LanguagePreferenceCard({
   currency,
   supportedLocales,
   endpoint,
-  description = 'Choose how dates, numbers and amounts are formatted for you. Everyone else at this clinic is unaffected.',
+  description,
 }: LanguagePreferenceCardProps) {
   const router = useRouter()
+  const t = useTranslations('settings.languageCard')
   const { toast } = useToast()
 
   const [selected, setSelected] = useState(locale ?? INHERIT)
@@ -76,15 +78,15 @@ export function LanguagePreferenceCard({
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}))
-        throw new Error(body.error || 'Failed to save language')
+        throw new Error(body.error || t('saveFailed'))
       }
 
       toast({
-        title: 'Language updated',
+        title: t('languageUpdated'),
         description:
           selected === INHERIT
-            ? 'You are now following the clinic default.'
-            : `Formatting now uses ${getLocaleLabel(selected)}.`,
+            ? t('followingDefault')
+            : t('formattingNow', { label: getLocaleLabel(selected) }),
       })
 
       // The locale is resolved server-side on every request, so the rest of
@@ -92,8 +94,8 @@ export function LanguagePreferenceCard({
       router.refresh()
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save language',
+        title: t('error'),
+        description: error instanceof Error ? error.message : t('saveFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -106,22 +108,23 @@ export function LanguagePreferenceCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Languages className="h-5 w-5" />
-          Language & Formatting
+          {t('title')}
         </CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription>{description ?? t('defaultDescription')}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="locale">Language</Label>
+          <Label htmlFor="locale">{t('language')}</Label>
           <Select value={selected} onValueChange={setSelected}>
             <SelectTrigger id="locale" className="max-w-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={INHERIT}>
-                Use clinic default
-                {hospitalLocale ? ` (${getLocaleLabel(hospitalLocale)})` : ''}
+                {hospitalLocale
+                  ? t('useClinicDefaultWith', { label: getLocaleLabel(hospitalLocale) })
+                  : t('useClinicDefault')}
               </SelectItem>
               {supportedLocales.map((value) => (
                 <SelectItem key={value} value={value}>
@@ -130,23 +133,20 @@ export function LanguagePreferenceCard({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground">
-            Leaving this on the clinic default means it follows the clinic if the clinic&apos;s
-            language is ever changed.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('inheritHint')}</p>
         </div>
 
         <div className="rounded-md border p-4">
-          <p className="text-sm font-medium">Preview</p>
+          <p className="text-sm font-medium">{t('preview')}</p>
           <dl className="mt-2 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
             <div className="flex gap-2">
-              <dt>Amount</dt>
+              <dt>{t('amount')}</dt>
               <dd className="font-medium text-foreground">
                 {formatCurrency(125000.5, { locale: effective, currency })}
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt>Date</dt>
+              <dt>{t('date')}</dt>
               <dd className="font-medium text-foreground">
                 {formatDate(new Date(2026, 0, 31), { locale: effective })}
               </dd>
@@ -158,7 +158,7 @@ export function LanguagePreferenceCard({
       <CardFooter>
         <Button onClick={handleSave} disabled={saving || !dirty}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save
+          {t('save')}
         </Button>
       </CardFooter>
     </Card>
