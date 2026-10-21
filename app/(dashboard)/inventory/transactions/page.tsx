@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Transaction {
   id: number
@@ -19,6 +21,10 @@ interface Transaction {
 }
 
 export default function TransactionsPage() {
+  const t = useTranslations('inventory.transactions')
+  const tType = useTranslations('inventory.txnType')
+  const fmt = useClinicFormatters()
+  const { currencySymbol } = fmt
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -134,7 +140,7 @@ export default function TransactionsPage() {
       const data = await response.json()
 
       if (data.success) {
-        alert('Transaction recorded successfully!')
+        alert(t('recordSuccess'))
         setShowAddModal(false)
         fetchTransactions()
         // Reset form
@@ -148,11 +154,11 @@ export default function TransactionsPage() {
           notes: '',
         })
       } else {
-        alert(data.error || 'Failed to record transaction')
+        alert(data.error || t('recordFailed'))
       }
     } catch (error) {
       console.error('Error recording transaction:', error)
-      alert('Failed to record transaction')
+      alert(t('recordFailed'))
     }
   }
 
@@ -167,39 +173,35 @@ export default function TransactionsPage() {
       previousStock: 'bg-muted text-foreground',
     }
 
+    const label = (tType.has(type) ? tType(type) : type.replace('_', ' ')).toUpperCase()
     return (
       <span
         className={`px-2 py-1 text-xs font-semibold rounded-full ${badges[type] || 'bg-muted text-foreground'}`}
       >
-        {type.replace('_', ' ').toUpperCase()}
+        {label}
       </span>
     )
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) =>
+    fmt.formatCurrency(amount, { minimumFractionDigits: 2 })
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Stock Transactions</h1>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
         <div className="flex gap-2">
           <Link
             href="/inventory"
             className="px-4 py-2 bg-muted-foreground text-background rounded-lg hover:bg-muted-foreground/80"
           >
-            Back to Inventory
+            {t('backToInventory')}
           </Link>
           <button
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            + New Transaction
+            + {t('newTransaction')}
           </button>
         </div>
       </div>
@@ -212,13 +214,13 @@ export default function TransactionsPage() {
             onChange={(e) => setTransactionType(e.target.value)}
             className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">All Types</option>
-            <option value="purchase">Purchase</option>
-            <option value="sale">Sale</option>
-            <option value="adjustment">Adjustment</option>
-            <option value="return">Return</option>
-            <option value="usage">Usage</option>
-            <option value="wastage">Wastage</option>
+            <option value="">{t('allTypes')}</option>
+            <option value="purchase">{tType('purchase')}</option>
+            <option value="sale">{tType('sale')}</option>
+            <option value="adjustment">{tType('adjustment')}</option>
+            <option value="return">{tType('return')}</option>
+            <option value="usage">{tType('usage')}</option>
+            <option value="wastage">{tType('wastage')}</option>
           </select>
 
           <input
@@ -226,7 +228,7 @@ export default function TransactionsPage() {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Start Date"
+            placeholder={t('startDate')}
           />
 
           <input
@@ -234,7 +236,7 @@ export default function TransactionsPage() {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="End Date"
+            placeholder={t('endDate')}
           />
         </div>
       </div>
@@ -242,9 +244,9 @@ export default function TransactionsPage() {
       {/* Transactions Table */}
       <div className="bg-background rounded-lg shadow overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">Loading...</div>
+          <div className="p-8 text-center">{t('loading')}</div>
         ) : transactions.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No transactions found</div>
+          <div className="p-8 text-center text-muted-foreground">{t('noTransactions')}</div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -252,28 +254,28 @@ export default function TransactionsPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Date
+                      {t('colDate')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Type
+                      {t('colType')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Item
+                      {t('colItem')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Quantity
+                      {t('colQuantity')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Unit Price
+                      {t('colUnitPrice')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Total Amount
+                      {t('colTotalAmount')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Supplier
+                      {t('colSupplier')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Performed By
+                      {t('colPerformedBy')}
                     </th>
                   </tr>
                 </thead>
@@ -281,7 +283,7 @@ export default function TransactionsPage() {
                   {transactions.map((transaction) => (
                     <tr key={transaction.id} className="hover:bg-muted/50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {new Date(transaction.transactionDate).toLocaleDateString()}
+                        {fmt.formatDate(transaction.transactionDate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getTransactionTypeBadge(transaction.type)}
@@ -317,9 +319,11 @@ export default function TransactionsPage() {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-foreground">
-                    Showing page <span className="font-medium">{pagination.page}</span> of{' '}
-                    <span className="font-medium">{pagination.pages}</span> ({pagination.total}{' '}
-                    total transactions)
+                    {t('showingPage', {
+                      page: pagination.page,
+                      pages: pagination.pages,
+                      total: pagination.total,
+                    })}
                   </p>
                 </div>
                 <div>
@@ -329,14 +333,14 @@ export default function TransactionsPage() {
                       disabled={pagination.page === 1}
                       className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 disabled:opacity-50"
                     >
-                      Previous
+                      {t('previous')}
                     </button>
                     <button
                       onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                       disabled={pagination.page === pagination.pages}
                       className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 disabled:opacity-50"
                     >
-                      Next
+                      {t('next')}
                     </button>
                   </nav>
                 </div>
@@ -350,12 +354,12 @@ export default function TransactionsPage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">New Stock Transaction</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('modalTitle')}</h2>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Transaction Type <span className="text-red-500">*</span>
+                    {t('transactionType')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="type"
@@ -364,17 +368,17 @@ export default function TransactionsPage() {
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="purchase">Purchase</option>
-                    <option value="adjustment">Adjustment</option>
-                    <option value="usage">Usage</option>
-                    <option value="wastage">Wastage</option>
-                    <option value="return">Return</option>
+                    <option value="purchase">{tType('purchase')}</option>
+                    <option value="adjustment">{tType('adjustment')}</option>
+                    <option value="usage">{tType('usage')}</option>
+                    <option value="wastage">{tType('wastage')}</option>
+                    <option value="return">{tType('return')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Item <span className="text-red-500">*</span>
+                    {t('item')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="itemId"
@@ -383,10 +387,10 @@ export default function TransactionsPage() {
                     required
                     className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select Item</option>
+                    <option value="">{t('selectItem')}</option>
                     {items.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} ({item.sku})
+                        {t('itemOption', { name: item.name, sku: item.sku })}
                       </option>
                     ))}
                   </select>
@@ -394,7 +398,7 @@ export default function TransactionsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Quantity <span className="text-red-500">*</span>
+                    {t('quantity')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -409,7 +413,7 @@ export default function TransactionsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Unit Price (₹)
+                    {t('unitPrice', { currency: currencySymbol })}
                   </label>
                   <input
                     type="number"
@@ -423,7 +427,7 @@ export default function TransactionsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    Transaction Date <span className="text-red-500">*</span>
+                    {t('transactionDate')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -438,7 +442,7 @@ export default function TransactionsPage() {
                 {formData.type === 'purchase' && (
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Supplier
+                      {t('supplier')}
                     </label>
                     <select
                       name="supplierId"
@@ -446,7 +450,7 @@ export default function TransactionsPage() {
                       onChange={handleChange}
                       className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Select Supplier</option>
+                      <option value="">{t('selectSupplier')}</option>
                       {suppliers.map((supplier) => (
                         <option key={supplier.id} value={supplier.id}>
                           {supplier.name}
@@ -458,7 +462,9 @@ export default function TransactionsPage() {
               </div>
 
               <div className="mt-4">
-                <label className="block text-sm font-medium text-foreground mb-2">Notes</label>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  {t('notes')}
+                </label>
                 <textarea
                   name="notes"
                   value={formData.notes}
@@ -474,13 +480,13 @@ export default function TransactionsPage() {
                   onClick={() => setShowAddModal(false)}
                   className="px-6 py-2 border border-border rounded-lg hover:bg-muted/50"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  Record Transaction
+                  {t('recordTransaction')}
                 </button>
               </div>
             </form>

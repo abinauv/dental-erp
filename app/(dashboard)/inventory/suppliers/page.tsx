@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Supplier {
   id: number
@@ -20,6 +22,9 @@ interface Supplier {
 
 export default function SuppliersPage() {
   const router = useRouter()
+  const t = useTranslations('inventory.suppliers')
+  const tStatus = useTranslations('inventory.supplierStatus')
+  const fmt = useClinicFormatters()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -67,39 +72,37 @@ export default function SuppliersPage() {
       BLOCKED: 'bg-red-100 text-red-800',
     }
 
+    const label = tStatus.has(status)
+      ? tStatus(status)
+      : status.charAt(0) + status.slice(1).toLowerCase()
     return (
       <span
         className={`px-2 py-1 text-xs font-semibold rounded-full ${badges[status as keyof typeof badges]}`}
       >
-        {status.charAt(0) + status.slice(1).toLowerCase()}
+        {label}
       </span>
     )
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) =>
+    fmt.formatCurrency(amount, { minimumFractionDigits: 0 })
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Supplier Management</h1>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
         <div className="flex gap-2">
           <Link
             href="/inventory"
             className="px-4 py-2 bg-muted-foreground text-background rounded-lg hover:bg-muted-foreground/80"
           >
-            Back to Inventory
+            {t('backToInventory')}
           </Link>
           <button
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            + Add Supplier
+            + {t('addSupplier')}
           </button>
         </div>
       </div>
@@ -109,7 +112,7 @@ export default function SuppliersPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
-            placeholder="Search by name, code, contact person..."
+            placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -120,10 +123,10 @@ export default function SuppliersPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="BLOCKED">Blocked</option>
+            <option value="all">{t('allStatus')}</option>
+            <option value="ACTIVE">{tStatus('ACTIVE')}</option>
+            <option value="INACTIVE">{tStatus('INACTIVE')}</option>
+            <option value="BLOCKED">{tStatus('BLOCKED')}</option>
           </select>
         </div>
       </div>
@@ -131,9 +134,9 @@ export default function SuppliersPage() {
       {/* Suppliers Table */}
       <div className="bg-background rounded-lg shadow overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">Loading...</div>
+          <div className="p-8 text-center">{t('loading')}</div>
         ) : suppliers.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No suppliers found</div>
+          <div className="p-8 text-center text-muted-foreground">{t('noSuppliers')}</div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -141,31 +144,31 @@ export default function SuppliersPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Code
+                      {t('colCode')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Name
+                      {t('colName')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Contact Person
+                      {t('colContactPerson')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Phone
+                      {t('colPhone')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Email
+                      {t('colEmail')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Status
+                      {t('colStatus')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Items
+                      {t('colItems')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Total Business
+                      {t('colTotalBusiness')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Actions
+                      {t('colActions')}
                     </th>
                   </tr>
                 </thead>
@@ -201,13 +204,13 @@ export default function SuppliersPage() {
                           href={`/inventory/suppliers/${supplier.id}`}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
-                          View
+                          {t('view')}
                         </Link>
                         <Link
                           href={`/inventory/suppliers/${supplier.id}/edit`}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
-                          Edit
+                          {t('edit')}
                         </Link>
                       </td>
                     </tr>
@@ -221,9 +224,11 @@ export default function SuppliersPage() {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-foreground">
-                    Showing page <span className="font-medium">{pagination.page}</span> of{' '}
-                    <span className="font-medium">{pagination.pages}</span> ({pagination.total}{' '}
-                    total suppliers)
+                    {t('showingPage', {
+                      page: pagination.page,
+                      pages: pagination.pages,
+                      total: pagination.total,
+                    })}
                   </p>
                 </div>
                 <div>
@@ -233,14 +238,14 @@ export default function SuppliersPage() {
                       disabled={pagination.page === 1}
                       className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 disabled:opacity-50"
                     >
-                      Previous
+                      {t('previous')}
                     </button>
                     <button
                       onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                       disabled={pagination.page === pagination.pages}
                       className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-border bg-background text-sm font-medium text-muted-foreground hover:bg-muted/50 disabled:opacity-50"
                     >
-                      Next
+                      {t('next')}
                     </button>
                   </nav>
                 </div>
@@ -254,16 +259,13 @@ export default function SuppliersPage() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">Add New Supplier</h2>
-            <p className="text-muted-foreground mb-4">
-              Supplier form will be implemented here. For now, please use the API directly or create
-              a dedicated page.
-            </p>
+            <h2 className="text-2xl font-bold mb-4">{t('addModalTitle')}</h2>
+            <p className="text-muted-foreground mb-4">{t('addModalDesc')}</p>
             <button
               onClick={() => setShowAddModal(false)}
               className="px-4 py-2 bg-muted-foreground text-background rounded-lg hover:bg-muted-foreground/80"
             >
-              Close
+              {t('close')}
             </button>
           </div>
         </div>

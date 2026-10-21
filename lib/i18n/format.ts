@@ -156,9 +156,18 @@ export function createFormatters(
   const resolved = resolveLocale(locale)
   const currency = currencyOverride || getLocaleDefaults(resolved).currency
 
+  // The bare currency symbol (e.g. ₹, $, €), derived from the locale+currency
+  // via Intl, for places that need the glyph in a label rather than a formatted
+  // amount. Falls back to the ISO code if no distinct symbol part is emitted.
+  const currencySymbol =
+    new Intl.NumberFormat(resolved, { style: 'currency', currency })
+      .formatToParts(0)
+      .find((part) => part.type === 'currency')?.value || currency
+
   return {
     locale: resolved,
     currency,
+    currencySymbol,
     formatCurrency: (amount: number | string | null | undefined, o: CurrencyFormatOptions = {}) =>
       formatCurrency(amount, { locale: resolved, currency, ...o }),
     formatNumber: (value: number | string | null | undefined, o: Intl.NumberFormatOptions = {}) =>

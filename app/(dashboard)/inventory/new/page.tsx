@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 export default function NewInventoryItemPage() {
   const router = useRouter()
+  const t = useTranslations('inventory.new')
+  const tType = useTranslations('inventory.itemType')
+  const { currencySymbol } = useClinicFormatters()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
   const [suppliers, setSuppliers] = useState<any[]>([])
@@ -92,14 +97,14 @@ export default function NewInventoryItemPage() {
       const data = await response.json()
 
       if (data.success) {
-        alert('Inventory item created successfully!')
+        alert(t('createSuccess'))
         router.push('/inventory')
       } else {
-        alert(data.error || 'Failed to create inventory item')
+        alert(data.error || t('createFailed'))
       }
     } catch (error) {
       console.error('Error creating inventory item:', error)
-      alert('Failed to create inventory item')
+      alert(t('createFailed'))
     } finally {
       setLoading(false)
     }
@@ -108,12 +113,12 @@ export default function NewInventoryItemPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Add New Inventory Item</h1>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
         <Link
           href="/inventory"
           className="px-4 py-2 bg-muted-foreground text-white rounded-lg hover:bg-muted-foreground/80"
         >
-          Back to Inventory
+          {t('backToInventory')}
         </Link>
       </div>
 
@@ -122,7 +127,7 @@ export default function NewInventoryItemPage() {
           {/* Item Code */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Item Code <span className="text-red-500">*</span>
+              {t('itemCode')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -131,14 +136,14 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., DM-001"
+              placeholder={t('itemCodePlaceholder')}
             />
           </div>
 
           {/* Item Name */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Item Name <span className="text-red-500">*</span>
+              {t('itemName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -147,20 +152,22 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., Composite Resin"
+              placeholder={t('itemNamePlaceholder')}
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Category</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t('category')}
+            </label>
             <select
               name="categoryId"
               value={formData.categoryId}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select Category</option>
+              <option value="">{t('selectCategory')}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -172,7 +179,7 @@ export default function NewInventoryItemPage() {
           {/* Item Type */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Item Type <span className="text-red-500">*</span>
+              {t('itemType')} <span className="text-red-500">*</span>
             </label>
             <select
               name="itemType"
@@ -181,19 +188,19 @@ export default function NewInventoryItemPage() {
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="DENTAL_MATERIAL">Dental Material</option>
-              <option value="INSTRUMENT">Instrument</option>
-              <option value="CONSUMABLE">Consumable</option>
-              <option value="MEDICINE">Medicine</option>
-              <option value="OFFICE_SUPPLY">Office Supply</option>
-              <option value="EQUIPMENT">Equipment</option>
+              <option value="DENTAL_MATERIAL">{tType('DENTAL_MATERIAL')}</option>
+              <option value="INSTRUMENT">{tType('INSTRUMENT')}</option>
+              <option value="CONSUMABLE">{tType('CONSUMABLE')}</option>
+              <option value="MEDICINE">{tType('MEDICINE')}</option>
+              <option value="OFFICE_SUPPLY">{tType('OFFICE_SUPPLY')}</option>
+              <option value="EQUIPMENT">{tType('EQUIPMENT')}</option>
             </select>
           </div>
 
           {/* Unit of Measurement */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Unit of Measurement <span className="text-red-500">*</span>
+              {t('unit')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -202,13 +209,15 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., pieces, boxes, bottles, kg"
+              placeholder={t('unitPlaceholder')}
             />
           </div>
 
           {/* Current Stock */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Current Stock</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t('currentStock')}
+            </label>
             <input
               type="number"
               name="currentStock"
@@ -221,7 +230,9 @@ export default function NewInventoryItemPage() {
 
           {/* Minimum Stock */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Minimum Stock</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t('minimumStock')}
+            </label>
             <input
               type="number"
               name="minimumStock"
@@ -234,7 +245,9 @@ export default function NewInventoryItemPage() {
 
           {/* Reorder Point */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Reorder Point</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t('reorderPoint')}
+            </label>
             <input
               type="number"
               name="reorderLevel"
@@ -247,7 +260,9 @@ export default function NewInventoryItemPage() {
 
           {/* Maximum Stock */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Maximum Stock</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t('maximumStock')}
+            </label>
             <input
               type="number"
               name="maximumStock"
@@ -260,7 +275,9 @@ export default function NewInventoryItemPage() {
 
           {/* Unit Price */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Unit Price (₹)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t('unitPrice', { currency: currencySymbol })}
+            </label>
             <input
               type="number"
               name="purchasePrice"
@@ -274,7 +291,7 @@ export default function NewInventoryItemPage() {
           {/* Selling Price */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Selling Price (₹)
+              {t('sellingPrice', { currency: currencySymbol })}
             </label>
             <input
               type="number"
@@ -288,7 +305,7 @@ export default function NewInventoryItemPage() {
 
           {/* HSN Code */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">HSN Code</label>
+            <label className="block text-sm font-medium text-foreground mb-2">{t('hsnCode')}</label>
             <input
               type="text"
               name="hsnCode"
@@ -301,7 +318,7 @@ export default function NewInventoryItemPage() {
           {/* Tax Percentage */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Tax Percentage (%)
+              {t('taxPercentage')}
             </label>
             <input
               type="number"
@@ -316,7 +333,7 @@ export default function NewInventoryItemPage() {
           {/* Preferred Supplier */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Preferred Supplier
+              {t('preferredSupplier')}
             </label>
             <select
               name="preferredSupplierId"
@@ -324,7 +341,7 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select Supplier</option>
+              <option value="">{t('selectSupplier')}</option>
               {suppliers.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>
                   {supplier.name}
@@ -336,7 +353,7 @@ export default function NewInventoryItemPage() {
           {/* Storage Location */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Storage Location
+              {t('storageLocation')}
             </label>
             <input
               type="text"
@@ -344,14 +361,16 @@ export default function NewInventoryItemPage() {
               value={formData.storageLocation}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="e.g., Shelf A1"
+              placeholder={t('storagePlaceholder')}
             />
           </div>
         </div>
 
         {/* Description */}
         <div className="mt-6">
-          <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            {t('description')}
+          </label>
           <textarea
             name="description"
             value={formData.description}
@@ -371,7 +390,7 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm">Requires Expiry Tracking</span>
+            <span className="text-sm">{t('expiryTracking')}</span>
           </label>
 
           <label className="flex items-center space-x-2">
@@ -382,7 +401,7 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm">Requires Batch Tracking</span>
+            <span className="text-sm">{t('batchTracking')}</span>
           </label>
 
           <label className="flex items-center space-x-2">
@@ -393,13 +412,13 @@ export default function NewInventoryItemPage() {
               onChange={handleChange}
               className="w-4 h-4 text-blue-600"
             />
-            <span className="text-sm">Active</span>
+            <span className="text-sm">{t('active')}</span>
           </label>
         </div>
 
         {/* Notes */}
         <div className="mt-6">
-          <label className="block text-sm font-medium text-foreground mb-2">Notes</label>
+          <label className="block text-sm font-medium text-foreground mb-2">{t('notes')}</label>
           <textarea
             name="notes"
             value={formData.notes}
@@ -415,14 +434,14 @@ export default function NewInventoryItemPage() {
             href="/inventory"
             className="px-6 py-2 border border-border rounded-lg hover:bg-muted"
           >
-            Cancel
+            {t('cancel')}
           </Link>
           <button
             type="submit"
             disabled={loading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? 'Creating...' : 'Create Item'}
+            {loading ? t('creating') : t('createItem')}
           </button>
         </div>
       </form>
