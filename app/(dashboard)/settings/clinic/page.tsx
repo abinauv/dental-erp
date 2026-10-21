@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,15 +51,6 @@ function regionName(code: string): string {
 }
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
-const DAY_LABELS: Record<string, string> = {
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
-}
 
 type DaySchedule = { open: string; close: string; closed: boolean }
 type WeekSchedule = Record<string, DaySchedule>
@@ -102,6 +94,7 @@ function serializeSchedule(schedule: WeekSchedule): string {
 }
 
 export default function ClinicSettingsPage() {
+  const t = useTranslations('settings.clinic')
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -180,8 +173,8 @@ export default function ClinicSettingsPage() {
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to load clinic information',
+        title: t('error'),
+        description: t('loadFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -201,12 +194,12 @@ export default function ClinicSettingsPage() {
       const res = await fetch('/api/settings/clinic/logo', { method: 'POST', body: fd })
       const result = await res.json()
 
-      if (!res.ok) throw new Error(result.error || 'Upload failed')
+      if (!res.ok) throw new Error(result.error || t('uploadFailed'))
 
       setLogo(result.logo)
-      toast({ title: 'Logo uploaded', description: 'Your clinic logo has been updated.' })
+      toast({ title: t('logoUploaded'), description: t('logoUploadedDesc') })
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Upload failed', description: err.message })
+      toast({ variant: 'destructive', title: t('uploadFailed'), description: err.message })
     } finally {
       setUploadingLogo(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -220,9 +213,9 @@ export default function ClinicSettingsPage() {
       if (!res.ok) throw new Error('Failed to remove logo')
 
       setLogo(null)
-      toast({ title: 'Logo removed' })
+      toast({ title: t('logoRemoved') })
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message })
+      toast({ variant: 'destructive', title: t('error'), description: err.message })
     } finally {
       setUploadingLogo(false)
     }
@@ -267,15 +260,15 @@ export default function ClinicSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Clinic information saved successfully',
+          title: t('success'),
+          description: t('savedSuccess'),
         })
       } else {
         throw new Error(result.error || 'Failed to save')
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -302,7 +295,7 @@ export default function ClinicSettingsPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Loading...</div>
+    return <div className="p-6">{t('loading')}</div>
   }
 
   return (
@@ -310,19 +303,17 @@ export default function ClinicSettingsPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Building2 className="w-8 h-8" />
-          Clinic Information
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground">Manage your clinic details and contact information</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <div className="space-y-6">
         {/* Clinic Logo */}
         <Card>
           <CardHeader>
-            <CardTitle>Clinic Logo</CardTitle>
-            <CardDescription>
-              Upload your clinic logo to display in the sidebar and invoices
-            </CardDescription>
+            <CardTitle>{t('logoTitle')}</CardTitle>
+            <CardDescription>{t('logoDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
@@ -330,7 +321,7 @@ export default function ClinicSettingsPage() {
               {logo ? (
                 <img
                   src={logo}
-                  alt="Clinic logo"
+                  alt={t('logoAlt')}
                   className="h-20 w-20 rounded-lg object-cover border"
                 />
               ) : (
@@ -359,7 +350,7 @@ export default function ClinicSettingsPage() {
                   ) : (
                     <Upload className="mr-2 h-4 w-4" />
                   )}
-                  {logo ? 'Change Logo' : 'Upload Logo'}
+                  {logo ? t('changeLogo') : t('uploadLogo')}
                 </Button>
                 {logo && (
                   <Button
@@ -371,12 +362,10 @@ export default function ClinicSettingsPage() {
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Remove
+                    {t('remove')}
                   </Button>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  JPEG, PNG, WebP, GIF or SVG. Max 2 MB.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('logoFormats')}</p>
               </div>
             </div>
           </CardContent>
@@ -385,29 +374,29 @@ export default function ClinicSettingsPage() {
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Primary clinic details</CardDescription>
+            <CardTitle>{t('basicInfo')}</CardTitle>
+            <CardDescription>{t('basicInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <Label htmlFor="name">Clinic Name *</Label>
+                <Label htmlFor="name">{t('clinicName')}</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Your Dental Clinic"
+                  placeholder={t('clinicNamePlaceholder')}
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="tagline">Tagline / Motto</Label>
+                <Label htmlFor="tagline">{t('tagline')}</Label>
                 <Input
                   id="tagline"
                   value={formData.tagline}
                   onChange={(e) => handleChange('tagline', e.target.value)}
-                  placeholder="Your Smile, Our Priority"
+                  placeholder={t('taglinePlaceholder')}
                 />
               </div>
             </div>
@@ -417,50 +406,50 @@ export default function ClinicSettingsPage() {
         {/* Contact Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
-            <CardDescription>How patients can reach you</CardDescription>
+            <CardTitle>{t('contactInfo')}</CardTitle>
+            <CardDescription>{t('contactInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="phone">Primary Phone *</Label>
+                <Label htmlFor="phone">{t('primaryPhone')}</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
-                  placeholder="044-12345678"
+                  placeholder={t('primaryPhonePlaceholder')}
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="alternatePhone">Alternate Phone</Label>
+                <Label htmlFor="alternatePhone">{t('alternatePhone')}</Label>
                 <Input
                   id="alternatePhone"
                   value={formData.alternatePhone}
                   onChange={(e) => handleChange('alternatePhone', e.target.value)}
-                  placeholder="9876543210"
+                  placeholder={t('alternatePhonePlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="info@yourclinic.com"
+                  placeholder={t('emailPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="website">Website</Label>
+                <Label htmlFor="website">{t('website')}</Label>
                 <Input
                   id="website"
                   value={formData.website}
                   onChange={(e) => handleChange('website', e.target.value)}
-                  placeholder="https://www.yourclinic.com"
+                  placeholder={t('websitePlaceholder')}
                 />
               </div>
             </div>
@@ -470,17 +459,17 @@ export default function ClinicSettingsPage() {
         {/* Address */}
         <Card>
           <CardHeader>
-            <CardTitle>Address</CardTitle>
-            <CardDescription>Clinic location details</CardDescription>
+            <CardTitle>{t('addressTitle')}</CardTitle>
+            <CardDescription>{t('addressDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="address">Street Address *</Label>
+              <Label htmlFor="address">{t('streetAddress')}</Label>
               <Textarea
                 id="address"
                 value={formData.address}
                 onChange={(e) => handleChange('address', e.target.value)}
-                placeholder="123, Main Street, Ayanavaram"
+                placeholder={t('streetAddressPlaceholder')}
                 rows={2}
                 required
               />
@@ -488,18 +477,18 @@ export default function ClinicSettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="city">City *</Label>
+                <Label htmlFor="city">{t('city')}</Label>
                 <Input
                   id="city"
                   value={formData.city}
                   onChange={(e) => handleChange('city', e.target.value)}
-                  placeholder="Chennai"
+                  placeholder={t('cityPlaceholder')}
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="state">State *</Label>
+                <Label htmlFor="state">{t('state')}</Label>
                 <Input
                   id="state"
                   value={formData.state}
@@ -509,12 +498,12 @@ export default function ClinicSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="pincode">Pincode *</Label>
+                <Label htmlFor="pincode">{t('pincode')}</Label>
                 <Input
                   id="pincode"
                   value={formData.pincode}
                   onChange={(e) => handleChange('pincode', e.target.value)}
-                  placeholder="600023"
+                  placeholder={t('pincodePlaceholder')}
                   required
                 />
               </div>
@@ -527,17 +516,14 @@ export default function ClinicSettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
-              Regional Settings
+              {t('regionalSettings')}
             </CardTitle>
-            <CardDescription>
-              Language, currency and time zone for this clinic. These control how dates and amounts
-              are formatted and which currency you bill in.
-            </CardDescription>
+            <CardDescription>{t('regionalSettingsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="locale">Language / Locale</Label>
+                <Label htmlFor="locale">{t('languageLocale')}</Label>
                 <Select value={formData.locale} onValueChange={handleLocaleChange}>
                   <SelectTrigger id="locale">
                     <SelectValue />
@@ -545,7 +531,7 @@ export default function ClinicSettingsPage() {
                   <SelectContent>
                     {locales.map((l) => (
                       <SelectItem key={l} value={l}>
-                        {getLocaleLabel(l)} ({l})
+                        {t('localeOption', { label: getLocaleLabel(l), code: l })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -553,7 +539,7 @@ export default function ClinicSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency">{t('currency')}</Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(v) => handleChange('currency', v)}
@@ -574,7 +560,7 @@ export default function ClinicSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">{t('country')}</Label>
                 <Select value={formData.country} onValueChange={(v) => handleChange('country', v)}>
                   <SelectTrigger id="country">
                     <SelectValue />
@@ -583,7 +569,7 @@ export default function ClinicSettingsPage() {
                     {Array.from(new Set([formData.country, ...COUNTRIES].filter(Boolean))).map(
                       (c) => (
                         <SelectItem key={c} value={c}>
-                          {regionName(c)} ({c})
+                          {t('countryOption', { name: regionName(c), code: c })}
                         </SelectItem>
                       )
                     )}
@@ -592,7 +578,7 @@ export default function ClinicSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="timezone">Time Zone</Label>
+                <Label htmlFor="timezone">{t('timeZone')}</Label>
                 <Select
                   value={formData.timezone}
                   onValueChange={(v) => handleChange('timezone', v)}
@@ -612,49 +598,45 @@ export default function ClinicSettingsPage() {
                 </Select>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              The interface language itself does not switch yet — only number, date and currency
-              formatting. Staff and patients can override the language for themselves in their own
-              profile.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('regionalHint')}</p>
           </CardContent>
         </Card>
 
         {/* Registration & Tax */}
         <Card>
           <CardHeader>
-            <CardTitle>Registration & Tax Information</CardTitle>
-            <CardDescription>Legal and tax registration details</CardDescription>
+            <CardTitle>{t('registrationTax')}</CardTitle>
+            <CardDescription>{t('registrationTaxDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="registrationNo">Registration Number</Label>
+                <Label htmlFor="registrationNo">{t('registrationNumber')}</Label>
                 <Input
                   id="registrationNo"
                   value={formData.registrationNo}
                   onChange={(e) => handleChange('registrationNo', e.target.value)}
-                  placeholder="REG123456"
+                  placeholder={t('registrationPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="gstNumber">GST Number</Label>
+                <Label htmlFor="gstNumber">{t('gstNumber')}</Label>
                 <Input
                   id="gstNumber"
                   value={formData.gstNumber}
                   onChange={(e) => handleChange('gstNumber', e.target.value)}
-                  placeholder="29XXXXX1234X1ZX"
+                  placeholder={t('gstPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="panNumber">PAN Number</Label>
+                <Label htmlFor="panNumber">{t('panNumber')}</Label>
                 <Input
                   id="panNumber"
                   value={formData.panNumber}
                   onChange={(e) => handleChange('panNumber', e.target.value)}
-                  placeholder="ABCDE1234F"
+                  placeholder={t('panPlaceholder')}
                 />
               </div>
             </div>
@@ -664,16 +646,16 @@ export default function ClinicSettingsPage() {
         {/* Working Hours */}
         <Card>
           <CardHeader>
-            <CardTitle>Working Hours</CardTitle>
-            <CardDescription>Clinic operating schedule</CardDescription>
+            <CardTitle>{t('workingHours')}</CardTitle>
+            <CardDescription>{t('workingHoursDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {/* Header row */}
             <div className="hidden md:grid md:grid-cols-[140px_1fr_1fr_80px_40px] gap-3 items-center text-xs font-medium text-muted-foreground px-1">
-              <span>Day</span>
-              <span>Opens at</span>
-              <span>Closes at</span>
-              <span className="text-center">Open</span>
+              <span>{t('colDay')}</span>
+              <span>{t('colOpensAt')}</span>
+              <span>{t('colClosesAt')}</span>
+              <span className="text-center">{t('colOpen')}</span>
               <span />
             </div>
             <Separator />
@@ -684,7 +666,7 @@ export default function ClinicSettingsPage() {
                   key={day}
                   className="grid grid-cols-1 md:grid-cols-[140px_1fr_1fr_80px_40px] gap-3 items-center"
                 >
-                  <span className="text-sm font-medium">{DAY_LABELS[day]}</span>
+                  <span className="text-sm font-medium">{t(`days.${day}`)}</span>
                   <Input
                     type="time"
                     value={d.closed ? '' : d.open}
@@ -710,7 +692,7 @@ export default function ClinicSettingsPage() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    title="Copy to all days"
+                    title={t('copyToAll')}
                     onClick={() => copyToAll(day)}
                   >
                     <Copy className="h-3.5 w-3.5" />
@@ -724,48 +706,48 @@ export default function ClinicSettingsPage() {
         {/* Bank Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Bank & Payment Details</CardTitle>
-            <CardDescription>For invoicing and payment collection</CardDescription>
+            <CardTitle>{t('bankTitle')}</CardTitle>
+            <CardDescription>{t('bankDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="bankName">Bank Name</Label>
+                <Label htmlFor="bankName">{t('bankName')}</Label>
                 <Input
                   id="bankName"
                   value={formData.bankName}
                   onChange={(e) => handleChange('bankName', e.target.value)}
-                  placeholder="State Bank of India"
+                  placeholder={t('bankNamePlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="bankAccountNo">Account Number</Label>
+                <Label htmlFor="bankAccountNo">{t('accountNumber')}</Label>
                 <Input
                   id="bankAccountNo"
                   value={formData.bankAccountNo}
                   onChange={(e) => handleChange('bankAccountNo', e.target.value)}
-                  placeholder="1234567890"
+                  placeholder={t('accountNumberPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="bankIfsc">IFSC Code</Label>
+                <Label htmlFor="bankIfsc">{t('ifscCode')}</Label>
                 <Input
                   id="bankIfsc"
                   value={formData.bankIfsc}
                   onChange={(e) => handleChange('bankIfsc', e.target.value)}
-                  placeholder="SBIN0001234"
+                  placeholder={t('ifscPlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="upiId">UPI ID</Label>
+                <Label htmlFor="upiId">{t('upiId')}</Label>
                 <Input
                   id="upiId"
                   value={formData.upiId}
                   onChange={(e) => handleChange('upiId', e.target.value)}
-                  placeholder="clinic@upi"
+                  placeholder={t('upiPlaceholder')}
                 />
               </div>
             </div>
@@ -775,24 +757,20 @@ export default function ClinicSettingsPage() {
         {/* Patient Portal */}
         <Card>
           <CardHeader>
-            <CardTitle>Patient Portal</CardTitle>
-            <CardDescription>
-              Allow patients to log in, view records, book appointments, and pay bills online
-            </CardDescription>
+            <CardTitle>{t('portalTitle')}</CardTitle>
+            <CardDescription>{t('portalDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Enable Patient Portal</p>
-                <p className="text-xs text-muted-foreground">
-                  Patients can access the portal via OTP login
-                </p>
+                <p className="text-sm font-medium">{t('enablePortal')}</p>
+                <p className="text-xs text-muted-foreground">{t('enablePortalHint')}</p>
               </div>
               <Switch checked={patientPortalEnabled} onCheckedChange={setPatientPortalEnabled} />
             </div>
             {patientPortalEnabled && hospitalSlug && (
               <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-                <p className="text-sm font-medium">Portal Login URL</p>
+                <p className="text-sm font-medium">{t('portalLoginUrl')}</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 text-xs bg-background p-2 rounded border break-all">
                     {typeof window !== 'undefined' ? window.location.origin : ''}
@@ -805,15 +783,13 @@ export default function ClinicSettingsPage() {
                       navigator.clipboard.writeText(
                         `${window.location.origin}/portal/login?clinic=${hospitalSlug}`
                       )
-                      toast({ title: 'Copied', description: 'Portal URL copied to clipboard' })
+                      toast({ title: t('copied'), description: t('copiedDesc') })
                     }}
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Share this URL with patients so they can log in with their registered phone number
-                </p>
+                <p className="text-xs text-muted-foreground">{t('portalUrlHint')}</p>
               </div>
             )}
           </CardContent>
@@ -823,7 +799,7 @@ export default function ClinicSettingsPage() {
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving} size="lg">
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Clinic Information'}
+            {saving ? t('saving') : t('saveClinicInfo')}
           </Button>
         </div>
       </div>
