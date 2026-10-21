@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Check, Crown, Building2, Zap, Server } from 'lucide-react'
 import {
   Card,
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { cn } from '@/lib/utils'
 
 type Plan = 'FREE' | 'PROFESSIONAL' | 'ENTERPRISE' | 'SELF_HOSTED'
@@ -29,92 +31,20 @@ type HospitalData = {
   currentStorageMB: number
 }
 
-const plans = [
-  {
-    id: 'FREE' as Plan,
-    name: 'Free',
-    price: '0',
-    description: 'Perfect for getting started',
-    icon: Building2,
-    features: [
-      'Up to 100 patients',
-      'Up to 3 staff members',
-      '500 MB storage',
-      'Basic reports',
-      'Email support',
-    ],
-    limits: {
-      patients: 100,
-      staff: 3,
-      storage: 500,
-    },
-  },
-  {
-    id: 'PROFESSIONAL' as Plan,
-    name: 'Professional',
-    price: '2,999',
-    description: 'For growing practices',
-    icon: Zap,
-    popular: true,
-    features: [
-      'Unlimited patients',
-      'Unlimited staff',
-      'Unlimited storage',
-      'Advanced analytics',
-      'Priority support',
-      'Custom branding',
-      'API access',
-    ],
-    limits: {
-      patients: -1,
-      staff: -1,
-      storage: -1,
-    },
-  },
-  {
-    id: 'ENTERPRISE' as Plan,
-    name: 'Enterprise',
-    price: 'Custom',
-    description: 'For large organizations',
-    icon: Crown,
-    features: [
-      'Everything in Professional',
-      'Multi-location support',
-      'Dedicated account manager',
-      'Custom integrations',
-      'SLA guarantee',
-      'On-premise option',
-    ],
-    limits: {
-      patients: -1,
-      staff: -1,
-      storage: -1,
-    },
-  },
-  {
-    id: 'SELF_HOSTED' as Plan,
-    name: 'Self-Hosted',
-    price: '49,999',
-    priceNote: 'one-time',
-    description: 'Own your data forever',
-    icon: Server,
-    features: [
-      'Full source code access',
-      'Host on your servers',
-      'Unlimited everything',
-      '1 year of updates',
-      'Installation support',
-      'No recurring fees',
-    ],
-    limits: {
-      patients: -1,
-      staff: -1,
-      storage: -1,
-    },
-  },
+// Static plan configuration. Display copy (name, description, features) lives in
+// the message catalogue under settings.subscription.plans.<id>; `price` is a
+// numeric amount formatted through the clinic formatter, or null for the
+// quote-based Enterprise plan.
+const planConfigs = [
+  { id: 'FREE' as Plan, price: 0, icon: Building2 },
+  { id: 'PROFESSIONAL' as Plan, price: 2999, icon: Zap, popular: true },
+  { id: 'ENTERPRISE' as Plan, price: null, icon: Crown },
+  { id: 'SELF_HOSTED' as Plan, price: 49999, icon: Server, oneTime: true },
 ]
 
 export default function SubscriptionPage() {
+  const t = useTranslations('settings.subscription')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
   const [hospitalData, setHospitalData] = useState<HospitalData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -133,8 +63,8 @@ export default function SubscriptionPage() {
     } catch {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load subscription data.',
+        title: t('errorTitle'),
+        description: t('loadFailed'),
       })
     } finally {
       setIsLoading(false)
@@ -144,8 +74,8 @@ export default function SubscriptionPage() {
   const handleUpgrade = async (planId: Plan) => {
     // In production, this would redirect to a payment page
     toast({
-      title: 'Upgrade requested',
-      description: 'Our team will contact you shortly to complete the upgrade.',
+      title: t('upgradeRequested'),
+      description: t('upgradeRequestedDesc'),
     })
   }
 
@@ -165,8 +95,8 @@ export default function SubscriptionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Subscription & Billing</h1>
-        <p className="text-muted-foreground">Manage your subscription and view usage</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Current Plan Usage */}
@@ -175,20 +105,14 @@ export default function SubscriptionPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Current Plan</CardTitle>
-                <CardDescription>Your current usage and limits</CardDescription>
+                <CardTitle>{t('currentPlanTitle')}</CardTitle>
+                <CardDescription>{t('currentPlanDesc')}</CardDescription>
               </div>
               <Badge
                 variant={hospitalData.plan === 'FREE' ? 'secondary' : 'default'}
                 className="text-sm"
               >
-                {hospitalData.plan === 'FREE'
-                  ? 'Free Plan'
-                  : hospitalData.plan === 'PROFESSIONAL'
-                    ? 'Professional'
-                    : hospitalData.plan === 'ENTERPRISE'
-                      ? 'Enterprise'
-                      : 'Self-Hosted'}
+                {t(`planBadge.${hospitalData.plan}`)}
               </Badge>
             </div>
           </CardHeader>
@@ -196,10 +120,10 @@ export default function SubscriptionPage() {
             {/* Patients Usage */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Patients</span>
+                <span>{t('patients')}</span>
                 <span className="text-muted-foreground">
                   {hospitalData.currentPatients} /{' '}
-                  {hospitalData.maxPatients === -1 ? 'Unlimited' : hospitalData.maxPatients}
+                  {hospitalData.maxPatients === -1 ? t('unlimited') : hospitalData.maxPatients}
                 </span>
               </div>
               {hospitalData.maxPatients !== -1 && (
@@ -217,10 +141,10 @@ export default function SubscriptionPage() {
             {/* Staff Usage */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Staff Members</span>
+                <span>{t('staffMembers')}</span>
                 <span className="text-muted-foreground">
                   {hospitalData.currentStaff} /{' '}
-                  {hospitalData.maxStaff === -1 ? 'Unlimited' : hospitalData.maxStaff}
+                  {hospitalData.maxStaff === -1 ? t('unlimited') : hospitalData.maxStaff}
                 </span>
               </div>
               {hospitalData.maxStaff !== -1 && (
@@ -238,11 +162,11 @@ export default function SubscriptionPage() {
             {/* Storage Usage */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Storage</span>
+                <span>{t('storage')}</span>
                 <span className="text-muted-foreground">
                   {hospitalData.currentStorageMB} MB /{' '}
                   {hospitalData.maxStorageMB === -1
-                    ? 'Unlimited'
+                    ? t('unlimited')
                     : `${hospitalData.maxStorageMB} MB`}
                 </span>
               </div>
@@ -267,11 +191,13 @@ export default function SubscriptionPage() {
 
       {/* Available Plans */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('availablePlans')}</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan) => {
+          {planConfigs.map((plan) => {
             const Icon = plan.icon
             const isCurrent = hospitalData?.plan === plan.id
+            const isCustom = plan.price === null
+            const features = t.raw(`plans.${plan.id}.features`) as string[]
 
             return (
               <Card
@@ -284,7 +210,7 @@ export default function SubscriptionPage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary">Most Popular</Badge>
+                    <Badge className="bg-primary">{t('mostPopular')}</Badge>
                   </div>
                 )}
                 <CardHeader>
@@ -298,30 +224,29 @@ export default function SubscriptionPage() {
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{plan.name}</CardTitle>
+                      <CardTitle className="text-lg">{t(`plans.${plan.id}.name`)}</CardTitle>
                       {isCurrent && (
                         <Badge variant="outline" className="text-xs">
-                          Current
+                          {t('current')}
                         </Badge>
                       )}
                     </div>
                   </div>
-                  <CardDescription>{plan.description}</CardDescription>
+                  <CardDescription>{t(`plans.${plan.id}.description`)}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
                     <span className="text-3xl font-bold">
-                      {plan.price === 'Custom' ? '' : '₹'}
-                      {plan.price}
+                      {isCustom ? t('custom') : fmt.formatCurrency(plan.price)}
                     </span>
-                    {plan.priceNote ? (
-                      <span className="text-muted-foreground"> {plan.priceNote}</span>
-                    ) : plan.price !== 'Custom' && plan.price !== '0' ? (
-                      <span className="text-muted-foreground">/month</span>
+                    {plan.oneTime ? (
+                      <span className="text-muted-foreground"> {t('oneTime')}</span>
+                    ) : !isCustom && plan.price !== 0 ? (
+                      <span className="text-muted-foreground">{t('perMonth')}</span>
                     ) : null}
                   </div>
                   <ul className="space-y-2">
-                    {plan.features.map((feature) => (
+                    {features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2 text-sm">
                         <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                         <span>{feature}</span>
@@ -336,11 +261,7 @@ export default function SubscriptionPage() {
                     disabled={isCurrent}
                     onClick={() => handleUpgrade(plan.id)}
                   >
-                    {isCurrent
-                      ? 'Current Plan'
-                      : plan.price === 'Custom'
-                        ? 'Contact Sales'
-                        : 'Upgrade'}
+                    {isCurrent ? t('currentPlan') : isCustom ? t('contactSales') : t('upgrade')}
                   </Button>
                 </CardFooter>
               </Card>

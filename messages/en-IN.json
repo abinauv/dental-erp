@@ -2115,6 +2115,118 @@
       "comingSoon": "Coming soon",
       "outlookDesc": "Outlook Calendar integration is planned for a future update."
     },
+    "pricing": {
+      "title": "Dynamic Pricing Advisor",
+      "subtitle": "AI-powered pricing recommendations based on demand patterns",
+      "analyzing": "Analyzing...",
+      "generate": "Generate Analysis",
+      "advisoryTitle": "Advisory Only",
+      "advisoryBody": "These are AI-generated recommendations. No pricing changes are applied automatically. Review each suggestion and implement manually if appropriate.",
+      "noAnalysisTitle": "No Analysis Generated",
+      "noAnalysisBody": "Click \"Generate Analysis\" to get AI-powered pricing recommendations based on your clinic's appointment and revenue data.",
+      "overallDemand": "Overall Demand",
+      "revenueOpportunity": "Revenue Opportunity",
+      "perMonth": "/mo",
+      "topRecommendation": "Top Recommendation",
+      "peakTitle": "Peak & Off-Peak Analysis",
+      "busiestDays": "Busiest Days",
+      "quietestDays": "Quietest Days",
+      "peakHours": "Peak Hours",
+      "offPeakHours": "Off-Peak Hours",
+      "avgUtilization": "Avg Utilization",
+      "peakUtilization": "Peak Utilization",
+      "pricingSuggestions": "Pricing Suggestions",
+      "estImpact": "Est. Impact: {impact}",
+      "doctorUtilization": "Doctor Utilization",
+      "procedureDemand": "Procedure Demand",
+      "bookingLabel": "Booking:",
+      "avgWait": "Avg wait: {days}d",
+      "generatedAt": "Generated at {time}",
+      "success": "Success",
+      "error": "Error",
+      "analysisGenerated": "Pricing analysis generated",
+      "generateFailed": "Failed to generate suggestions",
+      "toastFailed": "Failed to generate pricing suggestions"
+    },
+    "subscription": {
+      "title": "Subscription & Billing",
+      "subtitle": "Manage your subscription and view usage",
+      "errorTitle": "Error",
+      "loadFailed": "Failed to load subscription data.",
+      "upgradeRequested": "Upgrade requested",
+      "upgradeRequestedDesc": "Our team will contact you shortly to complete the upgrade.",
+      "currentPlanTitle": "Current Plan",
+      "currentPlanDesc": "Your current usage and limits",
+      "planBadge": {
+        "FREE": "Free Plan",
+        "PROFESSIONAL": "Professional",
+        "ENTERPRISE": "Enterprise",
+        "SELF_HOSTED": "Self-Hosted"
+      },
+      "patients": "Patients",
+      "staffMembers": "Staff Members",
+      "storage": "Storage",
+      "unlimited": "Unlimited",
+      "availablePlans": "Available Plans",
+      "mostPopular": "Most Popular",
+      "current": "Current",
+      "custom": "Custom",
+      "oneTime": "one-time",
+      "perMonth": "/month",
+      "currentPlan": "Current Plan",
+      "contactSales": "Contact Sales",
+      "upgrade": "Upgrade",
+      "plans": {
+        "FREE": {
+          "name": "Free",
+          "description": "Perfect for getting started",
+          "features": [
+            "Up to 100 patients",
+            "Up to 3 staff members",
+            "500 MB storage",
+            "Basic reports",
+            "Email support"
+          ]
+        },
+        "PROFESSIONAL": {
+          "name": "Professional",
+          "description": "For growing practices",
+          "features": [
+            "Unlimited patients",
+            "Unlimited staff",
+            "Unlimited storage",
+            "Advanced analytics",
+            "Priority support",
+            "Custom branding",
+            "API access"
+          ]
+        },
+        "ENTERPRISE": {
+          "name": "Enterprise",
+          "description": "For large organizations",
+          "features": [
+            "Everything in Professional",
+            "Multi-location support",
+            "Dedicated account manager",
+            "Custom integrations",
+            "SLA guarantee",
+            "On-premise option"
+          ]
+        },
+        "SELF_HOSTED": {
+          "name": "Self-Hosted",
+          "description": "Own your data forever",
+          "features": [
+            "Full source code access",
+            "Host on your servers",
+            "Unlimited everything",
+            "1 year of updates",
+            "Installation support",
+            "No recurring fees"
+          ]
+        }
+      }
+    },
     "languageCard": {
       "title": "Language & Formatting",
       "defaultDescription": "Choose how dates, numbers and amounts are formatted for you. Everyone else at this clinic is unaffected.",
