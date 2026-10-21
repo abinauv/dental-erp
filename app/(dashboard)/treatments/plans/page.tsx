@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -44,12 +46,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  treatmentPlanStatusConfig,
-  formatCurrency,
-  formatDate,
-  calculatePlanProgress,
-} from '@/lib/treatment-utils'
+import { treatmentPlanStatusConfig, calculatePlanProgress } from '@/lib/treatment-utils'
 
 interface TreatmentPlanItem {
   id: string
@@ -98,6 +95,9 @@ interface PaginationInfo {
 
 export default function TreatmentPlansPage() {
   const router = useRouter()
+  const t = useTranslations('treatments.plans')
+  const tStatus = useTranslations('treatments.planStatus')
+  const fmt = useClinicFormatters()
   const [plans, setPlans] = useState<TreatmentPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -147,7 +147,8 @@ export default function TreatmentPlansPage() {
       color: 'text-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tStatus.has(status) ? tStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   return (
@@ -161,14 +162,14 @@ export default function TreatmentPlansPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Treatment Plans</h1>
-            <p className="text-muted-foreground">Create and manage comprehensive treatment plans</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
         </div>
         <Link href="/treatments/plans/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            New Treatment Plan
+            {t('newPlan')}
           </Button>
         </Link>
       </div>
@@ -180,7 +181,7 @@ export default function TreatmentPlansPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by patient name, plan number, or title..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -189,26 +190,26 @@ export default function TreatmentPlansPage() {
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('statusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PROPOSED">Proposed</SelectItem>
-                  <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  <SelectItem value="all">{t('allStatus')}</SelectItem>
+                  <SelectItem value="DRAFT">{tStatus('DRAFT')}</SelectItem>
+                  <SelectItem value="PROPOSED">{tStatus('PROPOSED')}</SelectItem>
+                  <SelectItem value="ACCEPTED">{tStatus('ACCEPTED')}</SelectItem>
+                  <SelectItem value="IN_PROGRESS">{tStatus('IN_PROGRESS')}</SelectItem>
+                  <SelectItem value="COMPLETED">{tStatus('COMPLETED')}</SelectItem>
+                  <SelectItem value="CANCELLED">{tStatus('CANCELLED')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={consentFilter} onValueChange={setConsentFilter}>
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Consent" />
+                  <SelectValue placeholder={t('consentPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Plans</SelectItem>
-                  <SelectItem value="true">Consent Given</SelectItem>
-                  <SelectItem value="false">Pending Consent</SelectItem>
+                  <SelectItem value="all">{t('allPlans')}</SelectItem>
+                  <SelectItem value="true">{t('consentGiven')}</SelectItem>
+                  <SelectItem value="false">{t('pendingConsent')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -222,13 +223,13 @@ export default function TreatmentPlansPage() {
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Plan</TableHead>
-                <TableHead>Patient</TableHead>
-                <TableHead>Procedures</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Estimated Cost</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('colPlan')}</TableHead>
+                <TableHead>{t('colPatient')}</TableHead>
+                <TableHead>{t('colProcedures')}</TableHead>
+                <TableHead>{t('colProgress')}</TableHead>
+                <TableHead>{t('colEstimatedCost')}</TableHead>
+                <TableHead>{t('colStatus')}</TableHead>
+                <TableHead className="text-right">{t('colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -263,11 +264,11 @@ export default function TreatmentPlansPage() {
                   <TableCell colSpan={7} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <FileText className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No treatment plans found</p>
+                      <p className="text-muted-foreground">{t('noPlans')}</p>
                       <Link href="/treatments/plans/new">
                         <Button variant="outline" size="sm">
                           <Plus className="h-4 w-4 mr-2" />
-                          Create Treatment Plan
+                          {t('createPlan')}
                         </Button>
                       </Link>
                     </div>
@@ -299,17 +300,19 @@ export default function TreatmentPlansPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {plan._count.items} procedure{plan._count.items !== 1 ? 's' : ''}
+                          {t('procedures', { count: plan._count.items })}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="w-24 space-y-1">
                           <Progress value={progress} className="h-2" />
-                          <div className="text-xs text-muted-foreground">{progress}% complete</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('percentComplete', { percent: progress })}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{formatCurrency(plan.estimatedCost)}</div>
+                        <div className="font-medium">{fmt.formatCurrency(plan.estimatedCost)}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
@@ -317,7 +320,7 @@ export default function TreatmentPlansPage() {
                           {plan.consentGiven && (
                             <div className="flex items-center gap-1 text-xs text-green-600">
                               <CheckCircle className="h-3 w-3" />
-                              Consent
+                              {t('consent')}
                             </div>
                           )}
                         </div>
@@ -334,14 +337,14 @@ export default function TreatmentPlansPage() {
                               onClick={() => router.push(`/treatments/plans/${plan.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              View Details
+                              {t('viewDetails')}
                             </DropdownMenuItem>
                             {plan.status !== 'COMPLETED' && plan.status !== 'CANCELLED' && (
                               <DropdownMenuItem
                                 onClick={() => router.push(`/treatments/plans/${plan.id}/edit`)}
                               >
                                 <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                {t('edit')}
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -358,9 +361,11 @@ export default function TreatmentPlansPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} plans
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -370,10 +375,10 @@ export default function TreatmentPlansPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t('previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -381,7 +386,7 @@ export default function TreatmentPlansPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {t('next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
