@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ import { Receipt, Save } from 'lucide-react'
 import { GatewaySettings } from '@/components/billing/gateway-settings'
 
 export default function BillingSettingsPage() {
+  const t = useTranslations('settings.billing')
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
 
@@ -78,15 +80,15 @@ export default function BillingSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Billing settings saved successfully',
+          title: t('success'),
+          description: t('savedSuccess'),
         })
       } else {
         throw new Error('Failed to save settings')
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -100,11 +102,9 @@ export default function BillingSettingsPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Receipt className="w-8 h-8" />
-          Billing Settings
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground">
-          Configure invoicing, tax rates, and payment settings
-        </p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <div className="space-y-6">
@@ -114,13 +114,13 @@ export default function BillingSettingsPage() {
         {/* Tax Configuration */}
         <Card>
           <CardHeader>
-            <CardTitle>Tax Configuration</CardTitle>
-            <CardDescription>GST and tax rates for invoicing</CardDescription>
+            <CardTitle>{t('taxConfig')}</CardTitle>
+            <CardDescription>{t('taxConfigDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="cgstRate">CGST Rate (%)</Label>
+                <Label htmlFor="cgstRate">{t('cgstRate')}</Label>
                 <Input
                   id="cgstRate"
                   type="number"
@@ -128,11 +128,11 @@ export default function BillingSettingsPage() {
                   value={settings.cgstRate}
                   onChange={(e) => setSettings({ ...settings, cgstRate: e.target.value })}
                 />
-                <p className="text-sm text-muted-foreground mt-1">Central Goods and Services Tax</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('cgstHint')}</p>
               </div>
 
               <div>
-                <Label htmlFor="sgstRate">SGST Rate (%)</Label>
+                <Label htmlFor="sgstRate">{t('sgstRate')}</Label>
                 <Input
                   id="sgstRate"
                   type="number"
@@ -140,15 +140,18 @@ export default function BillingSettingsPage() {
                   value={settings.sgstRate}
                   onChange={(e) => setSettings({ ...settings, sgstRate: e.target.value })}
                 />
-                <p className="text-sm text-muted-foreground mt-1">State Goods and Services Tax</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('sgstHint')}</p>
               </div>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
-                <strong>Total GST:</strong>{' '}
-                {parseFloat(settings.cgstRate) + parseFloat(settings.sgstRate)}% (CGST{' '}
-                {settings.cgstRate}% + SGST {settings.sgstRate}%)
+                <strong>{t('totalGstLabel')}</strong>{' '}
+                {t('totalGstValue', {
+                  total: parseFloat(settings.cgstRate) + parseFloat(settings.sgstRate),
+                  cgst: settings.cgstRate,
+                  sgst: settings.sgstRate,
+                })}
               </p>
             </div>
           </CardContent>
@@ -157,13 +160,13 @@ export default function BillingSettingsPage() {
         {/* Invoice Format */}
         <Card>
           <CardHeader>
-            <CardTitle>Invoice Format</CardTitle>
-            <CardDescription>Customize invoice and receipt numbering</CardDescription>
+            <CardTitle>{t('invoiceFormat')}</CardTitle>
+            <CardDescription>{t('invoiceFormatDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="invoicePrefix">Invoice Prefix</Label>
+                <Label htmlFor="invoicePrefix">{t('invoicePrefix')}</Label>
                 <Input
                   id="invoicePrefix"
                   value={settings.invoicePrefix}
@@ -173,7 +176,7 @@ export default function BillingSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="receiptPrefix">Receipt Prefix</Label>
+                <Label htmlFor="receiptPrefix">{t('receiptPrefix')}</Label>
                 <Input
                   id="receiptPrefix"
                   value={settings.receiptPrefix}
@@ -183,7 +186,7 @@ export default function BillingSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="invoiceStartingNumber">Starting Number</Label>
+                <Label htmlFor="invoiceStartingNumber">{t('startingNumber')}</Label>
                 <Input
                   id="invoiceStartingNumber"
                   type="number"
@@ -197,7 +200,7 @@ export default function BillingSettingsPage() {
 
             <div className="bg-muted/50 border rounded-lg p-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Preview:</strong> {settings.invoicePrefix}
+                <strong>{t('previewLabel')}</strong> {settings.invoicePrefix}
                 {settings.invoiceStartingNumber}
               </p>
             </div>
@@ -207,13 +210,13 @@ export default function BillingSettingsPage() {
         {/* Payment Terms */}
         <Card>
           <CardHeader>
-            <CardTitle>Payment Terms</CardTitle>
-            <CardDescription>Default payment policies</CardDescription>
+            <CardTitle>{t('paymentTerms')}</CardTitle>
+            <CardDescription>{t('paymentTermsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="defaultPaymentTerms">Payment Due (days)</Label>
+                <Label htmlFor="defaultPaymentTerms">{t('paymentDue')}</Label>
                 <Input
                   id="defaultPaymentTerms"
                   type="number"
@@ -222,11 +225,11 @@ export default function BillingSettingsPage() {
                     setSettings({ ...settings, defaultPaymentTerms: e.target.value })
                   }
                 />
-                <p className="text-sm text-muted-foreground mt-1">Days until payment is due</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('paymentDueHint')}</p>
               </div>
 
               <div>
-                <Label htmlFor="lateFeePercentage">Late Fee (%)</Label>
+                <Label htmlFor="lateFeePercentage">{t('lateFee')}</Label>
                 <Input
                   id="lateFeePercentage"
                   type="number"
@@ -234,18 +237,18 @@ export default function BillingSettingsPage() {
                   value={settings.lateFeePercentage}
                   onChange={(e) => setSettings({ ...settings, lateFeePercentage: e.target.value })}
                 />
-                <p className="text-sm text-muted-foreground mt-1">Late payment penalty</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('lateFeeHint')}</p>
               </div>
 
               <div>
-                <Label htmlFor="minimumDueAmount">Minimum Due Amount</Label>
+                <Label htmlFor="minimumDueAmount">{t('minimumDue')}</Label>
                 <Input
                   id="minimumDueAmount"
                   type="number"
                   value={settings.minimumDueAmount}
                   onChange={(e) => setSettings({ ...settings, minimumDueAmount: e.target.value })}
                 />
-                <p className="text-sm text-muted-foreground mt-1">Minimum invoice amount</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('minimumDueHint')}</p>
               </div>
             </div>
           </CardContent>
@@ -254,13 +257,13 @@ export default function BillingSettingsPage() {
         {/* Currency */}
         <Card>
           <CardHeader>
-            <CardTitle>Currency Settings</CardTitle>
-            <CardDescription>Configure currency display</CardDescription>
+            <CardTitle>{t('currencySettings')}</CardTitle>
+            <CardDescription>{t('currencySettingsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="currencyCode">Currency Code</Label>
+                <Label htmlFor="currencyCode">{t('currencyCode')}</Label>
                 <Input
                   id="currencyCode"
                   value={settings.currencyCode}
@@ -270,7 +273,7 @@ export default function BillingSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="currencySymbol">Currency Symbol</Label>
+                <Label htmlFor="currencySymbol">{t('currencySymbol')}</Label>
                 <Input
                   id="currencySymbol"
                   value={settings.currencySymbol}
@@ -285,34 +288,32 @@ export default function BillingSettingsPage() {
         {/* Invoice Notes */}
         <Card>
           <CardHeader>
-            <CardTitle>Invoice Footer</CardTitle>
-            <CardDescription>Default notes and terms for invoices</CardDescription>
+            <CardTitle>{t('invoiceFooter')}</CardTitle>
+            <CardDescription>{t('invoiceFooterDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="invoiceNotes">Invoice Notes</Label>
+              <Label htmlFor="invoiceNotes">{t('invoiceNotes')}</Label>
               <Textarea
                 id="invoiceNotes"
                 value={settings.invoiceNotes}
                 onChange={(e) => setSettings({ ...settings, invoiceNotes: e.target.value })}
                 rows={2}
-                placeholder="Thank you for choosing our services."
+                placeholder={t('invoiceNotesPlaceholder')}
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                Appears at the bottom of invoices
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t('invoiceNotesHint')}</p>
             </div>
 
             <div>
-              <Label htmlFor="termsAndConditions">Terms and Conditions</Label>
+              <Label htmlFor="termsAndConditions">{t('termsAndConditions')}</Label>
               <Textarea
                 id="termsAndConditions"
                 value={settings.termsAndConditions}
                 onChange={(e) => setSettings({ ...settings, termsAndConditions: e.target.value })}
                 rows={4}
-                placeholder="Payment is due within 30 days..."
+                placeholder={t('termsPlaceholder')}
               />
-              <p className="text-sm text-muted-foreground mt-1">Payment terms and conditions</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('termsHint')}</p>
             </div>
           </CardContent>
         </Card>
@@ -321,7 +322,7 @@ export default function BillingSettingsPage() {
         <div className="flex justify-end">
           <Button onClick={handleSaveSettings} disabled={saving} size="lg">
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Billing Settings'}
+            {saving ? t('saving') : t('saveBillingSettings')}
           </Button>
         </div>
       </div>

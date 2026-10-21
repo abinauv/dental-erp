@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { Calendar, Clock, Plus, Trash2, Save } from 'lucide-react'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 export default function AppointmentSettingsPage() {
+  const t = useTranslations('settings.appointments')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [holidays, setHolidays] = useState<any[]>([])
@@ -81,15 +84,15 @@ export default function AppointmentSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Appointment settings saved successfully',
+          title: t('success'),
+          description: t('savedSuccess'),
         })
       } else {
-        throw new Error('Failed to save settings')
+        throw new Error(t('saveFailed'))
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -101,8 +104,8 @@ export default function AppointmentSettingsPage() {
   const handleAddHoliday = async () => {
     if (!newHoliday.name || !newHoliday.date) {
       toast({
-        title: 'Error',
-        description: 'Please enter holiday name and date',
+        title: t('error'),
+        description: t('holidayFieldsError'),
         variant: 'destructive',
       })
       return
@@ -120,17 +123,17 @@ export default function AppointmentSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Holiday added successfully',
+          title: t('success'),
+          description: t('holidayAdded'),
         })
         setNewHoliday({ name: '', date: '' })
         fetchHolidays()
       } else {
-        throw new Error('Failed to add holiday')
+        throw new Error(t('addHolidayFailed'))
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -145,16 +148,16 @@ export default function AppointmentSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Holiday deleted successfully',
+          title: t('success'),
+          description: t('holidayDeleted'),
         })
         fetchHolidays()
       } else {
-        throw new Error('Failed to delete holiday')
+        throw new Error(t('deleteHolidayFailed'))
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -166,22 +169,22 @@ export default function AppointmentSettingsPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Calendar className="w-8 h-8" />
-          Appointment Settings
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground">Configure appointment scheduling and timing</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <div className="space-y-6">
         {/* Slot Configuration */}
         <Card>
           <CardHeader>
-            <CardTitle>Time Slot Configuration</CardTitle>
-            <CardDescription>Set default appointment duration and buffer time</CardDescription>
+            <CardTitle>{t('slotConfig')}</CardTitle>
+            <CardDescription>{t('slotConfigDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="slotDuration">Default Slot Duration (minutes)</Label>
+                <Label htmlFor="slotDuration">{t('slotDuration')}</Label>
                 <Input
                   id="slotDuration"
                   type="number"
@@ -191,7 +194,7 @@ export default function AppointmentSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="bufferTime">Buffer Time Between Appointments (minutes)</Label>
+                <Label htmlFor="bufferTime">{t('bufferTime')}</Label>
                 <Input
                   id="bufferTime"
                   type="number"
@@ -206,13 +209,13 @@ export default function AppointmentSettingsPage() {
         {/* Working Hours */}
         <Card>
           <CardHeader>
-            <CardTitle>Working Hours</CardTitle>
-            <CardDescription>Set clinic operating hours</CardDescription>
+            <CardTitle>{t('workingHours')}</CardTitle>
+            <CardDescription>{t('workingHoursDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="startTime">Clinic Start Time</Label>
+                <Label htmlFor="startTime">{t('startTime')}</Label>
                 <Input
                   id="startTime"
                   type="time"
@@ -222,7 +225,7 @@ export default function AppointmentSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="endTime">Clinic End Time</Label>
+                <Label htmlFor="endTime">{t('endTime')}</Label>
                 <Input
                   id="endTime"
                   type="time"
@@ -232,7 +235,7 @@ export default function AppointmentSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="lunchBreakStart">Lunch Break Start</Label>
+                <Label htmlFor="lunchBreakStart">{t('lunchStart')}</Label>
                 <Input
                   id="lunchBreakStart"
                   type="time"
@@ -242,7 +245,7 @@ export default function AppointmentSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="lunchBreakEnd">Lunch Break End</Label>
+                <Label htmlFor="lunchBreakEnd">{t('lunchEnd')}</Label>
                 <Input
                   id="lunchBreakEnd"
                   type="time"
@@ -257,13 +260,13 @@ export default function AppointmentSettingsPage() {
         {/* Booking Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Booking Settings</CardTitle>
-            <CardDescription>Configure booking restrictions and reminders</CardDescription>
+            <CardTitle>{t('bookingSettings')}</CardTitle>
+            <CardDescription>{t('bookingSettingsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="maxAdvanceBookingDays">Maximum Advance Booking (days)</Label>
+                <Label htmlFor="maxAdvanceBookingDays">{t('maxAdvance')}</Label>
                 <Input
                   id="maxAdvanceBookingDays"
                   type="number"
@@ -272,13 +275,11 @@ export default function AppointmentSettingsPage() {
                     setSettings({ ...settings, maxAdvanceBookingDays: e.target.value })
                   }
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  How far in advance patients can book appointments
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">{t('maxAdvanceHint')}</p>
               </div>
 
               <div>
-                <Label htmlFor="reminderHoursBefore">Reminder Time (hours before)</Label>
+                <Label htmlFor="reminderHoursBefore">{t('reminderTime')}</Label>
                 <Input
                   id="reminderHoursBefore"
                   type="number"
@@ -287,9 +288,7 @@ export default function AppointmentSettingsPage() {
                     setSettings({ ...settings, reminderHoursBefore: e.target.value })
                   }
                 />
-                <p className="text-sm text-muted-foreground mt-1">
-                  When to send appointment reminders
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">{t('reminderTimeHint')}</p>
               </div>
             </div>
           </CardContent>
@@ -298,17 +297,17 @@ export default function AppointmentSettingsPage() {
         {/* Holidays */}
         <Card>
           <CardHeader>
-            <CardTitle>Holiday Calendar</CardTitle>
-            <CardDescription>Manage clinic holidays and closures</CardDescription>
+            <CardTitle>{t('holidayCalendar')}</CardTitle>
+            <CardDescription>{t('holidayCalendarDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Add Holiday Form */}
             <div className="border rounded-lg p-4 bg-muted/50">
-              <h4 className="font-semibold mb-3">Add New Holiday</h4>
+              <h4 className="font-semibold mb-3">{t('addNewHoliday')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-1">
                   <Input
-                    placeholder="Holiday name"
+                    placeholder={t('holidayNamePlaceholder')}
                     value={newHoliday.name}
                     onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
                   />
@@ -323,7 +322,7 @@ export default function AppointmentSettingsPage() {
                 <div>
                   <Button onClick={handleAddHoliday} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Holiday
+                    {t('addHoliday')}
                   </Button>
                 </div>
               </div>
@@ -331,9 +330,9 @@ export default function AppointmentSettingsPage() {
 
             {/* Holidays List */}
             <div className="space-y-2">
-              <h4 className="font-semibold">Upcoming Holidays</h4>
+              <h4 className="font-semibold">{t('upcomingHolidays')}</h4>
               {holidays.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No holidays configured</p>
+                <p className="text-sm text-muted-foreground">{t('noHolidays')}</p>
               ) : (
                 <div className="space-y-2">
                   {holidays.map((holiday) => (
@@ -344,7 +343,7 @@ export default function AppointmentSettingsPage() {
                       <div>
                         <p className="font-medium">{holiday.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(holiday.date), 'dd MMM yyyy')}
+                          {fmt.formatDate(holiday.date)}
                         </p>
                       </div>
                       <Button
@@ -366,7 +365,7 @@ export default function AppointmentSettingsPage() {
         <div className="flex justify-end">
           <Button onClick={handleSaveSettings} disabled={saving} size="lg">
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Appointment Settings'}
+            {saving ? t('saving') : t('saveAppointmentSettings')}
           </Button>
         </div>
       </div>
