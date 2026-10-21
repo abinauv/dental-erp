@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -95,7 +97,13 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export default function StaffDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
+  const t = useTranslations('staff.detail')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
+  const roleLabel = (role: string) =>
+    t.has(`roles.${role}`) ? t(`roles.${role}`) : roleLabels[role]
+  const genderLabel = (g: string | null) =>
+    g && t.has(`gender.${g}`) ? t(`gender.${g}`) : g || '-'
   const [staff, setStaff] = useState<StaffDetail | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -111,8 +119,8 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
         if (response.status === 404) {
           toast({
             variant: 'destructive',
-            title: 'Not Found',
-            description: 'Staff member not found',
+            title: t('notFoundToast'),
+            description: t('staffNotFound'),
           })
           router.push('/staff')
           return
@@ -126,31 +134,19 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
       console.error('Error fetching staff:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch staff details',
+        title: t('error'),
+        description: t('fetchFailed'),
       })
     } finally {
       setLoading(false)
     }
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
+  const formatDate = (dateString: string | null) =>
+    fmt.formatDate(dateString, { day: 'numeric', month: 'long', year: 'numeric' })
 
-  const formatCurrency = (amount: number | null) => {
-    if (amount === null) return '-'
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number | null) =>
+    amount === null ? '-' : fmt.formatCurrency(amount, { maximumFractionDigits: 0 })
 
   if (loading) {
     return (
@@ -182,9 +178,9 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="flex flex-col items-center justify-center h-[400px] gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Staff member not found</p>
+        <p className="text-muted-foreground">{t('staffNotFound')}</p>
         <Link href="/staff">
-          <Button>Back to Staff List</Button>
+          <Button>{t('backToStaff')}</Button>
         </Link>
       </div>
     )
@@ -210,13 +206,13 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                   {staff.firstName} {staff.lastName}
                 </h1>
                 <Badge variant={staff.isActive ? 'default' : 'secondary'}>
-                  {staff.isActive ? 'Active' : 'Inactive'}
+                  {staff.isActive ? t('active') : t('inactive')}
                 </Badge>
               </div>
               <div className="flex items-center gap-4 mt-1 text-muted-foreground">
                 <span>{staff.employeeId}</span>
                 <Badge className={`${roleColors[staff.user.role]} border-0`}>
-                  {roleLabels[staff.user.role]}
+                  {roleLabel(staff.user.role)}
                 </Badge>
               </div>
             </div>
@@ -226,7 +222,7 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
           <Link href={`/staff/${staff.id}/edit`}>
             <Button>
               <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
+              {t('editProfile')}
             </Button>
           </Link>
         </div>
@@ -234,9 +230,9 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="schedule">Work Schedule</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="profile">{t('tabProfile')}</TabsTrigger>
+          <TabsTrigger value="schedule">{t('tabSchedule')}</TabsTrigger>
+          <TabsTrigger value="documents">{t('tabDocuments')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -246,29 +242,29 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
-                  Contact Information
+                  {t('contactInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Primary Phone</p>
+                    <p className="text-sm text-muted-foreground">{t('primaryPhone')}</p>
                     <p className="font-medium">{staff.phone}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Alternate Phone</p>
+                    <p className="text-sm text-muted-foreground">{t('alternatePhone')}</p>
                     <p className="font-medium">{staff.alternatePhone || '-'}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="text-sm text-muted-foreground">{t('email')}</p>
                   <p className="font-medium">{staff.email}</p>
                 </div>
                 <Separator />
                 <div>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    Address
+                    {t('address')}
                   </p>
                   <p className="font-medium">
                     {staff.address ? (
@@ -291,37 +287,40 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Personal Details
+                  {t('personalDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Date of Birth</p>
+                    <p className="text-sm text-muted-foreground">{t('dateOfBirth')}</p>
                     <p className="font-medium">{formatDate(staff.dateOfBirth)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Gender</p>
-                    <p className="font-medium">{staff.gender || '-'}</p>
+                    <p className="text-sm text-muted-foreground">{t('genderLabel')}</p>
+                    <p className="font-medium">{genderLabel(staff.gender)}</p>
                   </div>
                 </div>
                 <Separator />
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Aadhar Number</p>
+                    <p className="text-sm text-muted-foreground">{t('aadharNumber')}</p>
                     <p className="font-medium">{staff.aadharNumber || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">PAN Number</p>
+                    <p className="text-sm text-muted-foreground">{t('panNumber')}</p>
                     <p className="font-medium">{staff.panNumber || '-'}</p>
                   </div>
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm text-muted-foreground">Emergency Contact</p>
+                  <p className="text-sm text-muted-foreground">{t('emergencyContact')}</p>
                   <p className="font-medium">
                     {staff.emergencyContact
-                      ? `${staff.emergencyContact} (${staff.emergencyPhone || 'No phone'})`
+                      ? t('emergencyValue', {
+                          name: staff.emergencyContact,
+                          phone: staff.emergencyPhone || t('noPhone'),
+                        })
                       : '-'}
                   </p>
                 </div>
@@ -333,27 +332,27 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4" />
-                  Professional Details
+                  {t('professionalDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Qualification</p>
+                    <p className="text-sm text-muted-foreground">{t('qualification')}</p>
                     <p className="font-medium">{staff.qualification || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Specialization</p>
+                    <p className="text-sm text-muted-foreground">{t('specialization')}</p>
                     <p className="font-medium">{staff.specialization || '-'}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">License Number</p>
+                    <p className="text-sm text-muted-foreground">{t('licenseNumber')}</p>
                     <p className="font-medium">{staff.licenseNumber || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Joining Date</p>
+                    <p className="text-sm text-muted-foreground">{t('joiningDate')}</p>
                     <p className="font-medium">{formatDate(staff.joiningDate)}</p>
                   </div>
                 </div>
@@ -365,19 +364,19 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                         <p className="text-2xl font-bold text-blue-700">
                           {staff._count.appointments}
                         </p>
-                        <p className="text-sm text-blue-600">Appointments</p>
+                        <p className="text-sm text-blue-600">{t('appointments')}</p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded-lg">
                         <p className="text-2xl font-bold text-green-700">
                           {staff._count.treatments}
                         </p>
-                        <p className="text-sm text-green-600">Treatments</p>
+                        <p className="text-sm text-green-600">{t('treatments')}</p>
                       </div>
                       <div className="text-center p-3 bg-purple-50 rounded-lg">
                         <p className="text-2xl font-bold text-purple-700">
                           {staff._count.prescriptions}
                         </p>
-                        <p className="text-sm text-purple-600">Prescriptions</p>
+                        <p className="text-sm text-purple-600">{t('prescriptions')}</p>
                       </div>
                     </div>
                   </>
@@ -390,12 +389,12 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4" />
-                  Financial Details
+                  {t('financialDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Monthly Salary</p>
+                  <p className="text-sm text-muted-foreground">{t('monthlySalary')}</p>
                   <p className="text-2xl font-bold">
                     {formatCurrency(staff.salary ? Number(staff.salary) : null)}
                   </p>
@@ -403,11 +402,11 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                 <Separator />
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Bank Account No.</p>
+                    <p className="text-sm text-muted-foreground">{t('bankAccountNo')}</p>
                     <p className="font-medium">{staff.bankAccountNo || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">IFSC Code</p>
+                    <p className="text-sm text-muted-foreground">{t('ifscCode')}</p>
                     <p className="font-medium">{staff.bankIfsc || '-'}</p>
                   </div>
                 </div>
@@ -421,18 +420,18 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Work Schedule
+                {t('workSchedule')}
               </CardTitle>
-              <CardDescription>Weekly work schedule for {staff.firstName}</CardDescription>
+              <CardDescription>{t('scheduleDesc', { name: staff.firstName })}</CardDescription>
             </CardHeader>
             <CardContent>
               {staff.shifts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No work schedule configured</p>
+                  <p>{t('noSchedule')}</p>
                   <Link href={`/staff/${staff.id}/edit`}>
                     <Button variant="outline" className="mt-4">
-                      Configure Schedule
+                      {t('configureSchedule')}
                     </Button>
                   </Link>
                 </div>
@@ -447,15 +446,15 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                           shift && shift.isActive ? 'bg-green-50' : 'bg-muted/50'
                         }`}
                       >
-                        <span className="font-medium">{day}</span>
+                        <span className="font-medium">{t(`days.${index}`)}</span>
                         <span
                           className={
                             shift && shift.isActive ? 'text-green-700' : 'text-muted-foreground'
                           }
                         >
                           {shift && shift.isActive
-                            ? `${shift.startTime} - ${shift.endTime}`
-                            : 'Off'}
+                            ? t('scheduleRange', { start: shift.startTime, end: shift.endTime })
+                            : t('off')}
                         </span>
                       </div>
                     )
@@ -471,14 +470,14 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Documents
+                {t('documents')}
               </CardTitle>
-              <CardDescription>Staff documents and certifications</CardDescription>
+              <CardDescription>{t('documentsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Document management coming soon</p>
+                <p>{t('documentsComingSoon')}</p>
               </div>
             </CardContent>
           </Card>
