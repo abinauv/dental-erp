@@ -1,14 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Database, Download, FileText, Shield, HardDrive } from 'lucide-react'
 import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 export default function SystemSettingsPage() {
+  const t = useTranslations('settings.system')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [backupStats, setBackupStats] = useState<any>(null)
@@ -64,15 +68,15 @@ export default function SystemSettingsPage() {
         document.body.removeChild(a)
 
         toast({
-          title: 'Success',
-          description: 'Backup downloaded successfully',
+          title: t('success'),
+          description: t('backupSuccess'),
         })
       } else {
-        throw new Error('Failed to export backup')
+        throw new Error(t('exportFailed'))
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -86,20 +90,20 @@ export default function SystemSettingsPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Database className="w-8 h-8" />
-          System Settings
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground">Backup, audit logs, and system management</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <Tabs defaultValue="backup" className="w-full">
         <TabsList>
           <TabsTrigger value="backup">
             <HardDrive className="w-4 h-4 mr-2" />
-            Backup & Export
+            {t('backupTab')}
           </TabsTrigger>
           <TabsTrigger value="audit">
             <FileText className="w-4 h-4 mr-2" />
-            Audit Logs
+            {t('auditTab')}
           </TabsTrigger>
         </TabsList>
 
@@ -108,49 +112,49 @@ export default function SystemSettingsPage() {
           {/* Database Statistics */}
           <Card>
             <CardHeader>
-              <CardTitle>Database Statistics</CardTitle>
-              <CardDescription>Current data in the system</CardDescription>
+              <CardTitle>{t('dbStats')}</CardTitle>
+              <CardDescription>{t('dbStatsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {backupStats ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <p className="text-3xl font-bold text-blue-600">{backupStats.patients}</p>
-                    <p className="text-sm text-muted-foreground">Patients</p>
+                    <p className="text-sm text-muted-foreground">{t('patients')}</p>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <p className="text-3xl font-bold text-green-600">{backupStats.appointments}</p>
-                    <p className="text-sm text-muted-foreground">Appointments</p>
+                    <p className="text-sm text-muted-foreground">{t('appointments')}</p>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <p className="text-3xl font-bold text-purple-600">{backupStats.treatments}</p>
-                    <p className="text-sm text-muted-foreground">Treatments</p>
+                    <p className="text-sm text-muted-foreground">{t('treatments')}</p>
                   </div>
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
                     <p className="text-3xl font-bold text-yellow-600">{backupStats.invoices}</p>
-                    <p className="text-sm text-muted-foreground">Invoices</p>
+                    <p className="text-sm text-muted-foreground">{t('invoices')}</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <p className="text-3xl font-bold text-red-600">{backupStats.payments}</p>
-                    <p className="text-sm text-muted-foreground">Payments</p>
+                    <p className="text-sm text-muted-foreground">{t('payments')}</p>
                   </div>
                   <div className="text-center p-4 bg-indigo-50 rounded-lg">
                     <p className="text-3xl font-bold text-indigo-600">
                       {backupStats.inventoryItems}
                     </p>
-                    <p className="text-sm text-muted-foreground">Inventory Items</p>
+                    <p className="text-sm text-muted-foreground">{t('inventoryItems')}</p>
                   </div>
                   <div className="text-center p-4 bg-pink-50 rounded-lg">
                     <p className="text-3xl font-bold text-pink-600">{backupStats.staff}</p>
-                    <p className="text-sm text-muted-foreground">Staff Members</p>
+                    <p className="text-sm text-muted-foreground">{t('staffMembers')}</p>
                   </div>
                   <div className="text-center p-4 bg-teal-50 rounded-lg">
                     <p className="text-3xl font-bold text-teal-600">{backupStats.labOrders}</p>
-                    <p className="text-sm text-muted-foreground">Lab Orders</p>
+                    <p className="text-sm text-muted-foreground">{t('labOrders')}</p>
                   </div>
                 </div>
               ) : (
-                <p>Loading statistics...</p>
+                <p>{t('loadingStats')}</p>
               )}
             </CardContent>
           </Card>
@@ -158,8 +162,8 @@ export default function SystemSettingsPage() {
           {/* Export Options */}
           <Card>
             <CardHeader>
-              <CardTitle>Data Export</CardTitle>
-              <CardDescription>Download data backups in JSON format</CardDescription>
+              <CardTitle>{t('dataExport')}</CardTitle>
+              <CardDescription>{t('dataExportDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -170,7 +174,7 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Full Database Backup
+                  {t('fullBackup')}
                 </Button>
 
                 <Button
@@ -180,7 +184,7 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Patients Only
+                  {t('patientsOnly')}
                 </Button>
 
                 <Button
@@ -190,7 +194,7 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Appointments Only
+                  {t('appointmentsOnly')}
                 </Button>
 
                 <Button
@@ -200,7 +204,7 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Treatments Only
+                  {t('treatmentsOnly')}
                 </Button>
 
                 <Button
@@ -210,7 +214,7 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Billing Data
+                  {t('billingData')}
                 </Button>
 
                 <Button
@@ -220,7 +224,7 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Inventory Data
+                  {t('inventoryData')}
                 </Button>
 
                 <Button
@@ -230,14 +234,13 @@ export default function SystemSettingsPage() {
                   className="justify-start"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Settings Only
+                  {t('settingsOnly')}
                 </Button>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Important:</strong> Backups should be stored securely and regularly.
-                  Consider setting up automated backups using cron jobs or scheduled tasks.
+                  <strong>{t('importantLabel')}</strong> {t('importantNote')}
                 </p>
               </div>
             </CardContent>
@@ -246,29 +249,29 @@ export default function SystemSettingsPage() {
           {/* Backup Instructions */}
           <Card>
             <CardHeader>
-              <CardTitle>Backup Best Practices</CardTitle>
+              <CardTitle>{t('bestPractices')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600">•</span>
-                  <span>Take full backups daily, preferably at night when system usage is low</span>
+                  <span>{t('practice1')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600">•</span>
-                  <span>Store backups in multiple locations (local + cloud storage)</span>
+                  <span>{t('practice2')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600">•</span>
-                  <span>Test backup restoration periodically to ensure data integrity</span>
+                  <span>{t('practice3')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600">•</span>
-                  <span>Keep backups for at least 90 days for compliance</span>
+                  <span>{t('practice4')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-600">•</span>
-                  <span>Encrypt backup files before storing them externally</span>
+                  <span>{t('practice5')}</span>
                 </li>
               </ul>
             </CardContent>
@@ -279,12 +282,12 @@ export default function SystemSettingsPage() {
         <TabsContent value="audit" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>System Audit Logs</CardTitle>
-              <CardDescription>Track all system activities and changes</CardDescription>
+              <CardTitle>{t('auditTitle')}</CardTitle>
+              <CardDescription>{t('auditDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {auditLogs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No audit logs available</p>
+                <p className="text-sm text-muted-foreground">{t('noAuditLogs')}</p>
               ) : (
                 <div className="space-y-2">
                   {auditLogs.map((log) => (
@@ -296,17 +299,24 @@ export default function SystemSettingsPage() {
                         <div className="flex items-center gap-2">
                           <Shield className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">{log.action}</span>
-                          <span className="text-sm text-muted-foreground">on {log.entityType}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {t('onEntity', { entityType: log.entityType })}
+                          </span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
-                          By: {log.user?.name || 'System'} ({log.user?.email || 'N/A'})
+                          {t('byUser', {
+                            name: log.user?.name || t('systemUser'),
+                            email: log.user?.email || t('naValue'),
+                          })}
                         </p>
                         {log.ipAddress && (
-                          <p className="text-xs text-muted-foreground mt-1">IP: {log.ipAddress}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {t('ipLabel', { ip: log.ipAddress })}
+                          </p>
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(log.createdAt), 'dd MMM yyyy HH:mm')}
+                        {fmt.formatDateTime(log.createdAt)}
                       </span>
                     </div>
                   ))}

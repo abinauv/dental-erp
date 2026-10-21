@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { AIUsageStats } from '@/components/ai/ai-usage-stats'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 /**
  * AI Settings page — /settings/ai
@@ -34,6 +36,8 @@ const DEFAULTS: AISettings = {
 }
 
 export default function AISettingsPage() {
+  const t = useTranslations('settings.ai')
+  const { currencySymbol } = useClinicFormatters()
   const [settings, setSettings] = useState<AISettings>(DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -108,23 +112,19 @@ export default function AISettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 p-6">
       <div>
-        <h1 className="text-xl font-bold">AI Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Configure AI features powered by OpenRouter
-        </p>
+        <h1 className="text-xl font-bold">{t('title')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
       </div>
 
       {/* API Key status */}
       <div className="rounded-lg border p-4 bg-muted/30">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold">OpenRouter API Key</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Set OPENROUTER_API_KEY in your .env file. Restart the app after changes.
-            </p>
+            <p className="text-sm font-semibold">{t('apiKeyTitle')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('apiKeyDesc')}</p>
           </div>
           <span className="text-xs rounded-full px-2.5 py-1 bg-blue-100 text-blue-800">
-            Check .env
+            {t('checkEnv')}
           </span>
         </div>
       </div>
@@ -133,15 +133,13 @@ export default function AISettingsPage() {
       <section>
         <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/20">
           <div>
-            <p className="text-sm font-semibold">AI Features Master Switch</p>
-            <p className="text-xs text-muted-foreground">
-              Enable or disable all AI features at once
-            </p>
+            <p className="text-sm font-semibold">{t('masterTitle')}</p>
+            <p className="text-xs text-muted-foreground">{t('masterDesc')}</p>
           </div>
           <ToggleSwitch
             checked={settings.ai_enabled}
             onChange={() => toggle('ai_enabled')}
-            label="AI Features Master Switch"
+            label={t('masterTitle')}
           />
         </div>
       </section>
@@ -149,33 +147,33 @@ export default function AISettingsPage() {
       {/* Feature toggles */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Features
+          {t('featuresHeading')}
         </h2>
         {[
           {
             key: 'ai_chat_enabled' as const,
-            label: 'AI Chat Widget',
-            desc: 'Floating chat assistant on all pages',
+            label: t('feat.chatLabel'),
+            desc: t('feat.chatDesc'),
           },
           {
             key: 'ai_command_bar_enabled' as const,
-            label: 'Command Bar (Ctrl+K)',
-            desc: 'Natural-language command execution',
+            label: t('feat.commandLabel'),
+            desc: t('feat.commandDesc'),
           },
           {
             key: 'ai_auto_reminders' as const,
-            label: 'Auto Appointment Reminders',
-            desc: 'AI-triggered reminders before appointments',
+            label: t('feat.remindersLabel'),
+            desc: t('feat.remindersDesc'),
           },
           {
             key: 'ai_morning_briefing' as const,
-            label: 'Morning Briefing',
-            desc: 'Daily clinic summary sent to admins',
+            label: t('feat.briefingLabel'),
+            desc: t('feat.briefingDesc'),
           },
           {
             key: 'ai_risk_scoring_enabled' as const,
-            label: 'Patient Risk Scoring',
-            desc: 'Automatic risk calculation on intake',
+            label: t('feat.riskLabel'),
+            desc: t('feat.riskDesc'),
           },
         ].map(({ key, label, desc }) => (
           <div key={key} className="flex items-center justify-between p-3 rounded-lg border">
@@ -191,7 +189,7 @@ export default function AISettingsPage() {
       {/* Model preference */}
       <section>
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Model Preference
+          {t('modelPreference')}
         </h2>
         <div className="flex gap-3">
           {(['economy', 'balanced', 'quality'] as const).map((pref) => (
@@ -207,14 +205,8 @@ export default function AISettingsPage() {
                   : 'hover:bg-muted'
               }`}
             >
-              <p className="text-sm font-semibold capitalize">{pref}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {pref === 'economy'
-                  ? 'Fastest, lowest cost'
-                  : pref === 'balanced'
-                    ? 'Best speed/quality mix'
-                    : 'Highest accuracy'}
-              </p>
+              <p className="text-sm font-semibold">{t(`model.${pref}`)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t(`model.${pref}Desc`)}</p>
             </button>
           ))}
         </div>
@@ -223,12 +215,12 @@ export default function AISettingsPage() {
       {/* Limits */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Limits & Guardrails
+          {t('limitsHeading')}
         </h2>
         <div className="flex gap-4">
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground">
-              Financial Approval Limit (₹)
+              {t('financialLimit', { currency: currencySymbol })}
             </label>
             <input
               type="number"
@@ -239,13 +231,11 @@ export default function AISettingsPage() {
               }}
               className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Transactions above this amount need manual approval
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t('financialLimitHint')}</p>
           </div>
           <div className="flex-1">
             <label className="text-xs font-medium text-muted-foreground">
-              Monthly AI Budget (₹)
+              {t('monthlyBudget', { currency: currencySymbol })}
             </label>
             <input
               type="number"
@@ -256,9 +246,7 @@ export default function AISettingsPage() {
               }}
               className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Estimated OpenRouter cost cap per month
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t('monthlyBudgetHint')}</p>
           </div>
         </div>
       </section>
@@ -275,9 +263,9 @@ export default function AISettingsPage() {
           disabled={saving}
           className="rounded-md bg-primary text-primary-foreground px-5 py-2 text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
         >
-          {saving ? 'Saving…' : 'Save Settings'}
+          {saving ? t('saving') : t('saveSettings')}
         </button>
-        {saved && <span className="text-xs text-emerald-600 font-medium">Saved ✓</span>}
+        {saved && <span className="text-xs text-emerald-600 font-medium">{t('savedCheck')}</span>}
       </div>
     </div>
   )
