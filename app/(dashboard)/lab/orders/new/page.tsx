@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -52,6 +54,8 @@ const WORK_TYPES = [
 
 export default function NewLabOrderPage() {
   const router = useRouter()
+  const t = useTranslations('lab.orderNew')
+  const { currency } = useClinicFormatters()
   const searchParams = useSearchParams()
   const preselectedPatientId = searchParams.get('patientId')
   const { toast } = useToast()
@@ -126,23 +130,23 @@ export default function NewLabOrderPage() {
     e.preventDefault()
 
     if (!form.patientId) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a patient.' })
+      toast({ variant: 'destructive', title: t('error'), description: t('selectPatientError') })
       return
     }
     if (!form.labVendorId) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a lab vendor.' })
+      toast({ variant: 'destructive', title: t('error'), description: t('selectVendorError') })
       return
     }
     if (!form.workType) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a work type.' })
+      toast({ variant: 'destructive', title: t('error'), description: t('selectWorkTypeError') })
       return
     }
     if (!form.orderDate) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please enter an order date.' })
+      toast({ variant: 'destructive', title: t('error'), description: t('orderDateError') })
       return
     }
     if (!form.estimatedCost) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please enter estimated cost.' })
+      toast({ variant: 'destructive', title: t('error'), description: t('costError') })
       return
     }
 
@@ -168,23 +172,23 @@ export default function NewLabOrderPage() {
       })
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(data.error || `Failed to create lab order (${response.status})`)
+        const data = await response.json().catch(() => ({ error: t('unknownError') }))
+        throw new Error(data.error || t('createFailedStatus', { status: response.status }))
       }
 
       const result = await response.json()
 
       toast({
-        title: 'Lab Order Created',
-        description: `Order ${result.data.orderNumber} created successfully.`,
+        title: t('created'),
+        description: t('createdDesc', { orderNumber: result.data.orderNumber }),
       })
 
       router.push('/lab')
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to create lab order',
+        title: t('error'),
+        description: error.message || t('createFailed'),
       })
     } finally {
       setSubmitting(false)
@@ -201,8 +205,8 @@ export default function NewLabOrderPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">New Lab Order</h1>
-          <p className="text-muted-foreground">Create a new lab work order</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -212,9 +216,9 @@ export default function NewLabOrderPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Patient
+              {t('patient')}
             </CardTitle>
-            <CardDescription>Select the patient for this lab order</CardDescription>
+            <CardDescription>{t('patientDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {selectedPatient ? (
@@ -240,7 +244,7 @@ export default function NewLabOrderPage() {
                     setForm((prev) => ({ ...prev, patientId: '' }))
                   }}
                 >
-                  Change
+                  {t('change')}
                 </Button>
               </div>
             ) : (
@@ -248,7 +252,7 @@ export default function NewLabOrderPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search patients by name, phone, or ID..."
+                    placeholder={t('searchPatients')}
                     value={patientSearch}
                     onChange={(e) => setPatientSearch(e.target.value)}
                     className="pl-9"
@@ -256,7 +260,7 @@ export default function NewLabOrderPage() {
                 </div>
                 <div className="max-h-60 overflow-y-auto border rounded-lg">
                   {filteredPatients.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">No patients found</div>
+                    <div className="p-4 text-center text-muted-foreground">{t('noPatients')}</div>
                   ) : (
                     filteredPatients.slice(0, 10).map((patient) => (
                       <button
@@ -290,26 +294,30 @@ export default function NewLabOrderPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FlaskConical className="h-5 w-5" />
-              Order Details
+              {t('orderDetails')}
             </CardTitle>
-            <CardDescription>Specify the lab work details</CardDescription>
+            <CardDescription>{t('orderDetailsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Lab Vendor *</Label>
+                <Label>{t('labVendor')}</Label>
                 <Select
                   value={form.labVendorId}
                   onValueChange={(v) => setForm((prev) => ({ ...prev, labVendorId: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select lab vendor" />
+                    <SelectValue placeholder={t('selectVendor')} />
                   </SelectTrigger>
                   <SelectContent>
                     {vendors.map((vendor) => (
                       <SelectItem key={vendor.id} value={vendor.id}>
-                        {vendor.name}
-                        {vendor.avgTurnaround ? ` (${vendor.avgTurnaround}d avg)` : ''}
+                        {vendor.avgTurnaround
+                          ? t('vendorTurnaround', {
+                              name: vendor.name,
+                              days: vendor.avgTurnaround,
+                            })
+                          : vendor.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -317,18 +325,18 @@ export default function NewLabOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Work Type *</Label>
+                <Label>{t('workType')}</Label>
                 <Select
                   value={form.workType}
                   onValueChange={(v) => setForm((prev) => ({ ...prev, workType: v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select work type" />
+                    <SelectValue placeholder={t('selectWorkType')} />
                   </SelectTrigger>
                   <SelectContent>
                     {WORK_TYPES.map((wt) => (
                       <SelectItem key={wt.value} value={wt.value}>
-                        {wt.label}
+                        {t(`workTypes.${wt.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -338,30 +346,30 @@ export default function NewLabOrderPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tooth Numbers</Label>
+                <Label>{t('toothNumbers')}</Label>
                 <Input
                   value={form.toothNumbers}
                   onChange={(e) => setForm((prev) => ({ ...prev, toothNumbers: e.target.value }))}
-                  placeholder="e.g. 11, 21, 36"
+                  placeholder={t('toothPlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Shade Guide</Label>
+                <Label>{t('shadeGuide')}</Label>
                 <Input
                   value={form.shadeGuide}
                   onChange={(e) => setForm((prev) => ({ ...prev, shadeGuide: e.target.value }))}
-                  placeholder="e.g. A2, B1"
+                  placeholder={t('shadePlaceholder')}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t('description')}</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the lab work required..."
+                placeholder={t('descriptionPlaceholder')}
                 rows={3}
               />
             </div>
@@ -371,13 +379,13 @@ export default function NewLabOrderPage() {
         {/* Dates & Cost */}
         <Card>
           <CardHeader>
-            <CardTitle>Schedule & Cost</CardTitle>
-            <CardDescription>Set dates and estimated cost</CardDescription>
+            <CardTitle>{t('scheduleCost')}</CardTitle>
+            <CardDescription>{t('scheduleCostDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Order Date *</Label>
+                <Label>{t('orderDate')}</Label>
                 <Input
                   type="date"
                   value={form.orderDate}
@@ -387,7 +395,7 @@ export default function NewLabOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Expected Delivery Date</Label>
+                <Label>{t('expectedDate')}</Label>
                 <Input
                   type="date"
                   value={form.expectedDate}
@@ -396,14 +404,14 @@ export default function NewLabOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Estimated Cost (INR) *</Label>
+                <Label>{t('estimatedCost', { currency })}</Label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
                   value={form.estimatedCost}
                   onChange={(e) => setForm((prev) => ({ ...prev, estimatedCost: e.target.value }))}
-                  placeholder="Enter estimated cost"
+                  placeholder={t('estimatedCostPlaceholder')}
                   required
                 />
               </div>
@@ -414,13 +422,13 @@ export default function NewLabOrderPage() {
         {/* Notes */}
         <Card>
           <CardHeader>
-            <CardTitle>Additional Notes</CardTitle>
+            <CardTitle>{t('additionalNotes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
               value={form.notes}
               onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-              placeholder="Any special instructions or notes for the lab..."
+              placeholder={t('notesPlaceholder')}
               rows={3}
             />
           </CardContent>
@@ -430,19 +438,19 @@ export default function NewLabOrderPage() {
         <div className="flex justify-end gap-3">
           <Link href="/lab">
             <Button type="button" variant="outline">
-              Cancel
+              {t('cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                {t('creating')}
               </>
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Create Lab Order
+                {t('createLabOrder')}
               </>
             )}
           </Button>

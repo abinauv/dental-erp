@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -94,6 +95,8 @@ interface PaginationInfo {
 
 export default function LabVendorsPage() {
   const router = useRouter()
+  const t = useTranslations('lab.vendors')
+  const tStatus = useTranslations('lab.vendorStatus')
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [vendors, setVendors] = useState<LabVendor[]>([])
@@ -155,8 +158,8 @@ export default function LabVendorsPage() {
     } catch (error) {
       console.error('Error fetching vendors:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to fetch lab vendors',
+        title: t('error'),
+        description: t('fetchFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -235,19 +238,21 @@ export default function LabVendorsPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to save vendor')
+        throw new Error(error.error || t('saveFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: `Lab vendor ${editingVendor ? 'updated' : 'created'} successfully`,
+        title: t('success'),
+        description: t('savedSuccess', {
+          action: editingVendor ? t('updatedWord') : t('createdWord'),
+        }),
       })
 
       setIsDialogOpen(false)
       fetchVendors()
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -258,9 +263,9 @@ export default function LabVendorsPage() {
 
   const handleDelete = async (vendorId: string) => {
     const ok = await confirm({
-      title: 'Delete Vendor',
-      description: 'Are you sure you want to delete this vendor?',
-      confirmLabel: 'Delete',
+      title: t('deleteTitle'),
+      description: t('deleteConfirm'),
+      confirmLabel: t('delete'),
     })
     if (!ok) return
 
@@ -271,18 +276,18 @@ export default function LabVendorsPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to delete vendor')
+        throw new Error(error.error || t('deleteFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: 'Lab vendor deleted successfully',
+        title: t('success'),
+        description: t('deletedSuccess'),
       })
 
       fetchVendors()
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -310,11 +315,12 @@ export default function LabVendorsPage() {
 
     const config = configs[status] || configs.active
     const Icon = config.icon
+    const label = tStatus.has(status) ? tStatus(status) : config.label
 
     return (
       <Badge className={config.className}>
         <Icon className="mr-1 h-3 w-3" />
-        {config.label}
+        {label}
       </Badge>
     )
   }
@@ -324,19 +330,17 @@ export default function LabVendorsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lab Vendors</h1>
-          <p className="text-muted-foreground">
-            Manage external laboratory vendors and their information
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => router.push('/lab')}>
             <FlaskConical className="mr-2 h-4 w-4" />
-            Back to Lab Orders
+            {t('backToOrders')}
           </Button>
           <Button onClick={() => handleOpenDialog()}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Vendor
+            {t('addVendor')}
           </Button>
         </div>
       </div>
@@ -345,7 +349,7 @@ export default function LabVendorsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Vendors</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalVendors')}</CardTitle>
             <FlaskConical className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -354,7 +358,7 @@ export default function LabVendorsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Vendors</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('activeVendors')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -365,7 +369,7 @@ export default function LabVendorsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Rating</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('avgRating')}</CardTitle>
             <Star className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -385,7 +389,7 @@ export default function LabVendorsPage() {
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search vendors..."
+                placeholder={t('searchPlaceholder')}
                 className="pl-8"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -393,13 +397,13 @@ export default function LabVendorsPage() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="All Statuses" />
+                <SelectValue placeholder={t('allStatuses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="blocked">Blocked</SelectItem>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="active">{tStatus('active')}</SelectItem>
+                <SelectItem value="inactive">{tStatus('inactive')}</SelectItem>
+                <SelectItem value="blocked">{tStatus('blocked')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -418,11 +422,11 @@ export default function LabVendorsPage() {
           ) : vendors.length === 0 ? (
             <div className="text-center py-12">
               <FlaskConical className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No vendors found</h3>
-              <p className="text-muted-foreground">Get started by adding your first lab vendor</p>
+              <h3 className="mt-4 text-lg font-semibold">{t('noVendors')}</h3>
+              <p className="text-muted-foreground">{t('noVendorsHint')}</p>
               <Button className="mt-4" onClick={() => handleOpenDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Vendor
+                {t('addVendor')}
               </Button>
             </div>
           ) : (
@@ -430,14 +434,14 @@ export default function LabVendorsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Vendor Code</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Specializations</TableHead>
-                    <TableHead>Turnaround</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('colVendorCode')}</TableHead>
+                    <TableHead>{t('colName')}</TableHead>
+                    <TableHead>{t('colContact')}</TableHead>
+                    <TableHead>{t('colSpecializations')}</TableHead>
+                    <TableHead>{t('colTurnaround')}</TableHead>
+                    <TableHead>{t('colRating')}</TableHead>
+                    <TableHead>{t('colStatus')}</TableHead>
+                    <TableHead className="text-right">{t('colActions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -476,7 +480,7 @@ export default function LabVendorsPage() {
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="mr-1 h-3 w-3" />
-                          {vendor.avgTurnaround} days
+                          {t('turnaroundDays', { days: vendor.avgTurnaround })}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -496,7 +500,7 @@ export default function LabVendorsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleOpenDialog(vendor)}>
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit
+                              {t('edit')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -504,7 +508,7 @@ export default function LabVendorsPage() {
                               className="text-red-600"
                             >
                               <Trash className="mr-2 h-4 w-4" />
-                              Delete
+                              {t('delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -517,9 +521,11 @@ export default function LabVendorsPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                  {pagination.total} vendors
+                  {t('showing', {
+                    from: (pagination.page - 1) * pagination.limit + 1,
+                    to: Math.min(pagination.page * pagination.limit, pagination.total),
+                    total: pagination.total,
+                  })}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -529,7 +535,7 @@ export default function LabVendorsPage() {
                     onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t('previous')}
                   </Button>
                   <Button
                     variant="outline"
@@ -537,7 +543,7 @@ export default function LabVendorsPage() {
                     disabled={pagination.page === pagination.pages}
                     onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                   >
-                    Next
+                    {t('next')}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -551,13 +557,13 @@ export default function LabVendorsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingVendor ? 'Edit Lab Vendor' : 'Add Lab Vendor'}</DialogTitle>
-            <DialogDescription>Enter the vendor information below</DialogDescription>
+            <DialogTitle>{editingVendor ? t('editVendor') : t('addVendorTitle')}</DialogTitle>
+            <DialogDescription>{t('dialogDesc')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Vendor Code *</Label>
+                <Label htmlFor="code">{t('vendorCode')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
@@ -566,7 +572,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">Vendor Name *</Label>
+                <Label htmlFor="name">{t('vendorName')}</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -578,7 +584,7 @@ export default function LabVendorsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="contactPerson">Contact Person</Label>
+                <Label htmlFor="contactPerson">{t('contactPerson')}</Label>
                 <Input
                   id="contactPerson"
                   value={formData.contactPerson}
@@ -586,7 +592,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone *</Label>
+                <Label htmlFor="phone">{t('phone')}</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -598,7 +604,7 @@ export default function LabVendorsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -607,7 +613,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="alternatePhone">Alternate Phone</Label>
+                <Label htmlFor="alternatePhone">{t('alternatePhone')}</Label>
                 <Input
                   id="alternatePhone"
                   value={formData.alternatePhone}
@@ -617,7 +623,7 @@ export default function LabVendorsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">{t('address')}</Label>
               <Textarea
                 id="address"
                 value={formData.address}
@@ -628,7 +634,7 @@ export default function LabVendorsPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city">{t('city')}</Label>
                 <Input
                   id="city"
                   value={formData.city}
@@ -636,7 +642,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
+                <Label htmlFor="state">{t('state')}</Label>
                 <Input
                   id="state"
                   value={formData.state}
@@ -644,7 +650,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pincode">Pincode</Label>
+                <Label htmlFor="pincode">{t('pincode')}</Label>
                 <Input
                   id="pincode"
                   value={formData.pincode}
@@ -654,18 +660,18 @@ export default function LabVendorsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="specializations">Specializations</Label>
+              <Label htmlFor="specializations">{t('specializations')}</Label>
               <Input
                 id="specializations"
                 value={formData.specializations}
                 onChange={(e) => setFormData({ ...formData, specializations: e.target.value })}
-                placeholder="crown, bridge, denture, etc. (comma-separated)"
+                placeholder={t('specializationsPlaceholder')}
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="avgTurnaround">Avg. Turnaround (days)</Label>
+                <Label htmlFor="avgTurnaround">{t('avgTurnaround')}</Label>
                 <Input
                   id="avgTurnaround"
                   type="number"
@@ -679,7 +685,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rating">Quality Rating</Label>
+                <Label htmlFor="rating">{t('qualityRating')}</Label>
                 <Input
                   id="rating"
                   type="number"
@@ -696,7 +702,7 @@ export default function LabVendorsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">{t('status')}</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value) =>
@@ -710,16 +716,16 @@ export default function LabVendorsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="blocked">Blocked</SelectItem>
+                    <SelectItem value="active">{tStatus('active')}</SelectItem>
+                    <SelectItem value="inactive">{tStatus('inactive')}</SelectItem>
+                    <SelectItem value="blocked">{tStatus('blocked')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t('notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
@@ -730,10 +736,10 @@ export default function LabVendorsPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : editingVendor ? 'Update' : 'Create'}
+                {saving ? t('saving') : editingVendor ? t('update') : t('create')}
               </Button>
             </DialogFooter>
           </form>
