@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { LogOut, User, Settings } from 'lucide-react'
@@ -32,6 +33,8 @@ const roleColors: Record<string, string> = {
 }
 
 export function UserMenu({ user }: UserMenuProps) {
+  const t = useTranslations('layout')
+  const tRole = useTranslations('staff.role')
   const router = useRouter()
   const initials = user.name
     .split(' ')
@@ -60,18 +63,18 @@ export function UserMenu({ user }: UserMenuProps) {
               variant={roleColors[user.role] as 'default' | 'secondary' | 'destructive' | 'outline'}
               className="w-fit text-xs"
             >
-              {user.role}
+              {tRole.has(user.role) ? tRole(user.role) : user.role}
             </Badge>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push('/settings')}>
           <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+          <span>{t('profile')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/settings')}>
           <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+          <span>{t('settings')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -79,7 +82,7 @@ export function UserMenu({ user }: UserMenuProps) {
           onClick={() => signOut({ callbackUrl: '/login' })}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{t('logOut')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
