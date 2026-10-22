@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Doctor {
   id: string
@@ -43,6 +45,8 @@ interface Slot {
 type Step = 1 | 2 | 3 | 4
 
 export default function BookAppointment() {
+  const t = useTranslations('portal.book')
+  const { formatDate } = useClinicFormatters()
   const router = useRouter()
 
   const [step, setStep] = useState<Step>(1)
@@ -138,14 +142,14 @@ export default function BookAppointment() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Booking failed')
+        setError(data.error || t('bookingFailed'))
         return
       }
 
       setBookingResult(data.appointment)
       setStep(4)
     } catch {
-      setError('Network error. Please try again.')
+      setError(t('networkError'))
     } finally {
       setBooking(false)
     }
@@ -163,7 +167,7 @@ export default function BookAppointment() {
         <Button variant="ghost" size="sm" onClick={() => router.push('/portal/appointments')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">Book Appointment</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
       </div>
 
       {/* Step indicator */}
@@ -184,9 +188,9 @@ export default function BookAppointment() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <User className="h-5 w-5" /> Select Doctor
+              <User className="h-5 w-5" /> {t('step1Title')}
             </CardTitle>
-            <CardDescription>Choose your preferred doctor</CardDescription>
+            <CardDescription>{t('step1Desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {doctorsLoading ? (
@@ -196,9 +200,7 @@ export default function BookAppointment() {
                 ))}
               </div>
             ) : doctors.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                No doctors available for booking
-              </p>
+              <p className="text-muted-foreground text-center py-4">{t('noDoctors')}</p>
             ) : (
               <div className="space-y-2">
                 {doctors.map((doc) => (
@@ -213,7 +215,7 @@ export default function BookAppointment() {
                     onClick={() => setSelectedDoctor(doc.id)}
                   >
                     <p className="font-medium">
-                      Dr. {doc.firstName} {doc.lastName}
+                      {t('doctor', { name: `${doc.firstName} ${doc.lastName}` })}
                     </p>
                     {doc.specialization && (
                       <p className="text-sm text-muted-foreground">{doc.specialization}</p>
@@ -224,7 +226,7 @@ export default function BookAppointment() {
             )}
 
             <Button className="w-full mt-4" disabled={!selectedDoctor} onClick={() => setStep(2)}>
-              Continue <ArrowRight className="h-4 w-4 ml-2" />
+              {t('continue')} <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </CardContent>
         </Card>
@@ -235,19 +237,18 @@ export default function BookAppointment() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar className="h-5 w-5" /> Select Date & Time
+              <Calendar className="h-5 w-5" /> {t('step2Title')}
             </CardTitle>
             <CardDescription>
-              {selectedDoctorObj && (
-                <>
-                  Dr. {selectedDoctorObj.firstName} {selectedDoctorObj.lastName}
-                </>
-              )}
+              {selectedDoctorObj &&
+                t('doctor', {
+                  name: `${selectedDoctorObj.firstName} ${selectedDoctorObj.lastName}`,
+                })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>{t('fieldDate')}</Label>
               <Input
                 type="date"
                 min={today}
@@ -258,13 +259,11 @@ export default function BookAppointment() {
 
             {selectedDate && (
               <div className="space-y-2">
-                <Label>Available Time Slots</Label>
+                <Label>{t('availableSlots')}</Label>
                 {slotsLoading ? (
                   <Skeleton className="h-32" />
                 ) : availableSlots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    No slots available on this date
-                  </p>
+                  <p className="text-sm text-muted-foreground py-4 text-center">{t('noSlots')}</p>
                 ) : (
                   <div className="grid grid-cols-4 gap-2">
                     {slots.map((slot) => (
@@ -286,10 +285,10 @@ export default function BookAppointment() {
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setStep(1)}>
-                <ArrowLeft className="h-4 w-4 mr-2" /> Back
+                <ArrowLeft className="h-4 w-4 mr-2" /> {t('back')}
               </Button>
               <Button className="flex-1" disabled={!selectedTime} onClick={() => setStep(3)}>
-                Continue <ArrowRight className="h-4 w-4 ml-2" />
+                {t('continue')} <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           </CardContent>
@@ -301,7 +300,7 @@ export default function BookAppointment() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" /> Confirm Booking
+              <CheckCircle className="h-5 w-5" /> {t('step3Title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -309,32 +308,29 @@ export default function BookAppointment() {
 
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Doctor</span>
+                <span className="text-muted-foreground">{t('fieldDoctor')}</span>
                 <span className="font-medium">
-                  Dr. {selectedDoctorObj?.firstName} {selectedDoctorObj?.lastName}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Date</span>
-                <span className="font-medium">
-                  {new Date(selectedDate).toLocaleDateString('en-IN', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
+                  {t('doctor', {
+                    name: `${selectedDoctorObj?.firstName ?? ''} ${selectedDoctorObj?.lastName ?? ''}`,
                   })}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Time</span>
+                <span className="text-muted-foreground">{t('fieldDate')}</span>
+                <span className="font-medium">
+                  {formatDate(selectedDate, { weekday: 'long', month: 'long' })}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t('fieldTime')}</span>
                 <span className="font-medium">{selectedTime}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Reason for visit (optional)</Label>
+              <Label>{t('reasonLabel')}</Label>
               <Textarea
-                placeholder="Describe your dental concern..."
+                placeholder={t('reasonPlaceholder')}
                 value={chiefComplaint}
                 onChange={(e) => setChiefComplaint(e.target.value)}
                 rows={3}
@@ -343,11 +339,11 @@ export default function BookAppointment() {
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setStep(2)}>
-                <ArrowLeft className="h-4 w-4 mr-2" /> Back
+                <ArrowLeft className="h-4 w-4 mr-2" /> {t('back')}
               </Button>
               <Button className="flex-1" onClick={handleBook} disabled={booking}>
                 {booking && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Confirm Booking
+                {t('confirmBooking')}
               </Button>
             </div>
           </CardContent>
@@ -359,34 +355,33 @@ export default function BookAppointment() {
         <Card>
           <CardContent className="py-8 text-center space-y-4">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-            <h2 className="text-xl font-bold text-green-700">Booking Confirmed!</h2>
+            <h2 className="text-xl font-bold text-green-700">{t('confirmedTitle')}</h2>
             <div className="p-4 rounded-lg bg-green-50 space-y-2 text-sm">
               <p>
-                <strong>Appointment:</strong> {bookingResult.appointmentNo}
+                <strong>{t('fieldAppointment')}:</strong> {bookingResult.appointmentNo}
               </p>
               <p>
-                <strong>Doctor:</strong>{' '}
+                <strong>{t('fieldDoctor')}:</strong>{' '}
                 {bookingResult.doctor?.firstName
-                  ? `Dr. ${bookingResult.doctor.firstName} ${bookingResult.doctor.lastName}`
+                  ? t('doctor', {
+                      name: `${bookingResult.doctor.firstName} ${bookingResult.doctor.lastName}`,
+                    })
                   : selectedDoctorObj
-                    ? `Dr. ${selectedDoctorObj.firstName} ${selectedDoctorObj.lastName}`
+                    ? t('doctor', {
+                        name: `${selectedDoctorObj.firstName} ${selectedDoctorObj.lastName}`,
+                      })
                     : ''}
               </p>
               <p>
-                <strong>Date:</strong>{' '}
-                {new Date(selectedDate).toLocaleDateString('en-IN', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                <strong>{t('fieldDate')}:</strong>{' '}
+                {formatDate(selectedDate, { weekday: 'long', month: 'long' })}
               </p>
               <p>
-                <strong>Time:</strong> {selectedTime}
+                <strong>{t('fieldTime')}:</strong> {selectedTime}
               </p>
             </div>
             <Button onClick={() => router.push('/portal/appointments')}>
-              View My Appointments
+              {t('viewMyAppointments')}
             </Button>
           </CardContent>
         </Card>
