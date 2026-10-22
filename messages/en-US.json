@@ -37,6 +37,196 @@
       "loginFailed": "Login failed",
       "invalidCredentials": "Invalid email or password. Please try again.",
       "errorTitle": "Error"
+    },
+    "verifyEmail": {
+      "loading": "Loading...",
+      "titleLoading": "Verifying...",
+      "titleSuccess": "Email Verified!",
+      "titleError": "Verification Failed",
+      "titlePending": "Check Your Email",
+      "pendingMsg": "We've sent a verification email to {email}. Please check your inbox and click the verification link.",
+      "noToken": "No verification token or email provided.",
+      "successMsg": "Your email has been verified successfully!",
+      "toastVerifiedTitle": "Email verified!",
+      "toastVerifiedDesc": "You can now log in to your account.",
+      "failMsg": "Verification failed. Please try again.",
+      "errorMsg": "An error occurred during verification. Please try again.",
+      "resendToastTitle": "Verification email sent",
+      "resendToastDesc": "Please check your inbox for the verification link.",
+      "continueToLogin": "Continue to Login",
+      "trySignup": "Try signing up again",
+      "backToLogin": "Back to Login",
+      "noEmailQ": "Didn't receive the email?",
+      "checkSpam": "Check your spam folder or click below to resend.",
+      "resendButton": "Resend Verification Email"
+    },
+    "signup": {
+      "vHospitalName": "Hospital name must be at least 2 characters",
+      "vAdminName": "Your name must be at least 2 characters",
+      "vEmail": "Please enter a valid email address",
+      "vPhone": "Phone number must be at least 10 digits",
+      "vPassword": "Password must be at least 8 characters",
+      "vPasswordMatch": "Passwords do not match",
+      "signupFailed": "Signup failed",
+      "somethingWrong": "Something went wrong. Please try again.",
+      "accountCreated": "Account created!",
+      "checkEmail": "Please check your email to verify your account.",
+      "errorTitle": "Error",
+      "title": "Create your clinic",
+      "subtitle": "Start your free trial with up to 100 patients",
+      "hospitalNameLabel": "Hospital/Clinic Name",
+      "hospitalNamePlaceholder": "Dr. Smith's Dental Clinic",
+      "yourNameLabel": "Your Name",
+      "yourNamePlaceholder": "Dr. John Smith",
+      "emailLabel": "Email",
+      "emailPlaceholder": "doctor@clinic.com",
+      "phoneLabel": "Phone Number",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "createAccount": "Create Account",
+      "haveAccount": "Already have an account? Sign in",
+      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy."
+    },
+    "invite": {
+      "vPassword": "Password must be at least 8 characters",
+      "vPasswordMatch": "Passwords do not match",
+      "vPhone": "Phone number must be at least 10 digits",
+      "noToken": "No invite token provided.",
+      "invalidLink": "Invalid invite link.",
+      "errorOccurred": "An error occurred. Please try again.",
+      "accountCreated": "Account created!",
+      "canLogin": "You can now log in to your account.",
+      "errorTitle": "Error",
+      "somethingWrong": "Something went wrong. Please try again.",
+      "loading": "Loading...",
+      "validatingTitle": "Validating Invite",
+      "pleaseWait": "Please wait...",
+      "invalidTitle": "Invalid Invite",
+      "goToLogin": "Go to Login",
+      "welcomeTitle": "Welcome Aboard!",
+      "welcomeBody": "Your account has been created successfully. You can now log in to {hospital}.",
+      "continueToLogin": "Continue to Login",
+      "joinTitle": "Join {hospital}",
+      "invitedAs": "You've been invited to join as a",
+      "nameLabel": "Name:",
+      "emailLabel": "Email:",
+      "phoneLabel": "Phone Number",
+      "createPassword": "Create Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm Password",
+      "confirmPlaceholder": "Confirm your password",
+      "createAccount": "Create Account",
+      "terms": "By creating an account, you agree to our Terms of Service and Privacy Policy."
+    },
+    "pricing": {
+      "signIn": "Sign In",
+      "getStarted": "Get Started",
+      "backToHome": "Back to home",
+      "heroTitle": "Simple, transparent pricing",
+      "heroSubtitle": "Choose the perfect plan for your dental practice. Start free and scale as you grow.",
+      "mostPopular": "Most Popular",
+      "perMonth": "/month",
+      "oneTime": "one-time",
+      "custom": "Custom",
+      "faqTitle": "Frequently asked questions",
+      "ctaTitle": "Ready to get started?",
+      "ctaSubtitle": "Start with our free plan and upgrade when you need more.",
+      "createFreeAccount": "Create Free Account",
+      "footer": "DentalERP - Complete Dental Practice Management Solution",
+      "plans": {
+        "FREE": {
+          "name": "Free",
+          "description": "Perfect for getting started",
+          "cta": "Get Started Free",
+          "features": [
+            "Up to 100 patients",
+            "Up to 3 staff members",
+            "500 MB storage",
+            "Basic reports",
+            "Email support",
+            "Patient management",
+            "Appointment scheduling",
+            "Basic billing"
+          ]
+        },
+        "PROFESSIONAL": {
+          "name": "Professional",
+          "description": "For growing practices",
+          "cta": "Start 14-Day Trial",
+          "features": [
+            "Unlimited patients",
+            "Unlimited staff",
+            "Unlimited storage",
+            "Advanced analytics",
+            "Priority support",
+            "Custom branding",
+            "API access",
+            "SMS notifications",
+            "Insurance claims management",
+            "Lab order management",
+            "Inventory management",
+            "Multi-location support"
+          ]
+        },
+        "ENTERPRISE": {
+          "name": "Enterprise",
+          "description": "For large organizations",
+          "cta": "Contact Sales",
+          "features": [
+            "Everything in Professional",
+            "Dedicated account manager",
+            "Custom integrations",
+            "SLA guarantee (99.9% uptime)",
+            "On-premise deployment option",
+            "Advanced security features",
+            "Custom training sessions",
+            "White-label options"
+          ]
+        },
+        "SELF_HOSTED": {
+          "name": "Self-Hosted",
+          "description": "Own your data forever",
+          "cta": "Purchase License",
+          "features": [
+            "Full source code access",
+            "Host on your own servers",
+            "No recurring fees",
+            "Unlimited everything",
+            "1 year of updates included",
+            "Installation support",
+            "Documentation & guides",
+            "Community support"
+          ]
+        }
+      },
+      "faqs": [
+        {
+          "question": "Can I switch plans later?",
+          "answer": "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes take effect at the end of your billing cycle."
+        },
+        {
+          "question": "What happens when I reach my patient limit?",
+          "answer": "You'll receive a notification when you're approaching your limit. Once reached, you won't be able to add new patients until you upgrade or remove inactive patient records."
+        },
+        {
+          "question": "Is there a free trial for paid plans?",
+          "answer": "Yes, the Professional plan comes with a 14-day free trial. No credit card required. You can explore all features before deciding to subscribe."
+        },
+        {
+          "question": "What payment methods do you accept?",
+          "answer": "We accept all major credit/debit cards, UPI, net banking, and can arrange invoicing for Enterprise customers."
+        },
+        {
+          "question": "Can I get a refund?",
+          "answer": "We offer a 30-day money-back guarantee for annual subscriptions. If you're not satisfied, contact us for a full refund."
+        },
+        {
+          "question": "What's included in the self-hosted license?",
+          "answer": "You get the complete source code, Docker deployment scripts, documentation, and one year of updates. After the first year, you can optionally renew for continued updates."
+        }
+      ]
     }
   },
   "billing": {
@@ -1686,6 +1876,32 @@
       "listening": "Listening…"
     }
   },
+  "pay": {
+    "createFailed": "Failed to create payment",
+    "paymentFailedGeneric": "Payment failed",
+    "unsupportedProvider": "Unsupported provider",
+    "razorpayFailed": "Payment failed. Please try again.",
+    "redirectUnavailable": "Redirect URL not available",
+    "verifyFailed": "Verification failed",
+    "descriptionFor": "Payment for {invoiceNo}",
+    "expired": "This payment link has expired. Please contact the clinic for a new link.",
+    "used": "This payment link has already been used.",
+    "paid": "This invoice has been fully paid. Thank you!",
+    "invoice": "Invoice",
+    "patient": "Patient",
+    "totalAmount": "Total Amount",
+    "paidLabel": "Paid",
+    "amountDue": "Amount Due",
+    "pay": "Pay {amount}",
+    "preparing": "Preparing payment...",
+    "waiting": "Waiting for payment...",
+    "verifying": "Verifying payment...",
+    "successTitle": "Payment Successful!",
+    "successBody": "{amount} has been received for invoice {invoiceNo}. Thank you!",
+    "failedTitle": "Payment Failed",
+    "tryAgain": "Try Again",
+    "securedBy": "Secure payment powered by your clinic's payment gateway"
+  },
   "portal": {
     "dashboard": {
       "title": "Dashboard",
@@ -2370,13 +2586,34 @@
         "confirm": "Confirm Import"
       },
       "entity": {
-        "patients": { "label": "Patients", "desc": "Demographics, contact info" },
-        "staff": { "label": "Staff", "desc": "Doctors, nurses, admin" },
-        "appointments": { "label": "Appointments", "desc": "Scheduled visits" },
-        "treatments": { "label": "Treatments", "desc": "Procedures & records" },
-        "invoices": { "label": "Invoices", "desc": "Bills & amounts" },
-        "payments": { "label": "Payments", "desc": "Payment transactions" },
-        "inventory": { "label": "Inventory", "desc": "Stock items & levels" }
+        "patients": {
+          "label": "Patients",
+          "desc": "Demographics, contact info"
+        },
+        "staff": {
+          "label": "Staff",
+          "desc": "Doctors, nurses, admin"
+        },
+        "appointments": {
+          "label": "Appointments",
+          "desc": "Scheduled visits"
+        },
+        "treatments": {
+          "label": "Treatments",
+          "desc": "Procedures & records"
+        },
+        "invoices": {
+          "label": "Invoices",
+          "desc": "Bills & amounts"
+        },
+        "payments": {
+          "label": "Payments",
+          "desc": "Payment transactions"
+        },
+        "inventory": {
+          "label": "Inventory",
+          "desc": "Stock items & levels"
+        }
       },
       "unsupportedTitle": "Unsupported file",
       "unsupportedDesc": "Please use CSV, Excel, or PDF files.",

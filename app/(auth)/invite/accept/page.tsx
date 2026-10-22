@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -14,18 +15,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 
-const acceptInviteSchema = z
-  .object({
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string(),
-    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
-
-type AcceptInviteFormData = z.infer<typeof acceptInviteSchema>
+type AcceptInviteFormData = {
+  password: string
+  confirmPassword: string
+  phone: string
+}
 
 type InviteData = {
   email: string
@@ -36,6 +30,8 @@ type InviteData = {
 }
 
 function AcceptInviteContent() {
+  const t = useTranslations('auth.invite')
+  const tRole = useTranslations('staff.role')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -45,6 +41,21 @@ function AcceptInviteContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const token = searchParams.get('token')
+
+  const acceptInviteSchema = useMemo(
+    () =>
+      z
+        .object({
+          password: z.string().min(8, t('vPassword')),
+          confirmPassword: z.string(),
+          phone: z.string().min(10, t('vPhone')),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t('vPasswordMatch'),
+          path: ['confirmPassword'],
+        }),
+    [t]
+  )
 
   const {
     register,
@@ -59,7 +70,7 @@ function AcceptInviteContent() {
       validateToken(token)
     } else {
       setStatus('invalid')
-      setErrorMessage('No invite token provided.')
+      setErrorMessage(t('noToken'))
     }
   }, [token])
 
@@ -73,11 +84,11 @@ function AcceptInviteContent() {
         setInviteData(result.invite)
       } else {
         setStatus('invalid')
-        setErrorMessage(result.error || 'Invalid invite link.')
+        setErrorMessage(result.error || t('invalidLink'))
       }
     } catch {
       setStatus('invalid')
-      setErrorMessage('An error occurred. Please try again.')
+      setErrorMessage(t('errorOccurred'))
     }
   }
 
@@ -102,30 +113,30 @@ function AcceptInviteContent() {
       if (response.ok) {
         setStatus('success')
         toast({
-          title: 'Account created!',
-          description: 'You can now log in to your account.',
+          title: t('accountCreated'),
+          description: t('canLogin'),
         })
       } else {
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: result.error || 'Something went wrong. Please try again.',
+          title: t('errorTitle'),
+          description: result.error || t('somethingWrong'),
         })
       }
     } catch {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        title: t('errorTitle'),
+        description: t('somethingWrong'),
       })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const formatRole = (role: string) => {
-    return role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')
-  }
+  // Role label: prefer the shared staff.role catalogue, else title-case the enum.
+  const formatRole = (role: string) =>
+    tRole.has(role) ? tRole(role) : role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')
 
   if (status === 'loading') {
     return (
@@ -136,8 +147,8 @@ function AcceptInviteContent() {
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Validating Invite</CardTitle>
-          <CardDescription>Please wait...</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t('validatingTitle')}</CardTitle>
+          <CardDescription>{t('pleaseWait')}</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -152,12 +163,12 @@ function AcceptInviteContent() {
               <XCircle className="h-6 w-6 text-red-600" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Invalid Invite</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('invalidTitle')}</CardTitle>
           <CardDescription>{errorMessage}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" className="w-full">
-            <Link href="/login">Go to Login</Link>
+            <Link href="/login">{t('goToLogin')}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -173,15 +184,14 @@ function AcceptInviteContent() {
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome Aboard!</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('welcomeTitle')}</CardTitle>
           <CardDescription>
-            Your account has been created successfully. You can now log in to{' '}
-            {inviteData?.hospitalName}.
+            {t('welcomeBody', { hospital: inviteData?.hospitalName ?? '' })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/login">Continue to Login</Link>
+            <Link href="/login">{t('continueToLogin')}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -196,21 +206,22 @@ function AcceptInviteContent() {
             <UserPlus className="h-6 w-6" />
           </div>
         </div>
-        <CardTitle className="text-2xl font-bold">Join {inviteData?.hospitalName}</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          {t('joinTitle', { hospital: inviteData?.hospitalName ?? '' })}
+        </CardTitle>
         <CardDescription>
-          You&apos;ve been invited to join as a{' '}
-          <Badge variant="secondary">{formatRole(inviteData?.role || '')}</Badge>
+          {t('invitedAs')} <Badge variant="secondary">{formatRole(inviteData?.role || '')}</Badge>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-6 p-4 bg-muted rounded-lg">
           <div className="text-sm space-y-1">
             <p>
-              <span className="text-muted-foreground">Name:</span>{' '}
+              <span className="text-muted-foreground">{t('nameLabel')}</span>{' '}
               <span className="font-medium">{inviteData?.name}</span>
             </p>
             <p>
-              <span className="text-muted-foreground">Email:</span>{' '}
+              <span className="text-muted-foreground">{t('emailLabel')}</span>{' '}
               <span className="font-medium">{inviteData?.email}</span>
             </p>
           </div>
@@ -218,7 +229,7 @@ function AcceptInviteContent() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">{t('phoneLabel')}</Label>
             <Input
               id="phone"
               type="tel"
@@ -230,11 +241,11 @@ function AcceptInviteContent() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Create Password</Label>
+            <Label htmlFor="password">{t('createPassword')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="At least 8 characters"
+              placeholder={t('passwordPlaceholder')}
               {...register('password')}
               disabled={isSubmitting}
             />
@@ -244,11 +255,11 @@ function AcceptInviteContent() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
             <Input
               id="confirmPassword"
               type="password"
-              placeholder="Confirm your password"
+              placeholder={t('confirmPlaceholder')}
               {...register('confirmPassword')}
               disabled={isSubmitting}
             />
@@ -259,34 +270,35 @@ function AcceptInviteContent() {
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Account
+            {t('createAccount')}
           </Button>
         </form>
 
-        <div className="mt-4 text-center text-xs text-muted-foreground">
-          By creating an account, you agree to our Terms of Service and Privacy Policy.
-        </div>
+        <div className="mt-4 text-center text-xs text-muted-foreground">{t('terms')}</div>
       </CardContent>
+    </Card>
+  )
+}
+
+function AcceptInviteFallback() {
+  const t = useTranslations('auth.invite')
+  return (
+    <Card className="shadow-lg">
+      <CardHeader className="space-y-1 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+        <CardTitle className="text-2xl font-bold">{t('loading')}</CardTitle>
+      </CardHeader>
     </Card>
   )
 }
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense
-      fallback={
-        <Card className="shadow-lg">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
-          </CardHeader>
-        </Card>
-      }
-    >
+    <Suspense fallback={<AcceptInviteFallback />}>
       <AcceptInviteContent />
     </Suspense>
   )

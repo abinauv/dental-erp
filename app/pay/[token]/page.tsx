@@ -1,7 +1,19 @@
+import { NextIntlClientProvider } from 'next-intl'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { resolvePublicLocale } from '@/lib/i18n/config'
+import enIN from '@/messages/en-IN.json'
+import enUS from '@/messages/en-US.json'
 import { PayPage } from './pay-page'
+
+// Static catalogues for the public pay page. It resolves its own locale from
+// the clinic + `?lang=` (anonymous visitor, no account to store a preference
+// on), so it carries its own NextIntlClientProvider rather than inheriting the
+// request locale. Add new locales here as their catalogues land.
+const CATALOGUES: Record<string, Record<string, unknown>> = {
+  'en-IN': enIN as Record<string, unknown>,
+  'en-US': enUS as Record<string, unknown>,
+}
 
 export default async function PublicPayPage({
   params,
@@ -71,36 +83,39 @@ export default async function PublicPayPage({
   // clinic's locale is the baseline and `?lang=` applies to this render only.
   // It is never written anywhere — see resolvePublicLocale.
   const locale = resolvePublicLocale(link.hospital.locale, lang)
+  const messages = CATALOGUES[locale] ?? enIN
 
   return (
-    <PayPage
-      token={token}
-      locale={locale}
-      currency={link.hospital.currency}
-      hospital={{
-        name: link.hospital.name,
-        logo: link.hospital.logo,
-        phone: link.hospital.phone,
-        email: link.hospital.email,
-        address: link.hospital.address,
-        city: link.hospital.city,
-        state: link.hospital.state,
-      }}
-      invoice={{
-        id: link.invoice.id,
-        invoiceNo: link.invoice.invoiceNo,
-        totalAmount: Number(link.invoice.totalAmount),
-        paidAmount: Number(link.invoice.paidAmount),
-        balanceAmount: currentBalance,
-      }}
-      patient={{
-        name: `${link.invoice.patient.firstName} ${link.invoice.patient.lastName}`,
-        phone: link.invoice.patient.phone,
-      }}
-      amount={payableAmount}
-      isExpired={isExpired}
-      isUsed={isUsed}
-      isPaid={isPaid}
-    />
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <PayPage
+        token={token}
+        locale={locale}
+        currency={link.hospital.currency}
+        hospital={{
+          name: link.hospital.name,
+          logo: link.hospital.logo,
+          phone: link.hospital.phone,
+          email: link.hospital.email,
+          address: link.hospital.address,
+          city: link.hospital.city,
+          state: link.hospital.state,
+        }}
+        invoice={{
+          id: link.invoice.id,
+          invoiceNo: link.invoice.invoiceNo,
+          totalAmount: Number(link.invoice.totalAmount),
+          paidAmount: Number(link.invoice.paidAmount),
+          balanceAmount: currentBalance,
+        }}
+        patient={{
+          name: `${link.invoice.patient.firstName} ${link.invoice.patient.lastName}`,
+          phone: link.invoice.patient.phone,
+        }}
+        amount={payableAmount}
+        isExpired={isExpired}
+        isUsed={isUsed}
+        isPaid={isPaid}
+      />
+    </NextIntlClientProvider>
   )
 }
