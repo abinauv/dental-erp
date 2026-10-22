@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Printer, Loader2, Trash2 } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface PrescriptionDetail {
   id: string
@@ -58,6 +60,10 @@ interface Hospital {
 }
 
 export default function PrescriptionDetailPage() {
+  const t = useTranslations('prescriptions.detail')
+  const tRoute = useTranslations('prescriptions.route')
+  const tTiming = useTranslations('prescriptions.timing')
+  const { formatDate } = useClinicFormatters()
   const router = useRouter()
   const params = useParams()
   const { toast } = useToast()
@@ -79,8 +85,8 @@ export default function PrescriptionDetailPage() {
       } catch (err: any) {
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: err.message || 'Failed to load prescription',
+          title: t('errorTitle'),
+          description: err.message || t('loadFailed'),
         })
       } finally {
         setLoading(false)
@@ -95,18 +101,18 @@ export default function PrescriptionDetailPage() {
 
   const handleDelete = async () => {
     const ok = await confirm({
-      title: 'Delete Prescription',
-      description: 'Delete this prescription? This action cannot be undone.',
-      confirmLabel: 'Delete',
+      title: t('deleteTitle'),
+      description: t('deleteDesc'),
+      confirmLabel: t('deleteConfirm'),
     })
     if (!ok) return
     try {
       const res = await fetch(`/api/prescriptions/${params.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed')
-      toast({ title: 'Deleted' })
+      toast({ title: t('deletedTitle') })
       router.push('/prescriptions')
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete' })
+      toast({ variant: 'destructive', title: t('errorTitle'), description: t('deleteFailed') })
     }
   }
 
@@ -121,7 +127,7 @@ export default function PrescriptionDetailPage() {
   if (!prescription) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
-        <p className="text-center text-muted-foreground py-20">Prescription not found</p>
+        <p className="text-center text-muted-foreground py-20">{t('notFound')}</p>
       </div>
     )
   }
@@ -139,14 +145,14 @@ export default function PrescriptionDetailPage() {
       <div className="container mx-auto p-6 max-w-4xl print:hidden">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" onClick={() => router.push('/prescriptions')}>
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+            <ArrowLeft className="h-4 w-4 mr-2" /> {t('back')}
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleDelete} className="text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete
+              <Trash2 className="h-4 w-4 mr-2" /> {t('delete')}
             </Button>
             <Button onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" /> Print
+              <Printer className="h-4 w-4 mr-2" /> {t('print')}
             </Button>
           </div>
         </div>
@@ -170,7 +176,7 @@ export default function PrescriptionDetailPage() {
                   </div>
                 )}
                 <div>
-                  <h1 className="text-xl font-bold">{hospital?.name || 'Dental Clinic'}</h1>
+                  <h1 className="text-xl font-bold">{hospital?.name || t('defaultClinic')}</h1>
                   {hospital?.tagline && (
                     <p className="text-sm text-muted-foreground">{hospital.tagline}</p>
                   )}
@@ -180,7 +186,7 @@ export default function PrescriptionDetailPage() {
                       .join(', ')}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {[hospital?.phone && `Ph: ${hospital.phone}`, hospital?.email]
+                    {[hospital?.phone && t('phPrefix', { phone: hospital.phone }), hospital?.email]
                       .filter(Boolean)
                       .join(' | ')}
                   </p>
@@ -191,11 +197,7 @@ export default function PrescriptionDetailPage() {
                   {prescription.prescriptionNo}
                 </Badge>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(prescription.createdAt).toLocaleDateString('en-IN', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
+                  {formatDate(prescription.createdAt, { month: 'long' })}
                 </p>
               </div>
             </div>
@@ -205,38 +207,39 @@ export default function PrescriptionDetailPage() {
             {/* Patient Info */}
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm mb-4">
               <div>
-                <span className="text-muted-foreground">Patient: </span>
+                <span className="text-muted-foreground">{t('patientLabel')}</span>
                 <span className="font-medium">
                   {prescription.patient.firstName} {prescription.patient.lastName}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">ID: </span>
+                <span className="text-muted-foreground">{t('idLabel')}</span>
                 <span className="font-mono">{prescription.patient.patientId}</span>
               </div>
               {patientAge !== null && (
                 <div>
-                  <span className="text-muted-foreground">Age/Gender: </span>
+                  <span className="text-muted-foreground">{t('ageGenderLabel')}</span>
                   <span>
-                    {patientAge} yrs
-                    {prescription.patient.gender ? ` / ${prescription.patient.gender}` : ''}
+                    {prescription.patient.gender
+                      ? t('ageGender', { age: patientAge, gender: prescription.patient.gender })
+                      : t('ageOnly', { age: patientAge })}
                   </span>
                 </div>
               )}
               <div>
-                <span className="text-muted-foreground">Phone: </span>
+                <span className="text-muted-foreground">{t('phoneLabel')}</span>
                 <span>{prescription.patient.phone}</span>
               </div>
               {prescription.patient.allergies && (
                 <div className="col-span-2 text-destructive font-medium">
-                  Allergies: {prescription.patient.allergies}
+                  {t('allergiesLabel', { allergies: prescription.patient.allergies })}
                 </div>
               )}
             </div>
 
             {prescription.diagnosis && (
               <div className="mb-4 text-sm">
-                <span className="text-muted-foreground">Diagnosis: </span>
+                <span className="text-muted-foreground">{t('diagnosisLabel')}</span>
                 <span className="font-medium">{prescription.diagnosis}</span>
               </div>
             )}
@@ -250,12 +253,12 @@ export default function PrescriptionDetailPage() {
             <table className="w-full text-sm mb-6">
               <thead>
                 <tr className="border-b text-left">
-                  <th className="pb-2 font-medium w-8">#</th>
-                  <th className="pb-2 font-medium">Medication</th>
-                  <th className="pb-2 font-medium">Dosage</th>
-                  <th className="pb-2 font-medium">Frequency</th>
-                  <th className="pb-2 font-medium">Duration</th>
-                  <th className="pb-2 font-medium hidden print:table-cell">Qty</th>
+                  <th className="pb-2 font-medium w-8">{t('colNum')}</th>
+                  <th className="pb-2 font-medium">{t('colMedication')}</th>
+                  <th className="pb-2 font-medium">{t('colDosage')}</th>
+                  <th className="pb-2 font-medium">{t('colFrequency')}</th>
+                  <th className="pb-2 font-medium">{t('colDuration')}</th>
+                  <th className="pb-2 font-medium hidden print:table-cell">{t('colQty')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -265,7 +268,12 @@ export default function PrescriptionDetailPage() {
                     <td className="py-3">
                       <div className="font-medium">{med.medicationName}</div>
                       <div className="text-xs text-muted-foreground">
-                        {[med.route !== 'Oral' && med.route, med.timing]
+                        {[
+                          med.route !== 'Oral' &&
+                            (tRoute.has(med.route) ? tRoute(med.route) : med.route),
+                          med.timing &&
+                            (tTiming.has(med.timing) ? tTiming(med.timing) : med.timing),
+                        ]
                           .filter(Boolean)
                           .join(' · ')}
                       </div>
@@ -286,19 +294,14 @@ export default function PrescriptionDetailPage() {
 
             {prescription.notes && (
               <div className="mb-6 p-3 bg-muted/50 rounded text-sm">
-                <span className="font-medium">Notes: </span>
+                <span className="font-medium">{t('notesLabel')}</span>
                 {prescription.notes}
               </div>
             )}
 
             {prescription.validUntil && (
               <p className="text-xs text-muted-foreground mb-6">
-                Valid until:{' '}
-                {new Date(prescription.validUntil).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {t('validUntil', { date: formatDate(prescription.validUntil, { month: 'long' }) })}
               </p>
             )}
 
@@ -314,7 +317,7 @@ export default function PrescriptionDetailPage() {
                 )}
                 {prescription.doctor.registrationNo && (
                   <p className="text-xs text-muted-foreground">
-                    Reg. No: {prescription.doctor.registrationNo}
+                    {t('regNo', { no: prescription.doctor.registrationNo })}
                   </p>
                 )}
               </div>
