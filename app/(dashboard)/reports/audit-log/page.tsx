@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ import {
 import { format } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
 import { downloadCSV } from '@/lib/export-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { TablePageSkeleton } from '@/components/ui/page-skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
 
@@ -59,6 +61,9 @@ const ENTITY_ICONS: Record<string, typeof Activity> = {
 }
 
 export default function AuditLogPage() {
+  const t = useTranslations('auditLog')
+  const tRole = useTranslations('staff.role')
+  const { formatDateTime } = useClinicFormatters()
   const [logs, setLogs] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -83,11 +88,11 @@ export default function AuditLogPage() {
       setTotalPages(data.pagination.totalPages)
       setTotal(data.pagination.total)
     } catch {
-      toast({ title: 'Error', description: 'Failed to load audit logs', variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: t('loadFailed'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [page, search, actionFilter, entityFilter, toast])
+  }, [page, search, actionFilter, entityFilter, toast, t])
 
   useEffect(() => {
     fetchLogs()
@@ -96,14 +101,14 @@ export default function AuditLogPage() {
   const exportLogs = () => {
     downloadCSV(
       logs.map((l) => ({
-        Date: format(new Date(l.createdAt), 'yyyy-MM-dd HH:mm:ss'),
-        User: l.user?.name || 'System',
-        Role: l.user?.role || '-',
-        Action: l.action,
-        Entity: l.entityType,
-        'Entity ID': l.entityId || '-',
-        Details: l.details || '-',
-        IP: l.ipAddress || '-',
+        [t('expDate')]: format(new Date(l.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+        [t('expUser')]: l.user?.name || t('systemUser'),
+        [t('expRole')]: l.user?.role || '-',
+        [t('expAction')]: l.action,
+        [t('expEntity')]: l.entityType,
+        [t('expEntityId')]: l.entityId || '-',
+        [t('expDetails')]: l.details || '-',
+        [t('expIp')]: l.ipAddress || '-',
       })),
       `audit-log-${format(new Date(), 'yyyy-MM-dd')}`
     )
@@ -116,12 +121,14 @@ export default function AuditLogPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Shield className="h-6 w-6" /> Audit Log
+            <Shield className="h-6 w-6" /> {t('title')}
           </h1>
-          <p className="text-muted-foreground">{total.toLocaleString()} total events</p>
+          <p className="text-muted-foreground">
+            {t('totalEvents', { count: total.toLocaleString() })}
+          </p>
         </div>
         <Button variant="outline" onClick={exportLogs}>
-          <Download className="h-4 w-4 mr-2" /> Export CSV
+          <Download className="h-4 w-4 mr-2" /> {t('exportCsv')}
         </Button>
       </div>
 
@@ -130,7 +137,7 @@ export default function AuditLogPage() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search logs..."
+            placeholder={t('searchPlaceholder')}
             className="pl-9"
             value={search}
             onChange={(e) => {
@@ -147,14 +154,14 @@ export default function AuditLogPage() {
           }}
         >
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Action" />
+            <SelectValue placeholder={t('actionPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Actions</SelectItem>
-            <SelectItem value="CREATE">Create</SelectItem>
-            <SelectItem value="UPDATE">Update</SelectItem>
-            <SelectItem value="DELETE">Delete</SelectItem>
-            <SelectItem value="LOGIN">Login</SelectItem>
+            <SelectItem value="all">{t('allActions')}</SelectItem>
+            <SelectItem value="CREATE">{t('action.CREATE')}</SelectItem>
+            <SelectItem value="UPDATE">{t('action.UPDATE')}</SelectItem>
+            <SelectItem value="DELETE">{t('action.DELETE')}</SelectItem>
+            <SelectItem value="LOGIN">{t('action.LOGIN')}</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -165,26 +172,22 @@ export default function AuditLogPage() {
           }}
         >
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Entity" />
+            <SelectValue placeholder={t('entityPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Entities</SelectItem>
-            <SelectItem value="Patient">Patient</SelectItem>
-            <SelectItem value="Appointment">Appointment</SelectItem>
-            <SelectItem value="Invoice">Invoice</SelectItem>
-            <SelectItem value="User">User</SelectItem>
-            <SelectItem value="Treatment">Treatment</SelectItem>
+            <SelectItem value="all">{t('allEntities')}</SelectItem>
+            <SelectItem value="Patient">{t('entity.Patient')}</SelectItem>
+            <SelectItem value="Appointment">{t('entity.Appointment')}</SelectItem>
+            <SelectItem value="Invoice">{t('entity.Invoice')}</SelectItem>
+            <SelectItem value="User">{t('entity.User')}</SelectItem>
+            <SelectItem value="Treatment">{t('entity.Treatment')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Log entries */}
       {logs.length === 0 ? (
-        <EmptyState
-          icon={Activity}
-          title="No audit logs found"
-          description="No activity matches your current filters. Try adjusting your search criteria."
-        />
+        <EmptyState icon={Activity} title={t('noLogs')} description={t('noLogsDesc')} />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -201,21 +204,31 @@ export default function AuditLogPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{log.user?.name || 'System'}</span>
+                        <span className="font-medium text-sm">
+                          {log.user?.name || t('systemUser')}
+                        </span>
                         <Badge
                           variant="outline"
                           className={ACTION_COLORS[log.action] || 'bg-muted text-muted-foreground'}
                         >
-                          {log.action}
+                          {t.has(`action.${log.action}`) ? t(`action.${log.action}`) : log.action}
                         </Badge>
-                        <Badge variant="outline">{log.entityType}</Badge>
+                        <Badge variant="outline">
+                          {t.has(`entity.${log.entityType}`)
+                            ? t(`entity.${log.entityType}`)
+                            : log.entityType}
+                        </Badge>
                       </div>
                       {log.details && (
                         <p className="text-sm text-muted-foreground mt-1 truncate">{log.details}</p>
                       )}
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span>{format(new Date(log.createdAt), 'MMM dd, yyyy HH:mm:ss')}</span>
-                        {log.user?.role && <span>{log.user.role}</span>}
+                        <span>{formatDateTime(log.createdAt, { second: '2-digit' })}</span>
+                        {log.user?.role && (
+                          <span>
+                            {tRole.has(log.user.role) ? tRole(log.user.role) : log.user.role}
+                          </span>
+                        )}
                         {log.ipAddress && <span>{log.ipAddress}</span>}
                       </div>
                     </div>
@@ -230,9 +243,7 @@ export default function AuditLogPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('pageOf', { page, totalPages })}</p>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -240,7 +251,7 @@ export default function AuditLogPage() {
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+              <ChevronLeft className="h-4 w-4 mr-1" /> {t('previous')}
             </Button>
             <Button
               variant="outline"
@@ -248,7 +259,7 @@ export default function AuditLogPage() {
               disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
             >
-              Next <ChevronRight className="h-4 w-4 ml-1" />
+              {t('next')} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </div>
