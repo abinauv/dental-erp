@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +33,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Plus, Loader2, Pencil, Trash2, Search, Package } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 const CATEGORIES = [
   'Handpiece',
@@ -67,6 +69,10 @@ interface Instrument {
 }
 
 export default function InstrumentsPage() {
+  const t = useTranslations('sterilization.instruments')
+  const tStatus = useTranslations('sterilization.status')
+  const tCategory = useTranslations('sterilization.category')
+  const { formatDate } = useClinicFormatters()
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [loading, setLoading] = useState(true)
@@ -104,7 +110,7 @@ export default function InstrumentsPage() {
       const data = await res.json()
       setInstruments(data.instruments)
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -152,7 +158,11 @@ export default function InstrumentsPage() {
 
   const handleSave = async () => {
     if (!form.name || !form.category) {
-      toast({ title: 'Error', description: 'Name and category required', variant: 'destructive' })
+      toast({
+        title: t('errorTitle'),
+        description: t('nameCategoryRequired'),
+        variant: 'destructive',
+      })
       return
     }
     setSaving(true)
@@ -167,17 +177,17 @@ export default function InstrumentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error((await res.json()).error || 'Failed to save')
+      if (!res.ok) throw new Error((await res.json()).error || t('saveFailed'))
 
       toast({
-        title: 'Success',
-        description: editingId ? 'Instrument updated' : 'Instrument created',
+        title: t('successTitle'),
+        description: editingId ? t('updated') : t('created'),
       })
       setShowDialog(false)
       resetForm()
       fetchInstruments()
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -185,18 +195,18 @@ export default function InstrumentsPage() {
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
-      title: 'Delete instrument?',
-      description: 'Are you sure you want to delete this instrument?',
-      confirmLabel: 'Delete',
+      title: t('deleteTitle'),
+      description: t('deleteDesc'),
+      confirmLabel: t('deleteConfirm'),
     })
     if (!ok) return
     try {
       const res = await fetch(`/api/sterilization/instruments/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete')
       setInstruments((prev) => prev.filter((i) => i.id !== id))
-      toast({ title: 'Success', description: 'Instrument deleted' })
+      toast({ title: t('successTitle'), description: t('deleted') })
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: err.message, variant: 'destructive' })
     }
   }
 
@@ -209,18 +219,22 @@ export default function InstrumentsPage() {
       MAINTENANCE: 'outline',
       RETIRED: 'outline',
     }
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>
+    return (
+      <Badge variant={variants[status] || 'outline'}>
+        {tStatus.has(status) ? tStatus(status) : status}
+      </Badge>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Instruments</h2>
-          <p className="text-muted-foreground">Manage dental instruments and equipment</p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-2" /> Add Instrument
+          <Plus className="h-4 w-4 mr-2" /> {t('addInstrument')}
         </Button>
       </div>
 
@@ -229,7 +243,7 @@ export default function InstrumentsPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search instruments..."
+            placeholder={t('searchPlaceholder')}
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -238,26 +252,26 @@ export default function InstrumentsPage() {
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('statusPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="all">{t('allStatus')}</SelectItem>
             {STATUSES.map((s) => (
               <SelectItem key={s} value={s}>
-                {s}
+                {tStatus.has(s) ? tStatus(s) : s}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Category" />
+            <SelectValue placeholder={t('categoryPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t('allCategories')}</SelectItem>
             {CATEGORIES.map((c) => (
               <SelectItem key={c} value={c}>
-                {c}
+                {tCategory.has(c) ? tCategory(c) : c}
               </SelectItem>
             ))}
           </SelectContent>
@@ -273,12 +287,10 @@ export default function InstrumentsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Package className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No instruments found</h3>
-            <p className="text-muted-foreground text-sm mt-1 mb-4">
-              Add your first instrument to start tracking
-            </p>
+            <h3 className="text-lg font-semibold">{t('noInstruments')}</h3>
+            <p className="text-muted-foreground text-sm mt-1 mb-4">{t('noInstrumentsHint')}</p>
             <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" /> Add Instrument
+              <Plus className="h-4 w-4 mr-2" /> {t('addInstrument')}
             </Button>
           </CardContent>
         </Card>
@@ -288,21 +300,23 @@ export default function InstrumentsPage() {
             <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Serial #</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead className="text-right">Cycles</TableHead>
-                  <TableHead>Last Sterilized</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('colName')}</TableHead>
+                  <TableHead>{t('colCategory')}</TableHead>
+                  <TableHead>{t('colSerial')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  <TableHead>{t('colLocation')}</TableHead>
+                  <TableHead className="text-right">{t('colCycles')}</TableHead>
+                  <TableHead>{t('colLastSterilized')}</TableHead>
+                  <TableHead className="text-right">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {instruments.map((inst) => (
                   <TableRow key={inst.id}>
                     <TableCell className="font-medium">{inst.name}</TableCell>
-                    <TableCell>{inst.category}</TableCell>
+                    <TableCell>
+                      {tCategory.has(inst.category) ? tCategory(inst.category) : inst.category}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {inst.serialNumber || '—'}
                     </TableCell>
@@ -321,9 +335,7 @@ export default function InstrumentsPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {inst.lastSterilizedAt
-                        ? new Date(inst.lastSterilizedAt).toLocaleDateString()
-                        : 'Never'}
+                      {inst.lastSterilizedAt ? formatDate(inst.lastSterilizedAt) : t('never')}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -357,32 +369,32 @@ export default function InstrumentsPage() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Instrument' : 'Add Instrument'}</DialogTitle>
-            <DialogDescription>Enter instrument details</DialogDescription>
+            <DialogTitle>{editingId ? t('editTitle') : t('addTitle')}</DialogTitle>
+            <DialogDescription>{t('enterDetails')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Name *</Label>
+                <Label>{t('nameLabel')}</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g., High-Speed Handpiece"
+                  placeholder={t('namePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Category *</Label>
+                <Label>{t('categoryLabel')}</Label>
                 <Select
                   value={form.category}
                   onValueChange={(v) => setForm({ ...form, category: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select..." />
+                    <SelectValue placeholder={t('selectEllipsis')} />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((c) => (
                       <SelectItem key={c} value={c}>
-                        {c}
+                        {tCategory.has(c) ? tCategory(c) : c}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -391,14 +403,14 @@ export default function InstrumentsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Serial Number</Label>
+                <Label>{t('serialLabel')}</Label>
                 <Input
                   value={form.serialNumber}
                   onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>RFID Tag</Label>
+                <Label>{t('rfidLabel')}</Label>
                 <Input
                   value={form.rfidTag}
                   onChange={(e) => setForm({ ...form, rfidTag: e.target.value })}
@@ -407,15 +419,15 @@ export default function InstrumentsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Location</Label>
+                <Label>{t('locationLabel')}</Label>
                 <Input
                   value={form.location}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="e.g., Chair 1"
+                  placeholder={t('locationPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Max Sterilization Cycles</Label>
+                <Label>{t('maxCyclesLabel')}</Label>
                 <Input
                   type="number"
                   value={form.maxCycles}
@@ -425,7 +437,7 @@ export default function InstrumentsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Purchase Date</Label>
+                <Label>{t('purchaseDateLabel')}</Label>
                 <Input
                   type="date"
                   value={form.purchaseDate}
@@ -433,7 +445,7 @@ export default function InstrumentsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Warranty Until</Label>
+                <Label>{t('warrantyLabel')}</Label>
                 <Input
                   type="date"
                   value={form.warrantyDate}
@@ -442,7 +454,7 @@ export default function InstrumentsPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>{t('notesLabel')}</Label>
               <Input
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -451,11 +463,11 @@ export default function InstrumentsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingId ? 'Update' : 'Create'}
+              {editingId ? t('update') : t('create')}
             </Button>
           </DialogFooter>
         </DialogContent>

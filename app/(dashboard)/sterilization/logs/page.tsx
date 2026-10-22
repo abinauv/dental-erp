@@ -30,8 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useTranslations } from 'next-intl'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Loader2, ClipboardList } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 const METHODS = ['AUTOCLAVE', 'CHEMICAL', 'DRY_HEAT', 'UV']
 const RESULTS = ['PASS', 'FAIL', 'PENDING']
@@ -62,6 +64,11 @@ interface InstrumentOption {
 }
 
 export default function SterilizationLogsPage() {
+  const t = useTranslations('sterilization.logs')
+  const tMethod = useTranslations('sterilization.method')
+  const tResult = useTranslations('sterilization.result')
+  const tCategory = useTranslations('sterilization.category')
+  const { formatDateTime } = useClinicFormatters()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -107,7 +114,7 @@ export default function SterilizationLogsPage() {
         setInstruments(instrData.instruments || [])
       }
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -120,8 +127,8 @@ export default function SterilizationLogsPage() {
   const handleRecord = async () => {
     if (!form.instrumentId || !form.method || !form.startedAt) {
       toast({
-        title: 'Error',
-        description: 'Instrument, method, and start time required',
+        title: t('errorTitle'),
+        description: t('requiredFields'),
         variant: 'destructive',
       })
       return
@@ -133,8 +140,8 @@ export default function SterilizationLogsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error((await res.json()).error || 'Failed to record')
-      toast({ title: 'Success', description: 'Sterilization cycle recorded' })
+      if (!res.ok) throw new Error((await res.json()).error || t('recordFailed'))
+      toast({ title: t('successTitle'), description: t('recorded') })
       setShowDialog(false)
       setForm({
         instrumentId: '',
@@ -152,7 +159,7 @@ export default function SterilizationLogsPage() {
       })
       fetchData()
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -164,18 +171,22 @@ export default function SterilizationLogsPage() {
       FAIL: 'destructive',
       PENDING: 'secondary',
     }
-    return <Badge variant={v[result] || 'secondary'}>{result}</Badge>
+    return (
+      <Badge variant={v[result] || 'secondary'}>
+        {tResult.has(result) ? tResult(result) : result}
+      </Badge>
+    )
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Sterilization Logs</h2>
-          <p className="text-muted-foreground">Record and view sterilization cycle history</p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={() => setShowDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Record Cycle
+          <Plus className="h-4 w-4 mr-2" /> {t('recordCycle')}
         </Button>
       </div>
 
@@ -183,26 +194,26 @@ export default function SterilizationLogsPage() {
       <div className="flex items-center gap-3">
         <Select value={filterMethod} onValueChange={setFilterMethod}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Method" />
+            <SelectValue placeholder={t('methodPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            {METHODS.map((m) => (
-              <SelectItem key={m} value={m}>
-                {m}
+            <SelectItem value="all">{t('allMethods')}</SelectItem>
+            {METHODS.map((mm) => (
+              <SelectItem key={mm} value={mm}>
+                {tMethod.has(mm) ? tMethod(mm) : mm}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterResult} onValueChange={setFilterResult}>
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="Result" />
+            <SelectValue placeholder={t('resultPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Results</SelectItem>
+            <SelectItem value="all">{t('allResults')}</SelectItem>
             {RESULTS.map((r) => (
               <SelectItem key={r} value={r}>
-                {r}
+                {tResult.has(r) ? tResult(r) : r}
               </SelectItem>
             ))}
           </SelectContent>
@@ -217,12 +228,10 @@ export default function SterilizationLogsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No sterilization logs</h3>
-            <p className="text-muted-foreground text-sm mt-1 mb-4">
-              Record your first sterilization cycle
-            </p>
+            <h3 className="text-lg font-semibold">{t('noLogs')}</h3>
+            <p className="text-muted-foreground text-sm mt-1 mb-4">{t('noLogsHint')}</p>
             <Button onClick={() => setShowDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Record Cycle
+              <Plus className="h-4 w-4 mr-2" /> {t('recordCycle')}
             </Button>
           </CardContent>
         </Card>
@@ -232,14 +241,14 @@ export default function SterilizationLogsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Instrument</TableHead>
-                  <TableHead>Cycle #</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Temp/Pressure</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Indicators</TableHead>
-                  <TableHead>Result</TableHead>
-                  <TableHead>Started</TableHead>
+                  <TableHead>{t('colInstrument')}</TableHead>
+                  <TableHead>{t('colCycle')}</TableHead>
+                  <TableHead>{t('colMethod')}</TableHead>
+                  <TableHead>{t('colTempPressure')}</TableHead>
+                  <TableHead>{t('colDuration')}</TableHead>
+                  <TableHead>{t('colIndicators')}</TableHead>
+                  <TableHead>{t('colResult')}</TableHead>
+                  <TableHead>{t('colStarted')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -248,40 +257,46 @@ export default function SterilizationLogsPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm">{log.instrument.name}</p>
-                        <p className="text-xs text-muted-foreground">{log.instrument.category}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {tCategory.has(log.instrument.category)
+                            ? tCategory(log.instrument.category)
+                            : log.instrument.category}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell>#{log.cycleNumber}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{log.method}</Badge>
+                      <Badge variant="outline">
+                        {tMethod.has(log.method) ? tMethod(log.method) : log.method}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {log.temperature ? `${log.temperature}°C` : '—'}
-                      {log.pressure ? ` / ${log.pressure} bar` : ''}
+                      {log.temperature ? t('tempC', { temp: log.temperature }) : '—'}
+                      {log.pressure ? t('pressureBar', { pressure: log.pressure }) : ''}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {log.duration ? `${log.duration} min` : '—'}
+                      {log.duration ? t('durationMin', { min: log.duration }) : '—'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {log.biologicalIndicator && (
                           <Badge variant="outline" className="text-xs">
-                            Bio
+                            {t('bio')}
                           </Badge>
                         )}
                         {log.chemicalIndicator && (
                           <Badge variant="outline" className="text-xs">
-                            Chem
+                            {t('chem')}
                           </Badge>
                         )}
                         {!log.biologicalIndicator && !log.chemicalIndicator && (
-                          <span className="text-xs text-muted-foreground">None</span>
+                          <span className="text-xs text-muted-foreground">{t('none')}</span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>{resultBadge(log.result)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(log.startedAt).toLocaleString()}
+                      {formatDateTime(log.startedAt)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -295,18 +310,18 @@ export default function SterilizationLogsPage() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Record Sterilization Cycle</DialogTitle>
-            <DialogDescription>Log a new sterilization process</DialogDescription>
+            <DialogTitle>{t('recordDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('recordDialogDesc')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
             <div className="space-y-2">
-              <Label>Instrument *</Label>
+              <Label>{t('instrumentLabel')}</Label>
               <Select
                 value={form.instrumentId}
                 onValueChange={(v) => setForm({ ...form, instrumentId: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select instrument..." />
+                  <SelectValue placeholder={t('selectInstrument')} />
                 </SelectTrigger>
                 <SelectContent>
                   {instruments
@@ -321,32 +336,32 @@ export default function SterilizationLogsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Method *</Label>
+                <Label>{t('methodLabel')}</Label>
                 <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {METHODS.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
+                    {METHODS.map((mm) => (
+                      <SelectItem key={mm} value={mm}>
+                        {tMethod.has(mm) ? tMethod(mm) : mm}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Machine ID</Label>
+                <Label>{t('machineIdLabel')}</Label>
                 <Input
                   value={form.machineId}
                   onChange={(e) => setForm({ ...form, machineId: e.target.value })}
-                  placeholder="e.g., AC-001"
+                  placeholder={t('machineIdPlaceholder')}
                 />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Temperature (°C)</Label>
+                <Label>{t('tempLabel')}</Label>
                 <Input
                   type="number"
                   value={form.temperature}
@@ -355,7 +370,7 @@ export default function SterilizationLogsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Pressure (bar)</Label>
+                <Label>{t('pressureLabel')}</Label>
                 <Input
                   type="number"
                   step="0.1"
@@ -365,7 +380,7 @@ export default function SterilizationLogsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Duration (min)</Label>
+                <Label>{t('durationLabel')}</Label>
                 <Input
                   type="number"
                   value={form.duration}
@@ -376,7 +391,7 @@ export default function SterilizationLogsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Started At *</Label>
+                <Label>{t('startedLabel')}</Label>
                 <Input
                   type="datetime-local"
                   value={form.startedAt}
@@ -384,7 +399,7 @@ export default function SterilizationLogsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Completed At</Label>
+                <Label>{t('completedLabel')}</Label>
                 <Input
                   type="datetime-local"
                   value={form.completedAt}
@@ -393,7 +408,7 @@ export default function SterilizationLogsPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Result</Label>
+              <Label>{t('resultLabel')}</Label>
               <Select value={form.result} onValueChange={(v) => setForm({ ...form, result: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -401,7 +416,7 @@ export default function SterilizationLogsPage() {
                 <SelectContent>
                   {RESULTS.map((r) => (
                     <SelectItem key={r} value={r}>
-                      {r}
+                      {tResult.has(r) ? tResult(r) : r}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -413,18 +428,18 @@ export default function SterilizationLogsPage() {
                   checked={form.biologicalIndicator}
                   onCheckedChange={(v) => setForm({ ...form, biologicalIndicator: v })}
                 />
-                <Label>Biological Indicator</Label>
+                <Label>{t('bioIndicator')}</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={form.chemicalIndicator}
                   onCheckedChange={(v) => setForm({ ...form, chemicalIndicator: v })}
                 />
-                <Label>Chemical Indicator</Label>
+                <Label>{t('chemIndicator')}</Label>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>{t('notesLabel')}</Label>
               <Input
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -433,11 +448,11 @@ export default function SterilizationLogsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleRecord} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Record Cycle
+              {t('recordCycle')}
             </Button>
           </DialogFooter>
         </DialogContent>

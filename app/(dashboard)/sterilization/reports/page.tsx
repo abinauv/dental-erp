@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -49,6 +50,9 @@ interface ReportData {
 }
 
 export default function ComplianceReportsPage() {
+  const t = useTranslations('sterilization.reports')
+  const tMethod = useTranslations('sterilization.method')
+  const tCategory = useTranslations('sterilization.category')
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [report, setReport] = useState<ReportData | null>(null)
@@ -147,7 +151,7 @@ export default function ComplianceReportsPage() {
         methodBreakdown,
       })
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -166,17 +170,15 @@ export default function ComplianceReportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Compliance Reports</h2>
-        <p className="text-muted-foreground">
-          Sterilization compliance rates, indicator pass rates, and maintenance alerts
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Overview Cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('complianceRate')}</CardTitle>
             <Shield className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -186,38 +188,40 @@ export default function ComplianceReportsPage() {
               {report.complianceRate}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {report.passCount} pass / {report.totalCycles} total
+              {t('passTotal', { pass: report.passCount, total: report.totalCycles })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed Cycles</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('failedCycles')}</CardTitle>
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{report.failCount}</div>
-            <p className="text-xs text-muted-foreground">{report.pendingCount} pending</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pendingCount', { count: report.pendingCount })}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bio Indicator Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('bioRate')}</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{report.bioIndicatorRate}%</div>
-            <p className="text-xs text-muted-foreground">Cycles with biological indicator</p>
+            <p className="text-xs text-muted-foreground">{t('bioRateDesc')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chem Indicator Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('chemRate')}</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{report.chemIndicatorRate}%</div>
-            <p className="text-xs text-muted-foreground">Cycles with chemical indicator</p>
+            <p className="text-xs text-muted-foreground">{t('chemRateDesc')}</p>
           </CardContent>
         </Card>
       </div>
@@ -228,34 +232,36 @@ export default function ComplianceReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Sterilization Method Breakdown
+              {t('methodBreakdown')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Method</TableHead>
-                  <TableHead className="text-right">Total Cycles</TableHead>
-                  <TableHead className="text-right">Pass Rate</TableHead>
+                  <TableHead>{t('colMethod')}</TableHead>
+                  <TableHead className="text-right">{t('colTotalCycles')}</TableHead>
+                  <TableHead className="text-right">{t('colPassRate')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {report.methodBreakdown.map((m) => (
-                  <TableRow key={m.method}>
-                    <TableCell className="font-medium">{m.method}</TableCell>
-                    <TableCell className="text-right">{m.count}</TableCell>
+                {report.methodBreakdown.map((mb) => (
+                  <TableRow key={mb.method}>
+                    <TableCell className="font-medium">
+                      {tMethod.has(mb.method) ? tMethod(mb.method) : mb.method}
+                    </TableCell>
+                    <TableCell className="text-right">{mb.count}</TableCell>
                     <TableCell className="text-right">
                       <span
                         className={
-                          m.passRate >= 95
+                          mb.passRate >= 95
                             ? 'text-green-600'
-                            : m.passRate >= 80
+                            : mb.passRate >= 80
                               ? 'text-yellow-600'
                               : 'text-red-600'
                         }
                       >
-                        {m.passRate}%
+                        {mb.passRate}%
                       </span>
                     </TableCell>
                   </TableRow>
@@ -272,27 +278,27 @@ export default function ComplianceReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
               <AlertTriangle className="h-5 w-5" />
-              Instruments Due for Retirement
+              {t('dueRetirement')}
             </CardTitle>
-            <CardDescription>
-              These instruments have exceeded their maximum sterilization cycles
-            </CardDescription>
+            <CardDescription>{t('dueRetirementDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Instrument</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Cycles Used</TableHead>
-                  <TableHead className="text-right">Max Cycles</TableHead>
+                  <TableHead>{t('colInstrument')}</TableHead>
+                  <TableHead>{t('colCategory')}</TableHead>
+                  <TableHead className="text-right">{t('colCyclesUsed')}</TableHead>
+                  <TableHead className="text-right">{t('colMaxCycles')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {report.dueForRetirement.map((i) => (
                   <TableRow key={i.id}>
                     <TableCell className="font-medium">{i.name}</TableCell>
-                    <TableCell>{i.category}</TableCell>
+                    <TableCell>
+                      {tCategory.has(i.category) ? tCategory(i.category) : i.category}
+                    </TableCell>
                     <TableCell className="text-right text-red-600 font-semibold">
                       {i.sterilizationCycleCount}
                     </TableCell>
@@ -311,28 +317,28 @@ export default function ComplianceReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-700">
               <Wrench className="h-5 w-5" />
-              Instruments Approaching Max Cycles
+              {t('approachingMax')}
             </CardTitle>
-            <CardDescription>
-              These instruments are above 80% of their maximum sterilization cycles
-            </CardDescription>
+            <CardDescription>{t('approachingMaxDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Instrument</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Cycles Used</TableHead>
-                  <TableHead className="text-right">Max Cycles</TableHead>
-                  <TableHead className="text-right">Usage</TableHead>
+                  <TableHead>{t('colInstrument')}</TableHead>
+                  <TableHead>{t('colCategory')}</TableHead>
+                  <TableHead className="text-right">{t('colCyclesUsed')}</TableHead>
+                  <TableHead className="text-right">{t('colMaxCycles')}</TableHead>
+                  <TableHead className="text-right">{t('colUsage')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {report.dueForMaintenance.map((i) => (
                   <TableRow key={i.id}>
                     <TableCell className="font-medium">{i.name}</TableCell>
-                    <TableCell>{i.category}</TableCell>
+                    <TableCell>
+                      {tCategory.has(i.category) ? tCategory(i.category) : i.category}
+                    </TableCell>
                     <TableCell className="text-right">{i.sterilizationCycleCount}</TableCell>
                     <TableCell className="text-right">{i.maxCycles}</TableCell>
                     <TableCell className="text-right">
@@ -352,10 +358,8 @@ export default function ComplianceReportsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No compliance data yet</h3>
-            <p className="text-muted-foreground text-sm mt-1">
-              Record sterilization cycles to see compliance reports
-            </p>
+            <h3 className="text-lg font-semibold">{t('noComplianceData')}</h3>
+            <p className="text-muted-foreground text-sm mt-1">{t('noComplianceHint')}</p>
           </CardContent>
         </Card>
       )}
