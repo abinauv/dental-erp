@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,6 +43,7 @@ import {
   Cpu,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Device {
   id: string
@@ -66,25 +68,31 @@ interface DeviceSummary {
   maintenance: number
 }
 
-const DEVICE_TYPES = [
-  { value: 'DENTAL_CHAIR', label: 'Dental Chair' },
-  { value: 'PULSE_OXIMETER', label: 'Pulse Oximeter' },
-  { value: 'BP_MONITOR', label: 'BP Monitor' },
-  { value: 'AUTOCLAVE', label: 'Autoclave' },
-  { value: 'XRAY', label: 'X-Ray Machine' },
-  { value: 'COMPRESSOR', label: 'Compressor' },
-  { value: 'SENSOR', label: 'Sensor' },
-  { value: 'OTHER', label: 'Other' },
+// Device type option values; labels come from the catalogue (devices.type.*).
+const DEVICE_TYPE_VALUES = [
+  'DENTAL_CHAIR',
+  'PULSE_OXIMETER',
+  'BP_MONITOR',
+  'AUTOCLAVE',
+  'XRAY',
+  'COMPRESSOR',
+  'SENSOR',
+  'OTHER',
 ]
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Wifi }> = {
-  ONLINE: { label: 'Online', color: 'bg-green-100 text-green-700', icon: Wifi },
-  OFFLINE: { label: 'Offline', color: 'bg-muted text-muted-foreground', icon: WifiOff },
-  ERROR: { label: 'Error', color: 'bg-red-100 text-red-700', icon: AlertTriangle },
-  MAINTENANCE: { label: 'Maintenance', color: 'bg-amber-100 text-amber-700', icon: Wrench },
+// Status icon + colour; the label comes from the catalogue (devices.status.*).
+const STATUS_CONFIG: Record<string, { color: string; icon: typeof Wifi }> = {
+  ONLINE: { color: 'bg-green-100 text-green-700', icon: Wifi },
+  OFFLINE: { color: 'bg-muted text-muted-foreground', icon: WifiOff },
+  ERROR: { color: 'bg-red-100 text-red-700', icon: AlertTriangle },
+  MAINTENANCE: { color: 'bg-amber-100 text-amber-700', icon: Wrench },
 }
 
 export default function DevicesPage() {
+  const t = useTranslations('devices')
+  const tType = useTranslations('devices.type')
+  const tStatus = useTranslations('devices.status')
+  const { formatDate } = useClinicFormatters()
   const [devices, setDevices] = useState<Device[]>([])
   const [summary, setSummary] = useState<DeviceSummary>({
     total: 0,
@@ -119,11 +127,11 @@ export default function DevicesPage() {
       setDevices(data.devices || [])
       setSummary(data.summary || { total: 0, online: 0, offline: 0, error: 0, maintenance: 0 })
     } catch {
-      toast({ title: 'Error', description: 'Failed to fetch devices', variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: t('fetchFailed'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [filterType, filterStatus, toast])
+  }, [filterType, filterStatus, toast, t])
 
   useEffect(() => {
     fetchDevices()
@@ -134,7 +142,7 @@ export default function DevicesPage() {
 
   const handleRegister = async () => {
     if (!formName || !formType) {
-      toast({ title: 'Error', description: 'Name and type are required', variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: t('nameTypeRequired'), variant: 'destructive' })
       return
     }
     try {
@@ -153,14 +161,14 @@ export default function DevicesPage() {
         const err = await res.json()
         throw new Error(err.error)
       }
-      toast({ title: 'Success', description: 'Device registered successfully' })
+      toast({ title: t('successTitle'), description: t('registered') })
       setDialogOpen(false)
       resetForm()
       fetchDevices()
     } catch (err: unknown) {
       toast({
-        title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed to register device',
+        title: t('errorTitle'),
+        description: err instanceof Error ? err.message : t('registerFailed'),
         variant: 'destructive',
       })
     }
@@ -168,18 +176,18 @@ export default function DevicesPage() {
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
-      title: 'Remove Device',
-      description: 'Remove this device? Data logs will also be deleted.',
-      confirmLabel: 'Remove',
+      title: t('removeTitle'),
+      description: t('removeDesc'),
+      confirmLabel: t('removeConfirm'),
     })
     if (!ok) return
     try {
       const res = await fetch(`/api/devices/status?id=${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
-      toast({ title: 'Success', description: 'Device removed' })
+      toast({ title: t('successTitle'), description: t('removed') })
       fetchDevices()
     } catch {
-      toast({ title: 'Error', description: 'Failed to remove device', variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: t('removeFailed'), variant: 'destructive' })
     }
   }
 
@@ -193,7 +201,7 @@ export default function DevicesPage() {
       if (!res.ok) throw new Error()
       fetchDevices()
     } catch {
-      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' })
+      toast({ title: t('errorTitle'), description: t('updateFailed'), variant: 'destructive' })
     }
   }
 
@@ -206,86 +214,85 @@ export default function DevicesPage() {
   }
 
   const formatLastPing = (dateStr: string | null) => {
-    if (!dateStr) return 'Never'
-    const date = new Date(dateStr)
-    const diff = Date.now() - date.getTime()
-    if (diff < 60000) return 'Just now'
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
-    return date.toLocaleDateString()
+    if (!dateStr) return t('never')
+    const diff = Date.now() - new Date(dateStr).getTime()
+    if (diff < 60000) return t('justNow')
+    if (diff < 3600000) return t('minutesAgo', { m: Math.floor(diff / 60000) })
+    if (diff < 86400000) return t('hoursAgo', { h: Math.floor(diff / 3600000) })
+    return formatDate(dateStr)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Device Management</h1>
-          <p className="text-muted-foreground">Monitor and manage connected IoT devices</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchDevices}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+            <RefreshCw className="h-4 w-4 mr-1" /> {t('refresh')}
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> Register Device
+                <Plus className="h-4 w-4 mr-1" /> {t('registerDevice')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Register New Device</DialogTitle>
+                <DialogTitle>{t('registerNewDevice')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>Device Name *</Label>
+                  <Label>{t('deviceNameLabel')}</Label>
                   <Input
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    placeholder="e.g. Chair Unit 1"
+                    placeholder={t('deviceNamePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>Device Type *</Label>
+                  <Label>{t('deviceTypeLabel')}</Label>
                   <Select value={formType} onValueChange={setFormType}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={t('selectType')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {DEVICE_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                      {DEVICE_TYPE_VALUES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {tType.has(value) ? tType(value) : value}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Serial Number</Label>
+                  <Label>{t('serialLabel')}</Label>
                   <Input
                     value={formSerial}
                     onChange={(e) => setFormSerial(e.target.value)}
-                    placeholder="Optional"
+                    placeholder={t('optional')}
                   />
                 </div>
                 <div>
-                  <Label>Location</Label>
+                  <Label>{t('locationLabel')}</Label>
                   <Input
                     value={formLocation}
                     onChange={(e) => setFormLocation(e.target.value)}
-                    placeholder="e.g. Operatory 1"
+                    placeholder={t('locationPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>IP Address</Label>
+                  <Label>{t('ipLabel')}</Label>
                   <Input
                     value={formIp}
                     onChange={(e) => setFormIp(e.target.value)}
-                    placeholder="e.g. 192.168.1.100"
+                    placeholder={t('ipPlaceholder')}
                   />
                 </div>
                 <Button className="w-full" onClick={handleRegister}>
-                  Register Device
+                  {t('registerDevice')}
                 </Button>
               </div>
             </DialogContent>
@@ -301,7 +308,7 @@ export default function DevicesPage() {
               <Monitor className="h-5 w-5 text-blue-500" />
               <div>
                 <p className="text-2xl font-bold">{summary.total}</p>
-                <p className="text-xs text-muted-foreground">Total Devices</p>
+                <p className="text-xs text-muted-foreground">{t('totalDevices')}</p>
               </div>
             </div>
           </CardContent>
@@ -312,7 +319,7 @@ export default function DevicesPage() {
               <Wifi className="h-5 w-5 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">{summary.online}</p>
-                <p className="text-xs text-muted-foreground">Online</p>
+                <p className="text-xs text-muted-foreground">{t('online')}</p>
               </div>
             </div>
           </CardContent>
@@ -323,7 +330,7 @@ export default function DevicesPage() {
               <WifiOff className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-2xl font-bold">{summary.offline}</p>
-                <p className="text-xs text-muted-foreground">Offline</p>
+                <p className="text-xs text-muted-foreground">{t('offline')}</p>
               </div>
             </div>
           </CardContent>
@@ -334,7 +341,7 @@ export default function DevicesPage() {
               <AlertTriangle className="h-5 w-5 text-red-500" />
               <div>
                 <p className="text-2xl font-bold">{summary.error}</p>
-                <p className="text-xs text-muted-foreground">Errors</p>
+                <p className="text-xs text-muted-foreground">{t('errors')}</p>
               </div>
             </div>
           </CardContent>
@@ -345,7 +352,7 @@ export default function DevicesPage() {
               <Wrench className="h-5 w-5 text-amber-500" />
               <div>
                 <p className="text-2xl font-bold">{summary.maintenance}</p>
-                <p className="text-xs text-muted-foreground">Maintenance</p>
+                <p className="text-xs text-muted-foreground">{t('maintenance')}</p>
               </div>
             </div>
           </CardContent>
@@ -356,27 +363,27 @@ export default function DevicesPage() {
       <div className="flex items-center gap-4">
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by type" />
+            <SelectValue placeholder={t('filterByType')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {DEVICE_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.label}
+            <SelectItem value="all">{t('allTypes')}</SelectItem>
+            {DEVICE_TYPE_VALUES.map((value) => (
+              <SelectItem key={value} value={value}>
+                {tType.has(value) ? tType(value) : value}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder={t('filterByStatus')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="ONLINE">Online</SelectItem>
-            <SelectItem value="OFFLINE">Offline</SelectItem>
-            <SelectItem value="ERROR">Error</SelectItem>
-            <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+            <SelectItem value="all">{t('allStatuses')}</SelectItem>
+            <SelectItem value="ONLINE">{tStatus('ONLINE')}</SelectItem>
+            <SelectItem value="OFFLINE">{tStatus('OFFLINE')}</SelectItem>
+            <SelectItem value="ERROR">{tStatus('ERROR')}</SelectItem>
+            <SelectItem value="MAINTENANCE">{tStatus('MAINTENANCE')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -385,27 +392,25 @@ export default function DevicesPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Cpu className="h-5 w-5" /> Registered Devices
+            <Cpu className="h-5 w-5" /> {t('registeredDevices')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-center py-8 text-muted-foreground">Loading devices...</p>
+            <p className="text-center py-8 text-muted-foreground">{t('loadingDevices')}</p>
           ) : devices.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">
-              No devices registered. Click &quot;Register Device&quot; to add one.
-            </p>
+            <p className="text-center py-8 text-muted-foreground">{t('noDevices')}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Ping</TableHead>
-                  <TableHead>Latest Data</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead>{t('colName')}</TableHead>
+                  <TableHead>{t('colType')}</TableHead>
+                  <TableHead>{t('colLocation')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  <TableHead>{t('colLastPing')}</TableHead>
+                  <TableHead>{t('colLatestData')}</TableHead>
+                  <TableHead className="w-[100px]">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -420,14 +425,14 @@ export default function DevicesPage() {
                           <p className="font-medium">{device.name}</p>
                           {device.serialNumber && (
                             <p className="text-xs text-muted-foreground">
-                              S/N: {device.serialNumber}
+                              {t('serialPrefix', { serial: device.serialNumber })}
                             </p>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {DEVICE_TYPES.find((t) => t.value === device.type)?.label || device.type}
+                          {tType.has(device.type) ? tType(device.type) : device.type}
                         </Badge>
                       </TableCell>
                       <TableCell>{device.location || '—'}</TableCell>
@@ -439,14 +444,18 @@ export default function DevicesPage() {
                           <SelectTrigger className="h-7 w-36">
                             <div className="flex items-center gap-1">
                               <StatusIcon className="h-3.5 w-3.5" />
-                              <Badge className={`${cfg.color} text-xs`}>{cfg.label}</Badge>
+                              <Badge className={`${cfg.color} text-xs`}>
+                                {tStatus.has(device.status)
+                                  ? tStatus(device.status)
+                                  : device.status}
+                              </Badge>
                             </div>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="ONLINE">Online</SelectItem>
-                            <SelectItem value="OFFLINE">Offline</SelectItem>
-                            <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                            <SelectItem value="ERROR">Error</SelectItem>
+                            <SelectItem value="ONLINE">{tStatus('ONLINE')}</SelectItem>
+                            <SelectItem value="OFFLINE">{tStatus('OFFLINE')}</SelectItem>
+                            <SelectItem value="MAINTENANCE">{tStatus('MAINTENANCE')}</SelectItem>
+                            <SelectItem value="ERROR">{tStatus('ERROR')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -467,7 +476,7 @@ export default function DevicesPage() {
                             </p>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground">No data</span>
+                          <span className="text-xs text-muted-foreground">{t('noData')}</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -492,26 +501,26 @@ export default function DevicesPage() {
       {/* API Integration Info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Device Integration API</CardTitle>
+          <CardTitle className="text-sm">{t('apiTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>Connected devices can push data using these endpoints:</p>
+          <p>{t('apiIntro')}</p>
           <div className="bg-muted/50 p-3 rounded-md font-mono text-xs space-y-1">
             <p>
-              <span className="text-green-600 font-semibold">POST</span> /api/devices/register —
-              Register new device
+              <span className="text-green-600 font-semibold">POST</span> /api/devices/register —{' '}
+              {t('apiRegister')}
             </p>
             <p>
-              <span className="text-blue-600 font-semibold">POST</span> /api/devices/data — Push
-              sensor readings
+              <span className="text-blue-600 font-semibold">POST</span> /api/devices/data —{' '}
+              {t('apiPush')}
             </p>
             <p>
-              <span className="text-purple-600 font-semibold">GET</span> /api/devices/status — Get
-              device statuses
+              <span className="text-purple-600 font-semibold">GET</span> /api/devices/status —{' '}
+              {t('apiStatus')}
             </p>
           </div>
           <p>
-            Payload example for{' '}
+            {t('payloadExample')}{' '}
             <code className="text-xs bg-muted px-1 rounded">/api/devices/data</code>:
           </p>
           <pre className="bg-muted/50 p-3 rounded-md text-xs overflow-x-auto">
