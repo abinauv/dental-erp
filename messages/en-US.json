@@ -5493,5 +5493,344 @@
       "noComplianceHint": "Record sterilization cycles to see compliance reports",
       "errorTitle": "Error"
     }
+  },
+  "crm": {
+    "dashboard": {
+      "title": "CRM Dashboard",
+      "loadError": "Failed to load CRM dashboard",
+      "stats": {
+        "activeMemberships": "Active Memberships",
+        "revenue": "{amount} revenue",
+        "referralConversion": "Referral Conversion",
+        "referralsConverted": "{converted} of {total} referrals converted",
+        "loyaltyPoints": "Loyalty Points",
+        "pointsInCirculation": "Points in circulation",
+        "patientRetention": "Patient Retention",
+        "visitedLast6Months": "{count} visited in last 6 months"
+      },
+      "cards": {
+        "memberships": "Memberships",
+        "membershipsCount": "{active} active / {total} total memberships",
+        "managePlans": "Manage Plans",
+        "loyaltyProgram": "Loyalty Program",
+        "pointsInCirculation": "{points} points in circulation",
+        "viewTransactions": "View Transactions",
+        "referrals": "Referrals",
+        "referralsSummary": "{total} referrals, {rate}% conversion",
+        "trackReferrals": "Track Referrals"
+      },
+      "atRisk": {
+        "title": "At-Risk Patients",
+        "description": "{count} patients haven't visited in the last 6 months.",
+        "viewSegments": "View Segments"
+      }
+    },
+    "memberships": {
+      "title": "Membership Plans",
+      "subtitle": "Create and manage membership plans for patients",
+      "newPlan": "New Plan",
+      "createFirstPlan": "Create First Plan",
+      "emptyTitle": "No membership plans yet",
+      "emptyDescription": "Create your first membership plan to start enrolling patients",
+      "active": "Active",
+      "inactive": "Inactive",
+      "member": "member",
+      "members": "members",
+      "maxSuffix": " / {max} max",
+      "benefitOffInline": "({percent}% off)",
+      "benefitOffBadge": "{percent}% off",
+      "moreBenefit": "+{count} more benefit",
+      "moreBenefits": "+{count} more benefits",
+      "duration": {
+        "oneMonth": "1 month",
+        "oneYear": "1 year",
+        "years": "{count} years",
+        "months": "{count} months"
+      },
+      "detail": {
+        "enrollPatient": "Enroll Patient",
+        "planBenefits": "Plan Benefits",
+        "enrolledPatients": "Enrolled Patients",
+        "noMembersTitle": "No enrolled patients yet",
+        "noMembersDescription": "Click \"Enroll Patient\" to add members to this plan",
+        "colPatient": "Patient",
+        "colContact": "Contact",
+        "colStartDate": "Start Date",
+        "colEndDate": "End Date",
+        "colAutoRenew": "Auto-Renew",
+        "colStatus": "Status",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "dialog": {
+        "editTitle": "Edit Plan",
+        "createTitle": "Create Membership Plan",
+        "nameLabel": "Plan Name *",
+        "namePlaceholder": "e.g., Gold Membership",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Brief description of the plan…",
+        "priceLabel": "Price ({symbol}) *",
+        "pricePlaceholder": "e.g., 5000",
+        "durationLabel": "Duration (months) *",
+        "durationPlaceholder": "e.g., 12",
+        "maxMembersLabel": "Max Members (optional)",
+        "maxMembersPlaceholder": "Leave blank for unlimited",
+        "benefitsLabel": "Benefits",
+        "addBenefit": "Add Benefit",
+        "benefitPlaceholder": "Benefit description",
+        "percentOffPlaceholder": "% off",
+        "benefitsHint": "Add benefit descriptions with optional discount percentages",
+        "activeLabel": "Active",
+        "activeHint": "Inactive plans cannot accept new enrollments",
+        "cancel": "Cancel",
+        "saving": "Saving…",
+        "updatePlan": "Update Plan",
+        "createPlan": "Create Plan"
+      },
+      "enroll": {
+        "title": "Enroll Patient in {plan}",
+        "searchLabel": "Search Patient *",
+        "searchPlaceholder": "Type patient name or phone…",
+        "searching": "Searching…",
+        "noPatients": "No patients found",
+        "noContact": "No contact info",
+        "autoRenewLabel": "Auto-Renew",
+        "autoRenewHint": "Automatically renew when membership expires",
+        "cancel": "Cancel",
+        "enrolling": "Enrolling…",
+        "submit": "Enroll Patient"
+      },
+      "toast": {
+        "loadError": "Failed to load membership plans",
+        "nameRequired": "Plan name is required",
+        "priceInvalid": "Price must be greater than 0",
+        "durationInvalid": "Duration must be at least 1 month",
+        "updated": "Plan updated",
+        "created": "Plan created",
+        "saveError": "Failed to save plan",
+        "deleteConfirmTitle": "Delete plan?",
+        "deleteConfirmDescription": "Are you sure you want to delete this plan?",
+        "deleteConfirmLabel": "Delete",
+        "deleted": "Plan deleted",
+        "deleteError": "Failed to delete",
+        "selectPatient": "Please select a patient",
+        "enrolled": "{name} enrolled successfully",
+        "enrollError": "Failed to enroll patient",
+        "membersLoadError": "Failed to load plan members"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "EXPIRED": "Expired",
+        "CANCELLED": "Cancelled",
+        "PENDING": "Pending"
+      }
+    },
+    "loyalty": {
+      "title": "Loyalty Points",
+      "subtitle": "Award, redeem, and track loyalty points",
+      "allTypes": "All Types",
+      "type": {
+        "VISIT": "Visit",
+        "REFERRAL": "Referral",
+        "TREATMENT": "Treatment",
+        "BIRTHDAY": "Birthday",
+        "SIGNUP": "Sign-up",
+        "REDEMPTION": "Redemption"
+      },
+      "award": {
+        "title": "Award Points",
+        "description": "Add loyalty points to a patient account",
+        "patientLabel": "Patient *",
+        "balance": "Balance",
+        "change": "Change",
+        "searchPlaceholder": "Search patient by name or phone…",
+        "searching": "Searching…",
+        "pointsLabel": "Points *",
+        "pointsPlaceholder": "Enter points to award",
+        "typeLabel": "Type *",
+        "typePlaceholder": "Select type",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Optional description",
+        "submitting": "Awarding…",
+        "submit": "Award Points",
+        "defaultDescription": "{type} points awarded"
+      },
+      "redeem": {
+        "title": "Redeem Points",
+        "description": "Redeem loyalty points from a patient account",
+        "availableBalance": "Available Balance",
+        "balancePts": "{balance} pts",
+        "pointsLabel": "Points to Redeem *",
+        "pointsPlaceholder": "Enter points to redeem",
+        "typeLabel": "Type",
+        "submitting": "Redeeming…",
+        "submit": "Redeem Points",
+        "defaultDescription": "Points redeemed"
+      },
+      "log": {
+        "title": "Transaction Log",
+        "description": "Recent loyalty point transactions",
+        "filterPlaceholder": "Filter by type",
+        "colDate": "Date",
+        "colPatient": "Patient",
+        "colType": "Type",
+        "colPoints": "Points",
+        "colDescription": "Description",
+        "empty": "No transactions found",
+        "pageInfo": "Page {page} of {totalPages} ({total} total)"
+      },
+      "toast": {
+        "selectPatient": "Please select a patient",
+        "pointsPositive": "Points must be a positive number",
+        "awarded": "+{pts} points awarded to {name}",
+        "awardError": "Failed to award points",
+        "insufficient": "Insufficient points balance",
+        "redeemed": "-{pts} points redeemed for {name}",
+        "redeemError": "Failed to redeem points",
+        "loadError": "Failed to load transactions"
+      },
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "referrals": {
+      "title": "Referral Program",
+      "create": "Create Referral",
+      "summary": {
+        "total": "Total Referrals",
+        "totalHint": "All-time referrals",
+        "converted": "Converted",
+        "convertedHint": "Referrals converted to patients",
+        "rewarded": "Rewarded",
+        "rewardedHint": "Rewards distributed",
+        "conversionRate": "Conversion Rate",
+        "conversionRateHint": "Of total referrals"
+      },
+      "listTitle": "Referrals",
+      "searchPlaceholder": "Search by name, phone or referral code…",
+      "filterPlaceholder": "Filter by status",
+      "allStatuses": "All Statuses",
+      "col": {
+        "code": "Referral Code",
+        "referrer": "Referrer",
+        "referredName": "Referred Name",
+        "referredPhone": "Referred Phone",
+        "status": "Status",
+        "created": "Created",
+        "actions": "Actions"
+      },
+      "empty": "No referrals found.",
+      "clickToCopy": "Click to copy",
+      "copyCode": "Copy Code",
+      "markConverted": "Mark Converted",
+      "giveReward": "Give Reward",
+      "showing": "Showing {from} to {to} of {total} referrals",
+      "previous": "Previous",
+      "next": "Next",
+      "dialog": {
+        "title": "Create Referral",
+        "referrerLabel": "Referrer Patient",
+        "referrerPlaceholder": "Search patient by name or ID…",
+        "selected": "Selected: {display}",
+        "referredNameLabel": "Referred Person Name",
+        "referredNamePlaceholder": "Full name of referred person",
+        "referredPhoneLabel": "Referred Person Phone",
+        "referredPhonePlaceholder": "Phone number",
+        "rewardTypeLabel": "Reward Type",
+        "rewardTypePlaceholder": "Select reward type",
+        "rewardValueLabel": "Reward Value",
+        "rewardValuePlaceholder": "e.g. 100",
+        "creating": "Creating…",
+        "submit": "Create Referral"
+      },
+      "status": {
+        "PENDING": "Pending",
+        "CONVERTED": "Converted",
+        "REWARDED": "Rewarded",
+        "EXPIRED": "Expired"
+      },
+      "rewardType": {
+        "POINTS": "Points",
+        "DISCOUNT": "Discount",
+        "CREDIT": "Credit"
+      },
+      "toast": {
+        "loadError": "Failed to load referrals",
+        "selectReferrer": "Please select a referrer patient",
+        "nameRequired": "Referred person name is required",
+        "phoneRequired": "Referred person phone is required",
+        "rewardValueInvalid": "Reward value must be greater than 0",
+        "createError": "Failed to create referral",
+        "created": "Referral created successfully",
+        "markedConverted": "Referral marked as converted",
+        "rewardGiven": "Reward given successfully",
+        "updateError": "Failed to update referral",
+        "codeCopied": "Referral code copied"
+      }
+    },
+    "segments": {
+      "title": "Patient Segments",
+      "totalPatients": "{count} total active patients",
+      "aiButton": "AI Churn Analysis",
+      "map": {
+        "new": {
+          "label": "New Patients",
+          "description": "Registered in last 3 months"
+        },
+        "active": {
+          "label": "Active",
+          "description": "Visited in last 3 months"
+        },
+        "loyal": {
+          "label": "Loyal",
+          "description": "Frequent visitors (4+ visits/year)"
+        },
+        "atRisk": {
+          "label": "At Risk",
+          "description": "No visit in 3-6 months"
+        },
+        "lost": {
+          "label": "Lost",
+          "description": "No visit in 6+ months"
+        },
+        "highValue": {
+          "label": "High Value",
+          "description": "Top 20% by spending"
+        }
+      },
+      "col": {
+        "patientId": "Patient ID",
+        "name": "Name",
+        "phone": "Phone",
+        "lastVisit": "Last Visit",
+        "totalSpend": "Total Spend"
+      },
+      "emptySegment": "No patients in this segment",
+      "never": "Never",
+      "ai": {
+        "title": "AI Churn Prediction",
+        "subtitle": "RFM analysis with churn risk scores — avg risk: {risk}%",
+        "topRetentionActions": "Top Retention Actions",
+        "colPatient": "Patient",
+        "colSegment": "Segment",
+        "colRecency": "Recency (days)",
+        "colFrequency": "Frequency",
+        "colSpend": "Spend",
+        "colChurnRisk": "Churn Risk",
+        "colRecommendation": "Recommendation",
+        "na": "N/A",
+        "segment": {
+          "vip": "VIP",
+          "loyal": "Loyal",
+          "regular": "Regular",
+          "atRisk": "At Risk",
+          "churning": "Churning",
+          "new": "New"
+        }
+      },
+      "toast": {
+        "loadError": "Failed to load segments",
+        "aiLoadError": "Failed to load AI segments"
+      }
+    }
   }
 }
