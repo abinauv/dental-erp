@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAI, type Insight } from './ai-provider'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +27,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 }
 
 function InsightCard({ insight, onDismiss }: { insight: Insight; onDismiss: () => void }) {
+  const t = useTranslations('ai.insights')
   return (
     <div
       className={cn(
@@ -45,7 +47,9 @@ function InsightCard({ insight, onDismiss }: { insight: Insight; onDismiss: () =
                   SEVERITY_BADGE[insight.severity] || SEVERITY_BADGE.INFO
                 )}
               >
-                {insight.severity}
+                {t.has(`severity.${insight.severity}`)
+                  ? t(`severity.${insight.severity}`)
+                  : insight.severity}
               </span>
             </div>
             <p className="text-xs mt-0.5 leading-relaxed">{insight.description}</p>
@@ -54,7 +58,7 @@ function InsightCard({ insight, onDismiss }: { insight: Insight; onDismiss: () =
         <button
           onClick={onDismiss}
           className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-          aria-label="Dismiss insight"
+          aria-label={t('dismiss')}
         >
           <svg
             width="14"
@@ -77,6 +81,7 @@ function InsightCard({ insight, onDismiss }: { insight: Insight; onDismiss: () =
  * Pass `maxItems` to limit how many are shown.
  */
 export function InsightsPanel({ maxItems = 4 }: { maxItems?: number }) {
+  const t = useTranslations('ai.insights')
   const { insights, insightsLoading, loadInsights, dismissInsight, generateInsights } = useAI()
 
   useEffect(() => {
@@ -89,12 +94,12 @@ export function InsightsPanel({ maxItems = 4 }: { maxItems?: number }) {
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">AI Insights</h3>
+        <h3 className="text-sm font-semibold">{t('title')}</h3>
         <button
           onClick={generateInsights}
           className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
@@ -102,13 +107,13 @@ export function InsightsPanel({ maxItems = 4 }: { maxItems?: number }) {
       {insightsLoading && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />
-          <span>Loading insights…</span>
+          <span>{t('loading')}</span>
         </div>
       )}
 
       {/* Empty */}
       {!insightsLoading && visible.length === 0 && (
-        <p className="text-xs text-muted-foreground">No active insights right now.</p>
+        <p className="text-xs text-muted-foreground">{t('empty')}</p>
       )}
 
       {/* Insight cards */}
@@ -123,7 +128,9 @@ export function InsightsPanel({ maxItems = 4 }: { maxItems?: number }) {
       {/* More link */}
       {insights.length > maxItems && (
         <p className="text-xs text-muted-foreground">
-          +{insights.length - maxItems} more insight{insights.length - maxItems > 1 ? 's' : ''}
+          {insights.length - maxItems > 1
+            ? t('morePlural', { count: insights.length - maxItems })
+            : t('more', { count: insights.length - maxItems })}
         </p>
       )}
     </div>

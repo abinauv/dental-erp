@@ -6536,5 +6536,143 @@
       "activated": "Policy activated",
       "updateError": "Failed to update policy"
     }
+  },
+  "ai": {
+    "orb": {
+      "start": "Start voice input",
+      "stopListening": "Stop listening",
+      "interrupt": "Interrupt",
+      "processing": "Processing..."
+    },
+    "waveform": {
+      "input": "Audio input level",
+      "output": "Audio output level"
+    },
+    "widget": {
+      "openChat": "Open AI chat",
+      "title": "AI Assistant",
+      "subtitleHandsFree": "Hands-free mode active",
+      "subtitle": "Ask anything about your clinic",
+      "toggleHandsFree": "Toggle hands-free mode",
+      "handsFreeTitle": "Hands-free: voice in + voice out, continuous",
+      "hf": "HF",
+      "muteResponses": "Mute responses",
+      "readResponses": "Read responses aloud",
+      "voiceOnTitle": "Voice responses ON",
+      "voiceOffTitle": "Voice responses OFF",
+      "clearChat": "Clear chat",
+      "close": "Close",
+      "emptyTitle": "How can I help?",
+      "emptyDescription": "Ask about patients, appointments, billing, inventory, or anything else.",
+      "voiceHint": "Tap the mic or enable Hands-Free mode for voice control",
+      "hints": {
+        "dailySummary": "Daily summary",
+        "registerPatient": "Register patient",
+        "bookAppointment": "Book appointment",
+        "todaysSchedule": "Today's schedule"
+      },
+      "listening": "Listening...",
+      "inputPlaceholder": "Type or tap mic...",
+      "micStop": "Stop listening",
+      "micStart": "Start voice input",
+      "micSpeak": "Speak your message",
+      "send": "Send"
+    },
+    "commandBar": {
+      "placeholder": "Type a command… e.g. 'Book appointment for Raj Kumar tomorrow at 10am'",
+      "quickCommands": "Quick commands",
+      "examples": [
+        "Show today's appointments",
+        "Check stock for composite resin",
+        "Show this month's revenue",
+        "Check overdue invoices",
+        "Low stock alerts"
+      ],
+      "recent": "Recent",
+      "processing": "Processing…",
+      "needsApproval": "Needs approval",
+      "noResult": "No result",
+      "footerExecute": "Enter to execute • ESC to close",
+      "poweredBy": "Powered by AI"
+    },
+    "usageStats": {
+      "title": "AI Usage Dashboard",
+      "subtitle": "This-month vs all-time usage statistics",
+      "conversations": "Conversations",
+      "commandsRun": "Commands Run",
+      "tokensUsed": "Tokens Used",
+      "allTime": "All-time: {value}",
+      "estimatedCost": "Estimated AI Cost",
+      "viaOpenRouter": "via OpenRouter",
+      "thisMonth": "This Month",
+      "allTimeLabel": "All-Time",
+      "insightsGenerated": "Insights Generated",
+      "topSkills": "Top Skills (this month)",
+      "execCount": "{count}x",
+      "costsNote": "Costs are estimates based on logged token usage."
+    },
+    "auditMonitor": {
+      "title": "Audit Log Intelligence",
+      "daysOption": "{count} days",
+      "analysing": "Analysing audit logs…",
+      "severity": {
+        "low": "low",
+        "medium": "medium",
+        "high": "high"
+      },
+      "affectedUsers": "Affected users: {users}",
+      "occurrences": "{count} occurrence",
+      "occurrencesPlural": "{count} occurrences",
+      "clean": "✓ No suspicious patterns detected in the last {count} day.",
+      "cleanPlural": "✓ No suspicious patterns detected in the last {count} days."
+    },
+    "duplicateDetector": {
+      "checking": "Checking for duplicates…",
+      "title": "⚠ Possible duplicate patient detected",
+      "titlePlural": "⚠ Possible duplicate patients detected",
+      "matchInfo": "{pct}% match · matched on {fields}",
+      "useExisting": "Use existing"
+    },
+    "insights": {
+      "title": "AI Insights",
+      "refresh": "Refresh",
+      "loading": "Loading insights…",
+      "empty": "No active insights right now.",
+      "dismiss": "Dismiss insight",
+      "severity": {
+        "INFO": "INFO",
+        "WARNING": "WARNING",
+        "CRITICAL": "CRITICAL"
+      },
+      "more": "+{count} more insight",
+      "morePlural": "+{count} more insights"
+    },
+    "patient360": {
+      "title": "AI Patient Summary",
+      "cached": "cached",
+      "regenerate": "↻ Regenerate",
+      "lastVisit": "Last visit: {value}"
+    },
+    "reportBuilder": {
+      "title": "Natural Language Report Builder",
+      "subtitle": "Ask questions in plain English — AI queries your data and returns results.",
+      "placeholder": "e.g. 'Show revenue by procedure for last month'",
+      "generating": "Generating…",
+      "generate": "Generate",
+      "examples": [
+        "Monthly revenue by procedure for last 3 months",
+        "Patients who haven't visited in 6 months",
+        "Overdue invoices sorted by amount",
+        "Appointment no-show rate by day of week",
+        "Top 5 most performed procedures this quarter",
+        "Inventory items running low on stock"
+      ],
+      "recentQueries": "Recent queries",
+      "querying": "Querying your data…",
+      "queryFailed": "Query failed",
+      "executeFailed": "Failed to execute query",
+      "noResults": "No results found for this query.",
+      "exportJson": "⬇ Export JSON"
+    }
   }
 }

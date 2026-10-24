@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useAI } from './ai-provider'
 import { useWebVoice } from '@/hooks/use-web-voice'
 import { cn } from '@/lib/utils'
@@ -91,6 +92,8 @@ function BlinkingCursor() {
 // ChatWidget
 // ---------------------------------------------------------------------------
 export function ChatWidget() {
+  const t = useTranslations('ai.widget')
+  const locale = useLocale()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -100,7 +103,7 @@ export function ChatWidget() {
   const { chatMessages, chatLoading, sendChat, clearChat } = useAI()
 
   const voice = useWebVoice({
-    lang: 'en-IN',
+    lang: locale,
     onFinalTranscript: (text) => {
       if (text.trim() && !chatLoading) {
         setInput('')
@@ -193,7 +196,7 @@ export function ChatWidget() {
         <button
           onClick={() => setOpen(true)}
           className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow"
-          aria-label="Open AI chat"
+          aria-label={t('openChat')}
         >
           <svg
             width="24"
@@ -214,9 +217,9 @@ export function ChatWidget() {
           {/* Header */}
           <div className="flex items-center justify-between border-b px-4 py-3 bg-primary text-primary-foreground rounded-tl-lg">
             <div>
-              <p className="font-semibold text-sm">AI Assistant</p>
+              <p className="font-semibold text-sm">{t('title')}</p>
               <p className="text-xs opacity-70">
-                {voice.handsFreeMode ? 'Hands-free mode active' : 'Ask anything about your clinic'}
+                {voice.handsFreeMode ? t('subtitleHandsFree') : t('subtitle')}
               </p>
             </div>
             <div className="flex gap-2 items-center">
@@ -230,25 +233,25 @@ export function ChatWidget() {
                       ? 'bg-primary-foreground text-primary'
                       : 'opacity-60 hover:opacity-100 border border-primary-foreground/30'
                   )}
-                  aria-label="Toggle hands-free mode"
-                  title="Hands-free: voice in + voice out, continuous"
+                  aria-label={t('toggleHandsFree')}
+                  title={t('handsFreeTitle')}
                 >
-                  HF
+                  {t('hf')}
                 </button>
               )}
               {/* TTS toggle */}
               <button
                 onClick={voice.toggleTts}
                 className="p-2 -m-1 opacity-60 hover:opacity-100 transition-opacity"
-                aria-label={voice.ttsEnabled ? 'Mute responses' : 'Read responses aloud'}
-                title={voice.ttsEnabled ? 'Voice responses ON' : 'Voice responses OFF'}
+                aria-label={voice.ttsEnabled ? t('muteResponses') : t('readResponses')}
+                title={voice.ttsEnabled ? t('voiceOnTitle') : t('voiceOffTitle')}
               >
                 <SpeakerIcon active={voice.ttsEnabled} />
               </button>
               <button
                 onClick={clearChat}
                 className="p-2 -m-1 opacity-60 hover:opacity-100 transition-opacity"
-                aria-label="Clear chat"
+                aria-label={t('clearChat')}
               >
                 <svg
                   width="16"
@@ -264,7 +267,7 @@ export function ChatWidget() {
               <button
                 onClick={() => setOpen(false)}
                 className="p-2 -m-1 opacity-60 hover:opacity-100 transition-opacity"
-                aria-label="Close"
+                aria-label={t('close')}
               >
                 <svg
                   width="16"
@@ -284,33 +287,29 @@ export function ChatWidget() {
           <div className="flex-1 overflow-auto p-3 space-y-3">
             {chatMessages.length === 0 && (
               <div className="text-center text-sm text-muted-foreground mt-8 px-4">
-                <p className="font-medium mb-1">How can I help?</p>
-                <p className="text-xs">
-                  Ask about patients, appointments, billing, inventory, or anything else.
-                </p>
+                <p className="font-medium mb-1">{t('emptyTitle')}</p>
+                <p className="text-xs">{t('emptyDescription')}</p>
                 {voice.voiceSupported && (
-                  <p className="text-xs text-primary mt-1">
-                    Tap the mic or enable Hands-Free mode for voice control
-                  </p>
+                  <p className="text-xs text-primary mt-1">{t('voiceHint')}</p>
                 )}
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  {[
-                    'Daily summary',
-                    'Register patient',
-                    'Book appointment',
-                    "Today's schedule",
-                  ].map((hint) => (
-                    <button
-                      key={hint}
-                      onClick={() => {
-                        setInput(hint)
-                        inputRef.current?.focus()
-                      }}
-                      className="rounded-full border px-3 py-1 text-xs hover:bg-muted transition-colors"
-                    >
-                      {hint}
-                    </button>
-                  ))}
+                  {['dailySummary', 'registerPatient', 'bookAppointment', 'todaysSchedule'].map(
+                    (key) => {
+                      const hint = t(`hints.${key}`)
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setInput(hint)
+                            inputRef.current?.focus()
+                          }}
+                          className="rounded-full border px-3 py-1 text-xs hover:bg-muted transition-colors"
+                        >
+                          {hint}
+                        </button>
+                      )
+                    }
+                  )}
                 </div>
               </div>
             )}
@@ -358,7 +357,7 @@ export function ChatWidget() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
                   </span>
-                  {voice.interimTranscript || voice.transcript || 'Listening...'}
+                  {voice.interimTranscript || voice.transcript || t('listening')}
                 </div>
               </div>
             )}
@@ -378,7 +377,7 @@ export function ChatWidget() {
                   handleSend()
                 }
               }}
-              placeholder={listening ? 'Listening...' : 'Type or tap mic...'}
+              placeholder={listening ? t('listening') : t('inputPlaceholder')}
               rows={1}
               className="flex-1 resize-none rounded-md border bg-muted px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
             />
@@ -397,8 +396,8 @@ export function ChatWidget() {
                     ? 'bg-red-500 text-white hover:bg-red-600'
                     : 'bg-muted border hover:bg-accent'
                 )}
-                aria-label={listening ? 'Stop listening' : 'Start voice input'}
-                title={listening ? 'Stop listening' : 'Speak your message'}
+                aria-label={listening ? t('micStop') : t('micStart')}
+                title={listening ? t('micStop') : t('micSpeak')}
               >
                 <MicIcon listening={listening} />
               </button>
@@ -408,7 +407,7 @@ export function ChatWidget() {
               disabled={chatLoading || !input.trim()}
               className="rounded-md bg-primary px-3 py-2 text-primary-foreground text-sm disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
-              Send
+              {t('send')}
             </button>
           </div>
         </div>

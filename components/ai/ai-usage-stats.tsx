@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,6 +33,8 @@ interface UsageStats {
  * Fetches from GET /api/ai/usage (admin-only).
  */
 export function AIUsageStats() {
+  const t = useTranslations('ai.usageStats')
+  const { formatNumber, formatCurrency } = useClinicFormatters()
   const [stats, setStats] = useState<UsageStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -62,23 +66,23 @@ export function AIUsageStats() {
   /* ---- stat-card data ---- */
   const cards = [
     {
-      label: 'Conversations',
+      label: t('conversations'),
       thisMonth: stats.thisMonth.conversations,
       allTime: stats.allTime.conversations,
       icon: '💬',
     },
     {
-      label: 'Commands Run',
+      label: t('commandsRun'),
       thisMonth: stats.thisMonth.executions,
       allTime: stats.allTime.executions,
       icon: '⚡',
     },
     {
-      label: 'Tokens Used',
+      label: t('tokensUsed'),
       thisMonth: stats.thisMonth.tokens,
       allTime: stats.allTime.tokens,
       icon: '🔢',
-      format: (n: number) => n.toLocaleString(),
+      format: (n: number) => formatNumber(n),
     },
   ]
 
@@ -89,10 +93,8 @@ export function AIUsageStats() {
     <div className="space-y-4">
       {/* section header */}
       <div>
-        <h3 className="text-sm font-semibold">AI Usage Dashboard</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          This-month vs all-time usage statistics
-        </p>
+        <h3 className="text-sm font-semibold">{t('title')}</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">{t('subtitle')}</p>
       </div>
 
       {/* top-line cards */}
@@ -107,7 +109,9 @@ export function AIUsageStats() {
               {card.format ? card.format(card.thisMonth) : card.thisMonth}
             </p>
             <p className="text-xs text-muted-foreground">
-              All-time: {card.format ? card.format(card.allTime) : card.allTime}
+              {t('allTime', {
+                value: card.format ? card.format(card.allTime) : card.allTime,
+              })}
             </p>
           </div>
         ))}
@@ -118,23 +122,31 @@ export function AIUsageStats() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span>💰</span>
-            <span className="text-xs font-semibold">Estimated AI Cost</span>
+            <span className="text-xs font-semibold">{t('estimatedCost')}</span>
           </div>
-          <span className="text-xs text-muted-foreground">via OpenRouter</span>
+          <span className="text-xs text-muted-foreground">{t('viaOpenRouter')}</span>
         </div>
         <div className="flex items-center gap-6 mt-2">
           <div>
-            <p className="text-xs text-muted-foreground">This Month</p>
-            <p className="text-sm font-bold">₹{stats.thisMonth.costINR.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">All-Time</p>
-            <p className="text-sm font-semibold text-muted-foreground">
-              ₹{stats.allTime.costINR.toFixed(2)}
+            <p className="text-xs text-muted-foreground">{t('thisMonth')}</p>
+            <p className="text-sm font-bold">
+              {formatCurrency(stats.thisMonth.costINR, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Insights Generated</p>
+            <p className="text-xs text-muted-foreground">{t('allTimeLabel')}</p>
+            <p className="text-sm font-semibold text-muted-foreground">
+              {formatCurrency(stats.allTime.costINR, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">{t('insightsGenerated')}</p>
             <p className="text-sm font-semibold">{stats.allTime.insights}</p>
           </div>
         </div>
@@ -143,9 +155,7 @@ export function AIUsageStats() {
       {/* skill breakdown */}
       {stats.skillBreakdown.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2">
-            Top Skills (this month)
-          </p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">{t('topSkills')}</p>
           <div className="space-y-2">
             {stats.skillBreakdown.slice(0, 6).map((s) => (
               <div key={s.skill} className="flex items-center gap-3 text-xs">
@@ -158,16 +168,16 @@ export function AIUsageStats() {
                     style={{ width: `${(s.executions / maxExecs) * 100}%` }}
                   />
                 </div>
-                <span className="text-muted-foreground w-8 text-right">{s.executions}x</span>
+                <span className="text-muted-foreground w-8 text-right">
+                  {t('execCount', { count: s.executions })}
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground italic">
-        Costs are estimates based on logged token usage.
-      </p>
+      <p className="text-xs text-muted-foreground italic">{t('costsNote')}</p>
     </div>
   )
 }
