@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import {
@@ -38,13 +39,14 @@ interface ImageAnnotatorProps {
   readOnly?: boolean
 }
 
+// Tool labels live in the `imaging.annotator.tools` catalogue, resolved by id.
 const TOOLS = [
-  { id: 'freehand' as const, label: 'Draw', icon: Pen },
-  { id: 'line' as const, label: 'Line', icon: Minus },
-  { id: 'arrow' as const, label: 'Arrow', icon: MoveRight },
-  { id: 'circle' as const, label: 'Circle', icon: Circle },
-  { id: 'rectangle' as const, label: 'Rectangle', icon: Square },
-  { id: 'text' as const, label: 'Text', icon: Type },
+  { id: 'freehand' as const, icon: Pen },
+  { id: 'line' as const, icon: Minus },
+  { id: 'arrow' as const, icon: MoveRight },
+  { id: 'circle' as const, icon: Circle },
+  { id: 'rectangle' as const, icon: Square },
+  { id: 'text' as const, icon: Type },
 ]
 
 const COLORS = [
@@ -70,6 +72,7 @@ export function ImageAnnotator({
   onSave,
   readOnly = false,
 }: ImageAnnotatorProps) {
+  const t = useTranslations('imaging.annotator')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -317,10 +320,14 @@ export function ImageAnnotator({
           {/* Top toolbar */}
           <div className="flex items-center justify-between px-4 py-2 bg-zinc-800 text-white border-b border-zinc-700">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium">{title || 'Annotate Image'}</h3>
+              <h3 className="text-sm font-medium">{title || t('titleFallback')}</h3>
               {!readOnly && (
                 <span className="text-xs text-zinc-400">
-                  ({annotations.length} annotation{annotations.length !== 1 ? 's' : ''})
+                  (
+                  {annotations.length === 1
+                    ? t('annotationCount', { count: annotations.length })
+                    : t('annotationCountPlural', { count: annotations.length })}
+                  )
                 </span>
               )}
             </div>
@@ -338,23 +345,27 @@ export function ImageAnnotator({
           {!readOnly && (
             <div className="flex items-center gap-1 px-4 py-2 bg-zinc-800 text-white border-b border-zinc-700 flex-wrap">
               {/* Drawing tools */}
-              {TOOLS.map((t) => (
-                <Button
-                  key={t.id}
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 text-xs ${
-                    tool === t.id
-                      ? 'bg-white/20 text-white'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/10'
-                  }`}
-                  onClick={() => setTool(t.id)}
-                  title={t.label}
-                >
-                  <t.icon className="h-3.5 w-3.5 mr-1" />
-                  {t.label}
-                </Button>
-              ))}
+              {TOOLS.map((toolItem) => {
+                const label = t(`tools.${toolItem.id}`)
+                const ToolIcon = toolItem.icon
+                return (
+                  <Button
+                    key={toolItem.id}
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 text-xs ${
+                      tool === toolItem.id
+                        ? 'bg-white/20 text-white'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                    }`}
+                    onClick={() => setTool(toolItem.id)}
+                    title={label}
+                  >
+                    <ToolIcon className="h-3.5 w-3.5 mr-1" />
+                    {label}
+                  </Button>
+                )
+              })}
 
               <div className="w-px h-5 bg-zinc-600 mx-1" />
 
@@ -374,7 +385,7 @@ export function ImageAnnotator({
               <div className="w-px h-5 bg-zinc-600 mx-1" />
 
               {/* Line width */}
-              <span className="text-xs text-zinc-400">Width:</span>
+              <span className="text-xs text-zinc-400">{t('width')}</span>
               <input
                 type="range"
                 min={1}
@@ -393,7 +404,7 @@ export function ImageAnnotator({
                 className="text-zinc-400 hover:text-white hover:bg-white/10 h-8 w-8"
                 onClick={handleUndo}
                 disabled={undoStack.length === 0}
-                title="Undo (Ctrl+Z)"
+                title={t('undo')}
               >
                 <Undo2 className="h-4 w-4" />
               </Button>
@@ -403,7 +414,7 @@ export function ImageAnnotator({
                 className="text-zinc-400 hover:text-white hover:bg-white/10 h-8 w-8"
                 onClick={handleRedo}
                 disabled={redoStack.length === 0}
-                title="Redo (Ctrl+Y)"
+                title={t('redo')}
               >
                 <Redo2 className="h-4 w-4" />
               </Button>
@@ -413,7 +424,7 @@ export function ImageAnnotator({
                 className="text-zinc-400 hover:text-white hover:bg-white/10 h-8 w-8"
                 onClick={handleClearAll}
                 disabled={annotations.length === 0}
-                title="Clear all"
+                title={t('clearAll')}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -458,7 +469,7 @@ export function ImageAnnotator({
                       type="text"
                       autoFocus
                       className="px-2 py-1 text-sm bg-black/80 text-white border border-zinc-500 rounded outline-none min-w-[150px]"
-                      placeholder="Type text..."
+                      placeholder={t('textPlaceholder')}
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -478,7 +489,7 @@ export function ImageAnnotator({
             {!imageLoaded && (
               <div className="text-zinc-400 flex items-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Loading image...
+                {t('loading')}
               </div>
             )}
           </div>
@@ -491,12 +502,12 @@ export function ImageAnnotator({
                 onClick={() => onOpenChange(false)}
                 className="border-zinc-600 text-zinc-300 hover:bg-zinc-700"
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 <Save className="h-4 w-4 mr-2" />
-                Save Annotations
+                {t('save')}
               </Button>
             </DialogFooter>
           )}
