@@ -5387,7 +5387,18 @@
         "COMPLETED": "Completed",
         "CANCELLED": "Cancelled",
         "NO_SHOW": "No Show"
-      }
+      },
+      "callEnded": "Call Ended",
+      "durationValue": "Duration: {duration}",
+      "addNotesPlaceholder": "Add consultation notes…",
+      "saveNotesClose": "Save Notes & Close",
+      "live": "LIVE",
+      "hidePanel": "Hide Panel",
+      "showPanel": "Show Panel",
+      "endCall": "End Call",
+      "appointment": "Appointment",
+      "complaintLabel": "Complaint:",
+      "typeNotesPlaceholder": "Type notes during the consultation…"
     }
   },
   "sterilization": {

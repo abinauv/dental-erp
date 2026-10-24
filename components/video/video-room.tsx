@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -68,6 +69,7 @@ export default function VideoRoom({
   onEnd,
   onStatusChange,
 }: VideoRoomProps) {
+  const t = useTranslations('video.room')
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [elapsed, setElapsed] = useState(0)
@@ -132,20 +134,22 @@ export default function VideoRoom({
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <div className="text-center space-y-2">
           <Phone className="h-12 w-12 text-muted-foreground mx-auto" />
-          <h2 className="text-xl font-semibold">Call Ended</h2>
-          <p className="text-muted-foreground">Duration: {formatDuration(elapsed)}</p>
+          <h2 className="text-xl font-semibold">{t('callEnded')}</h2>
+          <p className="text-muted-foreground">
+            {t('durationValue', { duration: formatDuration(elapsed) })}
+          </p>
         </div>
         {isDoctor && (
           <div className="w-full max-w-lg space-y-3">
-            <label className="text-sm font-medium">Consultation Notes</label>
+            <label className="text-sm font-medium">{t('consultationNotes')}</label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add consultation notes..."
+              placeholder={t('addNotesPlaceholder')}
               rows={6}
             />
             <Button onClick={() => onEnd?.(notes)} className="w-full">
-              Save Notes & Close
+              {t('saveNotesClose')}
             </Button>
           </div>
         )}
@@ -161,7 +165,7 @@ export default function VideoRoom({
         <div className="flex items-center justify-between px-4 py-2 bg-gray-900 text-white rounded-t-lg">
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="bg-red-600 text-white border-red-600 animate-pulse">
-              LIVE
+              {t('live')}
             </Badge>
             <div className="flex items-center gap-1 text-sm">
               <Clock className="h-3 w-3" />
@@ -177,7 +181,7 @@ export default function VideoRoom({
                 onClick={() => setShowSidebar(!showSidebar)}
               >
                 <FileText className="h-4 w-4 mr-1" />
-                {showSidebar ? 'Hide' : 'Show'} Panel
+                {showSidebar ? t('hidePanel') : t('showPanel')}
               </Button>
             )}
             <Button
@@ -211,7 +215,7 @@ export default function VideoRoom({
             className="rounded-full px-6"
           >
             <Phone className="h-5 w-5 mr-2 rotate-[135deg]" />
-            End Call
+            {t('endCall')}
           </Button>
         </div>
       </div>
@@ -225,7 +229,7 @@ export default function VideoRoom({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Patient Info
+                  {t('patientInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
@@ -244,30 +248,32 @@ export default function VideoRoom({
                 {patient.medicalHistory && (
                   <div className="space-y-1 pt-2 border-t">
                     <div className="font-medium text-xs text-muted-foreground uppercase">
-                      Medical Alerts
+                      {t('medicalAlerts')}
                     </div>
                     {patient.medicalHistory.hasAllergies && (
                       <div className="flex items-center gap-1 text-red-600 text-xs">
                         <AlertTriangle className="h-3 w-3" />
-                        Allergies: {patient.medicalHistory.drugAllergies || 'Yes'}
+                        {t('allergies', {
+                          value: patient.medicalHistory.drugAllergies || t('allergiesYes'),
+                        })}
                       </div>
                     )}
                     {patient.medicalHistory.hasDiabetes && (
                       <div className="flex items-center gap-1 text-orange-600 text-xs">
                         <AlertTriangle className="h-3 w-3" />
-                        Diabetes
+                        {t('diabetes')}
                       </div>
                     )}
                     {patient.medicalHistory.hasHypertension && (
                       <div className="flex items-center gap-1 text-orange-600 text-xs">
                         <AlertTriangle className="h-3 w-3" />
-                        Hypertension
+                        {t('hypertension')}
                       </div>
                     )}
                     {patient.medicalHistory.hasHeartDisease && (
                       <div className="flex items-center gap-1 text-red-600 text-xs">
                         <AlertTriangle className="h-3 w-3" />
-                        Heart Disease
+                        {t('heartDisease')}
                       </div>
                     )}
                   </div>
@@ -280,13 +286,13 @@ export default function VideoRoom({
           {appointment && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Appointment</CardTitle>
+                <CardTitle className="text-sm">{t('appointment')}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-1">
                 <div className="text-muted-foreground">{appointment.appointmentNo}</div>
                 {appointment.chiefComplaint && (
                   <div>
-                    <span className="text-muted-foreground">Complaint:</span>{' '}
+                    <span className="text-muted-foreground">{t('complaintLabel')}</span>{' '}
                     {appointment.chiefComplaint}
                   </div>
                 )}
@@ -299,14 +305,14 @@ export default function VideoRoom({
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Consultation Notes
+                {t('consultationNotes')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Type notes during the consultation..."
+                placeholder={t('typeNotesPlaceholder')}
                 rows={8}
                 className="text-sm"
               />
