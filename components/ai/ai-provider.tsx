@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,6 +74,7 @@ const AIContext = createContext<AIContextType | null>(null)
 // Provider
 // ---------------------------------------------------------------------------
 export function AIProvider({ children }: { children: React.ReactNode }) {
+  const t = useTranslations('ai.provider')
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([])
   const [chatLoading, setChatLoading] = useState(false)
   const [commandLoading, setCommandLoading] = useState(false)
@@ -111,9 +113,11 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
         })
 
         if (!res.ok || !res.body) {
-          const errText = await res.text().catch(() => 'Unknown error')
+          const errText = await res.text().catch(() => t('unknownError'))
           setChatMessages((prev) =>
-            prev.slice(0, -1).concat({ role: 'assistant', content: `Error: ${errText}` })
+            prev
+              .slice(0, -1)
+              .concat({ role: 'assistant', content: t('errorPrefix', { message: errText }) })
           )
           return
         }
@@ -149,15 +153,13 @@ export function AIProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return
         setChatMessages((prev) =>
-          prev
-            .slice(0, -1)
-            .concat({ role: 'assistant', content: 'Connection error. Please try again.' })
+          prev.slice(0, -1).concat({ role: 'assistant', content: t('connectionError') })
         )
       } finally {
         setChatLoading(false)
       }
     },
-    [chatMessages]
+    [chatMessages, t]
   )
 
   const clearChat = useCallback(() => {

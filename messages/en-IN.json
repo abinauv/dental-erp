@@ -6673,6 +6673,11 @@
       "executeFailed": "Failed to execute query",
       "noResults": "No results found for this query.",
       "exportJson": "⬇ Export JSON"
+    },
+    "provider": {
+      "errorPrefix": "Error: {message}",
+      "unknownError": "Unknown error",
+      "connectionError": "Connection error. Please try again."
     }
   }
 }
