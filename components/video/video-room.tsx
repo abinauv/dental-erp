@@ -229,7 +229,7 @@ export default function VideoRoom({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  {t('patientInfo')}
+                  {t('patientInfoCard')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">

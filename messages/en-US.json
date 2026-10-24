@@ -5390,7 +5390,7 @@
       },
       "callEnded": "Call Ended",
       "durationValue": "Duration: {duration}",
-      "addNotesPlaceholder": "Add consultation notes…",
+      "addNotesPlaceholder": "Add consultation notes...",
       "saveNotesClose": "Save Notes & Close",
       "live": "LIVE",
       "hidePanel": "Hide Panel",
@@ -5398,7 +5398,8 @@
       "endCall": "End Call",
       "appointment": "Appointment",
       "complaintLabel": "Complaint:",
-      "typeNotesPlaceholder": "Type notes during the consultation…"
+      "typeNotesPlaceholder": "Type notes during the consultation...",
+      "patientInfoCard": "Patient Info"
     }
   },
   "sterilization": {
@@ -6401,6 +6402,58 @@
         "circle": "Circle",
         "rectangle": "Rectangle",
         "text": "Text"
+      }
+    }
+  },
+  "forms": {
+    "renderer": {
+      "required": "{label} is required",
+      "minLength": "Minimum {count} characters",
+      "maxLength": "Maximum {count} characters",
+      "minValue": "Minimum value is {value}",
+      "maxValue": "Maximum value is {value}",
+      "signatureRequired": "Signature is required",
+      "selectPlaceholder": "Select...",
+      "agreeDefault": "I agree to the terms above",
+      "signatureAlt": "Signature",
+      "noSignature": "No signature",
+      "submit": "Submit Form"
+    },
+    "signature": {
+      "agreeDefault": "I agree to the terms and conditions above",
+      "signHere": "Sign here",
+      "undo": "Undo",
+      "clear": "Clear",
+      "signedOn": "Signed on: {date}"
+    },
+    "submissions": {
+      "title": "Form Submissions",
+      "empty": "No form submissions for this patient",
+      "signed": "(Signed)",
+      "review": "Review",
+      "statusLabel": "Status",
+      "setStatusPlaceholder": "Set status...",
+      "reviewNotes": "Review Notes",
+      "notesPlaceholder": "Optional notes...",
+      "close": "Close",
+      "saveReview": "Save Review",
+      "status": {
+        "SUBMITTED": "Pending Review",
+        "REVIEWED": "Reviewed",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "selectStatus": {
+        "SUBMITTED": "Pending",
+        "REVIEWED": "Reviewed",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "toast": {
+        "loadError": "Failed to load form submissions",
+        "detailError": "Failed to load submission details",
+        "saved": "Review saved",
+        "saveError": "Failed to save review"
       }
     }
   }
