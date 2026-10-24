@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -77,6 +78,9 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function FeedbackAnalyticsPage() {
   const { toast } = useToast()
+  const t = useTranslations('communications.feedback')
+  const tp = useTranslations('communications.period')
+  const tc = useTranslations('communications.common')
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('30d')
   const [data, setData] = useState<FeedbackData | null>(null)
@@ -88,7 +92,7 @@ export default function FeedbackAnalyticsPage() {
       if (!res.ok) throw new Error('Failed to fetch analytics')
       setData(await res.json())
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: tc('error'), description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -96,6 +100,7 @@ export default function FeedbackAnalyticsPage() {
 
   useEffect(() => {
     fetchData(period)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period])
 
   const npsColor = (score: number) =>
@@ -112,10 +117,8 @@ export default function FeedbackAnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Feedback Analytics</h2>
-          <p className="text-muted-foreground">
-            Patient satisfaction scores, NPS trends, and feedback insights
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
@@ -123,10 +126,10 @@ export default function FeedbackAnalyticsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="7d">{tp('7d')}</SelectItem>
+              <SelectItem value="30d">{tp('30d')}</SelectItem>
+              <SelectItem value="90d">{tp('90d')}</SelectItem>
+              <SelectItem value="all">{tp('all')}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={() => fetchData(period)}>
@@ -145,29 +148,33 @@ export default function FeedbackAnalyticsPage() {
           <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t('overview.totalResponses')}
+                </CardTitle>
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{data.totalResponses}</div>
                 <p className="text-xs text-muted-foreground">
-                  From {data.totalSurveys} active surveys
+                  {t('overview.fromSurveys', { count: data.totalSurveys })}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('overview.avgRating')}</CardTitle>
                 <Star className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.avgRating}/5</div>
+                <div className="text-2xl font-bold">
+                  {t('overview.ratingOutOf', { rating: data.avgRating })}
+                </div>
                 <StarRating rating={data.avgRating} />
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">NPS Score</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('overview.nps')}</CardTitle>
                 {data.nps.score >= 0 ? (
                   <ThumbsUp className="h-4 w-4 text-green-500" />
                 ) : (
@@ -181,21 +188,21 @@ export default function FeedbackAnalyticsPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {data.nps.score >= 50
-                    ? 'Excellent'
+                    ? t('overview.npsExcellent')
                     : data.nps.score >= 0
-                      ? 'Good'
-                      : 'Needs improvement'}
+                      ? t('overview.npsGood')
+                      : t('overview.npsNeedsImprovement')}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('overview.responseRate')}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{data.responseRate}%</div>
-                <p className="text-xs text-muted-foreground">Completion rate</p>
+                <p className="text-xs text-muted-foreground">{t('overview.completionRate')}</p>
               </CardContent>
             </Card>
           </div>
@@ -205,8 +212,8 @@ export default function FeedbackAnalyticsPage() {
             {/* NPS Breakdown */}
             <Card>
               <CardHeader>
-                <CardTitle>NPS Breakdown</CardTitle>
-                <CardDescription>Promoters (4-5), Passives (3), Detractors (1-2)</CardDescription>
+                <CardTitle>{t('nps.breakdownTitle')}</CardTitle>
+                <CardDescription>{t('nps.breakdownDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Stacked bar */}
@@ -247,40 +254,43 @@ export default function FeedbackAnalyticsPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-sm bg-green-500" />
-                    Promoters ({data.nps.promoters})
+                    {t('nps.promoters', { count: data.nps.promoters })}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-sm bg-yellow-400" />
-                    Passives ({data.nps.passives})
+                    {t('nps.passives', { count: data.nps.passives })}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-sm bg-red-500" />
-                    Detractors ({data.nps.detractors})
+                    {t('nps.detractors', { count: data.nps.detractors })}
                   </span>
                 </div>
 
                 {/* NPS Trend */}
                 {data.nps.trend.length > 1 && (
                   <div className="pt-4 border-t">
-                    <p className="text-sm font-medium mb-2">Monthly NPS Trend</p>
+                    <p className="text-sm font-medium mb-2">{t('nps.trendTitle')}</p>
                     <div className="flex items-end gap-2 h-[100px]">
-                      {data.nps.trend.map((t) => {
-                        const normalized = ((t.score + 100) / 200) * 100 // -100..100 → 0..100
+                      {data.nps.trend.map((pt) => {
+                        const normalized = ((pt.score + 100) / 200) * 100 // -100..100 → 0..100
                         return (
                           <div
-                            key={t.month}
+                            key={pt.month}
                             className="flex flex-col items-center flex-1 group relative"
                           >
                             <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-popover border rounded px-1.5 py-0.5 whitespace-nowrap z-10">
-                              {t.month}: {t.score > 0 ? '+' : ''}
-                              {t.score} ({t.responses})
+                              {t('nps.trendTooltip', {
+                                month: pt.month,
+                                score: `${pt.score > 0 ? '+' : ''}${pt.score}`,
+                                responses: pt.responses,
+                              })}
                             </div>
                             <div
-                              className={`w-full rounded-t-sm ${t.score >= 0 ? 'bg-green-500' : 'bg-red-400'}`}
+                              className={`w-full rounded-t-sm ${pt.score >= 0 ? 'bg-green-500' : 'bg-red-400'}`}
                               style={{ height: `${Math.max(normalized, 4)}%` }}
                             />
                             <span className="text-[9px] text-muted-foreground mt-1">
-                              {t.month.slice(5)}
+                              {pt.month.slice(5)}
                             </span>
                           </div>
                         )
@@ -294,15 +304,15 @@ export default function FeedbackAnalyticsPage() {
             {/* Sentiment */}
             <Card>
               <CardHeader>
-                <CardTitle>Sentiment Analysis</CardTitle>
-                <CardDescription>Overall patient sentiment from feedback</CardDescription>
+                <CardTitle>{t('sentiment.title')}</CardTitle>
+                <CardDescription>{t('sentiment.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm">
                       <Smile className="h-5 w-5 text-green-500" />
-                      Positive
+                      {t('sentiment.positive')}
                     </span>
                     <span className="font-semibold">{data.sentimentBreakdown.positive}</span>
                   </div>
@@ -320,7 +330,7 @@ export default function FeedbackAnalyticsPage() {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm">
                       <Meh className="h-5 w-5 text-yellow-500" />
-                      Neutral
+                      {t('sentiment.neutral')}
                     </span>
                     <span className="font-semibold">{data.sentimentBreakdown.neutral}</span>
                   </div>
@@ -338,7 +348,7 @@ export default function FeedbackAnalyticsPage() {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm">
                       <Frown className="h-5 w-5 text-red-500" />
-                      Negative
+                      {t('sentiment.negative')}
                     </span>
                     <span className="font-semibold">{data.sentimentBreakdown.negative}</span>
                   </div>
@@ -363,15 +373,17 @@ export default function FeedbackAnalyticsPage() {
             {data.satisfaction.byDoctor.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Satisfaction by Doctor</CardTitle>
+                  <CardTitle className="text-base">{t('satisfaction.byDoctorTitle')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead className="text-right">Responses</TableHead>
+                        <TableHead>{t('satisfaction.colDoctor')}</TableHead>
+                        <TableHead>{t('satisfaction.colRating')}</TableHead>
+                        <TableHead className="text-right">
+                          {t('satisfaction.colResponses')}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -394,15 +406,17 @@ export default function FeedbackAnalyticsPage() {
             {data.satisfaction.byProcedure.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Satisfaction by Procedure</CardTitle>
+                  <CardTitle className="text-base">{t('satisfaction.byProcedureTitle')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Procedure</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead className="text-right">Responses</TableHead>
+                        <TableHead>{t('satisfaction.colProcedure')}</TableHead>
+                        <TableHead>{t('satisfaction.colRating')}</TableHead>
+                        <TableHead className="text-right">
+                          {t('satisfaction.colResponses')}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -428,9 +442,9 @@ export default function FeedbackAnalyticsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Rating Trend
+                  {t('satisfaction.trendTitle')}
                 </CardTitle>
-                <CardDescription>Average satisfaction rating by month</CardDescription>
+                <CardDescription>{t('satisfaction.trendDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end gap-3 h-[140px]">
@@ -442,7 +456,11 @@ export default function FeedbackAnalyticsPage() {
                         className="flex flex-col items-center flex-1 group relative"
                       >
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-popover border rounded px-2 py-1 whitespace-nowrap z-10">
-                          {m.month}: {m.avgRating}/5 ({m.count} responses)
+                          {t('satisfaction.trendTooltip', {
+                            month: m.month,
+                            rating: m.avgRating,
+                            count: m.count,
+                          })}
                         </div>
                         <div
                           className={`w-full rounded-t-sm ${
@@ -469,8 +487,8 @@ export default function FeedbackAnalyticsPage() {
           {data.wordFrequencies.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Feedback Word Cloud</CardTitle>
-                <CardDescription>Most frequent words from patient feedback</CardDescription>
+                <CardTitle>{t('wordCloud.title')}</CardTitle>
+                <CardDescription>{t('wordCloud.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -486,7 +504,7 @@ export default function FeedbackAnalyticsPage() {
                           fontSize: `${scale}rem`,
                           opacity,
                         }}
-                        title={`"${w.word}" — ${w.count} mentions`}
+                        title={t('wordCloud.tooltip', { word: w.word, count: w.count })}
                       >
                         {w.word}
                         <span className="text-[10px] text-muted-foreground ml-1">{w.count}</span>
@@ -503,10 +521,8 @@ export default function FeedbackAnalyticsPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <MessageCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold">No feedback data yet</h3>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Start collecting patient surveys to see feedback analytics here
-                </p>
+                <h3 className="text-lg font-semibold">{t('empty.title')}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{t('empty.description')}</p>
               </CardContent>
             </Card>
           )}

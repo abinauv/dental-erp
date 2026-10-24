@@ -5832,5 +5832,275 @@
         "aiLoadError": "Failed to load AI segments"
       }
     }
+  },
+  "communications": {
+    "common": {
+      "error": "Error",
+      "success": "Success"
+    },
+    "period": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "all": "All time"
+    },
+    "center": {
+      "title": "Communication Center",
+      "subtitle": "Manage SMS, Email, Templates, and Patient Feedback",
+      "tabs": {
+        "sms": "SMS",
+        "email": "Email",
+        "templates": "Templates",
+        "surveys": "Surveys"
+      },
+      "sms": {
+        "sendTitle": "Send SMS",
+        "sendDescription": "Send individual or bulk SMS messages",
+        "phoneLabel": "Phone Number",
+        "phonePlaceholder": "10-digit mobile number",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Type your message here (max 500 characters)",
+        "charCount": "{count}/500 characters",
+        "send": "Send SMS",
+        "historyTitle": "SMS History",
+        "historyDescription": "Recent SMS communications",
+        "historyPlaceholder": "SMS history will be displayed here"
+      },
+      "email": {
+        "sendTitle": "Send Email",
+        "sendDescription": "Compose and send emails to patients",
+        "toLabel": "To (Email Address)",
+        "toPlaceholder": "patient@example.com",
+        "subjectLabel": "Subject",
+        "subjectPlaceholder": "Email subject",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Type your email message here",
+        "send": "Send Email",
+        "historyTitle": "Email History",
+        "historyDescription": "Recent email communications",
+        "historyPlaceholder": "Email history will be displayed here"
+      },
+      "templates": {
+        "title": "Communication Templates",
+        "description": "Manage SMS and Email templates for automated communications",
+        "availableTitle": "Available Templates",
+        "availableDescription": "Create and manage reusable message templates",
+        "create": "Create Template",
+        "listPlaceholder": "Template list will be displayed here"
+      },
+      "surveys": {
+        "title": "Patient Surveys & Feedback",
+        "description": "Create and manage patient satisfaction surveys",
+        "activeTitle": "Active Surveys",
+        "activeDescription": "Collect feedback from patients",
+        "create": "Create Survey",
+        "listPlaceholder": "Survey list will be displayed here"
+      },
+      "toast": {
+        "fillAll": "Please fill in all fields",
+        "smsSuccess": "SMS sent successfully",
+        "smsError": "Failed to send SMS",
+        "emailSuccess": "Email sent successfully",
+        "emailError": "Failed to send email"
+      }
+    },
+    "analytics": {
+      "title": "Campaign Analytics",
+      "subtitle": "SMS delivery rates, email engagement, and campaign performance",
+      "failureRate": "{rate}% failure rate",
+      "noMessages": "No messages",
+      "sms": {
+        "heading": "SMS Overview",
+        "totalSent": "Total Sent",
+        "pending": "{count} pending",
+        "allProcessed": "All processed",
+        "deliveryRate": "Delivery Rate",
+        "deliveredCount": "{count} delivered",
+        "failed": "Failed",
+        "totalCost": "Total Cost",
+        "costPerMsg": "{cost}/msg",
+        "noCostData": "No cost data"
+      },
+      "email": {
+        "heading": "Email Overview",
+        "totalSent": "Total Sent",
+        "deliveredCount": "{count} successfully delivered",
+        "openRate": "Open Rate",
+        "openedOf": "{opened} opened of {sent}",
+        "clickRate": "Click Rate",
+        "clickedOf": "{clicked} clicked of {sent}",
+        "failed": "Failed"
+      },
+      "dailyVolume": {
+        "title": "Daily Message Volume",
+        "description": "SMS and email messages sent per day",
+        "tooltip": "{date}: {sms} SMS, {email} Email",
+        "smsLegend": "SMS",
+        "emailLegend": "Email"
+      },
+      "campaigns": {
+        "title": "Recent Campaigns",
+        "description": "Bulk communication campaign performance",
+        "colCampaign": "Campaign",
+        "colChannel": "Channel",
+        "colStatus": "Status",
+        "colRecipients": "Recipients",
+        "colSent": "Sent",
+        "colFailed": "Failed",
+        "colCost": "Cost",
+        "colDate": "Date"
+      },
+      "channel": {
+        "SMS": "SMS",
+        "EMAIL": "Email"
+      },
+      "campaignStatus": {
+        "DRAFT": "Draft",
+        "SCHEDULED": "Scheduled",
+        "SENDING": "Sending",
+        "SENT": "Sent",
+        "COMPLETED": "Completed",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled",
+        "PENDING": "Pending",
+        "QUEUED": "Queued"
+      },
+      "topSmsTitle": "Top SMS Templates",
+      "topEmailTitle": "Top Email Templates",
+      "sentCount": "{count} sent",
+      "empty": {
+        "title": "No analytics data yet",
+        "description": "Start sending SMS and emails to see campaign analytics here"
+      }
+    },
+    "automations": {
+      "title": "Marketing Automations",
+      "subtitle": "Create rules to automatically send messages based on patient events",
+      "newAutomation": "New Automation",
+      "createAutomation": "Create Automation",
+      "emptyTitle": "No automations yet",
+      "emptyDescription": "Create your first automation rule to start engaging patients automatically",
+      "activeRules": "Active Rules ({active}/{total})",
+      "activeRulesDescription": "Automation rules are evaluated daily by the cron scheduler",
+      "col": {
+        "name": "Name",
+        "trigger": "Trigger",
+        "action": "Action",
+        "active": "Active",
+        "runs": "Runs",
+        "lastRun": "Last Run",
+        "actions": "Actions"
+      },
+      "never": "Never",
+      "trigger": {
+        "NO_VISIT": "No visit in {days} days",
+        "BIRTHDAY_UPCOMING": "Birthday in {days} days",
+        "TREATMENT_PLAN_PENDING": "Treatment plan pending {days} days",
+        "MEMBERSHIP_EXPIRING": "Membership expiring in {days} days",
+        "POST_APPOINTMENT": "After appointment completion",
+        "PAYMENT_OVERDUE": "Payment overdue by {days} days"
+      },
+      "triggerParam": {
+        "NO_VISIT": "Days since last visit",
+        "BIRTHDAY_UPCOMING": "Days before birthday",
+        "TREATMENT_PLAN_PENDING": "Days pending",
+        "MEMBERSHIP_EXPIRING": "Days before expiry",
+        "PAYMENT_OVERDUE": "Days overdue"
+      },
+      "action": {
+        "SEND_SMS": "Send SMS",
+        "SEND_EMAIL": "Send Email",
+        "CREATE_NOTIFICATION": "Create Notification"
+      },
+      "form": {
+        "defaultNotifMessage": "Automation \"{name}\" triggered"
+      },
+      "dialog": {
+        "editTitle": "Edit Automation",
+        "createTitle": "New Automation",
+        "description": "Define the trigger condition and action for this automation rule",
+        "nameLabel": "Automation Name",
+        "namePlaceholder": "e.g., Re-engage inactive patients",
+        "triggerLabel": "Trigger (IF)",
+        "triggerPlaceholder": "Select trigger...",
+        "actionLabel": "Action (THEN)",
+        "actionPlaceholder": "Select action...",
+        "templateLabel": "Message Template",
+        "templatePlaceholder": "Select template...",
+        "noTemplates": "No templates found — create one first",
+        "templateOption": "{name} ({category})",
+        "notifTitleLabel": "Notification Title",
+        "notifTitlePlaceholder": "e.g., Patient Follow-up Required",
+        "notifMessageLabel": "Notification Message",
+        "notifMessagePlaceholder": "e.g., Patient has not visited in 6 months",
+        "cancel": "Cancel",
+        "update": "Update",
+        "create": "Create"
+      },
+      "toast": {
+        "fillRequired": "Please fill in all required fields",
+        "selectTemplate": "Please select a template",
+        "saveError": "Failed to save",
+        "updated": "Automation updated",
+        "created": "Automation created",
+        "deleted": "Automation deleted",
+        "deleteConfirmTitle": "Delete automation?",
+        "deleteConfirmDescription": "Are you sure you want to delete this automation?",
+        "deleteConfirmLabel": "Delete"
+      }
+    },
+    "feedback": {
+      "title": "Feedback Analytics",
+      "subtitle": "Patient satisfaction scores, NPS trends, and feedback insights",
+      "errorTitle": "Error",
+      "overview": {
+        "totalResponses": "Total Responses",
+        "fromSurveys": "From {count} active surveys",
+        "avgRating": "Avg Rating",
+        "ratingOutOf": "{rating}/5",
+        "nps": "NPS Score",
+        "npsExcellent": "Excellent",
+        "npsGood": "Good",
+        "npsNeedsImprovement": "Needs improvement",
+        "responseRate": "Response Rate",
+        "completionRate": "Completion rate"
+      },
+      "nps": {
+        "breakdownTitle": "NPS Breakdown",
+        "breakdownDescription": "Promoters (4-5), Passives (3), Detractors (1-2)",
+        "promoters": "Promoters ({count})",
+        "passives": "Passives ({count})",
+        "detractors": "Detractors ({count})",
+        "trendTitle": "Monthly NPS Trend",
+        "trendTooltip": "{month}: {score} ({responses})"
+      },
+      "sentiment": {
+        "title": "Sentiment Analysis",
+        "description": "Overall patient sentiment from feedback",
+        "positive": "Positive",
+        "neutral": "Neutral",
+        "negative": "Negative"
+      },
+      "satisfaction": {
+        "byDoctorTitle": "Satisfaction by Doctor",
+        "byProcedureTitle": "Satisfaction by Procedure",
+        "colDoctor": "Doctor",
+        "colProcedure": "Procedure",
+        "colRating": "Rating",
+        "colResponses": "Responses",
+        "trendTitle": "Rating Trend",
+        "trendDescription": "Average satisfaction rating by month",
+        "trendTooltip": "{month}: {rating}/5 ({count} responses)"
+      },
+      "wordCloud": {
+        "title": "Feedback Word Cloud",
+        "description": "Most frequent words from patient feedback",
+        "tooltip": "\"{word}\" — {count} mentions"
+      },
+      "empty": {
+        "title": "No feedback data yet",
+        "description": "Start collecting patient surveys to see feedback analytics here"
+      }
+    }
   }
 }
