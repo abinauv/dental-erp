@@ -63,7 +63,7 @@ const ENTITY_ICONS: Record<string, typeof Activity> = {
 export default function AuditLogPage() {
   const t = useTranslations('auditLog')
   const tRole = useTranslations('staff.role')
-  const { formatDateTime } = useClinicFormatters()
+  const { formatDateTime, formatNumber } = useClinicFormatters()
   const [logs, setLogs] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -124,7 +124,7 @@ export default function AuditLogPage() {
             <Shield className="h-6 w-6" /> {t('title')}
           </h1>
           <p className="text-muted-foreground">
-            {t('totalEvents', { count: total.toLocaleString() })}
+            {t('totalEvents', { count: formatNumber(total) })}
           </p>
         </div>
         <Button variant="outline" onClick={exportLogs}>

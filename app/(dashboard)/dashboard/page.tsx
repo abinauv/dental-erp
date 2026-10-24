@@ -81,6 +81,7 @@ export default function DashboardPage() {
   const tStatus = useTranslations('appointments.status')
   const {
     formatCurrency: fmtCurrency,
+    formatNumber,
     formatDate,
     formatDateTime,
     currencySymbol,
@@ -192,9 +193,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.overview.totalPatients.toLocaleString()}
-            </div>
+            <div className="text-2xl font-bold">{formatNumber(stats.overview.totalPatients)}</div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {getGrowthIcon(stats.overview.patientGrowth)}
               <span className={getGrowthColor(stats.overview.patientGrowth)}>
