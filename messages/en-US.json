@@ -6456,5 +6456,85 @@
         "saveError": "Failed to save review"
       }
     }
+  },
+  "insurance": {
+    "title": "Insurance Policies",
+    "addPolicy": "Add Policy",
+    "emptyTitle": "No insurance policies on file",
+    "emptyDescription": "Add the patient's insurance information to enable claims and pre-authorizations",
+    "inactive": "Inactive",
+    "policyLine": "Policy: {policy}",
+    "groupLine": "· Group: {group}",
+    "memberId": "Member ID",
+    "subscriber": "Subscriber",
+    "subscriberValue": "{name} ({relation})",
+    "effective": "Effective",
+    "expires": "Expires",
+    "na": "N/A",
+    "annualMaximum": "Annual Maximum",
+    "remaining": "Remaining",
+    "deductible": "Deductible",
+    "met": "(Met)",
+    "copay": "Co-pay",
+    "copayValue": "{value}%",
+    "verify": "Verify",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "verification": {
+      "unverified": "Unverified",
+      "verified": "Verified",
+      "expired": "Expired"
+    },
+    "relation": {
+      "Self": "Self",
+      "Spouse": "Spouse",
+      "Child": "Child",
+      "Parent": "Parent",
+      "Other": "Other"
+    },
+    "coverageType": {
+      "Individual": "Individual",
+      "Family": "Family",
+      "Group": "Group"
+    },
+    "dialog": {
+      "editTitle": "Edit Insurance Policy",
+      "addTitle": "Add Insurance Policy",
+      "providerLabel": "Insurance Provider *",
+      "providerPlaceholder": "Select provider",
+      "policyNumberLabel": "Policy Number *",
+      "policyNumberPlaceholder": "e.g., POL-12345",
+      "groupNumberLabel": "Group Number",
+      "groupNumberPlaceholder": "Optional",
+      "memberIdLabel": "Member ID *",
+      "memberIdPlaceholder": "e.g., MEM-001",
+      "relationLabel": "Subscriber Relation",
+      "subscriberNameLabel": "Subscriber Name *",
+      "subscriberNamePlaceholder": "Name of the policy holder",
+      "effectiveDateLabel": "Effective Date *",
+      "expiryDateLabel": "Expiry Date",
+      "coverageTypeLabel": "Coverage Type",
+      "coverageTypePlaceholder": "Select type",
+      "annualMaximumLabel": "Annual Maximum",
+      "deductibleLabel": "Deductible",
+      "copayLabel": "Co-pay %",
+      "copayPlaceholder": "%",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "update": "Update",
+      "addPolicy": "Add Policy"
+    },
+    "toast": {
+      "loadError": "Failed to load insurance policies",
+      "fillRequired": "Please fill all required fields",
+      "saveError": "Failed to save",
+      "updated": "Policy updated",
+      "added": "Policy added",
+      "verified": "Insurance verified successfully",
+      "verifyError": "Verification failed",
+      "deactivated": "Policy deactivated",
+      "activated": "Policy activated",
+      "updateError": "Failed to update policy"
+    }
   }
 }
