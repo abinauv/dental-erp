@@ -6102,5 +6102,176 @@
         "description": "Start collecting patient surveys to see feedback analytics here"
       }
     }
+  },
+  "chat": {
+    "title": "AI Assistant",
+    "subtitleHandsFree": "Hands-free mode — speak naturally, I'll respond and keep listening",
+    "subtitle": "Type or speak to manage your clinic",
+    "handsFree": "Hands-free",
+    "handsFreeTitle": "Hands-free: continuous voice conversation",
+    "voiceOnTitle": "Voice responses ON",
+    "voiceOffTitle": "Voice responses OFF",
+    "voiceOn": "Voice on",
+    "voiceOff": "Voice off",
+    "newChat": "New Chat",
+    "status": {
+      "listening": "Listening...",
+      "thinking": "Thinking...",
+      "speakingLong": "Speaking... (click orb to stop)",
+      "speaking": "Speaking..."
+    },
+    "welcomeTitle": "How can I help you today?",
+    "welcomeDescription": "I can look up patients, check appointments, show revenue, manage inventory, and more.",
+    "voiceHint": "Tap the orb to speak, or type below. Enable Hands-free for continuous conversation.",
+    "plainEnglish": "Just ask in plain English.",
+    "inputPlaceholder": "Type a message...",
+    "mic": {
+      "stopListening": "Stop listening",
+      "stopSpeaking": "Stop speaking",
+      "start": "Start voice input",
+      "speak": "Speak your message"
+    },
+    "send": "Send message",
+    "disclaimer": "AI can make mistakes. Verify important information.",
+    "suggestions": {
+      "dailySummary": {
+        "label": "Daily summary",
+        "prompt": "Give me today's daily summary"
+      },
+      "registerPatient": {
+        "label": "Register patient",
+        "prompt": "Create a new patient named "
+      },
+      "bookAppointment": {
+        "label": "Book appointment",
+        "prompt": "Book an appointment for "
+      },
+      "createInvoice": {
+        "label": "Create invoice",
+        "prompt": "Create an invoice for "
+      },
+      "recordPayment": {
+        "label": "Record payment",
+        "prompt": "Record a payment for "
+      },
+      "todaysAppointments": {
+        "label": "Today's appointments",
+        "prompt": "Show today's appointments"
+      },
+      "overdueInvoices": {
+        "label": "Overdue invoices",
+        "prompt": "Check overdue invoices"
+      },
+      "revenueThisMonth": {
+        "label": "Revenue this month",
+        "prompt": "Show revenue this month"
+      },
+      "lowStockItems": {
+        "label": "Low stock items",
+        "prompt": "Show low stock items"
+      },
+      "patientLookup": {
+        "label": "Patient lookup",
+        "prompt": "Look up patient "
+      },
+      "createLabOrder": {
+        "label": "Create lab order",
+        "prompt": "Create a lab order for "
+      },
+      "showStaff": {
+        "label": "Show staff",
+        "prompt": "Show all staff members"
+      }
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "clinicDetails": "Clinic Details",
+      "workingHours": "Working Hours",
+      "paymentSetup": "Payment Setup",
+      "complete": "Complete"
+    },
+    "allSet": "You're all set!",
+    "setupTitle": "Setup {name}",
+    "yourClinic": "your clinic",
+    "stepDescription": {
+      "1": "Enter your clinic's location details",
+      "2": "Set your working hours",
+      "3": "Configure payment options (optional)",
+      "4": "Your clinic is ready to accept patients"
+    },
+    "fields": {
+      "tagline": "Tagline (optional)",
+      "address": "Address *",
+      "city": "City *",
+      "state": "State *",
+      "pincode": "Pincode *",
+      "alternatePhone": "Alternate Phone",
+      "website": "Website",
+      "gstNumber": "GST Number",
+      "registrationNo": "Registration Number",
+      "upiId": "UPI ID",
+      "bankName": "Bank Name",
+      "bankAccountNo": "Account Number",
+      "bankIfsc": "IFSC Code",
+      "bankAccountName": "Account Holder Name"
+    },
+    "placeholders": {
+      "tagline": "Your smile, our priority",
+      "address": "123, Main Street",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "pincode": "600001",
+      "alternatePhone": "9876543210",
+      "website": "www.myclinic.com",
+      "gstNumber": "33AAACX1234X1ZX",
+      "registrationNo": "MED-2024-12345",
+      "upiId": "clinic@upi",
+      "bankName": "State Bank of India",
+      "bankAccountNo": "1234567890",
+      "bankIfsc": "SBIN0001234",
+      "bankAccountName": "Dr. John Smith"
+    },
+    "validation": {
+      "address": "Address is required",
+      "city": "City is required",
+      "state": "State is required",
+      "pincode": "Valid pincode is required"
+    },
+    "days": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
+    "hours": {
+      "open": "Open",
+      "to": "to",
+      "closed": "Closed"
+    },
+    "payment": {
+      "intro": "Configure your payment options for invoices. All fields are optional.",
+      "bankDetails": "Bank Details"
+    },
+    "complete": {
+      "title": "Setup Complete!",
+      "description": "Your clinic is now ready. Start by adding your first patient or exploring the dashboard.",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next",
+      "completeSetup": "Complete Setup"
+    },
+    "footer": "You can always update these settings later from the Settings page.",
+    "toast": {
+      "error": "Error",
+      "genericError": "Something went wrong. Please try again.",
+      "successTitle": "Setup complete!",
+      "successDescription": "Your clinic is ready to use."
+    }
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { useAI } from '@/components/ai/ai-provider'
 import { useWebVoice } from '@/hooks/use-web-voice'
 import { VoiceOrb } from '@/components/ai/voice-orb'
@@ -106,27 +107,32 @@ function HandsFreeIcon() {
 }
 
 // ---------------------------------------------------------------------------
-// Suggestions
+// Suggestions — labels and prompts live in the `chat.suggestions` catalogue,
+// resolved by key at render. A prompt ending in a space is a fill-in prompt
+// (placed in the input for the user to complete); the trailing space is kept
+// in the catalogue value and must be preserved by translators.
 // ---------------------------------------------------------------------------
-const SUGGESTIONS = [
-  { label: 'Daily summary', prompt: "Give me today's daily summary" },
-  { label: 'Register patient', prompt: 'Create a new patient named ' },
-  { label: 'Book appointment', prompt: 'Book an appointment for ' },
-  { label: 'Create invoice', prompt: 'Create an invoice for ' },
-  { label: 'Record payment', prompt: 'Record a payment for ' },
-  { label: "Today's appointments", prompt: "Show today's appointments" },
-  { label: 'Overdue invoices', prompt: 'Check overdue invoices' },
-  { label: 'Revenue this month', prompt: 'Show revenue this month' },
-  { label: 'Low stock items', prompt: 'Show low stock items' },
-  { label: 'Patient lookup', prompt: 'Look up patient ' },
-  { label: 'Create lab order', prompt: 'Create a lab order for ' },
-  { label: 'Show staff', prompt: 'Show all staff members' },
+const SUGGESTION_KEYS = [
+  'dailySummary',
+  'registerPatient',
+  'bookAppointment',
+  'createInvoice',
+  'recordPayment',
+  'todaysAppointments',
+  'overdueInvoices',
+  'revenueThisMonth',
+  'lowStockItems',
+  'patientLookup',
+  'createLabOrder',
+  'showStaff',
 ]
 
 // ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 export default function ChatPage() {
+  const t = useTranslations('chat')
+  const locale = useLocale()
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -135,7 +141,7 @@ export default function ChatPage() {
   const prevMsgCountRef = useRef(0)
 
   const voice = useWebVoice({
-    lang: 'en-IN',
+    lang: locale,
     onFinalTranscript: (text) => {
       if (text.trim() && !chatLoading) {
         isVoiceRequest.current = true
@@ -259,11 +265,9 @@ export default function ChatPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b px-6 py-3 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold">AI Assistant</h1>
+          <h1 className="text-lg font-semibold">{t('title')}</h1>
           <p className="text-xs text-muted-foreground">
-            {voice.handsFreeMode
-              ? "Hands-free mode — speak naturally, I'll respond and keep listening"
-              : 'Type or speak to manage your clinic'}
+            {voice.handsFreeMode ? t('subtitleHandsFree') : t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -277,10 +281,10 @@ export default function ChatPage() {
                   ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                   : 'text-muted-foreground hover:bg-muted border-border'
               )}
-              title="Hands-free: continuous voice conversation"
+              title={t('handsFreeTitle')}
             >
               <HandsFreeIcon />
-              <span className="hidden sm:inline">Hands-free</span>
+              <span className="hidden sm:inline">{t('handsFree')}</span>
             </button>
           )}
           {/* TTS toggle */}
@@ -292,10 +296,12 @@ export default function ChatPage() {
                 ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800'
                 : 'text-muted-foreground hover:bg-muted border-border'
             )}
-            title={voice.ttsEnabled ? 'Voice responses ON' : 'Voice responses OFF'}
+            title={voice.ttsEnabled ? t('voiceOnTitle') : t('voiceOffTitle')}
           >
             <SpeakerIcon active={voice.ttsEnabled} />
-            <span className="hidden sm:inline">{voice.ttsEnabled ? 'Voice on' : 'Voice off'}</span>
+            <span className="hidden sm:inline">
+              {voice.ttsEnabled ? t('voiceOn') : t('voiceOff')}
+            </span>
           </button>
           {/* New chat */}
           {hasMessages && (
@@ -306,7 +312,7 @@ export default function ChatPage() {
               }}
               className="rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
             >
-              New Chat
+              {t('newChat')}
             </button>
           )}
         </div>
@@ -350,16 +356,14 @@ export default function ChatPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
                 </span>
-                {voice.interimTranscript || voice.transcript || 'Listening...'}
+                {voice.interimTranscript || voice.transcript || t('status.listening')}
               </div>
             )}
             {orbState === 'processing' && (
-              <p className="text-sm text-purple-500 font-medium mb-4">Thinking...</p>
+              <p className="text-sm text-purple-500 font-medium mb-4">{t('status.thinking')}</p>
             )}
             {orbState === 'speaking' && (
-              <p className="text-sm text-blue-500 font-medium mb-4">
-                Speaking... (click orb to stop)
-              </p>
+              <p className="text-sm text-blue-500 font-medium mb-4">{t('status.speakingLong')}</p>
             )}
 
             {/* Welcome text */}
@@ -385,19 +389,15 @@ export default function ChatPage() {
                     </svg>
                   </div>
                 )}
-                <h2 className="text-xl font-semibold mb-2">How can I help you today?</h2>
+                <h2 className="text-xl font-semibold mb-2">{t('welcomeTitle')}</h2>
                 <p className="text-sm text-muted-foreground mb-2 text-center max-w-md">
-                  I can look up patients, check appointments, show revenue, manage inventory, and
-                  more.
+                  {t('welcomeDescription')}
                 </p>
                 {voice.voiceSupported && (
-                  <p className="text-xs text-primary mb-6 text-center">
-                    Tap the orb to speak, or type below. Enable Hands-free for continuous
-                    conversation.
-                  </p>
+                  <p className="text-xs text-primary mb-6 text-center">{t('voiceHint')}</p>
                 )}
                 {!voice.voiceSupported && (
-                  <p className="text-xs text-muted-foreground mb-6">Just ask in plain English.</p>
+                  <p className="text-xs text-muted-foreground mb-6">{t('plainEnglish')}</p>
                 )}
               </>
             )}
@@ -405,20 +405,24 @@ export default function ChatPage() {
             {/* Suggestion chips */}
             {orbState === 'idle' && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-w-3xl w-full">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s.label}
-                    onClick={() => handleSuggestion(s.prompt)}
-                    className="rounded-lg border p-3 text-left hover:bg-muted transition-colors group"
-                  >
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">
-                      {s.label}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {s.prompt.endsWith(' ') ? `"${s.prompt.trim()}..."` : `"${s.prompt}"`}
-                    </p>
-                  </button>
-                ))}
+                {SUGGESTION_KEYS.map((key) => {
+                  const label = t(`suggestions.${key}.label`)
+                  const prompt = t(`suggestions.${key}.prompt`)
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleSuggestion(prompt)}
+                      className="rounded-lg border p-3 text-left hover:bg-muted transition-colors group"
+                    >
+                      <p className="text-sm font-medium group-hover:text-primary transition-colors">
+                        {label}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {prompt.endsWith(' ') ? `"${prompt.trim()}..."` : `"${prompt}"`}
+                      </p>
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -544,14 +548,14 @@ export default function ChatPage() {
                 )}
                 {orbState === 'listening' && (
                   <p className="text-xs text-red-500 font-medium mt-2">
-                    {voice.interimTranscript || voice.transcript || 'Listening...'}
+                    {voice.interimTranscript || voice.transcript || t('status.listening')}
                   </p>
                 )}
                 {orbState === 'processing' && (
-                  <p className="text-xs text-purple-500 font-medium mt-2">Thinking...</p>
+                  <p className="text-xs text-purple-500 font-medium mt-2">{t('status.thinking')}</p>
                 )}
                 {orbState === 'speaking' && (
-                  <p className="text-xs text-blue-500 font-medium mt-2">Speaking...</p>
+                  <p className="text-xs text-blue-500 font-medium mt-2">{t('status.speaking')}</p>
                 )}
               </div>
             )}
@@ -574,7 +578,9 @@ export default function ChatPage() {
                 handleSend()
               }
             }}
-            placeholder={voice.state === 'listening' ? 'Listening...' : 'Type a message...'}
+            placeholder={
+              voice.state === 'listening' ? t('status.listening') : t('inputPlaceholder')
+            }
             rows={1}
             className="flex-1 resize-none rounded-xl border bg-muted px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
           />
@@ -601,17 +607,17 @@ export default function ChatPage() {
               )}
               aria-label={
                 voice.state === 'listening'
-                  ? 'Stop listening'
+                  ? t('mic.stopListening')
                   : voice.state === 'speaking'
-                    ? 'Stop speaking'
-                    : 'Start voice input'
+                    ? t('mic.stopSpeaking')
+                    : t('mic.start')
               }
               title={
                 voice.state === 'listening'
-                  ? 'Stop listening'
+                  ? t('mic.stopListening')
                   : voice.state === 'speaking'
-                    ? 'Stop speaking'
-                    : 'Speak your message'
+                    ? t('mic.stopSpeaking')
+                    : t('mic.speak')
               }
             >
               <span className="relative flex items-center justify-center">
@@ -627,7 +633,7 @@ export default function ChatPage() {
             onClick={handleSend}
             disabled={chatLoading || !input.trim()}
             className="rounded-xl bg-primary px-4 py-3 text-primary-foreground disabled:opacity-40 hover:opacity-90 transition-opacity shrink-0"
-            aria-label="Send message"
+            aria-label={t('send')}
           >
             <svg
               width="20"
@@ -642,9 +648,7 @@ export default function ChatPage() {
             </svg>
           </button>
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          AI can make mistakes. Verify important information.
-        </p>
+        <p className="text-xs text-muted-foreground text-center mt-2">{t('disclaimer')}</p>
       </div>
     </div>
   )
