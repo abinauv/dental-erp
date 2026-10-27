@@ -1506,6 +1506,11 @@ async function main() {
         taxableAmount: 1000,
         cgstAmount: 90,
         sgstAmount: 90,
+        taxComponents: [
+          { code: 'CGST', label: 'CGST', rate: 9, amount: 90 },
+          { code: 'SGST', label: 'SGST', rate: 9, amount: 90 },
+        ],
+        taxAmount: 180,
         totalAmount: 1180,
         paidAmount: 0,
         balanceAmount: 1180,

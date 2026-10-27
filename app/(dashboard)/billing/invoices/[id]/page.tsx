@@ -81,6 +81,8 @@ interface Invoice {
   cgstAmount: string | number
   sgstRate: string | number
   sgstAmount: string | number
+  taxComponents?: Array<{ code: string; label: string; rate: number; amount: number }> | null
+  taxAmount?: string | number
   totalAmount: string | number
   paidAmount: string | number
   balanceAmount: string | number
@@ -485,18 +487,33 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                         <span>-{formatCurrency(invoice.discountAmount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {tInv('cgst')} ({invoice.cgstRate}%)
-                      </span>
-                      <span>{formatCurrency(invoice.cgstAmount)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {tInv('sgst')} ({invoice.sgstRate}%)
-                      </span>
-                      <span>{formatCurrency(invoice.sgstAmount)}</span>
-                    </div>
+                    {(invoice.taxComponents && invoice.taxComponents.length > 0
+                      ? invoice.taxComponents
+                      : [
+                          {
+                            code: 'CGST',
+                            label: 'CGST',
+                            rate: Number(invoice.cgstRate),
+                            amount: Number(invoice.cgstAmount),
+                          },
+                          {
+                            code: 'SGST',
+                            label: 'SGST',
+                            rate: Number(invoice.sgstRate),
+                            amount: Number(invoice.sgstAmount),
+                          },
+                        ]
+                    ).map((component) => {
+                      const key = component.code.toLowerCase()
+                      return (
+                        <div key={component.code} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {tInv.has(key) ? tInv(key) : component.label} ({component.rate}%)
+                          </span>
+                          <span>{formatCurrency(component.amount)}</span>
+                        </div>
+                      )
+                    })}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                       <span>{tInv('total')}</span>

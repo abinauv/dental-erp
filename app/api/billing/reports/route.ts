@@ -182,6 +182,7 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
       discountAmount: true,
       cgstAmount: true,
       sgstAmount: true,
+      taxAmount: true,
     },
     orderBy: { createdAt: 'asc' },
   })
@@ -214,7 +215,10 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
     dailyRevenue[dateKey].billed += Number(invoice.totalAmount)
     dailyRevenue[dateKey].collected += Number(invoice.paidAmount)
     dailyRevenue[dateKey].discount += Number(invoice.discountAmount)
-    dailyRevenue[dateKey].tax += Number(invoice.cgstAmount) + Number(invoice.sgstAmount)
+    // taxAmount is the country-agnostic scalar total (IGST/VAT included); it is
+    // backfilled from cgst+sgst for historical rows, but guard just in case.
+    dailyRevenue[dateKey].tax +=
+      Number(invoice.taxAmount) || Number(invoice.cgstAmount) + Number(invoice.sgstAmount)
     dailyRevenue[dateKey].count += 1
   })
 

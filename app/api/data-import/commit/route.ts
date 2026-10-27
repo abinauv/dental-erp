@@ -656,6 +656,9 @@ async function importInvoices(
       const taxableAmount = row.taxableAmount ?? subtotal
       const cgstAmount = row.cgstAmount ?? 0
       const sgstAmount = row.sgstAmount ?? 0
+      // Scalar tax total for the country-agnostic model; imported rows are
+      // historical GST, so derive it from the legacy columns.
+      const taxAmount = Math.round((Number(cgstAmount) + Number(sgstAmount)) * 100) / 100
 
       await prisma.invoice.create({
         data: {
@@ -669,6 +672,7 @@ async function importInvoices(
           taxableAmount,
           cgstAmount,
           sgstAmount,
+          taxAmount,
           discountAmount: row.discountAmount || 0,
           status:
             row.status ||
