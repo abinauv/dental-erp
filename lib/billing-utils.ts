@@ -12,6 +12,7 @@ import {
   formatDate as baseFormatDate,
   formatDateTime as baseFormatDateTime,
 } from '@/lib/i18n/format'
+import { getTaxProvider, type TaxComponent } from '@/lib/tax'
 
 // Invoice Status Configuration
 export const invoiceStatusConfig: Record<
@@ -286,13 +287,25 @@ export function calculateDiscount(
   }
 }
 
+// Optional tax context: which country's provider to use and, for India, where
+// the supply is consumed (patient region) versus the clinic's own region, which
+// decides the intra-state (CGST+SGST) vs inter-state (IGST) split. Omitted, it
+// behaves exactly as before: India GST, intra-state, CGST+SGST at cgstRate/sgstRate.
+export interface InvoiceTaxContext {
+  country?: string
+  placeOfSupply?: string
+  clinicRegion?: string
+  igstRate?: number
+}
+
 // Calculate invoice totals
 export function calculateInvoiceTotals(
   items: Array<{ quantity: number; unitPrice: number; taxable: boolean }>,
   discountType: DiscountType = 'FIXED',
   discountValue: number = 0,
   cgstRate: number = gstConfig.cgstRate,
-  sgstRate: number = gstConfig.sgstRate
+  sgstRate: number = gstConfig.sgstRate,
+  taxContext?: InvoiceTaxContext
 ): {
   subtotal: number
   discountAmount: number
@@ -302,6 +315,8 @@ export function calculateInvoiceTotals(
   sgstAmount: number
   totalTax: number
   totalAmount: number
+  taxComponents: TaxComponent[]
+  taxAmount: number
 } {
   // Calculate subtotals
   let taxableSubtotal = 0
@@ -327,10 +342,21 @@ export function calculateInvoiceTotals(
   const taxableAmount = taxableSubtotal - taxableDiscount
   const nonTaxableAmount = nonTaxableSubtotal - (discountAmount - taxableDiscount)
 
-  // Calculate GST only on taxable amount
-  const cgstAmount = (taxableAmount * cgstRate) / 100
-  const sgstAmount = (taxableAmount * sgstRate) / 100
-  const totalTax = cgstAmount + sgstAmount
+  // Compute tax on the taxable amount via the country's provider. With no
+  // context this resolves to India GST intra-state (CGST+SGST), identical to
+  // the previous inline maths.
+  const provider = getTaxProvider(taxContext?.country)
+  const taxResult = provider.calculate(taxableAmount, {
+    placeOfSupply: taxContext?.placeOfSupply,
+    clinicRegion: taxContext?.clinicRegion,
+    rates: { cgstRate, sgstRate, igstRate: taxContext?.igstRate },
+  })
+
+  // Legacy CGST/SGST columns, derived from the component list so existing GST
+  // invoices stay byte-identical (0 for IGST/VAT/sales-tax breakdowns).
+  const cgstAmount = taxResult.components.find((c) => c.code === 'CGST')?.amount ?? 0
+  const sgstAmount = taxResult.components.find((c) => c.code === 'SGST')?.amount ?? 0
+  const totalTax = taxResult.totalTax
 
   const totalAmount = taxableAmount + nonTaxableAmount + totalTax
 
@@ -339,10 +365,12 @@ export function calculateInvoiceTotals(
     discountAmount: Math.round(discountAmount * 100) / 100,
     taxableAmount: Math.round(taxableAmount * 100) / 100,
     nonTaxableAmount: Math.round(nonTaxableAmount * 100) / 100,
-    cgstAmount: Math.round(cgstAmount * 100) / 100,
-    sgstAmount: Math.round(sgstAmount * 100) / 100,
-    totalTax: Math.round(totalTax * 100) / 100,
+    cgstAmount,
+    sgstAmount,
+    totalTax,
     totalAmount: Math.round(totalAmount * 100) / 100,
+    taxComponents: taxResult.components,
+    taxAmount: taxResult.totalTax,
   }
 }
 
