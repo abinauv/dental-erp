@@ -116,8 +116,8 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^2.1.8",
-    "@vitest/ui": "^2.1.8",
+    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/ui": "^5.0.5",
     "axe-core": "^4.11.1",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.1.6",
@@ -128,7 +128,7 @@
     "prisma": "5.22.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.8",
+    "vitest": "^5.0.5",
     "vitest-axe": "^0.1.0"
   }
 }
