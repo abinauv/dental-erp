@@ -140,7 +140,11 @@ export async function createCalendarEvent(
     doctorName: string
     chiefComplaint?: string | null
     appointmentType: string
-  }
+  },
+  // The clinic's IANA timezone (Hospital.timezone). The appointment's
+  // scheduledTime is a wall-clock time in this zone. Defaults to Asia/Kolkata
+  // for backward compatibility with existing Indian clinics.
+  timezone: string = 'Asia/Kolkata'
 ): Promise<{ eventId: string }> {
   const date =
     typeof appointment.scheduledDate === 'string'
@@ -148,10 +152,21 @@ export async function createCalendarEvent(
       : appointment.scheduledDate.toISOString().split('T')[0]
 
   const [hours, minutes] = appointment.scheduledTime.split(':').map(Number)
-  const startDateTime = new Date(
-    `${date}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`
-  )
-  const endDateTime = new Date(startDateTime.getTime() + appointment.duration * 60 * 1000)
+  const [year, month, day] = date.split('-').map(Number)
+
+  // Build floating local datetimes (no UTC offset) and let Google interpret
+  // them in `timezone`. Using Date.UTC only for the duration arithmetic keeps
+  // the wall-clock maths (incl. day rollover) independent of the server's zone.
+  const startMs = Date.UTC(year, month - 1, day, hours, minutes, 0)
+  const endMs = startMs + appointment.duration * 60 * 1000
+  const toLocalString = (ms: number): string => {
+    const dt = new Date(ms)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return (
+      `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}` +
+      `T${pad(dt.getUTCHours())}:${pad(dt.getUTCMinutes())}:00`
+    )
+  }
 
   const event = {
     summary: `Dental Appointment - ${appointment.patientName}`,
@@ -165,12 +180,12 @@ export async function createCalendarEvent(
       .filter(Boolean)
       .join('\n'),
     start: {
-      dateTime: startDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata',
+      dateTime: toLocalString(startMs),
+      timeZone: timezone,
     },
     end: {
-      dateTime: endDateTime.toISOString(),
-      timeZone: 'Asia/Kolkata',
+      dateTime: toLocalString(endMs),
+      timeZone: timezone,
     },
     extendedProperties: {
       private: {
@@ -242,6 +257,14 @@ export async function syncAppointments(
 
   const calendarId = integration.calendarId || 'primary'
 
+  // The clinic's timezone, so synced events land at the right wall-clock time
+  // for a non-IST clinic rather than defaulting to Asia/Kolkata.
+  const hospital = await prisma.hospital.findUnique({
+    where: { id: hospitalId },
+    select: { timezone: true },
+  })
+  const clinicTimezone = hospital?.timezone || 'Asia/Kolkata'
+
   // Get the user's staff record to find their doctor ID
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -280,16 +303,21 @@ export async function syncAppointments(
 
   for (const appt of appointments) {
     try {
-      await createCalendarEvent(accessToken, calendarId, {
-        id: appt.id,
-        scheduledDate: appt.scheduledDate,
-        scheduledTime: appt.scheduledTime,
-        duration: appt.duration,
-        patientName: `${appt.patient.firstName} ${appt.patient.lastName}`,
-        doctorName: `Dr. ${appt.doctor.firstName} ${appt.doctor.lastName}`,
-        chiefComplaint: appt.chiefComplaint,
-        appointmentType: appt.appointmentType,
-      })
+      await createCalendarEvent(
+        accessToken,
+        calendarId,
+        {
+          id: appt.id,
+          scheduledDate: appt.scheduledDate,
+          scheduledTime: appt.scheduledTime,
+          duration: appt.duration,
+          patientName: `${appt.patient.firstName} ${appt.patient.lastName}`,
+          doctorName: `Dr. ${appt.doctor.firstName} ${appt.doctor.lastName}`,
+          chiefComplaint: appt.chiefComplaint,
+          appointmentType: appt.appointmentType,
+        },
+        clinicTimezone
+      )
       synced++
     } catch {
       errors++
