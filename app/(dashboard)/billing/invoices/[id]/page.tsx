@@ -156,7 +156,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const tStatus = useTranslations('billing.status')
   const tMethods = useTranslations('billing.paymentMethods')
   const tCommon = useTranslations('common')
-  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const { formatDate, formatCurrency: fc, currency, locale } = useClinicFormatters()
   const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
     fc(amount, { minimumFractionDigits: 2 })
 
@@ -540,7 +540,9 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             <CardContent className="py-4">
               <div className="text-sm">
                 <span className="text-muted-foreground">{tInv('amountInWords')}: </span>
-                <span className="font-medium">{numberToWords(Number(invoice.totalAmount))}</span>
+                <span className="font-medium">
+                  {numberToWords(Number(invoice.totalAmount), { currency, locale })}
+                </span>
               </div>
             </CardContent>
           </Card>
