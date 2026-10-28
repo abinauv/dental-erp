@@ -68,9 +68,12 @@ export default function AISettingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
 
-    // Quick check: try hitting /api/ai/chat with an empty body — if 500 with key error, key is missing
-    // For now, just show "configured" if OPENROUTER_API_KEY env var is referenced
-    setApiKeyStatus('unknown')
+    // Ask the server whether an OpenRouter key is configured (the env var is
+    // not visible client-side). Falls back to "unknown" if the check fails.
+    fetch('/api/ai/key-status')
+      .then((r) => r.json())
+      .then((d) => setApiKeyStatus(d.configured ? 'configured' : 'missing'))
+      .catch(() => setApiKeyStatus('unknown'))
   }, [])
 
   const toggle = (key: keyof AISettings) => {

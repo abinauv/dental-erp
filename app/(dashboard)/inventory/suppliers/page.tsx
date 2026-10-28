@@ -5,6 +5,25 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
+import { useToast } from '@/hooks/use-toast'
+
+const emptySupplierForm = {
+  code: '',
+  name: '',
+  contactPerson: '',
+  phone: '',
+  email: '',
+  alternatePhone: '',
+  address: '',
+  city: '',
+  state: '',
+  pincode: '',
+  gstNumber: '',
+  panNumber: '',
+  paymentTerms: 'Net 30',
+  creditLimit: '',
+  notes: '',
+}
 
 interface Supplier {
   id: number
@@ -24,12 +43,16 @@ export default function SuppliersPage() {
   const router = useRouter()
   const t = useTranslations('inventory.suppliers')
   const tStatus = useTranslations('inventory.supplierStatus')
+  const tForm = useTranslations('inventory.suppliers.form')
+  const { toast } = useToast()
   const fmt = useClinicFormatters()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [supplierForm, setSupplierForm] = useState(emptySupplierForm)
+  const [savingSupplier, setSavingSupplier] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -62,6 +85,49 @@ export default function SuppliersPage() {
       console.error('Error fetching suppliers:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openAddModal = () => {
+    setSupplierForm(emptySupplierForm)
+    setShowAddModal(true)
+  }
+
+  const setField = (key: keyof typeof emptySupplierForm, value: string) =>
+    setSupplierForm((prev) => ({ ...prev, [key]: value }))
+
+  const handleCreateSupplier = async () => {
+    if (!supplierForm.code.trim() || !supplierForm.name.trim() || !supplierForm.phone.trim()) {
+      toast({ title: tForm('requiredError'), variant: 'destructive' })
+      return
+    }
+    setSavingSupplier(true)
+    try {
+      const res = await fetch('/api/inventory/suppliers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...supplierForm,
+          creditLimit: supplierForm.creditLimit ? Number(supplierForm.creditLimit) : 0,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(
+          res.status === 409 ? tForm('codeExists') : data.error || tForm('createError')
+        )
+      }
+      toast({ title: tForm('createSuccess') })
+      setShowAddModal(false)
+      setSupplierForm(emptySupplierForm)
+      fetchSuppliers()
+    } catch (err) {
+      toast({
+        title: err instanceof Error ? err.message : tForm('createError'),
+        variant: 'destructive',
+      })
+    } finally {
+      setSavingSupplier(false)
     }
   }
 
@@ -99,7 +165,7 @@ export default function SuppliersPage() {
             {t('backToInventory')}
           </Link>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={openAddModal}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             + {t('addSupplier')}
@@ -255,18 +321,87 @@ export default function SuppliersPage() {
         )}
       </div>
 
-      {/* Add Supplier Modal - Placeholder */}
+      {/* Add Supplier Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">{t('addModalTitle')}</h2>
-            <p className="text-muted-foreground mb-4">{t('addModalDesc')}</p>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="px-4 py-2 bg-muted-foreground text-background rounded-lg hover:bg-muted-foreground/80"
-            >
-              {t('close')}
-            </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-1">{t('addModalTitle')}</h2>
+            <p className="text-muted-foreground mb-4 text-sm">{t('addModalDesc')}</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {(
+                [
+                  ['code', true],
+                  ['name', true],
+                  ['contactPerson', false],
+                  ['phone', true],
+                  ['email', false],
+                  ['alternatePhone', false],
+                  ['city', false],
+                  ['state', false],
+                  ['pincode', false],
+                  ['gstNumber', false],
+                  ['panNumber', false],
+                  ['paymentTerms', false],
+                  ['creditLimit', false],
+                ] as const
+              ).map(([field, required]) => (
+                <div key={field} className="space-y-1">
+                  <label htmlFor={`sup-${field}`} className="text-sm font-medium">
+                    {tForm(field)}
+                    {required && <span className="text-red-500 ml-0.5">*</span>}
+                  </label>
+                  <input
+                    id={`sup-${field}`}
+                    type={field === 'creditLimit' ? 'number' : field === 'email' ? 'email' : 'text'}
+                    value={supplierForm[field]}
+                    onChange={(e) => setField(field, e.target.value)}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              ))}
+              <div className="space-y-1 sm:col-span-2">
+                <label htmlFor="sup-address" className="text-sm font-medium">
+                  {tForm('address')}
+                </label>
+                <input
+                  id="sup-address"
+                  type="text"
+                  value={supplierForm.address}
+                  onChange={(e) => setField('address', e.target.value)}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <label htmlFor="sup-notes" className="text-sm font-medium">
+                  {tForm('notes')}
+                </label>
+                <textarea
+                  id="sup-notes"
+                  rows={2}
+                  value={supplierForm.notes}
+                  onChange={(e) => setField('notes', e.target.value)}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                disabled={savingSupplier}
+                className="px-4 py-2 border border-border rounded-lg hover:bg-muted/50 disabled:opacity-50"
+              >
+                {tForm('cancel')}
+              </button>
+              <button
+                onClick={handleCreateSupplier}
+                disabled={savingSupplier}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {savingSupplier ? tForm('saving') : tForm('save')}
+              </button>
+            </div>
           </div>
         </div>
       )}

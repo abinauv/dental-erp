@@ -687,7 +687,9 @@
       "date": "Date",
       "total": "Total",
       "count": "Count",
-      "noCollection": "No collection data available"
+      "noCollection": "No collection data available",
+      "exportEmpty": "Keine Daten zum Exportieren",
+      "exportSuccess": "Export abgeschlossen"
     },
     "checkout": {
       "payOnline": "Pay Online",
@@ -4864,7 +4866,7 @@
     "suppliers": {
       "title": "Supplier Management",
       "backToInventory": "Back to Inventory",
-      "addSupplier": "Add Supplier",
+      "addSupplier": "Lieferant hinzufügen",
       "searchPlaceholder": "Search by name, code, contact person…",
       "allStatus": "All Status",
       "loading": "Loading…",
@@ -4883,9 +4885,33 @@
       "showingPage": "Showing page {page} of {pages} ({total} total suppliers)",
       "previous": "Previous",
       "next": "Next",
-      "addModalTitle": "Add New Supplier",
-      "addModalDesc": "Supplier form will be implemented here. For now, please use the API directly or create a dedicated page.",
-      "close": "Close"
+      "addModalTitle": "Neuen Lieferanten hinzufügen",
+      "addModalDesc": "Geben Sie unten die Lieferantendaten ein.",
+      "close": "Schließen",
+      "form": {
+        "code": "Code",
+        "name": "Name",
+        "contactPerson": "Ansprechpartner",
+        "phone": "Telefon",
+        "email": "E-Mail",
+        "alternatePhone": "Alternative Telefonnummer",
+        "address": "Adresse",
+        "city": "Stadt",
+        "state": "Bundesland",
+        "pincode": "Postleitzahl",
+        "gstNumber": "USt-IdNr.",
+        "panNumber": "Steuernummer",
+        "paymentTerms": "Zahlungsbedingungen",
+        "creditLimit": "Kreditlimit",
+        "notes": "Notizen",
+        "save": "Lieferant speichern",
+        "saving": "Wird gespeichert…",
+        "cancel": "Abbrechen",
+        "requiredError": "Code, Name und Telefon sind erforderlich",
+        "createSuccess": "Lieferant erstellt",
+        "createError": "Lieferant konnte nicht erstellt werden",
+        "codeExists": "Lieferantencode existiert bereits"
+      }
     },
     "txnType": {
       "purchase": "Purchase",

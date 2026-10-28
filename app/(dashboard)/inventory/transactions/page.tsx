@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
@@ -23,6 +24,7 @@ interface Transaction {
 export default function TransactionsPage() {
   const t = useTranslations('inventory.transactions')
   const tType = useTranslations('inventory.txnType')
+  const { toast } = useToast()
   const fmt = useClinicFormatters()
   const { currencySymbol } = fmt
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -140,7 +142,7 @@ export default function TransactionsPage() {
       const data = await response.json()
 
       if (data.success) {
-        alert(t('recordSuccess'))
+        toast({ title: t('recordSuccess') })
         setShowAddModal(false)
         fetchTransactions()
         // Reset form
@@ -154,11 +156,11 @@ export default function TransactionsPage() {
           notes: '',
         })
       } else {
-        alert(data.error || t('recordFailed'))
+        toast({ title: data.error || t('recordFailed'), variant: 'destructive' })
       }
     } catch (error) {
       console.error('Error recording transaction:', error)
-      alert(t('recordFailed'))
+      toast({ title: t('recordFailed'), variant: 'destructive' })
     }
   }
 

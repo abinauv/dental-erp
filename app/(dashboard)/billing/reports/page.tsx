@@ -39,6 +39,8 @@ import {
 } from 'lucide-react'
 import { dateRangePresets } from '@/lib/billing-utils'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
+import { downloadExcel } from '@/lib/export-utils'
+import { useToast } from '@/hooks/use-toast'
 
 interface OutstandingInvoice {
   id: string
@@ -88,6 +90,7 @@ interface DoctorRevenue {
 export default function FinancialReportsPage() {
   const t = useTranslations('billing.reports')
   const tMethods = useTranslations('billing.paymentMethods')
+  const { toast } = useToast()
   const { formatDate, formatCurrency: fc } = useClinicFormatters()
   const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
     fc(amount, { minimumFractionDigits: 2 })
@@ -168,9 +171,64 @@ export default function FinancialReportsPage() {
     fetchReport(activeTab)
   }, [activeTab, datePreset, dateFrom, dateTo])
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    alert('Export functionality coming soon!')
+  const handleExport = async () => {
+    // Export the currently-active tab's loaded data as .xlsx. Amounts are kept
+    // as raw numbers so the spreadsheet can total/sort them.
+    let rows: Record<string, unknown>[] = []
+    let filename = 'report'
+
+    if (activeTab === 'outstanding') {
+      rows = (outstandingData?.invoices ?? []).map((i) => ({
+        Invoice: i.invoiceNo,
+        Patient: `${i.patient.firstName} ${i.patient.lastName}`,
+        'Patient ID': i.patient.patientId,
+        Phone: i.patient.phone,
+        'Invoice Date': i.invoiceDate ? formatDate(i.invoiceDate) : '',
+        'Due Date': i.dueDate ? formatDate(i.dueDate) : '',
+        Total: Number(i.totalAmount),
+        Balance: Number(i.balanceAmount),
+        Status: i.status,
+      }))
+      filename = 'outstanding-invoices'
+    } else if (activeTab === 'procedure_revenue') {
+      rows = (procedureData?.byProcedure ?? []).map((p) => ({
+        Code: p.code,
+        Procedure: p.name,
+        Category: p.category,
+        'Total Revenue': p.totalRevenue,
+        Count: p.count,
+        'Avg Revenue': p.avgRevenue,
+      }))
+      filename = 'procedure-revenue'
+    } else if (activeTab === 'doctor_revenue') {
+      rows = (doctorData?.byDoctor ?? []).map((d) => ({
+        Doctor: d.name,
+        Specialization: d.specialization ?? '',
+        'Total Revenue': d.totalRevenue,
+        Treatments: d.treatmentCount,
+        'Avg per Treatment': d.avgPerTreatment,
+      }))
+      filename = 'doctor-revenue'
+    } else if (activeTab === 'daily_collection') {
+      rows = (dailyData?.dailyData ?? []).map((d) => ({
+        Date: d.date,
+        Cash: d.cash,
+        Card: d.card,
+        UPI: d.upi,
+        'Bank Transfer': d.bankTransfer,
+        Total: d.total,
+        Payments: d.count,
+      }))
+      filename = 'daily-collection'
+    }
+
+    if (rows.length === 0) {
+      toast({ title: t('exportEmpty'), variant: 'destructive' })
+      return
+    }
+
+    await downloadExcel(rows, `${filename}-${new Date().toISOString().slice(0, 10)}`, filename)
+    toast({ title: t('exportSuccess') })
   }
 
   return (

@@ -687,7 +687,9 @@
       "date": "Date",
       "total": "Total",
       "count": "Count",
-      "noCollection": "No collection data available"
+      "noCollection": "No collection data available",
+      "exportEmpty": "No data to export",
+      "exportSuccess": "Export complete"
     },
     "checkout": {
       "payOnline": "Pay Online",
@@ -4884,8 +4886,32 @@
       "previous": "Previous",
       "next": "Next",
       "addModalTitle": "Add New Supplier",
-      "addModalDesc": "Supplier form will be implemented here. For now, please use the API directly or create a dedicated page.",
-      "close": "Close"
+      "addModalDesc": "Enter the supplier's details below.",
+      "close": "Close",
+      "form": {
+        "code": "Code",
+        "name": "Name",
+        "contactPerson": "Contact Person",
+        "phone": "Phone",
+        "email": "Email",
+        "alternatePhone": "Alternate Phone",
+        "address": "Address",
+        "city": "City",
+        "state": "State",
+        "pincode": "Pincode",
+        "gstNumber": "GST Number",
+        "panNumber": "PAN Number",
+        "paymentTerms": "Payment Terms",
+        "creditLimit": "Credit Limit",
+        "notes": "Notes",
+        "save": "Save Supplier",
+        "saving": "Saving…",
+        "cancel": "Cancel",
+        "requiredError": "Code, name and phone are required",
+        "createSuccess": "Supplier created",
+        "createError": "Failed to create supplier",
+        "codeExists": "Supplier code already exists"
+      }
     },
     "txnType": {
       "purchase": "Purchase",

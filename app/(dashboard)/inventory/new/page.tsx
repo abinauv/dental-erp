@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
@@ -10,6 +11,7 @@ export default function NewInventoryItemPage() {
   const router = useRouter()
   const t = useTranslations('inventory.new')
   const tType = useTranslations('inventory.itemType')
+  const { toast } = useToast()
   const { currencySymbol } = useClinicFormatters()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
@@ -97,14 +99,14 @@ export default function NewInventoryItemPage() {
       const data = await response.json()
 
       if (data.success) {
-        alert(t('createSuccess'))
+        toast({ title: t('createSuccess') })
         router.push('/inventory')
       } else {
-        alert(data.error || t('createFailed'))
+        toast({ title: data.error || t('createFailed'), variant: 'destructive' })
       }
     } catch (error) {
       console.error('Error creating inventory item:', error)
-      alert(t('createFailed'))
+      toast({ title: t('createFailed'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
