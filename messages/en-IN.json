@@ -239,7 +239,8 @@
       "amountInWords": "Amount in words",
       "cgst": "CGST",
       "sgst": "SGST",
-      "igst": "IGST"
+      "igst": "IGST",
+      "vat": "VAT"
     },
     "status": {
       "all": "All Status",

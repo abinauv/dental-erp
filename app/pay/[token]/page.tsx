@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { resolvePublicLocale } from '@/lib/i18n/config'
 import enIN from '@/messages/en-IN.json'
 import enUS from '@/messages/en-US.json'
+import deDE from '@/messages/de-DE.json'
 import { PayPage } from './pay-page'
 
 // Static catalogues for the public pay page. It resolves its own locale from
@@ -13,6 +14,7 @@ import { PayPage } from './pay-page'
 const CATALOGUES: Record<string, Record<string, unknown>> = {
   'en-IN': enIN as Record<string, unknown>,
   'en-US': enUS as Record<string, unknown>,
+  'de-DE': deDE as Record<string, unknown>,
 }
 
 export default async function PublicPayPage({

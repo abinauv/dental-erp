@@ -101,9 +101,30 @@ const US_REGIONS = [
   'Wyoming',
 ]
 
+// 16 Bundesländer.
+const DE_REGIONS = [
+  'Baden-Württemberg',
+  'Bayern',
+  'Berlin',
+  'Brandenburg',
+  'Bremen',
+  'Hamburg',
+  'Hessen',
+  'Mecklenburg-Vorpommern',
+  'Niedersachsen',
+  'Nordrhein-Westfalen',
+  'Rheinland-Pfalz',
+  'Saarland',
+  'Sachsen',
+  'Sachsen-Anhalt',
+  'Schleswig-Holstein',
+  'Thüringen',
+]
+
 const REGIONS: Record<string, string[]> = {
   IN: IN_REGIONS,
   US: US_REGIONS,
+  DE: DE_REGIONS,
 }
 
 /** Region (state/province) list for a country, or `[]` if none is known. */

@@ -31,7 +31,7 @@ describe('i18n config', () => {
 
   // A stale or hand-edited Hospital.locale must never break formatting.
   it('falls back to the default for unknown or missing locales', () => {
-    expect(resolveLocale('de-DE')).toBe('en-IN')
+    expect(resolveLocale('fr-FR')).toBe('en-IN')
     expect(resolveLocale(undefined)).toBe('en-IN')
     expect(resolveLocale('en-US')).toBe('en-US')
   })

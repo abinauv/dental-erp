@@ -2,6 +2,8 @@ import { procedures as inProcedures } from './IN/procedures'
 import { medications as inMedications } from './IN/medications'
 import { procedures as usProcedures } from './US/procedures'
 import { medications as usMedications } from './US/medications'
+import { procedures as deProcedures } from './DE/procedures'
+import { medications as deMedications } from './DE/medications'
 
 export interface CountrySeedData {
   procedures: typeof inProcedures
@@ -11,6 +13,7 @@ export interface CountrySeedData {
 const SEED_DATA: Record<string, CountrySeedData> = {
   IN: { procedures: inProcedures, medications: inMedications },
   US: { procedures: usProcedures, medications: usMedications },
+  DE: { procedures: deProcedures, medications: deMedications },
 }
 
 /**

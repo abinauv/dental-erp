@@ -137,7 +137,7 @@ describe('PATCH /api/settings/profile', () => {
   it('rejects an unsupported locale with 400 rather than storing it', async () => {
     signedInAsStaff()
 
-    const res = await profilePATCH(makeReq('/api/settings/profile', 'PATCH', { locale: 'de-DE' }))
+    const res = await profilePATCH(makeReq('/api/settings/profile', 'PATCH', { locale: 'fr-FR' }))
 
     expect(res.status).toBe(400)
     expect(prisma.user.update).not.toHaveBeenCalled()
@@ -362,7 +362,7 @@ describe('getLocaleForRequest', () => {
   it('falls through an unsupported stored override to the clinic', async () => {
     auth.mockResolvedValue({ user: STAFF })
     prisma.user.findUnique.mockResolvedValue({
-      locale: 'de-DE',
+      locale: 'fr-FR',
       hospital: { locale: 'en-US' },
     })
 
