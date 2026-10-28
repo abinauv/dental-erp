@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
@@ -19,12 +19,15 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
+import { RegionField } from '@/components/geo/region-field'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 import { useToast } from '@/hooks/use-toast'
 
 export default function NewStaffPage() {
   const router = useRouter()
   const t = useTranslations('staff.new')
   const { currencySymbol } = useClinicFormatters()
+  const clinicCountry = getLocaleDefaults(useLocale()).country
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -44,7 +47,7 @@ export default function NewStaffPage() {
     gender: '',
     address: '',
     city: '',
-    state: 'Tamil Nadu',
+    state: '',
     pincode: '',
 
     // Documents
@@ -291,10 +294,11 @@ export default function NewStaffPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">{t('state')}</Label>
-                  <Input
+                  <RegionField
                     id="state"
+                    country={clinicCountry}
                     value={formData.state}
-                    onChange={(e) => handleChange('state', e.target.value)}
+                    onChange={(v) => handleChange('state', v)}
                     placeholder={t('statePlaceholder')}
                   />
                 </div>

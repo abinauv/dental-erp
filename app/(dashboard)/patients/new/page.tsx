@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Loader2, Save } from 'lucide-react'
+import { RegionField } from '@/components/geo/region-field'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 import { DuplicateDetector } from '@/components/ai/duplicate-detector'
 
 const BLOOD_GROUPS = [
@@ -37,6 +39,7 @@ export default function NewPatientPage() {
   const t = useTranslations('patients.new')
   const tGender = useTranslations('patients.gender')
   const tCommon = useTranslations('common')
+  const clinicCountry = getLocaleDefaults(useLocale()).country
   const [submitting, setSubmitting] = useState(false)
 
   const [form, setForm] = useState({
@@ -51,7 +54,7 @@ export default function NewPatientPage() {
     email: '',
     address: '',
     city: '',
-    state: 'Tamil Nadu',
+    state: '',
     pincode: '',
     aadharNumber: '',
     occupation: '',
@@ -286,10 +289,11 @@ export default function NewPatientPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="state">{t('state')}</Label>
-              <Input
+              <RegionField
                 id="state"
+                country={clinicCountry}
                 value={form.state}
-                onChange={(e) => updateField('state', e.target.value)}
+                onChange={(v) => updateField('state', v)}
                 placeholder={t('statePlaceholder')}
               />
             </div>

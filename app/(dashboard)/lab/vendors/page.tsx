@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -52,6 +52,8 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react'
+import { RegionField } from '@/components/geo/region-field'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,6 +99,7 @@ export default function LabVendorsPage() {
   const router = useRouter()
   const t = useTranslations('lab.vendors')
   const tStatus = useTranslations('lab.vendorStatus')
+  const clinicCountry = getLocaleDefaults(useLocale()).country
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [vendors, setVendors] = useState<LabVendor[]>([])
@@ -124,7 +127,7 @@ export default function LabVendorsPage() {
     alternatePhone: '',
     address: '',
     city: '',
-    state: 'Tamil Nadu',
+    state: '',
     pincode: '',
     gstin: '',
     pan: '',
@@ -183,7 +186,7 @@ export default function LabVendorsPage() {
         alternatePhone: vendor.alternatePhone || '',
         address: vendor.address || '',
         city: vendor.city || '',
-        state: vendor.state || 'Tamil Nadu',
+        state: vendor.state || '',
         pincode: vendor.pincode || '',
         gstin: vendor.gstin || '',
         pan: vendor.pan || '',
@@ -206,7 +209,7 @@ export default function LabVendorsPage() {
         alternatePhone: '',
         address: '',
         city: '',
-        state: 'Tamil Nadu',
+        state: '',
         pincode: '',
         gstin: '',
         pan: '',
@@ -643,10 +646,11 @@ export default function LabVendorsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="state">{t('state')}</Label>
-                <Input
+                <RegionField
                   id="state"
+                  country={clinicCountry}
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(v) => setFormData({ ...formData, state: v })}
                 />
               </div>
               <div className="space-y-2">

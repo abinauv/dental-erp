@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { Separator } from '@/components/ui/separator'
 import { Building2, Save, Upload, Trash2, Loader2, Copy, Globe } from 'lucide-react'
+import { RegionField } from '@/components/geo/region-field'
 import { locales, localeDefaults, getLocaleLabel, type Locale } from '@/lib/i18n/config'
 
 // Small curated option sets for the regional selectors. The clinic's current
@@ -115,7 +116,7 @@ export default function ClinicSettingsPage() {
     website: '',
     address: '',
     city: '',
-    state: 'Tamil Nadu',
+    state: '',
     pincode: '',
     registrationNo: '',
     gstNumber: '',
@@ -155,7 +156,7 @@ export default function ClinicSettingsPage() {
           website: result.data.website || '',
           address: result.data.address || '',
           city: result.data.city || '',
-          state: result.data.state || 'Tamil Nadu',
+          state: result.data.state || '',
           pincode: result.data.pincode || '',
           registrationNo: result.data.registrationNo || '',
           gstNumber: result.data.gstNumber || '',
@@ -489,10 +490,11 @@ export default function ClinicSettingsPage() {
 
               <div>
                 <Label htmlFor="state">{t('state')}</Label>
-                <Input
+                <RegionField
                   id="state"
+                  country={formData.country}
                   value={formData.state}
-                  onChange={(e) => handleChange('state', e.target.value)}
+                  onChange={(v) => handleChange('state', v)}
                   required
                 />
               </div>

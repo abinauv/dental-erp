@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -20,6 +20,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import { RegionField } from '@/components/geo/region-field'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 import { Checkbox } from '@/components/ui/checkbox'
 
 interface OnboardingFormData {
@@ -62,6 +64,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const { toast } = useToast()
   const t = useTranslations('onboarding')
+  const clinicCountry = getLocaleDefaults(useLocale()).country
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [hospitalName, setHospitalName] = useState('')
@@ -94,6 +97,7 @@ export default function OnboardingPage() {
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -266,10 +270,12 @@ export default function OnboardingPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">{t('fields.state')}</Label>
-                      <Input
+                      <RegionField
                         id="state"
+                        country={clinicCountry}
+                        value={watch('state') || ''}
+                        onChange={(v) => setValue('state', v, { shouldValidate: true })}
                         placeholder={t('placeholders.state')}
-                        {...register('state')}
                       />
                       {errors.state && (
                         <p className="text-sm text-destructive">{errors.state.message}</p>
