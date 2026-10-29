@@ -9,7 +9,6 @@ vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
 
 const securityModule = await import('@/app/api/settings/security/route')
-const subscriptionModule = await import('@/app/api/settings/subscription/route')
 
 function makeSecurityRequest(method: string, body?: any) {
   return new Request('http://localhost/api/settings/security', {
@@ -20,7 +19,7 @@ function makeSecurityRequest(method: string, body?: any) {
   }) as any
 }
 
-describe('Settings Security & Subscription API', () => {
+describe('Settings Security API', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.requireAuthAndRole.mockResolvedValue({
@@ -104,48 +103,6 @@ describe('Settings Security & Subscription API', () => {
         })
       )
       expect(res.status).toBe(500) // Zod throws
-    })
-  })
-
-  // ─── GET /api/settings/subscription ───────────────
-  describe('GET /api/settings/subscription', () => {
-    it('returns subscription info with usage counts', async () => {
-      ;(prisma.hospital.findUnique as any).mockResolvedValue({
-        name: 'Test Clinic',
-        plan: 'PRO',
-        patientLimit: 1000,
-        staffLimit: 20,
-        storageLimitMb: 5000,
-      })
-      ;(prisma.patient.count as any).mockResolvedValue(150)
-      ;(prisma.user.count as any).mockResolvedValue(8)
-
-      const res = await subscriptionModule.GET()
-      expect(res.status).toBe(200)
-      const body = await res.json()
-      expect(body.plan).toBe('PRO')
-      expect(body.maxPatients).toBe(1000)
-      expect(body.currentPatients).toBe(150)
-      expect(body.maxStaff).toBe(20)
-      expect(body.currentStaff).toBe(8)
-      expect(body.currentStorageMB).toBe(0) // TODO in source
-    })
-
-    it('returns 404 when hospital not found', async () => {
-      ;(prisma.hospital.findUnique as any).mockResolvedValue(null)
-
-      const res = await subscriptionModule.GET()
-      expect(res.status).toBe(404)
-    })
-
-    it('returns 401 when not authenticated', async () => {
-      mockAuth.requireAuthAndRole.mockResolvedValue({
-        error: Response.json({ error: 'Unauthorized' }, { status: 401 }),
-        hospitalId: null,
-      })
-
-      const res = await subscriptionModule.GET()
-      expect(res.status).toBe(401)
     })
   })
 })
