@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { communicationTriggersService } from '@/lib/services/communication-triggers.service'
+import { enqueue } from '@/lib/queue'
 
 // POST /api/communications/triggers - Run communication triggers
 // This endpoint should be called by a cron job (e.g., every hour)
@@ -13,12 +14,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Run all automated communication triggers
-    await communicationTriggersService.runAllTriggers()
+    // Run all automated communication triggers. With a queue configured this
+    // hands the long send loop to the worker (durable, retried, survives a
+    // restart) and returns immediately; without one it runs inline as before.
+    const { queued } = await enqueue('run-communication-triggers', {})
 
     return NextResponse.json({
       success: true,
-      message: 'Communication triggers executed successfully',
+      message: queued
+        ? 'Communication triggers queued'
+        : 'Communication triggers executed successfully',
+      queued,
       timestamp: new Date().toISOString(),
     })
   } catch (error: any) {
