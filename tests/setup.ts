@@ -2,6 +2,12 @@ import { expect, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
 
+// Better Auth (and the mobile/patient JWT paths) read these at construction and
+// runtime; provide test defaults so importing lib/auth never fails for lack of
+// a secret.
+process.env.NEXTAUTH_SECRET ||= 'test-secret-not-for-production'
+process.env.NEXTAUTH_URL ||= 'http://localhost:3000'
+
 // Extend Vitest's expect method with Testing Library matchers
 expect.extend(matchers)
 

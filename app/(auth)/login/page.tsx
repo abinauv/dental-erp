@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, oidcEnabled, signInWithOidc } from '@/lib/auth-client'
 import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -42,13 +42,12 @@ function LoginForm() {
     setIsLoading(true)
 
     try {
-      const result = await signIn('credentials', {
+      const { error } = await signIn.email({
         email: data.email,
         password: data.password,
-        redirect: false,
       })
 
-      if (result?.error) {
+      if (error) {
         toast({
           variant: 'destructive',
           title: t('loginFailed'),
@@ -111,6 +110,20 @@ function LoginForm() {
             {t('submit')}
           </Button>
         </form>
+
+        {oidcEnabled && (
+          <div className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={isLoading}
+              onClick={() => signInWithOidc(callbackUrl)}
+            >
+              {t('ssoButton')}
+            </Button>
+          </div>
+        )}
 
         <div className="mt-6 text-center text-sm">
           <p className="text-muted-foreground">

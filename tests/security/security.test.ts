@@ -119,7 +119,7 @@ describe('Security — Authentication', () => {
 // ---------------------------------------------------------------------------
 
 vi.mock('@/lib/auth', () => ({
-  auth: vi.fn(),
+  auth: { api: { getSession: vi.fn() } },
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -148,7 +148,7 @@ import {
   generateToken,
 } from '@/lib/api-helpers'
 
-const mockAuth = vi.mocked(auth)
+const mockGetSession = vi.mocked(auth.api.getSession)
 const mockPrisma = vi.mocked(prisma)
 
 describe('Security — Authorization', () => {
@@ -186,14 +186,14 @@ describe('Security — Authorization', () => {
 
   describe('requireAuthAndRole', () => {
     it('returns 401 when no session exists', async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(null)
       const result = await requireAuthAndRole(['ADMIN'])
       expect(result.error).not.toBeNull()
       expect(result.user).toBeNull()
     })
 
     it('returns user when session exists and no role restriction', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'u1', role: 'DOCTOR', hospitalId: 'h1', email: 'doc@test.com', name: 'Dr.' },
       } as any)
       const result = await requireAuthAndRole()
@@ -203,7 +203,7 @@ describe('Security — Authorization', () => {
     })
 
     it('returns 403 when role does not match', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'u1', role: 'RECEPTIONIST', hospitalId: 'h1', email: 'r@t.com', name: 'R' },
       } as any)
       const result = await requireAuthAndRole(['ADMIN'])
@@ -212,7 +212,7 @@ describe('Security — Authorization', () => {
     })
 
     it('allows matching role', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'u1', role: 'ADMIN', hospitalId: 'h1', email: 'a@t.com', name: 'A' },
       } as any)
       const result = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
@@ -223,7 +223,7 @@ describe('Security — Authorization', () => {
 
   describe('Hospital Isolation', () => {
     it('getAuthenticatedHospital returns hospitalId from session', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: { id: 'u1', role: 'ADMIN', hospitalId: 'h-abc', email: 'a@t.com', name: 'A' },
       } as any)
       const result = await getAuthenticatedHospital()
@@ -231,7 +231,7 @@ describe('Security — Authorization', () => {
     })
 
     it('returns 401 when session has no user', async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(null)
       const result = await getAuthenticatedHospital()
       expect(result.error).not.toBeNull()
       expect(result.hospitalId).toBeNull()

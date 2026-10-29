@@ -3,11 +3,22 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { SignJWT } from 'jose'
+import { rateLimit } from '@/lib/rate-limit'
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
 })
+
+// Brute-force throttle (11.3): this custom route is outside Better Auth's
+// built-in rate limiter, so cap attempts per client IP + email.
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 5 * 60 * 1000
+
+function clientIp(req: NextRequest): string {
+  const fwd = req.headers.get('x-forwarded-for')
+  return fwd ? fwd.split(',')[0].trim() : req.headers.get('x-real-ip') || 'unknown'
+}
 
 // Mobile-specific login endpoint that returns a JWT token directly
 // instead of setting cookies (which don't work well in native apps)
@@ -21,6 +32,14 @@ export async function POST(req: NextRequest) {
     }
 
     const { email, password } = validated.data
+
+    const limit = rateLimit(`mobile-token:${clientIp(req)}:${email}`, MAX_ATTEMPTS, WINDOW_MS)
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(limit.retryAfterMs / 1000)) } }
+      )
+    }
 
     const user = await prisma.user.findUnique({
       where: { email },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -12,7 +12,7 @@ const registerSchema = z.object({
 // Register a device for push notifications
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getServerSession()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { token, platform, deviceName } = validated.data
+    // hospitalId is a Better Auth additionalField not reflected in the inferred
+    // session type, so narrow through unknown.
+    const su = session.user as unknown as { id: string; hospitalId: string }
 
     // Upsert device token - update if same token exists, create if new
     await prisma.pushDevice.upsert({
@@ -37,8 +40,8 @@ export async function POST(req: NextRequest) {
       update: {
         platform,
         deviceName: deviceName || null,
-        userId: session.user.id as string,
-        hospitalId: session.user.hospitalId as string,
+        userId: su.id,
+        hospitalId: su.hospitalId,
         isActive: true,
         updatedAt: new Date(),
       },
@@ -46,8 +49,8 @@ export async function POST(req: NextRequest) {
         token,
         platform,
         deviceName: deviceName || null,
-        userId: session.user.id as string,
-        hospitalId: session.user.hospitalId as string,
+        userId: su.id,
+        hospitalId: su.hospitalId,
         isActive: true,
       },
     })
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest) {
 // Unregister device (on logout)
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth()
+    const session = await getServerSession()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

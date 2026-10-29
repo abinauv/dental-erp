@@ -30,8 +30,8 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({}),
 }))
 
-vi.mock('next-auth/react', () => ({
-  signIn: vi.fn(),
+vi.mock('@/lib/auth-client', () => ({
+  signIn: { email: vi.fn() },
   signOut: vi.fn(),
   useSession: () => ({
     data: {
@@ -39,7 +39,9 @@ vi.mock('next-auth/react', () => ({
     },
     status: 'authenticated',
   }),
-  SessionProvider: ({ children }: any) => <>{children}</>,
+  oidcEnabled: false,
+  signInWithOidc: vi.fn(),
+  authClient: { $fetch: vi.fn() },
 }))
 
 vi.mock('next-themes', () => ({

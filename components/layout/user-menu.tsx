@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/lib/auth-client'
 import { LogOut, User, Settings } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -79,7 +79,7 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
-          onClick={() => signOut({ callbackUrl: '/login' })}
+          onClick={() => signOut({ fetchOptions: { onSuccess: () => router.push('/login') } })}
         >
           <LogOut className="mr-2 h-4 w-4" />
           <span>{t('logOut')}</span>

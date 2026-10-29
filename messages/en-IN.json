@@ -30,6 +30,7 @@
       "emailPlaceholder": "admin@demo-dental.com",
       "passwordPlaceholder": "Enter your password",
       "submit": "Sign in",
+      "ssoButton": "Sign in with SSO",
       "loading": "Loading…",
       "noAccount": "Don't have an account?",
       "signUp": "Sign up for free",

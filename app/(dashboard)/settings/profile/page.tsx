@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
 import { LanguagePreferenceCard } from '@/components/i18n/language-preference-card'
-import { auth } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 import { locales } from '@/lib/i18n/config'
 import { prisma } from '@/lib/prisma'
 
@@ -12,7 +12,7 @@ export async function generateMetadata() {
 }
 
 export default async function ProfileSettingsPage() {
-  const session = await auth()
+  const session = await getServerSession()
   if (!session?.user?.id) {
     redirect('/login')
   }

@@ -1,17 +1,17 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { ClinicLocaleProvider } from '@/components/i18n/clinic-locale-provider'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth()
+  const session = await getServerSession()
 
   if (!session?.user) {
     redirect('/login')
   }
 
-  const hospitalId = session.user.hospitalId
+  const hospitalId = (session.user as { hospitalId?: string }).hospitalId
 
   // Fetch hospital info
   const hospital = hospitalId
@@ -32,10 +32,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
+  const su = session.user as { name?: string; email?: string; role?: string }
   const user = {
-    name: session.user.name || 'User',
-    email: session.user.email || '',
-    role: session.user.role || 'RECEPTIONIST',
+    name: su.name || 'User',
+    email: su.email || '',
+    role: su.role || 'RECEPTIONIST',
   }
 
   const hospitalInfo = hospital

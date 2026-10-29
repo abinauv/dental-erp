@@ -206,6 +206,10 @@ model User {
   image              String?
   mustChangePassword Boolean   @default(false)
 
+  // Better Auth's boolean email-verified flag. Kept separate from the app's
+  // DateTime `emailVerified` above (Better Auth requires a boolean).
+  emailVerifiedBa Boolean @default(false)
+
   // Personal locale override, BCP 47. NULL means "inherit from the clinic" and
   // is deliberately NOT defaulted: a default would be indistinguishable from an
   // explicit choice of en-IN, so a clinic changing its own locale would
@@ -221,6 +225,8 @@ model User {
   notifications             Notification[]
   sessions                  Session[]
   accounts                  Account[]
+  baSessions                BaSession[]
+  baAccounts                BaAccount[]
   aiConversations           AIConversation[]
   calendarIntegrations      CalendarIntegration[]
   pushDevices               PushDevice[]
@@ -267,6 +273,57 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ── Better Auth tables (staff/web session layer) ──────────────────────────────
+// Better Auth's core schema, mapped to Ba-prefixed tables so they don't collide
+// with the vestigial next-auth-shaped Account/Session/VerificationToken above.
+// The `user` model is mapped onto the existing User table in lib/auth.ts.
+
+model BaSession {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?  @db.Text
+  userId    String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BaAccount {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BaVerification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String    @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
 }
 
 enum Role {
