@@ -4356,7 +4356,31 @@
       "off": "Off",
       "documents": "Documents",
       "documentsDesc": "Staff documents and certifications",
-      "documentsComingSoon": "Document management coming soon"
+      "documentsComingSoon": "Document management coming soon",
+      "docEmpty": "No documents uploaded yet",
+      "upload": "Upload",
+      "uploading": "Uploading…",
+      "docTypeLabel": "Type",
+      "docTypes": {
+        "contract": "Contract",
+        "idProof": "ID Proof",
+        "certificate": "Certificate",
+        "licence": "Licence",
+        "other": "Other"
+      },
+      "colName": "Name",
+      "colType": "Type",
+      "colSize": "Size",
+      "colUploaded": "Uploaded",
+      "colActions": "Actions",
+      "download": "Download",
+      "deleteDoc": "Delete",
+      "deleteConfirm": "Delete this document?",
+      "descriptionPlaceholder": "Description (optional)",
+      "uploadSuccess": "Document uploaded",
+      "uploadError": "Failed to upload document",
+      "deleteSuccess": "Document deleted",
+      "deleteError": "Failed to delete document"
     },
     "edit": {
       "title": "Edit Staff",

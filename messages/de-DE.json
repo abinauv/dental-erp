@@ -4356,7 +4356,31 @@
       "off": "Off",
       "documents": "Documents",
       "documentsDesc": "Staff documents and certifications",
-      "documentsComingSoon": "Document management coming soon"
+      "documentsComingSoon": "Document management coming soon",
+      "docEmpty": "Noch keine Dokumente hochgeladen",
+      "upload": "Hochladen",
+      "uploading": "Wird hochgeladen…",
+      "docTypeLabel": "Typ",
+      "docTypes": {
+        "contract": "Vertrag",
+        "idProof": "Ausweis",
+        "certificate": "Zertifikat",
+        "licence": "Lizenz",
+        "other": "Sonstiges"
+      },
+      "colName": "Name",
+      "colType": "Typ",
+      "colSize": "Größe",
+      "colUploaded": "Hochgeladen",
+      "colActions": "Aktionen",
+      "download": "Herunterladen",
+      "deleteDoc": "Löschen",
+      "deleteConfirm": "Dieses Dokument löschen?",
+      "descriptionPlaceholder": "Beschreibung (optional)",
+      "uploadSuccess": "Dokument hochgeladen",
+      "uploadError": "Dokument konnte nicht hochgeladen werden",
+      "deleteSuccess": "Dokument gelöscht",
+      "deleteError": "Dokument konnte nicht gelöscht werden"
     },
     "edit": {
       "title": "Edit Staff",

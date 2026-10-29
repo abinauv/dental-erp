@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -25,8 +25,29 @@ import {
   Clock,
   FileText,
   AlertCircle,
+  Upload,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { uploadUrl } from '@/lib/storage/keys'
+
+interface StaffDoc {
+  id: string
+  originalName: string
+  fileType: string
+  fileSize: number
+  filePath: string
+  documentType: string | null
+  description: string | null
+  createdAt: string
+}
+
+const DOC_TYPES = ['contract', 'idProof', 'certificate', 'licence', 'other']
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 interface StaffDetail {
   id: string
@@ -107,9 +128,72 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
   const [staff, setStaff] = useState<StaffDetail | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [documents, setDocuments] = useState<StaffDoc[]>([])
+  const [docLoading, setDocLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [uploadType, setUploadType] = useState('contract')
+  const [uploadDesc, setUploadDesc] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     fetchStaff()
+    fetchDocuments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams.id])
+
+  const fetchDocuments = async () => {
+    setDocLoading(true)
+    try {
+      const res = await fetch(`/api/staff/${resolvedParams.id}/documents`)
+      const data = await res.json()
+      if (data.success) setDocuments(data.documents)
+    } catch {
+      // non-fatal; the tab just shows empty
+    } finally {
+      setDocLoading(false)
+    }
+  }
+
+  const handleUploadDocument = async (file: File) => {
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('documentType', uploadType)
+      if (uploadDesc.trim()) form.append('description', uploadDesc.trim())
+      const res = await fetch(`/api/staff/${resolvedParams.id}/documents`, {
+        method: 'POST',
+        body: form,
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || t('uploadError'))
+      toast({ title: t('uploadSuccess') })
+      setUploadDesc('')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      fetchDocuments()
+    } catch (err) {
+      toast({
+        title: err instanceof Error ? err.message : t('uploadError'),
+        variant: 'destructive',
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!window.confirm(t('deleteConfirm'))) return
+    try {
+      const res = await fetch(`/api/staff/${resolvedParams.id}/documents/${documentId}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error()
+      toast({ title: t('deleteSuccess') })
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId))
+    } catch {
+      toast({ title: t('deleteError'), variant: 'destructive' })
+    }
+  }
 
   const fetchStaff = async () => {
     try {
@@ -474,11 +558,99 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               </CardTitle>
               <CardDescription>{t('documentsDesc')}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{t('documentsComingSoon')}</p>
+            <CardContent className="space-y-4">
+              {/* Upload row */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-end border-b pb-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {t('docTypeLabel')}
+                  </label>
+                  <select
+                    value={uploadType}
+                    onChange={(e) => setUploadType(e.target.value)}
+                    className="block w-full sm:w-40 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    {DOC_TYPES.map((v) => (
+                      <option key={v} value={v}>
+                        {t(`docTypes.${v}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <input
+                  value={uploadDesc}
+                  onChange={(e) => setUploadDesc(e.target.value)}
+                  placeholder={t('descriptionPlaceholder')}
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleUploadDocument(file)
+                  }}
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploading ? t('uploading') : t('upload')}
+                </Button>
               </div>
+
+              {/* Document list */}
+              {docLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : documents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>{t('docEmpty')}</p>
+                </div>
+              ) : (
+                <div className="rounded-md border divide-y">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <a
+                          href={uploadUrl(doc.filePath)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:underline truncate block"
+                        >
+                          {doc.originalName}
+                        </a>
+                        <div className="text-xs text-muted-foreground">
+                          {doc.documentType && t.has(`docTypes.${doc.documentType}`)
+                            ? t(`docTypes.${doc.documentType}`)
+                            : doc.documentType || '—'}
+                          {' · '}
+                          {formatBytes(doc.fileSize)}
+                          {' · '}
+                          {fmt.formatDate(doc.createdAt)}
+                          {doc.description ? ` · ${doc.description}` : ''}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                      >
+                        {t('deleteDoc')}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

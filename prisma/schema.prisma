@@ -83,6 +83,7 @@ model Hospital {
   labVendors             LabVendor[]
   labOrders              LabOrder[]
   documents              Document[]
+  staffDocuments         StaffDocument[]
   notifications          Notification[]
   auditLogs              AuditLog[]
   settings               Setting[]
@@ -349,6 +350,7 @@ model Staff {
   shifts             StaffShift[]
   leaves             Leave[]
   videoConsultations VideoConsultation[] @relation("DoctorVideoConsultations")
+  documents          StaffDocument[]
 
   @@unique([hospitalId, employeeId])
   @@index([hospitalId])
@@ -1868,6 +1870,31 @@ model Document {
   @@index([hospitalId])
   @@index([patientId])
   @@index([documentType])
+}
+
+// Staff-scoped document (contract, ID proof, certificate, …). Separate from the
+// patient-only Document model so staff files are never entangled with patient
+// records. documentType is a free-form category string rather than an enum.
+model StaffDocument {
+  id           String   @id @default(cuid())
+  hospitalId   String
+  staffId      String
+  fileName     String
+  originalName String
+  fileType     String
+  fileSize     Int
+  filePath     String
+  documentType String?
+  description  String?
+  uploadedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  staff    Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([hospitalId])
+  @@index([staffId])
 }
 
 enum DocumentType {
