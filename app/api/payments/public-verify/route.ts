@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Verify payment from public pay page (no auth — uses token).
@@ -20,6 +21,19 @@ export async function POST(req: NextRequest) {
 
     if (!token || !orderId || !paymentId) {
       return NextResponse.json({ error: 'token, orderId, paymentId are required' }, { status: 400 })
+    }
+
+    // Unauthenticated endpoint: throttle per IP and per link token.
+    const WINDOW = 10 * 60 * 1000
+    const [byIp, byToken] = await Promise.all([
+      checkRateLimit(`pay-verify-ip:${getClientIp(req)}`, 30, WINDOW),
+      checkRateLimit(`pay-verify:${token}`, 15, WINDOW),
+    ])
+    if (!byIp.allowed || !byToken.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     // Look up payment link

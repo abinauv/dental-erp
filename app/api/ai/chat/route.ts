@@ -7,6 +7,7 @@ import { getModelByTier } from '@/lib/ai/models'
 import { executeIntent } from '@/lib/ai/command-executors'
 import type { ChatMessage } from '@/lib/ai/openrouter'
 import { logger } from '@/lib/logger'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // ---------------------------------------------------------------------------
 // Intent detection prompt — analyses full conversation to detect actions
@@ -115,20 +116,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Rate-limit: max 100 requests/min checked via last-minute audit logs
-    const oneMinuteAgo = new Date(Date.now() - 60_000)
-    const recentCount = await prisma.auditLog.count({
-      where: {
-        hospitalId,
-        userId: user.id,
-        action: 'AI_INTERACTION',
-        createdAt: { gte: oneMinuteAgo },
-      },
-    })
-    if (recentCount >= 100) {
+    // Rate-limit: max 100 requests/min per user via the shared limiter.
+    const aiLimit = await checkRateLimit(`ai-chat:${hospitalId}:${user.id}`, 100, 60_000)
+    if (!aiLimit.allowed) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Try again shortly.' },
-        { status: 429 }
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(aiLimit.retryAfterMs / 1000)) },
+        }
       )
     }
 

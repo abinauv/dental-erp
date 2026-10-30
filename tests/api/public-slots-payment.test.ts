@@ -14,6 +14,13 @@ vi.mock('@/lib/payment-gateways', () => ({
   getGateway: mockGetGateway,
 }))
 
+// These tests don't exercise rate limiting; keep the shared limiter from
+// accumulating in-memory counts across cases.
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 1, retryAfterMs: 0 }),
+  getClientIp: vi.fn(() => 'test-ip'),
+}))
+
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { GET as publicSlotsGET } from '@/app/api/public/[slug]/slots/route'

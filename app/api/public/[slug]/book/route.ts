@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Public booking endpoint.
@@ -24,6 +25,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       return NextResponse.json(
         { error: 'Phone, doctor, date, and time are required' },
         { status: 400 }
+      )
+    }
+
+    // Unauthenticated endpoint: throttle per IP (and per phone).
+    const WINDOW = 10 * 60 * 1000
+    const [byIp, byPhone] = await Promise.all([
+      checkRateLimit(`public-book-ip:${getClientIp(req)}`, 20, WINDOW),
+      checkRateLimit(`public-book:${slug}:${phone}`, 10, WINDOW),
+    ])
+    if (!byIp.allowed || !byPhone.allowed) {
+      return NextResponse.json(
+        { error: 'Too many booking attempts. Please try again later.' },
+        { status: 429 }
       )
     }
 

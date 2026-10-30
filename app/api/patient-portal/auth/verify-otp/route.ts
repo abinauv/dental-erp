@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createPatientToken, setPatientCookie } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Verify OTP and return JWT in httpOnly cookie.
@@ -19,6 +20,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Phone, OTP, and clinic identifier are required' },
         { status: 400 }
+      )
+    }
+
+    // Cap total verify attempts per phone/IP (the per-OTP attempts counter below
+    // only bounds guesses against one OTP; this bounds cycling through OTPs).
+    const WINDOW = 10 * 60 * 1000
+    const [byPhone, byIp] = await Promise.all([
+      checkRateLimit(`otp-verify:${hospitalSlug}:${phone}`, 15, WINDOW),
+      checkRateLimit(`otp-verify-ip:${getClientIp(req)}`, 30, WINDOW),
+    ])
+    if (!byPhone.allowed || !byIp.allowed) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429 }
       )
     }
 

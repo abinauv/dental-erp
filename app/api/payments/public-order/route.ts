@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
 import { reservePendingPayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Create a payment order using a payment link token (no auth required).
@@ -15,6 +16,19 @@ export async function POST(req: NextRequest) {
 
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+    }
+
+    // Unauthenticated endpoint: throttle per IP and per link token.
+    const WINDOW = 10 * 60 * 1000
+    const [byIp, byToken] = await Promise.all([
+      checkRateLimit(`pay-order-ip:${getClientIp(req)}`, 30, WINDOW),
+      checkRateLimit(`pay-order:${token}`, 15, WINDOW),
+    ])
+    if (!byIp.allowed || !byToken.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     // Look up payment link

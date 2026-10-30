@@ -7,6 +7,8 @@ import * as matchers from '@testing-library/jest-dom/matchers'
 // a secret.
 process.env.NEXTAUTH_SECRET ||= 'test-secret-not-for-production'
 process.env.NEXTAUTH_URL ||= 'http://localhost:3000'
+// Keep pino quiet during tests (expected error paths log through it).
+process.env.LOG_LEVEL ||= 'silent'
 
 // Extend Vitest's expect method with Testing Library matchers
 expect.extend(matchers)

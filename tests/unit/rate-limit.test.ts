@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { rateLimit, pruneRateLimits, _resetRateLimits } from '@/lib/rate-limit'
+import { rateLimit, checkRateLimit, pruneRateLimits, _resetRateLimits } from '@/lib/rate-limit'
 
 describe('rateLimit', () => {
   beforeEach(() => {
@@ -45,5 +45,22 @@ describe('rateLimit', () => {
     pruneRateLimits()
     // After pruning the expired bucket, the key starts fresh.
     expect(rateLimit('a', 1, 1_000).allowed).toBe(true)
+  })
+})
+
+describe('checkRateLimit (no REDIS_URL → in-memory)', () => {
+  beforeEach(() => {
+    _resetRateLimits()
+    vi.unstubAllEnvs()
+    vi.stubEnv('REDIS_URL', '')
+  })
+
+  it('falls back to the in-memory window and blocks past the limit', async () => {
+    const key = 'c'
+    expect((await checkRateLimit(key, 2, 60_000)).allowed).toBe(true)
+    expect((await checkRateLimit(key, 2, 60_000)).allowed).toBe(true)
+    const blocked = await checkRateLimit(key, 2, 60_000)
+    expect(blocked.allowed).toBe(false)
+    expect(blocked.retryAfterMs).toBeGreaterThan(0)
   })
 })

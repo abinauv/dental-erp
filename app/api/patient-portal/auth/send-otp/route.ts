@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { generateOTP } from '@/lib/patient-auth'
 import { smsService } from '@/lib/services/sms.service'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Send OTP to patient's phone for portal login.
@@ -52,17 +53,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Rate limit: max 5 OTPs in 10 minutes
-    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000)
-    const recentOTPs = await prisma.patientOTP.count({
-      where: {
-        hospitalId: hospital.id,
-        phone,
-        createdAt: { gte: tenMinAgo },
-      },
-    })
+    // Rate limit: max 5 OTP requests per phone (and per IP) in 10 minutes,
+    // via the shared limiter.
+    const WINDOW = 10 * 60 * 1000
+    const [byPhone, byIp] = await Promise.all([
+      checkRateLimit(`otp-send:${hospital.id}:${phone}`, 5, WINDOW),
+      checkRateLimit(`otp-send-ip:${getClientIp(req)}`, 20, WINDOW),
+    ])
 
-    if (recentOTPs >= 5) {
+    if (!byPhone.allowed || !byIp.allowed) {
       return NextResponse.json(
         { error: 'Too many OTP requests. Please try again in 10 minutes.' },
         { status: 429 }
