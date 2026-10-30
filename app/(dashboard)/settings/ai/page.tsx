@@ -68,8 +68,9 @@ export default function AISettingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
 
-    // Ask the server whether an OpenRouter key is configured (the env var is
-    // not visible client-side). Falls back to "unknown" if the check fails.
+    // Ask the server whether the active AI provider's credentials are
+    // configured (env vars aren't visible client-side). Falls back to
+    // "unknown" if the check fails.
     fetch('/api/ai/key-status')
       .then((r) => r.json())
       .then((d) => setApiKeyStatus(d.configured ? 'configured' : 'missing'))

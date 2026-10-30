@@ -2696,9 +2696,9 @@
     },
     "ai": {
       "title": "AI Settings",
-      "subtitle": "Configure AI features powered by OpenRouter",
-      "apiKeyTitle": "OpenRouter API Key",
-      "apiKeyDesc": "Set OPENROUTER_API_KEY in your .env file. Restart the app after changes.",
+      "subtitle": "Configure AI features (OpenRouter, Anthropic, or Amazon Bedrock)",
+      "apiKeyTitle": "AI Provider API Key",
+      "apiKeyDesc": "Choose the backend with AI_PROVIDER (openrouter by default, or anthropic / bedrock) and set its credentials: OPENROUTER_API_KEY, ANTHROPIC_API_KEY, or AWS credentials for Bedrock. Restart the app after changes.",
       "checkEnv": "Check .env",
       "masterTitle": "AI Features Master Switch",
       "masterDesc": "Enable or disable all AI features at once",
@@ -3991,7 +3991,7 @@
           "guides": [
             {
               "title": "Get an OpenRouter API Key",
-              "description": "DentalERP uses OpenRouter to power its AI features. You'll need an API key.",
+              "description": "DentalERP uses OpenRouter by default to power its AI features (Anthropic and Amazon Bedrock are also supported via the AI_PROVIDER setting). For the default, you'll need an OpenRouter API key.",
               "steps": [
                 "Go to openrouter.ai and create a free account",
                 "Click on your profile icon → \"Keys\" (or go to openrouter.ai/keys)",
