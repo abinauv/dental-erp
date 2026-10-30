@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
 import { reservePendingPayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 /**
  * POST: Create a payment order using a payment link token (no auth required).
@@ -82,7 +83,10 @@ export async function POST(req: NextRequest) {
         provider: order.provider,
       })
     } catch (reserveErr) {
-      console.error('Failed to reserve pending payment for order', order.orderId, reserveErr)
+      logger.error(
+        { err: order.orderId, reserveErr },
+        'Failed to reserve pending payment for order'
+      )
     }
 
     const checkoutConfig = gateway.getCheckoutConfig(order, credentials)
@@ -97,7 +101,7 @@ export async function POST(req: NextRequest) {
       checkout: checkoutConfig,
     })
   } catch (err: unknown) {
-    console.error('Public order error:', err)
+    logger.error({ err }, 'Public order error:')
     const message = err instanceof Error ? err.message : 'Failed to create order'
     return NextResponse.json({ error: message }, { status: 500 })
   }

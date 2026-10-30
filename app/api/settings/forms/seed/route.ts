@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 const DEFAULT_TEMPLATES = [
   {
@@ -394,7 +395,7 @@ export async function POST() {
       { status: 201 }
     )
   } catch (err) {
-    console.error('Seed templates error:', err)
+    logger.error({ err }, 'Seed templates error:')
     return NextResponse.json({ error: 'Failed to seed templates' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, StockAlertType, StockTransactionType } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const TRANSACTION_TYPES = Object.values(StockTransactionType) as string[]
 
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error fetching stock transactions:', error)
+    logger.error({ err: error }, 'Error fetching stock transactions:')
     return NextResponse.json(
       { error: 'Failed to fetch stock transactions', details: error.message },
       { status: 500 }
@@ -258,7 +259,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Error creating stock transaction:', error)
+    logger.error({ err: error }, 'Error creating stock transaction:')
     return NextResponse.json(
       { error: 'Failed to create stock transaction', details: error.message },
       { status: 500 }

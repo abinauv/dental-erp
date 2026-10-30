@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const registerSchema = z.object({
   token: z.string().min(1, 'Push token is required'),
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Device registration error:', error)
+    logger.error({ err: error }, 'Device registration error:')
     return NextResponse.json({ error: 'Failed to register device' }, { status: 500 })
   }
 }
@@ -89,7 +90,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Device unregister error:', error)
+    logger.error({ err: error }, 'Device unregister error:')
     return NextResponse.json({ error: 'Failed to unregister device' }, { status: 500 })
   }
 }

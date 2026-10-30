@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkPatientLimit } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // Generate unique patient ID for the hospital
 async function generatePatientId(hospitalId: string): Promise<string> {
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching patients:', error)
+    logger.error({ err: error }, 'Error fetching patients:')
     return NextResponse.json({ error: 'Failed to fetch patients' }, { status: 500 })
   }
 }
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(patient, { status: 201 })
   } catch (error) {
-    console.error('Error creating patient:', error)
+    logger.error({ err: error }, 'Error creating patient:')
     return NextResponse.json({ error: 'Failed to create patient' }, { status: 500 })
   }
 }

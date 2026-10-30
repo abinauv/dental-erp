@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/ai/no-show-risk
@@ -182,7 +183,7 @@ Use patient history as primary factor. Return ONLY valid JSON array, no markdown
       model: response.model,
     })
   } catch (error: any) {
-    console.error('No-show risk error:', error)
+    logger.error({ err: error }, 'No-show risk error:')
     return NextResponse.json(
       { error: error.message || 'Failed to generate predictions' },
       { status: error.message?.includes('Unauthorized') ? 401 : 500 }

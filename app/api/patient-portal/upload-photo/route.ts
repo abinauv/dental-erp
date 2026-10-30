@@ -4,6 +4,7 @@ import { requirePatientAuth } from '@/lib/patient-auth'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildStorageKey, getStorage } from '@/lib/storage'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/patient-portal/upload-photo
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     )
   } catch (err: any) {
-    console.error('Photo upload error:', err)
+    logger.error({ err }, 'Photo upload error:')
     return NextResponse.json({ error: err.message || 'Failed to upload photo' }, { status: 500 })
   }
 }

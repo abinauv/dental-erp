@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 // GET: Get a specific form template with fields (for patient to fill)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       existingSubmission,
     })
   } catch (err) {
-    console.error('Patient form detail error:', err)
+    logger.error({ err }, 'Patient form detail error:')
     return NextResponse.json({ error: 'Failed to load form' }, { status: 500 })
   }
 }

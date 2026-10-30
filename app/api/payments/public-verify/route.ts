@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 /**
  * POST: Verify payment from public pay page (no auth — uses token).
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error('Public verify error:', err)
+    logger.error({ err }, 'Public verify error:')
     const message = err instanceof Error ? err.message : 'Verification failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }

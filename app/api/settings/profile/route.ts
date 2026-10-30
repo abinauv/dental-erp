@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { isSupportedLocale, locales, resolveLocaleCascade, type Locale } from '@/lib/i18n/config'
+import { logger } from '@/lib/logger'
 
 /**
  * The signed-in staff member's own profile preferences.
@@ -60,7 +61,7 @@ export async function GET() {
       },
     })
   } catch (err) {
-    console.error('Get profile error:', err)
+    logger.error({ err }, 'Get profile error:')
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 })
   }
 }
@@ -97,7 +98,7 @@ export async function PATCH(req: NextRequest) {
       message: locale ? 'Language updated' : 'Language reset to the clinic default',
     })
   } catch (err) {
-    console.error('Update profile error:', err)
+    logger.error({ err }, 'Update profile error:')
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
 }

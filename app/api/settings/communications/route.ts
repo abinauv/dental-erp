@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Retrieve SMS and email settings
 export async function GET(request: NextRequest) {
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       reviews: reviewSettingsJson ? JSON.parse(reviewSettingsJson.value) : {},
     })
   } catch (error) {
-    console.error('Error fetching communication settings:', error)
+    logger.error({ err: error }, 'Error fetching communication settings:')
     return NextResponse.json({ error: 'Failed to fetch communication settings' }, { status: 500 })
   }
 }
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
       message: `${type.toUpperCase()} settings saved successfully`,
     })
   } catch (error) {
-    console.error('Error saving communication settings:', error)
+    logger.error({ err: error }, 'Error saving communication settings:')
     return NextResponse.json({ error: 'Failed to save communication settings' }, { status: 500 })
   }
 }

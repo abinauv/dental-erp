@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: Available slots for the patient's hospital.
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ available: true, date, doctorId, slots })
   } catch (err: unknown) {
-    console.error('Portal slots error:', err)
+    logger.error({ err }, 'Portal slots error:')
     return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
   }
 }

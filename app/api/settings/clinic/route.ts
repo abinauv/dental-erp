@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { isSupportedLocale } from '@/lib/i18n/config'
+import { logger } from '@/lib/logger'
 
 const optionalString = z.preprocess(
   (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
@@ -115,7 +116,7 @@ export async function GET(req: NextRequest) {
       data: clinicInfo,
     })
   } catch (error: any) {
-    console.error('Get clinic info error:', error)
+    logger.error({ err: error }, 'Get clinic info error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get clinic information' },
       { status: 500 }
@@ -145,7 +146,7 @@ export async function POST(req: NextRequest) {
       message: 'Clinic information saved successfully',
     })
   } catch (error: any) {
-    console.error('Update clinic info error:', error)
+    logger.error({ err: error }, 'Update clinic info error:')
     return NextResponse.json(
       { error: error.message || 'Failed to update clinic information' },
       { status: 500 }

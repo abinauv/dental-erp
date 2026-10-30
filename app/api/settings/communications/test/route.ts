@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { smsService } from '@/lib/services/sms.service'
 import { emailService } from '@/lib/services/email.service'
+import { logger } from '@/lib/logger'
 
 // POST - Test SMS or email connection
 export async function POST(request: NextRequest) {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
           details: `SMS sent to ${testData.phone}`,
         })
       } catch (error: any) {
-        console.error('SMS test failed:', error)
+        logger.error({ err: error }, 'SMS test failed:')
         return NextResponse.json(
           {
             success: false,
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
           details: `Email sent to ${testData.email}`,
         })
       } catch (error: any) {
-        console.error('Email test failed:', error)
+        logger.error({ err: error }, 'Email test failed:')
         return NextResponse.json(
           {
             success: false,
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   } catch (error: any) {
-    console.error('Error testing communication settings:', error)
+    logger.error({ err: error }, 'Error testing communication settings:')
     return NextResponse.json(
       {
         success: false,

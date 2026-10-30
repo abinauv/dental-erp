@@ -5,6 +5,7 @@
  */
 
 import { emailService } from '@/lib/services/email.service'
+import { logger } from '@/lib/logger'
 
 const APP_NAME = 'DentalERP'
 
@@ -84,7 +85,7 @@ export async function sendInviteEmail(params: {
     })
     return true
   } catch (err) {
-    console.error(`[email-helpers] Failed to send invite email to ${to}:`, err)
+    logger.error({ err }, `[email-helpers] Failed to send invite email to ${to}:`)
     return false
   }
 }
@@ -123,7 +124,7 @@ export async function sendVerificationEmail(params: {
     })
     return true
   } catch (err) {
-    console.error(`[email-helpers] Failed to send verification email to ${to}:`, err)
+    logger.error({ err }, `[email-helpers] Failed to send verification email to ${to}:`)
     return false
   }
 }

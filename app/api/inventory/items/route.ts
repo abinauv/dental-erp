@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { InventoryItemType } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - Fetch all inventory items with filters
 export async function GET(request: NextRequest) {
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error fetching inventory items:', error)
+    logger.error({ err: error }, 'Error fetching inventory items:')
     return NextResponse.json(
       { error: 'Failed to fetch inventory items', details: error.message },
       { status: 500 }
@@ -243,7 +244,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Error creating inventory item:', error)
+    logger.error({ err: error }, 'Error creating inventory item:')
     return NextResponse.json(
       { error: 'Failed to create inventory item', details: error.message },
       { status: 500 }

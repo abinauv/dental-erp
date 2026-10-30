@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { LabVendorStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const VENDOR_STATUSES = Object.values(LabVendorStatus) as string[]
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, data: vendor })
   } catch (error: any) {
-    console.error('Error fetching lab vendor:', error)
+    logger.error({ err: error }, 'Error fetching lab vendor:')
     return NextResponse.json(
       { error: 'Failed to fetch lab vendor', details: error.message },
       { status: 500 }
@@ -126,7 +127,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, message: 'Lab vendor updated successfully' })
   } catch (error: any) {
-    console.error('Error updating lab vendor:', error)
+    logger.error({ err: error }, 'Error updating lab vendor:')
     return NextResponse.json(
       { error: 'Failed to update lab vendor', details: error.message },
       { status: 500 }
@@ -178,7 +179,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Lab vendor deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting lab vendor:', error)
+    logger.error({ err: error }, 'Error deleting lab vendor:')
     return NextResponse.json(
       { error: 'Failed to delete lab vendor', details: error.message },
       { status: 500 }

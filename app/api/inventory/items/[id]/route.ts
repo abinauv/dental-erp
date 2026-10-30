@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, StockAlertType, StockTransactionType } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 function stockStatus(currentStock: number, minimumStock: number, reorderLevel: number) {
   if (currentStock <= 0) return 'out_of_stock'
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
   } catch (error: any) {
-    console.error('Error fetching inventory item:', error)
+    logger.error({ err: error }, 'Error fetching inventory item:')
     return NextResponse.json(
       { error: 'Failed to fetch inventory item', details: error.message },
       { status: 500 }
@@ -197,7 +198,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, message: 'Inventory item updated successfully' })
   } catch (error: any) {
-    console.error('Error updating inventory item:', error)
+    logger.error({ err: error }, 'Error updating inventory item:')
     return NextResponse.json(
       { error: 'Failed to update inventory item', details: error.message },
       { status: 500 }
@@ -244,7 +245,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Inventory item deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting inventory item:', error)
+    logger.error({ err: error }, 'Error deleting inventory item:')
     return NextResponse.json(
       { error: 'Failed to delete inventory item', details: error.message },
       { status: 500 }

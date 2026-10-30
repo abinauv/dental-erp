@@ -7,6 +7,9 @@ const withNextIntl = createNextIntlPlugin('./lib/i18n/request.ts')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  // pino does dynamic requires (transports); keep it a native server dependency
+  // rather than bundling it into route handlers.
+  serverExternalPackages: ['pino'],
   images: {
     unoptimized: true,
   },

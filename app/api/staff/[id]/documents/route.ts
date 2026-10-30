@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildStorageKey, getStorage } from '@/lib/storage'
+import { logger } from '@/lib/logger'
 
 const ALLOWED_TYPES = [
   'image/jpeg',
@@ -40,7 +41,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ success: true, documents })
   } catch (err: any) {
-    console.error('Error fetching staff documents:', err)
+    logger.error({ err }, 'Error fetching staff documents:')
     return NextResponse.json({ error: err.message || 'Failed to fetch documents' }, { status: 500 })
   }
 }
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ success: true, document })
   } catch (err: any) {
-    console.error('Error uploading staff document:', err)
+    logger.error({ err }, 'Error uploading staff document:')
     return NextResponse.json({ error: err.message || 'Failed to upload document' }, { status: 500 })
   }
 }

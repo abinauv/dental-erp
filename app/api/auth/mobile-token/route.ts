@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { SignJWT } from 'jose'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Mobile auth error:', error)
+    logger.error({ err: error }, 'Mobile auth error:')
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 /**
  * POST: Public booking endpoint.
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       { status: 201 }
     )
   } catch (err: unknown) {
-    console.error('Public booking error:', err)
+    logger.error({ err }, 'Public booking error:')
     return NextResponse.json({ error: 'Failed to book appointment' }, { status: 500 })
   }
 }

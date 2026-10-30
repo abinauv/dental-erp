@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // POST /api/payment-plans/[id]/pay — Record payment for an installment
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       remainingInstallments: result.remainingInstallments,
     })
   } catch (err) {
-    console.error('Error recording installment payment:', err)
+    logger.error({ err }, 'Error recording installment payment:')
     return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
   }
 }

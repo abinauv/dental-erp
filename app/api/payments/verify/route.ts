@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error('Payment verification error:', err)
+    logger.error({ err }, 'Payment verification error:')
     const message = err instanceof Error ? err.message : 'Payment verification failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - List membership plans
 export async function GET(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(plans)
   } catch (err) {
-    console.error('Error fetching membership plans:', err)
+    logger.error({ err }, 'Error fetching membership plans:')
     return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 })
   }
 }
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(plan, { status: 201 })
   } catch (err) {
-    console.error('Error creating membership plan:', err)
+    logger.error({ err }, 'Error creating membership plan:')
     return NextResponse.json({ error: 'Failed to create plan' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
@@ -83,7 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('Update pre-authorization error:', err)
+    logger.error({ err }, 'Update pre-authorization error:')
     return NextResponse.json({ error: 'Failed to update pre-authorization' }, { status: 500 })
   }
 }

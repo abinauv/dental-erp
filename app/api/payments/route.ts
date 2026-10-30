@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // Parse a query-string date, returning null for empty values, the "all" sentinel,
 // or anything that isn't a valid date — so a bad value never reaches Prisma.
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching payments:', error)
+    logger.error({ err: error }, 'Error fetching payments:')
     return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
   }
 }

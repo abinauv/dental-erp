@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get loyalty points for a patient or all transactions
 export async function GET(request: NextRequest) {
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error('Error fetching loyalty transactions:', err)
+    logger.error({ err }, 'Error fetching loyalty transactions:')
     return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
   }
 }
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transaction, { status: 201 })
   } catch (err) {
-    console.error('Error creating loyalty transaction:', err)
+    logger.error({ err }, 'Error creating loyalty transaction:')
     return NextResponse.json({ error: 'Failed to process transaction' }, { status: 500 })
   }
 }

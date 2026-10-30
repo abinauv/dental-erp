@@ -1,5 +1,6 @@
 import { getRedisConnection } from './connection'
 import { QUEUE_NAME, getJobHandlers, type JobName } from './jobs'
+import { logger } from '@/lib/logger'
 
 // Background job worker. Run as a separate long-lived process:
 //
@@ -15,7 +16,7 @@ import { QUEUE_NAME, getJobHandlers, type JobName } from './jobs'
 export async function startWorker(): Promise<any | null> {
   const connection = await getRedisConnection()
   if (!connection) {
-    console.warn('[queue] REDIS_URL not set — worker has nothing to do; jobs run inline.')
+    logger.warn('[queue] REDIS_URL not set — worker has nothing to do; jobs run inline.')
     return null
   }
 
@@ -38,20 +39,20 @@ export async function startWorker(): Promise<any | null> {
   )
 
   worker.on('completed', (job: { id?: string; name: string }) => {
-    console.log(`[queue] completed ${job.name} (${job.id})`)
+    logger.info(`[queue] completed ${job.name} (${job.id})`)
   })
   worker.on(
     'failed',
     (job: { id?: string; name: string; attemptsMade?: number } | undefined, err: Error) => {
       // A job that has exhausted its attempts stays in the failed set
       // (removeOnFail age) as the dead-letter record.
-      console.error(
+      logger.error(
         `[queue] failed ${job?.name} (${job?.id}) attempt ${job?.attemptsMade}: ${err.message}`
       )
     }
   )
 
-  console.log(`[queue] worker started on "${QUEUE_NAME}"`)
+  logger.info(`[queue] worker started on "${QUEUE_NAME}"`)
   return worker
 }
 
@@ -64,7 +65,7 @@ const invokedDirectly =
 
 if (invokedDirectly) {
   startWorker().catch((err) => {
-    console.error('[queue] worker failed to start:', err)
+    logger.error({ err }, '[queue] worker failed to start:')
     process.exit(1)
   })
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { getDateRangeFromPreset } from '@/lib/billing-utils'
+import { logger } from '@/lib/logger'
 
 // GET - Generate billing reports
 export async function GET(request: NextRequest) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
   } catch (error) {
-    console.error('Error generating report:', error)
+    logger.error({ err: error }, 'Error generating report:')
     return NextResponse.json(
       {
         error: 'Failed to generate report',

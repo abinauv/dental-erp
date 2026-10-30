@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get single procedure
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(procedure)
   } catch (error) {
-    console.error('Error fetching procedure:', error)
+    logger.error({ err: error }, 'Error fetching procedure:')
     return NextResponse.json({ error: 'Failed to fetch procedure' }, { status: 500 })
   }
 }
@@ -99,7 +100,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(procedure)
   } catch (error) {
-    console.error('Error updating procedure:', error)
+    logger.error({ err: error }, 'Error updating procedure:')
     return NextResponse.json({ error: 'Failed to update procedure' }, { status: 500 })
   }
 }
@@ -166,7 +167,7 @@ export async function DELETE(
       deleted: true,
     })
   } catch (error) {
-    console.error('Error deleting procedure:', error)
+    logger.error({ err: error }, 'Error deleting procedure:')
     return NextResponse.json({ error: 'Failed to delete procedure' }, { status: 500 })
   }
 }

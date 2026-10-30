@@ -6,6 +6,7 @@ import { complete, extractJSON, streamResponse } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { executeIntent } from '@/lib/ai/command-executors'
 import type { ChatMessage } from '@/lib/ai/openrouter'
+import { logger } from '@/lib/logger'
 
 // ---------------------------------------------------------------------------
 // Intent detection prompt — analyses full conversation to detect actions
@@ -265,7 +266,7 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
           context: context as any,
         },
       })
-      .catch((e: any) => console.error('AI conversation log failed:', e.message))
+      .catch((e: any) => logger.error({ err: e.message }, 'AI conversation log failed'))
 
     prisma.auditLog
       .create({
@@ -277,7 +278,7 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
           entityId: skillName || 'chat',
         },
       })
-      .catch((e: any) => console.error('AI audit log failed:', e.message))
+      .catch((e: any) => logger.error({ err: e.message }, 'AI audit log failed'))
 
     // -----------------------------------------------------------------------
     // Smart model routing — Flash Lite by default, escalate only when needed
@@ -304,14 +305,14 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
       const { content } = await complete(allMessages, model)
       return NextResponse.json({ response: content })
     } catch (err) {
-      console.error('AI response error:', err)
+      logger.error({ err }, 'AI response error:')
       return NextResponse.json(
         { error: err instanceof Error ? err.message : 'AI service error' },
         { status: 502 }
       )
     }
   } catch (err: any) {
-    console.error('AI chat route error:', err)
+    logger.error({ err }, 'AI chat route error:')
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }

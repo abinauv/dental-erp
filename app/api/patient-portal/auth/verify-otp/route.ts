@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createPatientToken, setPatientCookie } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * POST: Verify OTP and return JWT in httpOnly cookie.
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     return setPatientCookie(response, token)
   } catch (err: unknown) {
-    console.error('Verify OTP error:', err)
+    logger.error({ err }, 'Verify OTP error:')
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { StockTransactionType, SupplierStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 /**
  * These reports multiply columns together (SUM(stock * price)) and do date
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
   } catch (error: any) {
-    console.error('Error generating inventory report:', error)
+    logger.error({ err: error }, 'Error generating inventory report:')
     return NextResponse.json(
       { error: 'Failed to generate inventory report', details: error.message },
       { status: 500 }

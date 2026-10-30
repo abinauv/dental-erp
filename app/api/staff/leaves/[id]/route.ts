@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get single leave request details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(leave)
   } catch (error) {
-    console.error('Error fetching leave:', error)
+    logger.error({ err: error }, 'Error fetching leave:')
     return NextResponse.json({ error: 'Failed to fetch leave request' }, { status: 500 })
   }
 }
@@ -143,7 +144,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(updatedLeave)
   } catch (error) {
-    console.error('Error updating leave:', error)
+    logger.error({ err: error }, 'Error updating leave:')
     return NextResponse.json({ error: 'Failed to update leave request' }, { status: 500 })
   }
 }
@@ -183,7 +184,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Leave request deleted successfully' })
   } catch (error) {
-    console.error('Error deleting leave:', error)
+    logger.error({ err: error }, 'Error deleting leave:')
     return NextResponse.json({ error: 'Failed to delete leave request' }, { status: 500 })
   }
 }

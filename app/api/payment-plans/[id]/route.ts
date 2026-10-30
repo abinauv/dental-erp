@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET /api/payment-plans/[id] — Get payment plan details
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -96,7 +97,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         .reduce((sum, s) => sum + Number(s.amount), 0),
     })
   } catch (err) {
-    console.error('Error fetching payment plan:', err)
+    logger.error({ err }, 'Error fetching payment plan:')
     return NextResponse.json({ error: 'Failed to fetch payment plan' }, { status: 500 })
   }
 }
@@ -191,7 +192,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (err) {
-    console.error('Error updating payment plan:', err)
+    logger.error({ err }, 'Error updating payment plan:')
     return NextResponse.json({ error: 'Failed to update payment plan' }, { status: 500 })
   }
 }

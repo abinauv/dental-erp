@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 /**
  * Webhook handler for payment gateway callbacks.
@@ -60,7 +61,7 @@ export async function POST(
     }
 
     if (!gatewayOrderId) {
-      console.error('Webhook: could not extract order ID from payload')
+      logger.error('Webhook: could not extract order ID from payload')
       return NextResponse.json({ status: 'ok' }) // Acknowledge but skip
     }
 
@@ -75,7 +76,7 @@ export async function POST(
     if (!existingPayment) {
       // No reserved payment (e.g. an order created before reservation existed).
       // We cannot settle it safely, so acknowledge without processing.
-      console.error('Webhook: no payment record for order', gatewayOrderId)
+      logger.error({ err: gatewayOrderId }, 'Webhook: no payment record for order')
       return NextResponse.json({ status: 'ok' })
     }
 
@@ -92,7 +93,7 @@ export async function POST(
     const { gateway, credentials } = gatewayResult
     const verified = gateway.verifyWebhook(rawBody, signature, credentials.webhookSecret || '')
     if (!verified) {
-      console.error('Webhook: signature verification failed for order', gatewayOrderId)
+      logger.error({ err: gatewayOrderId }, 'Webhook: signature verification failed for order')
       // Return 200 so the gateway does not retry a payload we have rejected.
       return NextResponse.json({ status: 'invalid_signature' })
     }
@@ -111,7 +112,7 @@ export async function POST(
 
     return NextResponse.json({ status: 'ok' })
   } catch (err) {
-    console.error('Webhook processing error:', err)
+    logger.error({ err }, 'Webhook processing error:')
     // Always return 200 to avoid gateway retries
     return NextResponse.json({ status: 'error_logged' })
   }

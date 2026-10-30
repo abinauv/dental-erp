@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // POST - Start treatment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json(updatedTreatment)
   } catch (error) {
-    console.error('Error starting treatment:', error)
+    logger.error({ err: error }, 'Error starting treatment:')
     return NextResponse.json({ error: 'Failed to start treatment' }, { status: 500 })
   }
 }

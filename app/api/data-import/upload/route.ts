@@ -4,6 +4,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS } from '@/lib/import/schema-definitions'
+import { logger } from '@/lib/logger'
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
 const ALLOWED_EXTENSIONS = ['csv', 'xlsx', 'xls', 'pdf']
@@ -99,7 +100,7 @@ export async function POST(req: NextRequest) {
       totalRows: parsed.totalRows,
     })
   } catch (err: any) {
-    console.error('Data import upload error:', err)
+    logger.error({ err }, 'Data import upload error:')
     return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 })
   }
 }

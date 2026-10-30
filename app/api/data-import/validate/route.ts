@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
 import type { FieldDefinition } from '@/lib/import/schema-definitions'
+import { logger } from '@/lib/logger'
 
 interface ValidationError {
   row: number
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
       foreignKeyResolution: fkReport,
     })
   } catch (err: any) {
-    console.error('Validation error:', err)
+    logger.error({ err }, 'Validation error:')
     return NextResponse.json({ error: err.message || 'Validation failed' }, { status: 500 })
   }
 }

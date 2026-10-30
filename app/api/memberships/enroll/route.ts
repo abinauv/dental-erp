@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // POST - Enroll patient in membership plan
 export async function POST(request: NextRequest) {
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(membership, { status: 201 })
   } catch (err) {
-    console.error('Error enrolling patient:', err)
+    logger.error({ err }, 'Error enrolling patient:')
     return NextResponse.json({ error: 'Failed to enroll patient' }, { status: 500 })
   }
 }
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error('Error fetching memberships:', err)
+    logger.error({ err }, 'Error fetching memberships:')
     return NextResponse.json({ error: 'Failed to fetch memberships' }, { status: 500 })
   }
 }

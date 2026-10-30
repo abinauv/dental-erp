@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateOTP } from '@/lib/patient-auth'
 import { smsService } from '@/lib/services/sms.service'
+import { logger } from '@/lib/logger'
 
 /**
  * POST: Send OTP to patient's phone for portal login.
@@ -95,9 +96,9 @@ export async function POST(req: NextRequest) {
       })
       delivered = true
     } catch (smsErr) {
-      console.error('[Patient Portal OTP] SMS delivery failed:', smsErr)
+      logger.error({ err: smsErr }, '[Patient Portal OTP] SMS delivery failed:')
       if (process.env.NODE_ENV !== 'production') {
-        console.log(`[Patient Portal OTP] ${phone}: ${otp}`)
+        logger.info(`[Patient Portal OTP] ${phone}: ${otp}`)
       }
     }
 
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
       ...(process.env.NODE_ENV !== 'production' && { otp }),
     })
   } catch (err: unknown) {
-    console.error('Send OTP error:', err)
+    logger.error({ err }, 'Send OTP error:')
     return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 })
   }
 }

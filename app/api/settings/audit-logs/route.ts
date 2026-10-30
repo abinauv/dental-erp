@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET /api/settings/audit-logs - Get audit logs
 export async function GET(req: NextRequest) {
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Get audit logs error:', error)
+    logger.error({ err: error }, 'Get audit logs error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get audit logs' },
       { status: 500 }

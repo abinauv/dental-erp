@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // Generate unique procedure code
 async function generateProcedureCode(category: string, hospitalId: string): Promise<string> {
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching procedures:', error)
+    logger.error({ err: error }, 'Error fetching procedures:')
     return NextResponse.json({ error: 'Failed to fetch procedures' }, { status: 500 })
   }
 }
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(procedure, { status: 201 })
   } catch (error) {
-    console.error('Error creating procedure:', error)
+    logger.error({ err: error }, 'Error creating procedure:')
     return NextResponse.json({ error: 'Failed to create procedure' }, { status: 500 })
   }
 }

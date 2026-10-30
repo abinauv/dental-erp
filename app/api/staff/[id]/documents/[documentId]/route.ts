@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { getStorage, toStorageKey } from '@/lib/storage'
+import { logger } from '@/lib/logger'
 
 // DELETE /api/staff/[id]/documents/[documentId] — remove a staff document
 export async function DELETE(
@@ -34,7 +35,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    console.error('Error deleting staff document:', err)
+    logger.error({ err }, 'Error deleting staff document:')
     return NextResponse.json({ error: err.message || 'Failed to delete document' }, { status: 500 })
   }
 }

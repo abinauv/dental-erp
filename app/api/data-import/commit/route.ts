@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
 import bcrypt from 'bcryptjs'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   const { error, session, hospitalId } = await requireAuthAndRole(['ADMIN'])
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest) {
       errors: importErrors.slice(0, 50),
     })
   } catch (err: any) {
-    console.error('Data import commit error:', err)
+    logger.error({ err }, 'Data import commit error:')
     return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 })
   }
 }

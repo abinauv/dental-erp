@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/cron/automations
@@ -252,7 +253,7 @@ export async function POST(req: Request) {
         action: action.type,
       })
     } catch (err) {
-      console.error(`Automation ${auto.id} (${auto.name}) failed:`, err)
+      logger.error({ err }, `Automation ${auto.id} (${auto.name}) failed:`)
       results.push({
         automationId: auto.id,
         name: auto.name,

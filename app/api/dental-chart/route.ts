@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get dental chart entries for a patient
 export async function GET(request: NextRequest) {
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
       patientId,
     })
   } catch (error) {
-    console.error('Error fetching dental chart:', error)
+    logger.error({ err: error }, 'Error fetching dental chart:')
     return NextResponse.json({ error: 'Failed to fetch dental chart' }, { status: 500 })
   }
 }
@@ -197,7 +198,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(entry, { status: 201 })
   } catch (error) {
-    console.error('Error creating dental chart entry:', error)
+    logger.error({ err: error }, 'Error creating dental chart entry:')
     return NextResponse.json({ error: 'Failed to create dental chart entry' }, { status: 500 })
   }
 }

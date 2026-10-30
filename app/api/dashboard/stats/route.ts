@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns'
+import { logger } from '@/lib/logger'
 
 // Helper function to convert BigInt to Number in query results
 function convertBigIntToNumber(obj: any): any {
@@ -258,11 +259,10 @@ export async function GET(req: NextRequest) {
       `,
       ])
     } catch (queryError: any) {
-      console.error('Database query error:', {
-        message: queryError.message,
-        stack: queryError.stack,
-        code: queryError.code,
-      })
+      logger.error(
+        { message: queryError.message, stack: queryError.stack, code: queryError.code },
+        'Database query error'
+      )
       throw new Error(`Database query failed: ${queryError.message}`)
     }
 
@@ -391,12 +391,10 @@ export async function GET(req: NextRequest) {
       data: stats,
     })
   } catch (error: any) {
-    console.error('Dashboard stats error details:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      meta: error.meta,
-    })
+    logger.error(
+      { message: error.message, stack: error.stack, code: error.code, meta: error.meta },
+      'Dashboard stats error details'
+    )
     return NextResponse.json(
       {
         error: 'Failed to fetch dashboard statistics',

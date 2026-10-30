@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { communicationTriggersService } from '@/lib/services/communication-triggers.service'
 import { enqueue } from '@/lib/queue'
+import { logger } from '@/lib/logger'
 
 // POST /api/communications/triggers - Run communication triggers
 // This endpoint should be called by a cron job (e.g., every hour)
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error: any) {
-    console.error('Communication triggers error:', error)
+    logger.error({ err: error }, 'Communication triggers error:')
     return NextResponse.json(
       { error: error.message || 'Failed to run communication triggers' },
       { status: 500 }
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error: any) {
-    console.error('Communication triggers error:', error)
+    logger.error({ err: error }, 'Communication triggers error:')
     return NextResponse.json(
       { error: error.message || 'Failed to run communication triggers' },
       { status: 500 }

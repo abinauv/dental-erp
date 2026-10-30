@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { buildStorageKey, getStorage } from '@/lib/storage'
+import { logger } from '@/lib/logger'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 const MAX_SIZE = 2 * 1024 * 1024 // 2 MB
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, logo: logoPath })
   } catch (err: any) {
-    console.error('Logo upload error:', err)
+    logger.error({ err }, 'Logo upload error:')
     return NextResponse.json({ error: err.message || 'Failed to upload logo' }, { status: 500 })
   }
 }
@@ -106,7 +107,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    console.error('Logo delete error:', err)
+    logger.error({ err }, 'Logo delete error:')
     return NextResponse.json({ error: err.message || 'Failed to delete logo' }, { status: 500 })
   }
 }

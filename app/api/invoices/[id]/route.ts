@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
 import { DiscountType, InvoiceStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - Get single invoice with full details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(invoice)
   } catch (error) {
-    console.error('Error fetching invoice:', error)
+    logger.error({ err: error }, 'Error fetching invoice:')
     return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 })
   }
 }
@@ -269,7 +270,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(invoice)
   } catch (error) {
-    console.error('Error updating invoice:', error)
+    logger.error({ err: error }, 'Error updating invoice:')
     return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 })
   }
 }
@@ -339,7 +340,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Invoice deleted successfully' })
   } catch (error) {
-    console.error('Error deleting invoice:', error)
+    logger.error({ err: error }, 'Error deleting invoice:')
     return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 })
   }
 }

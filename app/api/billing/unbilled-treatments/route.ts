@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get unbilled treatments for a patient
 export async function GET(request: NextRequest) {
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching unbilled treatments:', error)
+    logger.error({ err: error }, 'Error fetching unbilled treatments:')
     return NextResponse.json({ error: 'Failed to fetch unbilled treatments' }, { status: 500 })
   }
 }
