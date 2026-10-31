@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,7 @@ import {
   User,
   CalendarPlus,
 } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface DashboardData {
   upcomingAppointments: Array<{
@@ -52,6 +54,11 @@ interface DashboardData {
 }
 
 export default function PatientDashboard() {
+  const t = useTranslations('portal.dashboard')
+  const tAptType = useTranslations('appointments.type')
+  const tInvStatus = useTranslations('billing.status')
+  const tTxStatus = useTranslations('treatments.status')
+  const { formatCurrency, formatDate } = useClinicFormatters()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -62,20 +69,6 @@ export default function PatientDashboard() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
-
-  const formatCurrency = (val: number | string) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-    }).format(Number(val))
-
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
 
   if (loading) {
     return (
@@ -96,11 +89,11 @@ export default function PatientDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <Link href="/portal/book">
           <Button>
             <CalendarPlus className="h-4 w-4 mr-2" />
-            Book Appointment
+            {t('bookAppointment')}
           </Button>
         </Link>
       </div>
@@ -115,7 +108,7 @@ export default function PatientDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{data.stats.upcomingCount}</p>
-                <p className="text-xs text-muted-foreground">Upcoming</p>
+                <p className="text-xs text-muted-foreground">{t('upcoming')}</p>
               </div>
             </div>
           </CardContent>
@@ -128,7 +121,7 @@ export default function PatientDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{data.stats.totalVisits}</p>
-                <p className="text-xs text-muted-foreground">Total Visits</p>
+                <p className="text-xs text-muted-foreground">{t('totalVisits')}</p>
               </div>
             </div>
           </CardContent>
@@ -141,7 +134,7 @@ export default function PatientDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{data.stats.outstandingCount}</p>
-                <p className="text-xs text-muted-foreground">Pending Bills</p>
+                <p className="text-xs text-muted-foreground">{t('pendingBills')}</p>
               </div>
             </div>
           </CardContent>
@@ -154,7 +147,7 @@ export default function PatientDashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{formatCurrency(data.stats.totalOutstanding)}</p>
-                <p className="text-xs text-muted-foreground">Balance Due</p>
+                <p className="text-xs text-muted-foreground">{t('balanceDue')}</p>
               </div>
             </div>
           </CardContent>
@@ -165,19 +158,17 @@ export default function PatientDashboard() {
         {/* Upcoming Appointments */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Upcoming Appointments</CardTitle>
+            <CardTitle className="text-base">{t('upcomingAppointments')}</CardTitle>
             <Link
               href="/portal/appointments"
               className="text-xs text-primary hover:underline flex items-center gap-1"
             >
-              View All <ArrowRight className="h-3 w-3" />
+              {t('viewAll')} <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
           <CardContent>
             {data.upcomingAppointments.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No upcoming appointments
-              </p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('noUpcoming')}</p>
             ) : (
               <div className="space-y-3">
                 {data.upcomingAppointments.map((apt) => (
@@ -189,18 +180,25 @@ export default function PatientDashboard() {
                       <div className="flex items-center gap-2">
                         <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-sm font-medium">
-                          {formatDate(apt.scheduledDate)} at {apt.scheduledTime}
+                          {t('aptWhen', {
+                            date: formatDate(apt.scheduledDate),
+                            time: apt.scheduledTime,
+                          })}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <User className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          Dr. {apt.doctor.firstName} {apt.doctor.lastName}
+                          {t('doctorPrefix', {
+                            name: `${apt.doctor.firstName} ${apt.doctor.lastName}`,
+                          })}
                         </span>
                       </div>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {apt.appointmentType.replace('_', ' ')}
+                      {tAptType.has(apt.appointmentType)
+                        ? tAptType(apt.appointmentType)
+                        : apt.appointmentType.replace('_', ' ')}
                     </Badge>
                   </div>
                 ))}
@@ -212,17 +210,17 @@ export default function PatientDashboard() {
         {/* Outstanding Bills */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Outstanding Bills</CardTitle>
+            <CardTitle className="text-base">{t('outstandingBills')}</CardTitle>
             <Link
               href="/portal/bills"
               className="text-xs text-primary hover:underline flex items-center gap-1"
             >
-              View All <ArrowRight className="h-3 w-3" />
+              {t('viewAll')} <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
           <CardContent>
             {data.outstandingInvoices.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">All bills are paid!</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('allPaid')}</p>
             ) : (
               <div className="space-y-3">
                 {data.outstandingInvoices.map((inv) => (
@@ -234,7 +232,7 @@ export default function PatientDashboard() {
                       <p className="text-sm font-medium">{inv.invoiceNo}</p>
                       {inv.dueDate && (
                         <p className="text-xs text-muted-foreground">
-                          Due: {formatDate(inv.dueDate)}
+                          {t('due', { date: formatDate(inv.dueDate) })}
                         </p>
                       )}
                     </div>
@@ -244,7 +242,9 @@ export default function PatientDashboard() {
                         variant={inv.status === 'PARTIALLY_PAID' ? 'secondary' : 'destructive'}
                         className="text-xs"
                       >
-                        {inv.status.replace('_', ' ')}
+                        {tInvStatus.has(inv.status)
+                          ? tInvStatus(inv.status)
+                          : inv.status.replace('_', ' ')}
                       </Badge>
                     </div>
                   </div>
@@ -257,35 +257,35 @@ export default function PatientDashboard() {
         {/* Recent Treatments */}
         <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Recent Treatments</CardTitle>
+            <CardTitle className="text-base">{t('recentTreatments')}</CardTitle>
             <Link
               href="/portal/records"
               className="text-xs text-primary hover:underline flex items-center gap-1"
             >
-              View All <ArrowRight className="h-3 w-3" />
+              {t('viewAll')} <ArrowRight className="h-3 w-3" />
             </Link>
           </CardHeader>
           <CardContent>
             {data.recentTreatments.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No treatment records yet
-              </p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('noTreatments')}</p>
             ) : (
               <div className="space-y-3">
-                {data.recentTreatments.map((t) => (
+                {data.recentTreatments.map((tx) => (
                   <div
-                    key={t.id}
+                    key={tx.id}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">{t.procedure.name}</p>
+                      <p className="text-sm font-medium">{tx.procedure.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Dr. {t.doctor.firstName} {t.doctor.lastName} &middot;{' '}
-                        {formatDate(t.createdAt)}
+                        {t('treatmentMeta', {
+                          name: `${tx.doctor.firstName} ${tx.doctor.lastName}`,
+                          date: formatDate(tx.createdAt),
+                        })}
                       </p>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {t.status}
+                      {tTxStatus.has(tx.status) ? tTxStatus(tx.status) : tx.status}
                     </Badge>
                   </div>
                 ))}

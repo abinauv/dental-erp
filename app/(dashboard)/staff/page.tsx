@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -102,7 +104,11 @@ const roleLabels: Record<string, string> = {
 
 export default function StaffPage() {
   const router = useRouter()
+  const t = useTranslations('staff.list')
+  const tRole = useTranslations('staff.role')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
+  const roleLabel = (role: string) => (tRole.has(role) ? tRole(role) : roleLabels[role] || role)
   const [staff, setStaff] = useState<Staff[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -143,8 +149,8 @@ export default function StaffPage() {
       console.error('Error fetching staff:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch staff members',
+        title: t('error'),
+        description: t('fetchFailed'),
       })
     } finally {
       setLoading(false)
@@ -166,16 +172,16 @@ export default function StaffPage() {
       if (!response.ok) throw new Error('Failed to deactivate staff')
 
       toast({
-        title: 'Success',
-        description: 'Staff member deactivated successfully',
+        title: t('success'),
+        description: t('deactivateSuccess'),
       })
       fetchStaff()
     } catch (error) {
       console.error('Error deactivating staff:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to deactivate staff member',
+        title: t('error'),
+        description: t('deactivateFailed'),
       })
     } finally {
       setDeleteDialogOpen(false)
@@ -183,21 +189,16 @@ export default function StaffPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
+  const formatDate = (dateString: string) =>
+    fmt.formatDate(dateString, { day: 'numeric', month: 'short', year: 'numeric' })
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Staff Management</h1>
-          <p className="text-muted-foreground">Manage staff members, roles, and permissions</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ExportMenu
@@ -220,19 +221,19 @@ export default function StaffPage() {
           <Link href="/staff/attendance">
             <Button variant="outline">
               <Calendar className="h-4 w-4 mr-2" />
-              Attendance
+              {t('attendance')}
             </Button>
           </Link>
           <Link href="/staff/leaves">
             <Button variant="outline">
               <Calendar className="h-4 w-4 mr-2" />
-              Leaves
+              {t('leaves')}
             </Button>
           </Link>
           <Link href="/staff/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add Staff
+              {t('addStaff')}
             </Button>
           </Link>
         </div>
@@ -245,7 +246,7 @@ export default function StaffPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name, employee ID, phone, or email..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -254,25 +255,25 @@ export default function StaffPage() {
             <div className="flex gap-2">
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Role" />
+                  <SelectValue placeholder={t('rolePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="DOCTOR">Doctor</SelectItem>
-                  <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
-                  <SelectItem value="LAB_TECH">Lab Tech</SelectItem>
-                  <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
+                  <SelectItem value="all">{t('allRoles')}</SelectItem>
+                  <SelectItem value="ADMIN">{tRole('ADMIN')}</SelectItem>
+                  <SelectItem value="DOCTOR">{tRole('DOCTOR')}</SelectItem>
+                  <SelectItem value="RECEPTIONIST">{tRole('RECEPTIONIST')}</SelectItem>
+                  <SelectItem value="LAB_TECH">{tRole('LAB_TECH')}</SelectItem>
+                  <SelectItem value="ACCOUNTANT">{tRole('ACCOUNTANT')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('statusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="all">{t('allStatus')}</SelectItem>
+                  <SelectItem value="active">{t('active')}</SelectItem>
+                  <SelectItem value="inactive">{t('inactive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -286,14 +287,14 @@ export default function StaffPage() {
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Employee ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Specialization</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('colEmployeeId')}</TableHead>
+                <TableHead>{t('colName')}</TableHead>
+                <TableHead>{t('colContact')}</TableHead>
+                <TableHead>{t('colRole')}</TableHead>
+                <TableHead>{t('colSpecialization')}</TableHead>
+                <TableHead>{t('colJoined')}</TableHead>
+                <TableHead>{t('colStatus')}</TableHead>
+                <TableHead className="text-right">{t('colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -331,11 +332,11 @@ export default function StaffPage() {
                   <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <UserCog className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No staff members found</p>
+                      <p className="text-muted-foreground">{t('noStaff')}</p>
                       <Link href="/staff/new">
                         <Button variant="outline" size="sm">
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Staff
+                          {t('addStaff')}
                         </Button>
                       </Link>
                     </div>
@@ -373,7 +374,7 @@ export default function StaffPage() {
                     </TableCell>
                     <TableCell>
                       <Badge className={`${roleColors[member.user.role]} border-0`}>
-                        {roleLabels[member.user.role] || member.user.role}
+                        {roleLabel(member.user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -386,7 +387,7 @@ export default function StaffPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={member.isActive ? 'default' : 'secondary'}>
-                        {member.isActive ? 'Active' : 'Inactive'}
+                        {member.isActive ? t('active') : t('inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -399,18 +400,18 @@ export default function StaffPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => router.push(`/staff/${member.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            {t('viewDetails')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push(`/staff/${member.id}/edit`)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            {t('edit')}
                           </DropdownMenuItem>
                           {member.user.role === 'DOCTOR' && (
                             <DropdownMenuItem
                               onClick={() => router.push(`/staff/${member.id}/performance`)}
                             >
                               <BarChart3 className="h-4 w-4 mr-2" />
-                              Performance
+                              {t('performance')}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -423,7 +424,7 @@ export default function StaffPage() {
                               }}
                             >
                               <UserX className="h-4 w-4 mr-2" />
-                              Deactivate
+                              {t('deactivate')}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -439,9 +440,11 @@ export default function StaffPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} staff members
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -451,10 +454,10 @@ export default function StaffPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t('previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -462,7 +465,7 @@ export default function StaffPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {t('next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -475,19 +478,18 @@ export default function StaffPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Staff Member</AlertDialogTitle>
+            <AlertDialogTitle>{t('deactivateTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate{' '}
-              <strong>
-                {staffToDelete?.firstName} {staffToDelete?.lastName}
-              </strong>
-              ? They will no longer be able to log in to the system.
+              {t.rich('deactivateConfirm', {
+                name: `${staffToDelete?.firstName ?? ''} ${staffToDelete?.lastName ?? ''}`.trim(),
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeactivate} className="bg-red-600 hover:bg-red-700">
-              Deactivate
+              {t('deactivate')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

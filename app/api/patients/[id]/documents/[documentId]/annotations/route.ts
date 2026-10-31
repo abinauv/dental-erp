@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // PUT /api/patients/[id]/documents/[documentId]/annotations — Save annotations
 export async function PUT(
@@ -53,7 +54,7 @@ export async function PUT(
       annotatedAt: updated.annotatedAt,
     })
   } catch (err) {
-    console.error('Error saving annotations:', err)
+    logger.error({ err }, 'Error saving annotations:')
     return NextResponse.json({ error: 'Failed to save annotations' }, { status: 500 })
   }
 }
@@ -94,7 +95,7 @@ export async function GET(
       annotatedAt: document.annotatedAt,
     })
   } catch (err) {
-    console.error('Error fetching annotations:', err)
+    logger.error({ err }, 'Error fetching annotations:')
     return NextResponse.json({ error: 'Failed to fetch annotations' }, { status: 500 })
   }
 }

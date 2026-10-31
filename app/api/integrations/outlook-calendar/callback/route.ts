@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { exchangeCodeForTokens, listCalendars } from '@/lib/services/outlook-calendar'
+import { logger } from '@/lib/logger'
+
+// GET /api/integrations/outlook-calendar/callback — OAuth callback
+export async function GET(req: NextRequest) {
+  try {
+    const code = req.nextUrl.searchParams.get('code')
+    const state = req.nextUrl.searchParams.get('state')
+    const errorParam = req.nextUrl.searchParams.get('error')
+
+    if (errorParam) {
+      // User denied access
+      return NextResponse.redirect(new URL('/settings/integrations?error=denied', req.url))
+    }
+
+    if (!code || !state) {
+      return NextResponse.redirect(new URL('/settings/integrations?error=missing_params', req.url))
+    }
+
+    // Decode state
+    let userId: string, hospitalId: string
+    try {
+      const decoded = JSON.parse(Buffer.from(state, 'base64url').toString())
+      userId = decoded.userId
+      hospitalId = decoded.hospitalId
+    } catch {
+      return NextResponse.redirect(new URL('/settings/integrations?error=invalid_state', req.url))
+    }
+
+    // Exchange code for tokens
+    const tokens = await exchangeCodeForTokens(code)
+
+    // Get the user's default calendar ID (Graph has no "primary" literal).
+    let calendarId: string | null = null
+    try {
+      const calendars = await listCalendars(tokens.access_token)
+      const primary = calendars.find((c: any) => c.isDefaultCalendar)
+      if (primary) calendarId = primary.id
+    } catch {
+      // Fall back to the default calendar (/me/events) when listing fails.
+    }
+
+    // Upsert the integration record
+    await prisma.calendarIntegration.upsert({
+      where: {
+        userId_provider: {
+          userId,
+          provider: 'OUTLOOK',
+        },
+      },
+      update: {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        calendarId,
+        syncEnabled: true,
+      },
+      create: {
+        hospitalId,
+        userId,
+        provider: 'OUTLOOK',
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        calendarId,
+        syncEnabled: true,
+      },
+    })
+
+    return NextResponse.redirect(new URL('/settings/integrations?success=connected', req.url))
+  } catch (err) {
+    logger.error({ err }, 'Outlook Calendar callback error:')
+    return NextResponse.redirect(new URL('/settings/integrations?error=token_exchange', req.url))
+  }
+}

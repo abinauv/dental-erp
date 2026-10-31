@@ -1,36 +1,40 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useHotkey } from '@/hooks/use-keyboard-shortcuts'
 
+// Keys are literal; section/description text is resolved from the catalogue
+// (layout.shortcuts.section.* / .desc.*).
 const SHORTCUTS = [
   {
-    section: 'Navigation',
+    sectionKey: 'navigation',
     items: [
-      { keys: ['/'], description: 'Open search' },
-      { keys: ['?'], description: 'Show keyboard shortcuts' },
+      { keys: ['/'], descKey: 'openSearch' },
+      { keys: ['?'], descKey: 'showShortcuts' },
     ],
   },
   {
-    section: 'Quick Actions',
+    sectionKey: 'quickActions',
     items: [
-      { keys: ['n', 'p'], description: 'New patient' },
-      { keys: ['n', 'a'], description: 'New appointment' },
-      { keys: ['n', 'i'], description: 'New invoice' },
+      { keys: ['n', 'p'], descKey: 'newPatient' },
+      { keys: ['n', 'a'], descKey: 'newAppointment' },
+      { keys: ['n', 'i'], descKey: 'newInvoice' },
     ],
   },
   {
-    section: 'General',
+    sectionKey: 'general',
     items: [
-      { keys: ['Esc'], description: 'Close dialog / modal' },
-      { keys: ['Ctrl', 'K'], description: 'Open AI command bar' },
+      { keys: ['Esc'], descKey: 'closeDialog' },
+      { keys: ['Ctrl', 'K'], descKey: 'openCommandBar' },
     ],
   },
 ]
 
 export function KeyboardShortcutHelp() {
+  const t = useTranslations('layout.shortcuts')
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -68,22 +72,24 @@ export function KeyboardShortcutHelp() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           {SHORTCUTS.map((section) => (
-            <div key={section.section}>
+            <div key={section.sectionKey}>
               <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-                {section.section}
+                {t(`section.${section.sectionKey}`)}
               </h4>
               <div className="space-y-2">
                 {section.items.map((item) => (
-                  <div key={item.description} className="flex items-center justify-between text-sm">
-                    <span>{item.description}</span>
+                  <div key={item.descKey} className="flex items-center justify-between text-sm">
+                    <span>{t(`desc.${item.descKey}`)}</span>
                     <div className="flex items-center gap-1">
                       {item.keys.map((key, i) => (
                         <span key={i}>
-                          {i > 0 && <span className="text-muted-foreground mx-0.5">then</span>}
+                          {i > 0 && (
+                            <span className="text-muted-foreground mx-0.5">{t('then')}</span>
+                          )}
                           <kbd className="px-2 py-0.5 bg-muted rounded border text-xs font-mono">
                             {key}
                           </kbd>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const createHolidaySchema = z.object({
   name: z.string().min(1),
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       count: holidays.length,
     })
   } catch (error: any) {
-    console.error('Get holidays error:', error)
+    logger.error({ err: error }, 'Get holidays error:')
     return NextResponse.json({ error: error.message || 'Failed to get holidays' }, { status: 500 })
   }
 }
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       message: 'Holiday created successfully',
     })
   } catch (error: any) {
-    console.error('Create holiday error:', error)
+    logger.error({ err: error }, 'Create holiday error:')
     return NextResponse.json(
       { error: error.message || 'Failed to create holiday' },
       { status: 500 }
@@ -106,7 +107,7 @@ export async function DELETE(req: NextRequest) {
       message: 'Holiday deleted successfully',
     })
   } catch (error: any) {
-    console.error('Delete holiday error:', error)
+    logger.error({ err: error }, 'Delete holiday error:')
     return NextResponse.json(
       { error: error.message || 'Failed to delete holiday' },
       { status: 500 }

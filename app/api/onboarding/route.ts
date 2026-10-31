@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 const onboardingSchema = z.object({
   // Step 1: Clinic Details
@@ -89,7 +90,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error('Onboarding error:', error)
+    logger.error({ err: error }, 'Onboarding error:')
     return NextResponse.json(
       { error: 'An error occurred during onboarding. Please try again.' },
       { status: 500 }
@@ -140,7 +141,7 @@ export async function GET() {
 
     return NextResponse.json(hospital)
   } catch (error) {
-    console.error('Get onboarding status error:', error)
+    logger.error({ err: error }, 'Get onboarding status error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@
 // Supports: MSG91, TextLocal, Fast2SMS, Twilio India
 
 import prisma from '@/lib/prisma'
+import { enqueue, isQueueEnabled } from '@/lib/queue'
 
 export interface SMSConfig {
   gateway: 'MSG91' | 'TEXTLOCAL' | 'FAST2SMS' | 'TWILIO'
@@ -18,6 +19,10 @@ export interface SMSPayload {
   patientId?: string
   templateId?: string
   scheduledFor?: Date
+  // Transactional messages (OTPs, booking confirmations) are exempt from the
+  // promotional 9 AM–9 PM window and from marketing DND/consent checks under
+  // TRAI rules. Set this for those; leave it off for marketing messages.
+  transactional?: boolean
 }
 
 class SMSService {
@@ -69,8 +74,8 @@ class SMSService {
       }
     }
 
-    // Check time restrictions (9 AM to 9 PM IST)
-    if (!this.isWithinAllowedTime()) {
+    // Check time restrictions (9 AM to 9 PM IST) — promotional only.
+    if (!payload.transactional && !this.isWithinAllowedTime()) {
       throw new Error('SMS cannot be sent outside 9 AM - 9 PM IST')
     }
 
@@ -88,19 +93,46 @@ class SMSService {
       },
     })
 
-    // If scheduled for later, return
+    // Scheduled for later: the row stays PENDING. With a queue, schedule a
+    // delayed dispatch job; without one nothing is sent now (unchanged).
     if (payload.scheduledFor && payload.scheduledFor > new Date()) {
+      if (isQueueEnabled()) {
+        await enqueue(
+          'send-sms',
+          { smsLogId: smsLog.id, payload },
+          { jobId: `sms:${smsLog.id}`, delayMs: payload.scheduledFor.getTime() - Date.now() }
+        )
+      }
       return smsLog.id
     }
 
-    // Send SMS immediately
+    // Transactional messages (OTPs, booking confirmations) are time-sensitive
+    // and the caller depends on a synchronous success/failure result, so they
+    // always dispatch inline and never defer to the queue, regardless of Redis.
+    if (payload.transactional) {
+      await this.dispatchLog(smsLog.id, payload)
+      return smsLog.id
+    }
+
+    // Otherwise dispatch via the queue: with Redis this enqueues and returns
+    // immediately, letting the worker send with retries; without one it runs
+    // inline and throws on failure, exactly as before.
+    await enqueue('send-sms', { smsLogId: smsLog.id, payload }, { jobId: `sms:${smsLog.id}` })
+
+    return smsLog.id
+  }
+
+  // Perform the actual gateway send for an already-created SMS log row and
+  // record the outcome. This is the unit the queue runs (inline or in the
+  // worker); it throws on failure so BullMQ retries and the inline path
+  // surfaces the error.
+  async dispatchLog(smsLogId: string, payload: SMSPayload): Promise<void> {
     try {
       await this.initialize()
       const result = await this.sendViaGateway(payload)
 
-      // Update SMS log
       await prisma.sMSLog.update({
-        where: { id: smsLog.id },
+        where: { id: smsLogId },
         data: {
           status: 'SENT',
           sentAt: new Date(),
@@ -108,12 +140,9 @@ class SMSService {
           cost: result.cost,
         },
       })
-
-      return smsLog.id
     } catch (error: any) {
-      // Update SMS log with error
       await prisma.sMSLog.update({
-        where: { id: smsLog.id },
+        where: { id: smsLogId },
         data: {
           status: 'FAILED',
           failedAt: new Date(),

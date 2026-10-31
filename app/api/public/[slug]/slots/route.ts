@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: Public slot availability by hospital slug.
@@ -132,7 +133,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
     return NextResponse.json({ available: true, date, doctorId, slots })
   } catch (err: unknown) {
-    console.error('Public slots error:', err)
+    logger.error({ err }, 'Public slots error:')
     return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
   }
 }

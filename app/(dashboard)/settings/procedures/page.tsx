@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -92,6 +93,8 @@ const categories = [
 ]
 
 export default function ProceduresSettingsPage() {
+  const t = useTranslations('settings.procedures')
+  const tc = useTranslations('treatments.category')
   const { toast } = useToast()
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [loading, setLoading] = useState(true)
@@ -129,6 +132,10 @@ export default function ProceduresSettingsPage() {
     isActive: true,
   })
 
+  // Category labels prefer the i18n catalogue, falling back to the config label.
+  const categoryLabel = (cat: string) =>
+    tc.has(cat) ? tc(cat) : procedureCategoryConfig[cat]?.label || cat
+
   const fetchProcedures = async () => {
     try {
       setLoading(true)
@@ -142,7 +149,7 @@ export default function ProceduresSettingsPage() {
       if (activeFilter && activeFilter !== 'all') params.append('isActive', activeFilter)
 
       const response = await fetch(`/api/settings/procedures?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch procedures')
+      if (!response.ok) throw new Error(t('fetchFailed'))
 
       const data = await response.json()
       setProcedures(data.data || [])
@@ -150,8 +157,8 @@ export default function ProceduresSettingsPage() {
     } catch (error) {
       console.error('Error fetching procedures:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to fetch procedures',
+        title: t('error'),
+        description: t('fetchFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -208,12 +215,12 @@ export default function ProceduresSettingsPage() {
 
     // Validation
     if (dialogMode === 'create' && !formData.code) {
-      setError('Code is required')
+      setError(t('codeRequired'))
       return
     }
 
     if (!formData.name || !formData.category || !formData.basePrice) {
-      setError('Name, category, and base price are required')
+      setError(t('requiredFields'))
       return
     }
 
@@ -239,15 +246,12 @@ export default function ProceduresSettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save procedure')
+        throw new Error(data.error || t('saveFailed'))
       }
 
       toast({
-        title: 'Success',
-        description:
-          dialogMode === 'create'
-            ? 'Procedure created successfully'
-            : 'Procedure updated successfully',
+        title: t('success'),
+        description: dialogMode === 'create' ? t('created') : t('updated'),
       })
 
       setDialogOpen(false)
@@ -255,7 +259,7 @@ export default function ProceduresSettingsPage() {
     } catch (error: any) {
       setError(error.message)
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -277,14 +281,12 @@ export default function ProceduresSettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete procedure')
+        throw new Error(data.error || t('deleteFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: data.deactivated
-          ? 'Procedure has been deactivated as it is used in existing treatments'
-          : 'Procedure deleted successfully',
+        title: t('success'),
+        description: data.deactivated ? t('deactivated') : t('deleted'),
       })
 
       setDeleteDialogOpen(false)
@@ -293,7 +295,7 @@ export default function ProceduresSettingsPage() {
     } catch (error: any) {
       setError(error.message)
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -310,19 +312,19 @@ export default function ProceduresSettingsPage() {
         body: JSON.stringify({ isActive: !procedure.isActive }),
       })
 
-      if (!response.ok) throw new Error('Failed to update procedure')
+      if (!response.ok) throw new Error(t('updateFailed'))
 
       toast({
-        title: 'Success',
-        description: `Procedure ${!procedure.isActive ? 'activated' : 'deactivated'} successfully`,
+        title: t('success'),
+        description: !procedure.isActive ? t('statusActivated') : t('statusDeactivated'),
       })
 
       fetchProcedures()
     } catch (error: any) {
       console.error('Error updating procedure:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to update procedure status',
+        title: t('error'),
+        description: t('updateStatusFailed'),
         variant: 'destructive',
       })
     }
@@ -333,12 +335,12 @@ export default function ProceduresSettingsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Procedures</h1>
-          <p className="text-muted-foreground">Manage dental procedures catalog</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Procedure
+          {t('addProcedure')}
         </Button>
       </div>
 
@@ -349,7 +351,7 @@ export default function ProceduresSettingsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search procedures..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -358,25 +360,25 @@ export default function ProceduresSettingsPage() {
             <div className="flex gap-2">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Category" />
+                  <SelectValue placeholder={t('categoryPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t('allCategories')}</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {procedureCategoryConfig[cat]?.label || cat}
+                      {categoryLabel(cat)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={activeFilter} onValueChange={setActiveFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('statusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="true">Active</SelectItem>
-                  <SelectItem value="false">Inactive</SelectItem>
+                  <SelectItem value="all">{t('allStatus')}</SelectItem>
+                  <SelectItem value="true">{t('active')}</SelectItem>
+                  <SelectItem value="false">{t('inactive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -390,13 +392,13 @@ export default function ProceduresSettingsPage() {
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('colCode')}</TableHead>
+                <TableHead>{t('colName')}</TableHead>
+                <TableHead>{t('colCategory')}</TableHead>
+                <TableHead>{t('colDuration')}</TableHead>
+                <TableHead>{t('colPrice')}</TableHead>
+                <TableHead>{t('colStatus')}</TableHead>
+                <TableHead className="text-right">{t('colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -431,10 +433,10 @@ export default function ProceduresSettingsPage() {
                   <TableCell colSpan={7} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Stethoscope className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No procedures found</p>
+                      <p className="text-muted-foreground">{t('noProcedures')}</p>
                       <Button variant="outline" size="sm" onClick={openCreateDialog}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Procedure
+                        {t('addProcedure')}
                       </Button>
                     </div>
                   </TableCell>
@@ -455,10 +457,10 @@ export default function ProceduresSettingsPage() {
                       <Badge
                         className={`${procedureCategoryConfig[procedure.category]?.bgColor} ${procedureCategoryConfig[procedure.category]?.color} border-0`}
                       >
-                        {procedureCategoryConfig[procedure.category]?.label}
+                        {categoryLabel(procedure.category)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{procedure.defaultDuration} min</TableCell>
+                    <TableCell>{t('durationMin', { count: procedure.defaultDuration })}</TableCell>
                     <TableCell className="font-medium">
                       {formatCurrency(procedure.basePrice)}
                     </TableCell>
@@ -478,7 +480,7 @@ export default function ProceduresSettingsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEditDialog(procedure)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -489,7 +491,7 @@ export default function ProceduresSettingsPage() {
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+                            {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -504,9 +506,11 @@ export default function ProceduresSettingsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} procedures
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -516,10 +520,10 @@ export default function ProceduresSettingsPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t('previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -527,7 +531,7 @@ export default function ProceduresSettingsPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {t('next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -541,12 +545,10 @@ export default function ProceduresSettingsPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {dialogMode === 'create' ? 'Add New Procedure' : 'Edit Procedure'}
+              {dialogMode === 'create' ? t('addDialogTitle') : t('editDialogTitle')}
             </DialogTitle>
             <DialogDescription>
-              {dialogMode === 'create'
-                ? 'Add a new procedure to your catalog'
-                : 'Update procedure details'}
+              {dialogMode === 'create' ? t('addDialogDesc') : t('editDialogDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -560,33 +562,33 @@ export default function ProceduresSettingsPage() {
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Code *</Label>
+                <Label htmlFor="code">{t('codeLabel')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="e.g., PRV001"
+                  placeholder={t('codePlaceholder')}
                   maxLength={10}
                   disabled={dialogMode === 'edit'}
                   className="uppercase"
                 />
                 {dialogMode === 'edit' && (
-                  <p className="text-xs text-muted-foreground">Code cannot be changed</p>
+                  <p className="text-xs text-muted-foreground">{t('codeCannotChange')}</p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category">{t('categoryLabel')}</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t('selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
                       <SelectItem key={cat} value={cat}>
-                        {procedureCategoryConfig[cat]?.label || cat}
+                        {categoryLabel(cat)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -595,29 +597,29 @@ export default function ProceduresSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t('nameLabel')}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Procedure name"
+                placeholder={t('namePlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Brief description of the procedure"
+                placeholder={t('descriptionPlaceholder')}
                 rows={2}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="defaultDuration">Duration (minutes)</Label>
+                <Label htmlFor="defaultDuration">{t('durationLabel')}</Label>
                 <Input
                   id="defaultDuration"
                   type="number"
@@ -626,47 +628,47 @@ export default function ProceduresSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="basePrice">Base Price *</Label>
+                <Label htmlFor="basePrice">{t('basePriceLabel')}</Label>
                 <Input
                   id="basePrice"
                   type="number"
                   step="0.01"
                   value={formData.basePrice}
                   onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                  placeholder="0.00"
+                  placeholder={t('basePricePlaceholder')}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="materials">Materials</Label>
+              <Label htmlFor="materials">{t('materialsLabel')}</Label>
               <Textarea
                 id="materials"
                 value={formData.materials}
                 onChange={(e) => setFormData({ ...formData, materials: e.target.value })}
-                placeholder="List of materials used"
+                placeholder={t('materialsPlaceholder')}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="preInstructions">Pre-procedure Instructions</Label>
+              <Label htmlFor="preInstructions">{t('preInstructionsLabel')}</Label>
               <Textarea
                 id="preInstructions"
                 value={formData.preInstructions}
                 onChange={(e) => setFormData({ ...formData, preInstructions: e.target.value })}
-                placeholder="Instructions for patients before the procedure"
+                placeholder={t('preInstructionsPlaceholder')}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="postInstructions">Post-procedure Instructions</Label>
+              <Label htmlFor="postInstructions">{t('postInstructionsLabel')}</Label>
               <Textarea
                 id="postInstructions"
                 value={formData.postInstructions}
                 onChange={(e) => setFormData({ ...formData, postInstructions: e.target.value })}
-                placeholder="Instructions for patients after the procedure"
+                placeholder={t('postInstructionsPlaceholder')}
                 rows={2}
               />
             </div>
@@ -677,20 +679,20 @@ export default function ProceduresSettingsPage() {
                 checked={formData.isActive}
                 onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
               />
-              <Label htmlFor="isActive">Active</Label>
+              <Label htmlFor="isActive">{t('activeLabel')}</Label>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={actionLoading}>
               {actionLoading
-                ? 'Saving...'
+                ? t('saving')
                 : dialogMode === 'create'
-                  ? 'Add Procedure'
-                  : 'Save Changes'}
+                  ? t('addProcedure')
+                  : t('saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -700,18 +702,17 @@ export default function ProceduresSettingsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Procedure</DialogTitle>
+            <DialogTitle>{t('deleteDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedProcedure?.name}"? If this procedure is used
-              in treatments, it will be deactivated instead.
+              {t('deleteDialogDesc', { name: selectedProcedure?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={actionLoading}>
-              {actionLoading ? 'Deleting...' : 'Delete'}
+              {actionLoading ? t('deleting') : t('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

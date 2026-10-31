@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -18,7 +20,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Search, User, Stethoscope, Save, AlertCircle } from 'lucide-react'
 import { DentalChart } from '@/components/treatments/dental-chart'
-import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
+import { procedureCategoryConfig } from '@/lib/treatment-utils'
 import { TreatmentAssist } from '@/components/ai/treatment-assist'
 import { VoiceInput } from '@/components/clinical/voice-input'
 
@@ -50,6 +52,9 @@ interface Procedure {
 
 export default function NewTreatmentPage() {
   const router = useRouter()
+  const t = useTranslations('treatments.new')
+  const tCategory = useTranslations('treatments.category')
+  const fmt = useClinicFormatters()
   const searchParams = useSearchParams()
   const preselectedPatientId = searchParams.get('patientId')
   const preselectedAppointmentId = searchParams.get('appointmentId')
@@ -163,15 +168,15 @@ export default function NewTreatmentPage() {
 
     // Validation
     if (!formData.patientId) {
-      setError('Please select a patient')
+      setError(t('selectPatientError'))
       return
     }
     if (!formData.doctorId) {
-      setError('Please select a doctor')
+      setError(t('selectDoctorError'))
       return
     }
     if (!formData.procedureId) {
-      setError('Please select a procedure')
+      setError(t('selectProcedureError'))
       return
     }
 
@@ -190,7 +195,7 @@ export default function NewTreatmentPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to create treatment')
+        throw new Error(data.error || t('createFailed'))
       }
 
       const treatment = await response.json()
@@ -212,8 +217,8 @@ export default function NewTreatmentPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Treatment</h1>
-          <p className="text-muted-foreground">Record a new treatment for a patient</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -230,9 +235,9 @@ export default function NewTreatmentPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Patient Information
+              {t('patientInfo')}
             </CardTitle>
-            <CardDescription>Select the patient for this treatment</CardDescription>
+            <CardDescription>{t('patientInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedPatient ? (
@@ -258,7 +263,7 @@ export default function NewTreatmentPage() {
                     setFormData({ ...formData, patientId: '' })
                   }}
                 >
-                  Change
+                  {t('change')}
                 </Button>
               </div>
             ) : (
@@ -266,7 +271,7 @@ export default function NewTreatmentPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search patients by name, phone, or ID..."
+                    placeholder={t('searchPatients')}
                     value={patientSearch}
                     onChange={(e) => setPatientSearch(e.target.value)}
                     className="pl-9"
@@ -274,7 +279,7 @@ export default function NewTreatmentPage() {
                 </div>
                 <div className="max-h-60 overflow-y-auto border rounded-lg">
                   {filteredPatients.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">No patients found</div>
+                    <div className="p-4 text-center text-muted-foreground">{t('noPatients')}</div>
                   ) : (
                     filteredPatients.slice(0, 10).map((patient) => (
                       <button
@@ -308,26 +313,32 @@ export default function NewTreatmentPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Stethoscope className="h-5 w-5" />
-              Treatment Details
+              {t('treatmentDetails')}
             </CardTitle>
-            <CardDescription>Select the doctor and procedure</CardDescription>
+            <CardDescription>{t('treatmentDetailsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="doctor">Doctor *</Label>
+                <Label htmlFor="doctor">{t('doctor')}</Label>
                 <Select
                   value={formData.doctorId}
                   onValueChange={(value) => setFormData({ ...formData, doctorId: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select doctor" />
+                    <SelectValue placeholder={t('selectDoctor')} />
                   </SelectTrigger>
                   <SelectContent>
                     {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id}>
-                        Dr. {doctor.firstName} {doctor.lastName}
-                        {doctor.specialization && ` - ${doctor.specialization}`}
+                        {doctor.specialization
+                          ? t('doctorNameSpec', {
+                              name: `${doctor.firstName} ${doctor.lastName}`,
+                              spec: doctor.specialization,
+                            })
+                          : t('doctorName', {
+                              name: `${doctor.firstName} ${doctor.lastName}`,
+                            })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -335,20 +346,26 @@ export default function NewTreatmentPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="procedure">Procedure *</Label>
+                <Label htmlFor="procedure">{t('procedure')}</Label>
                 <Select value={formData.procedureId} onValueChange={handleProcedureSelect}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select procedure" />
+                    <SelectValue placeholder={t('selectProcedure')} />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(groupedProcedures).map(([category, procs]) => (
                       <div key={category}>
                         <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                          {procedureCategoryConfig[category]?.label || category}
+                          {tCategory.has(category)
+                            ? tCategory(category)
+                            : procedureCategoryConfig[category]?.label || category}
                         </div>
                         {procs.map((proc) => (
                           <SelectItem key={proc.id} value={proc.id}>
-                            {proc.code} - {proc.name} ({formatCurrency(proc.basePrice)})
+                            {t('procedureOption', {
+                              code: proc.code,
+                              name: proc.name,
+                              price: fmt.formatCurrency(proc.basePrice),
+                            })}
                           </SelectItem>
                         ))}
                       </div>
@@ -367,21 +384,23 @@ export default function NewTreatmentPage() {
                   </p>
                 )}
                 <div className="flex gap-4 mt-2 text-sm">
-                  <span>Duration: {selectedProcedure.defaultDuration} min</span>
-                  <span>Base Price: {formatCurrency(selectedProcedure.basePrice)}</span>
+                  <span>{t('duration', { minutes: selectedProcedure.defaultDuration })}</span>
+                  <span>
+                    {t('basePrice', { price: fmt.formatCurrency(selectedProcedure.basePrice) })}
+                  </span>
                 </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="cost">Treatment Cost</Label>
+              <Label htmlFor="cost">{t('treatmentCost')}</Label>
               <Input
                 id="cost"
                 type="number"
                 step="0.01"
                 value={formData.cost}
                 onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                placeholder="Enter treatment cost"
+                placeholder={t('costPlaceholder')}
               />
             </div>
           </CardContent>
@@ -399,46 +418,46 @@ export default function NewTreatmentPage() {
         {/* Clinical Notes */}
         <Card>
           <CardHeader>
-            <CardTitle>Clinical Notes</CardTitle>
-            <CardDescription>Document the clinical findings and treatment notes</CardDescription>
+            <CardTitle>{t('clinicalNotes')}</CardTitle>
+            <CardDescription>{t('clinicalNotesDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="chiefComplaint">Chief Complaint</Label>
+              <Label htmlFor="chiefComplaint">{t('chiefComplaint')}</Label>
               <Textarea
                 id="chiefComplaint"
                 value={formData.chiefComplaint}
                 onChange={(e) => setFormData({ ...formData, chiefComplaint: e.target.value })}
-                placeholder="Patient's main concern or reason for visit..."
+                placeholder={t('chiefComplaintPlaceholder')}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="diagnosis">Diagnosis</Label>
+              <Label htmlFor="diagnosis">{t('diagnosis')}</Label>
               <Textarea
                 id="diagnosis"
                 value={formData.diagnosis}
                 onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
-                placeholder="Clinical diagnosis..."
+                placeholder={t('diagnosisPlaceholder')}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="findings">Clinical Findings</Label>
+              <Label htmlFor="findings">{t('findings')}</Label>
               <Textarea
                 id="findings"
                 value={formData.findings}
                 onChange={(e) => setFormData({ ...formData, findings: e.target.value })}
-                placeholder="Examination findings..."
+                placeholder={t('findingsPlaceholder')}
                 rows={2}
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="procedureNotes">Procedure Notes</Label>
+                <Label htmlFor="procedureNotes">{t('procedureNotes')}</Label>
                 <VoiceInput
                   onTranscript={(text) =>
                     setFormData((prev) => ({
@@ -452,18 +471,18 @@ export default function NewTreatmentPage() {
                 id="procedureNotes"
                 value={formData.procedureNotes}
                 onChange={(e) => setFormData({ ...formData, procedureNotes: e.target.value })}
-                placeholder="Details of the procedure performed... (use mic for voice dictation)"
+                placeholder={t('procedureNotesPlaceholder')}
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="materialsUsed">Materials Used</Label>
+              <Label htmlFor="materialsUsed">{t('materialsUsed')}</Label>
               <Textarea
                 id="materialsUsed"
                 value={formData.materialsUsed}
                 onChange={(e) => setFormData({ ...formData, materialsUsed: e.target.value })}
-                placeholder="List of materials and supplies used..."
+                placeholder={t('materialsUsedPlaceholder')}
                 rows={2}
               />
             </div>
@@ -485,7 +504,7 @@ export default function NewTreatmentPage() {
         {/* Follow-up */}
         <Card>
           <CardHeader>
-            <CardTitle>Follow-up</CardTitle>
+            <CardTitle>{t('followUp')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -496,12 +515,12 @@ export default function NewTreatmentPage() {
                   setFormData({ ...formData, followUpRequired: checked as boolean })
                 }
               />
-              <Label htmlFor="followUpRequired">Follow-up required</Label>
+              <Label htmlFor="followUpRequired">{t('followUpRequired')}</Label>
             </div>
 
             {formData.followUpRequired && (
               <div className="space-y-2">
-                <Label htmlFor="followUpDate">Follow-up Date</Label>
+                <Label htmlFor="followUpDate">{t('followUpDate')}</Label>
                 <Input
                   id="followUpDate"
                   type="date"
@@ -517,16 +536,16 @@ export default function NewTreatmentPage() {
         <div className="flex justify-end gap-4">
           <Link href="/treatments">
             <Button type="button" variant="outline">
-              Cancel
+              {t('cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={loading}>
             {loading ? (
-              'Creating...'
+              t('creating')
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Create Treatment
+                {t('createTreatment')}
               </>
             )}
           </Button>

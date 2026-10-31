@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get staff member's performance statistics
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -195,7 +196,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       attendance: attendanceStats,
     })
   } catch (error) {
-    console.error('Error fetching performance:', error)
+    logger.error({ err: error }, 'Error fetching performance:')
     return NextResponse.json({ error: 'Failed to fetch performance statistics' }, { status: 500 })
   }
 }

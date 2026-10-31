@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildStorageKey, getStorage } from '@/lib/storage'
+import { logger } from '@/lib/logger'
 
 // GET /api/patients/[id]/documents - Get all documents for a patient
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       documents,
     })
   } catch (error: any) {
-    console.error('Error fetching documents:', error)
+    logger.error({ err: error }, 'Error fetching documents:')
     return NextResponse.json(
       { error: error.message || 'Failed to fetch documents' },
       { status: 500 }
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       document,
     })
   } catch (error: any) {
-    console.error('Error uploading document:', error)
+    logger.error({ err: error }, 'Error uploading document:')
     return NextResponse.json(
       { error: error.message || 'Failed to upload document' },
       { status: 500 }

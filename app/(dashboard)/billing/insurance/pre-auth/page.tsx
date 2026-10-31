@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,7 +38,7 @@ import {
   AlertTriangle,
   IndianRupee,
 } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface PreAuth {
   id: string
@@ -77,6 +78,12 @@ const STATUS_CONFIG: Record<
 
 export default function PreAuthorizationsPage() {
   const { toast } = useToast()
+  const t = useTranslations('billing.preAuth')
+  const tStatus = useTranslations('billing.preAuthStatus')
+  const tCommon = useTranslations('common')
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
   const [preAuths, setPreAuths] = useState<PreAuth[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -101,7 +108,7 @@ export default function PreAuthorizationsPage() {
         setTotal(data.pagination.total)
       }
     } catch {
-      toast({ title: 'Failed to load pre-authorizations', variant: 'destructive' })
+      toast({ title: t('loadError'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -120,12 +127,12 @@ export default function PreAuthorizationsPage() {
         body: JSON.stringify({ status, ...extra }),
       })
       if (res.ok) {
-        toast({ title: `Pre-authorization ${status.toLowerCase()}` })
+        toast({ title: t('statusUpdated', { status: status.toLowerCase() }) })
         setViewItem(null)
         fetchPreAuths()
       }
     } catch {
-      toast({ title: 'Failed to update', variant: 'destructive' })
+      toast({ title: t('updateError'), variant: 'destructive' })
     } finally {
       setUpdating(false)
     }
@@ -138,10 +145,11 @@ export default function PreAuthorizationsPage() {
       icon: Clock,
     }
     const Icon = config.icon
+    const label = tStatus.has(status) ? tStatus(status) : config.label
     return (
       <Badge variant={config.variant} className="gap-1">
         <Icon className="h-3 w-3" />
-        {config.label}
+        {label}
       </Badge>
     )
   }
@@ -150,13 +158,13 @@ export default function PreAuthorizationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Pre-Authorizations</h1>
-          <p className="text-muted-foreground">Manage insurance pre-authorization requests</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button asChild>
           <Link href="/billing/insurance/pre-auth/new">
             <Plus className="h-4 w-4 mr-2" />
-            New Pre-Auth
+            {t('new')}
           </Link>
         </Button>
       </div>
@@ -173,7 +181,9 @@ export default function PreAuthorizationsPage() {
             >
               <CardContent className="p-4">
                 <div className="text-2xl font-bold">{count}</div>
-                <div className="text-sm text-muted-foreground">{config.label}</div>
+                <div className="text-sm text-muted-foreground">
+                  {tStatus.has(key) ? tStatus(key) : config.label}
+                </div>
               </CardContent>
             </Card>
           )
@@ -186,7 +196,7 @@ export default function PreAuthorizationsPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by auth number or patient..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value)
@@ -203,13 +213,13 @@ export default function PreAuthorizationsPage() {
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Statuses" />
+                <SelectValue placeholder={t('allStatuses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                   <SelectItem key={key} value={key}>
-                    {config.label}
+                    {tStatus.has(key) ? tStatus(key) : config.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -226,21 +236,21 @@ export default function PreAuthorizationsPage() {
           ) : preAuths.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <FileCheck className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No pre-authorizations found</p>
+              <p className="font-medium">{t('empty')}</p>
             </div>
           ) : (
             <>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Auth #</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Provider</TableHead>
-                    <TableHead>Procedures</TableHead>
-                    <TableHead className="text-right">Est. Cost</TableHead>
-                    <TableHead className="text-right">Approved</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>{t('cols.authNo')}</TableHead>
+                    <TableHead>{t('cols.patient')}</TableHead>
+                    <TableHead>{t('cols.provider')}</TableHead>
+                    <TableHead>{t('cols.procedures')}</TableHead>
+                    <TableHead className="text-right">{t('cols.estCost')}</TableHead>
+                    <TableHead className="text-right">{t('cols.approved')}</TableHead>
+                    <TableHead>{t('cols.status')}</TableHead>
+                    <TableHead>{t('cols.date')}</TableHead>
                     <TableHead className="w-[50px]" />
                   </TableRow>
                 </TableHeader>
@@ -291,7 +301,11 @@ export default function PreAuthorizationsPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(page - 1) * 10 + 1}–{Math.min(page * 10, total)} of {total}
+                  {t('showing', {
+                    from: (page - 1) * 10 + 1,
+                    to: Math.min(page * 10, total),
+                    total,
+                  })}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -303,7 +317,7 @@ export default function PreAuthorizationsPage() {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm">
-                    Page {page} of {totalPages}
+                    {tCommon('pagination.page', { page, totalPages })}
                   </span>
                   <Button
                     variant="outline"
@@ -324,40 +338,40 @@ export default function PreAuthorizationsPage() {
       <Dialog open={!!viewItem} onOpenChange={() => setViewItem(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pre-Authorization Details</DialogTitle>
+            <DialogTitle>{t('detailsTitle')}</DialogTitle>
           </DialogHeader>
           {viewItem && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Auth Number</p>
-                  <p className="font-medium">{viewItem.authNumber || 'Not assigned'}</p>
+                  <p className="text-sm text-muted-foreground">{t('authNumber')}</p>
+                  <p className="font-medium">{viewItem.authNumber || t('notAssigned')}</p>
                 </div>
                 {getStatusBadge(viewItem.status)}
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Patient</p>
+                  <p className="text-muted-foreground">{t('patient')}</p>
                   <p className="font-medium">
                     {viewItem.patient.firstName} {viewItem.patient.lastName}
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Provider</p>
+                  <p className="text-muted-foreground">{t('provider')}</p>
                   <p className="font-medium">{viewItem.policy.provider.name}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Policy</p>
+                  <p className="text-muted-foreground">{t('policy')}</p>
                   <p className="font-medium">{viewItem.policy.policyNumber}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Estimated Cost</p>
+                  <p className="text-muted-foreground">{t('estimatedCost')}</p>
                   <p className="font-medium">{formatCurrency(Number(viewItem.estimatedCost))}</p>
                 </div>
                 {viewItem.approvedAmount && (
                   <div>
-                    <p className="text-muted-foreground">Approved Amount</p>
+                    <p className="text-muted-foreground">{t('approvedAmount')}</p>
                     <p className="font-medium text-green-600">
                       {formatCurrency(Number(viewItem.approvedAmount))}
                     </p>
@@ -365,14 +379,14 @@ export default function PreAuthorizationsPage() {
                 )}
                 {viewItem.expiryDate && (
                   <div>
-                    <p className="text-muted-foreground">Expires</p>
+                    <p className="text-muted-foreground">{t('expires')}</p>
                     <p className="font-medium">{formatDate(viewItem.expiryDate)}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Procedures</p>
+                <p className="text-sm text-muted-foreground mb-2">{t('procedures')}</p>
                 <div className="space-y-1">
                   {(viewItem.procedures as any[]).map((proc: any, i: number) => (
                     <div
@@ -393,14 +407,14 @@ export default function PreAuthorizationsPage() {
 
               {viewItem.denialReason && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Denial Reason</p>
+                  <p className="text-sm text-muted-foreground">{t('denialReason')}</p>
                   <p className="text-sm text-destructive">{viewItem.denialReason}</p>
                 </div>
               )}
 
               {viewItem.notes && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Notes</p>
+                  <p className="text-sm text-muted-foreground">{t('notes')}</p>
                   <p className="text-sm">{viewItem.notes}</p>
                 </div>
               )}
@@ -414,7 +428,7 @@ export default function PreAuthorizationsPage() {
                       onClick={() => handleUpdateStatus(viewItem.id, 'SUBMITTED')}
                       disabled={updating}
                     >
-                      <FileCheck className="h-4 w-4 mr-1" /> Mark Submitted
+                      <FileCheck className="h-4 w-4 mr-1" /> {t('markSubmitted')}
                     </Button>
                   )}
                   <Button
@@ -422,7 +436,7 @@ export default function PreAuthorizationsPage() {
                     variant="default"
                     className="bg-green-600 hover:bg-green-700"
                     onClick={() => {
-                      const amount = prompt('Approved amount:')
+                      const amount = prompt(t('approvedPrompt'))
                       if (amount) {
                         handleUpdateStatus(viewItem.id, 'APPROVED', {
                           approvedAmount: amount,
@@ -432,20 +446,20 @@ export default function PreAuthorizationsPage() {
                     }}
                     disabled={updating}
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" /> Approve
+                    <CheckCircle className="h-4 w-4 mr-1" /> {t('approve')}
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      const reason = prompt('Denial reason:')
+                      const reason = prompt(t('denialPrompt'))
                       if (reason) {
                         handleUpdateStatus(viewItem.id, 'DENIED', { denialReason: reason })
                       }
                     }}
                     disabled={updating}
                   >
-                    <XCircle className="h-4 w-4 mr-1" /> Deny
+                    <XCircle className="h-4 w-4 mr-1" /> {t('deny')}
                   </Button>
                 </div>
               )}

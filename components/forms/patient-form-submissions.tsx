@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { FormRenderer, type FormField } from './form-renderer'
 import { FileText, Eye, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface FormSubmission {
   id: string
@@ -39,18 +41,19 @@ interface FormSubmission {
   }
 }
 
+// Labels live in the `forms.submissions.status` catalogue, resolved by status
+// value; only the icon and badge variant stay in code.
 const statusConfig: Record<
   string,
   {
     icon: React.ReactNode
-    label: string
     variant: 'default' | 'secondary' | 'destructive' | 'outline'
   }
 > = {
-  SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: 'Pending Review', variant: 'secondary' },
-  REVIEWED: { icon: <Eye className="h-3 w-3" />, label: 'Reviewed', variant: 'outline' },
-  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Approved', variant: 'default' },
-  REJECTED: { icon: <XCircle className="h-3 w-3" />, label: 'Rejected', variant: 'destructive' },
+  SUBMITTED: { icon: <Clock className="h-3 w-3" />, variant: 'secondary' },
+  REVIEWED: { icon: <Eye className="h-3 w-3" />, variant: 'outline' },
+  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, variant: 'default' },
+  REJECTED: { icon: <XCircle className="h-3 w-3" />, variant: 'destructive' },
 }
 
 interface PatientFormSubmissionsProps {
@@ -58,6 +61,8 @@ interface PatientFormSubmissionsProps {
 }
 
 export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProps) {
+  const t = useTranslations('forms.submissions')
+  const { formatDateTime } = useClinicFormatters()
   const [submissions, setSubmissions] = useState<FormSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [viewSubmission, setViewSubmission] = useState<FormSubmission | null>(null)
@@ -75,7 +80,7 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
       const data = await res.json()
       if (data.submissions) setSubmissions(data.submissions)
     } catch {
-      toast.error('Failed to load form submissions')
+      toast.error(t('toast.loadError'))
     } finally {
       setLoading(false)
     }
@@ -92,7 +97,7 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
         setReviewNotes(data.submission.reviewNotes || '')
       }
     } catch {
-      toast.error('Failed to load submission details')
+      toast.error(t('toast.detailError'))
     }
   }
 
@@ -106,15 +111,15 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
         body: JSON.stringify({ status: reviewStatus, reviewNotes }),
       })
       if (res.ok) {
-        toast.success('Review saved')
+        toast.success(t('toast.saved'))
         setViewSubmission(null)
         fetchSubmissions()
       } else {
         const err = await res.json()
-        toast.error(err.error || 'Failed to save review')
+        toast.error(err.error || t('toast.saveError'))
       }
     } catch {
-      toast.error('Failed to save review')
+      toast.error(t('toast.saveError'))
     } finally {
       setReviewing(false)
     }
@@ -134,13 +139,13 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Form Submissions</CardTitle>
+          <CardTitle>{t('title')}</CardTitle>
         </CardHeader>
         <CardContent>
           {submissions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p>No form submissions for this patient</p>
+              <p>{t('empty')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -156,19 +161,13 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{s.template.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {new Date(s.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                        {s.signedAt && ' (Signed)'}
+                        {formatDateTime(s.createdAt, { day: 'numeric' })}
+                        {s.signedAt && ` ${t('signed')}`}
                       </div>
                     </div>
                     <Badge variant={sc.variant} className="flex items-center gap-1">
                       {sc.icon}
-                      {sc.label}
+                      {t.has(`status.${s.status}`) ? t(`status.${s.status}`) : s.status}
                     </Badge>
                   </div>
                 )
@@ -199,39 +198,39 @@ export function PatientFormSubmissions({ patientId }: PatientFormSubmissionsProp
 
           {/* Review Section */}
           <div className="space-y-4">
-            <h4 className="font-semibold">Review</h4>
+            <h4 className="font-semibold">{t('review')}</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>{t('statusLabel')}</Label>
                 <Select value={reviewStatus} onValueChange={setReviewStatus}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Set status..." />
+                    <SelectValue placeholder={t('setStatusPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="SUBMITTED">Pending</SelectItem>
-                    <SelectItem value="REVIEWED">Reviewed</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    <SelectItem value="SUBMITTED">{t('selectStatus.SUBMITTED')}</SelectItem>
+                    <SelectItem value="REVIEWED">{t('selectStatus.REVIEWED')}</SelectItem>
+                    <SelectItem value="APPROVED">{t('selectStatus.APPROVED')}</SelectItem>
+                    <SelectItem value="REJECTED">{t('selectStatus.REJECTED')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Review Notes</Label>
+              <Label>{t('reviewNotes')}</Label>
               <Textarea
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
-                placeholder="Optional notes..."
+                placeholder={t('notesPlaceholder')}
                 rows={2}
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setViewSubmission(null)}>
-                Close
+                {t('close')}
               </Button>
               <Button onClick={handleReview} disabled={reviewing}>
                 {reviewing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Save Review
+                {t('saveReview')}
               </Button>
             </div>
           </div>

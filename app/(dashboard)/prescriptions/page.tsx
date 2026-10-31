@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,6 +19,7 @@ import {
 } from '@/components/ui/table'
 import { ClipboardList, Plus, Search, Eye, Trash2, Loader2 } from 'lucide-react'
 import { ExportMenu } from '@/components/ui/export-menu'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Prescription {
   id: string
@@ -37,6 +39,8 @@ interface Prescription {
 }
 
 export default function PrescriptionsPage() {
+  const t = useTranslations('prescriptions.list')
+  const { formatDate } = useClinicFormatters()
   const router = useRouter()
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
@@ -62,11 +66,11 @@ export default function PrescriptionsPage() {
         }))
       }
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load prescriptions' })
+      toast({ variant: 'destructive', title: t('errorTitle'), description: t('loadFailed') })
     } finally {
       setLoading(false)
     }
-  }, [search, pagination.page])
+  }, [search, pagination.page, t])
 
   useEffect(() => {
     fetchPrescriptions()
@@ -74,21 +78,21 @@ export default function PrescriptionsPage() {
 
   const handleDelete = async (rx: Prescription) => {
     const ok = await confirm({
-      title: 'Delete Prescription',
-      description: `Delete prescription ${rx.prescriptionNo}?`,
-      confirmLabel: 'Delete',
+      title: t('deleteTitle'),
+      description: t('deleteDesc', { no: rx.prescriptionNo }),
+      confirmLabel: t('deleteConfirm'),
     })
     if (!ok) return
     try {
       const res = await fetch(`/api/prescriptions/${rx.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed')
-      toast({ title: 'Deleted', description: `Prescription ${rx.prescriptionNo} removed` })
+      toast({ title: t('deletedTitle'), description: t('deletedDesc', { no: rx.prescriptionNo }) })
       fetchPrescriptions()
     } catch {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete prescription',
+        title: t('errorTitle'),
+        description: t('deleteFailed'),
       })
     }
   }
@@ -99,41 +103,31 @@ export default function PrescriptionsPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <ClipboardList className="h-8 w-8" />
-            Prescriptions
+            {t('title')}
           </h1>
-          <p className="text-muted-foreground">Create and manage patient prescriptions</p>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <ExportMenu
             filename="prescriptions"
             getData={() =>
               prescriptions.map((rx) => ({
-                'Rx #': rx.prescriptionNo,
-                Patient: `${rx.patient.firstName} ${rx.patient.lastName}`,
-                'Patient ID': rx.patient.patientId,
-                Doctor: rx.doctor.name,
-                Diagnosis: rx.diagnosis || '',
-                Medications: rx.medications
+                [t('colRx')]: rx.prescriptionNo,
+                [t('colPatient')]: `${rx.patient.firstName} ${rx.patient.lastName}`,
+                [t('exportPatientId')]: rx.patient.patientId,
+                [t('colDoctor')]: rx.doctor.name,
+                [t('colDiagnosis')]: rx.diagnosis || '',
+                [t('colMedications')]: rx.medications
                   .map((m) => `${m.medicationName} ${m.dosage} ${m.frequency} ${m.duration}`)
                   .join('; '),
-                Date: new Date(rx.createdAt).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                }),
-                'Valid Until': rx.validUntil
-                  ? new Date(rx.validUntil).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })
-                  : '',
+                [t('colDate')]: formatDate(rx.createdAt),
+                [t('exportValidUntil')]: rx.validUntil ? formatDate(rx.validUntil) : '',
               }))
             }
           />
           <Button onClick={() => router.push('/prescriptions/new')}>
             <Plus className="h-4 w-4 mr-2" />
-            New Prescription
+            {t('newPrescription')}
           </Button>
         </div>
       </div>
@@ -144,7 +138,7 @@ export default function PrescriptionsPage() {
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by prescription #, patient name..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -166,20 +160,20 @@ export default function PrescriptionsPage() {
           ) : prescriptions.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium">No prescriptions found</p>
-              <p className="text-sm">Create your first prescription to get started.</p>
+              <p className="text-lg font-medium">{t('noPrescriptions')}</p>
+              <p className="text-sm">{t('noPrescriptionsHint')}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Rx #</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead className="hidden md:table-cell">Doctor</TableHead>
-                  <TableHead className="hidden md:table-cell">Diagnosis</TableHead>
-                  <TableHead className="hidden lg:table-cell">Medications</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead>{t('colRx')}</TableHead>
+                  <TableHead>{t('colPatient')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('colDoctor')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('colDiagnosis')}</TableHead>
+                  <TableHead className="hidden lg:table-cell">{t('colMedications')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('colDate')}</TableHead>
+                  <TableHead className="w-[100px]">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -210,11 +204,7 @@ export default function PrescriptionsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                      {new Date(rx.createdAt).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+                      {formatDate(rx.createdAt)}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -252,10 +242,10 @@ export default function PrescriptionsPage() {
             disabled={pagination.page <= 1}
             onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
           >
-            Previous
+            {t('previous')}
           </Button>
           <span className="flex items-center text-sm text-muted-foreground px-3">
-            Page {pagination.page} of {pagination.pages}
+            {t('pageOf', { page: pagination.page, pages: pagination.pages })}
           </span>
           <Button
             variant="outline"
@@ -263,7 +253,7 @@ export default function PrescriptionsPage() {
             disabled={pagination.page >= pagination.pages}
             onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
           >
-            Next
+            {t('next')}
           </Button>
         </div>
       )}

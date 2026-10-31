@@ -1,8 +1,11 @@
 # Localization & Internationalization
 
-**Status:** step 1 (locale plumbing) is implemented, including the per-person
-locale override described in §2.1; steps 2–5 are still proposals. See §3 for the
-running order.
+**Status:** steps 1–5 have shipped (see §3) — locale plumbing, client-UI string
+extraction, the tax-provider abstraction, per-country seed data, and a second
+locale (`de-DE`) end-to-end. The sections below record the design and the
+original India-coupling baseline; where they describe the pre-extraction state
+("still a literal", "still India-shaped"), read that as the starting point, not
+today's. Server-route API message i18n is the one deferred piece.
 
 DentalERP was built for Indian dental clinics, and that assumption is not confined
 to display strings — it reaches into the invoice schema, the tax maths and the seed
@@ -16,7 +19,9 @@ config and the one formatting module. What remains is the volume: every
 user-facing string is still a literal in a `.tsx` file, and the tax model is
 still India-shaped.
 
-The counts below are what step 2 onwards has to work through:
+The counts below were the baseline step 2 onwards worked through (now largely
+resolved — client UI strings live in `messages/*.json` and formatting goes
+through `useClinicFormatters()`):
 
 | Coupling                      | Count | Where                                 |
 | ----------------------------- | ----- | ------------------------------------- |
@@ -228,14 +233,19 @@ Sequenced so that contributors are not editing the same files simultaneously.
    The per-person override in §2.1 is part of this step: nullable `User.locale`
    and `Patient.locale`, the resolution cascade, and a picker on both surfaces.
    Also invisible by default — a clinic that changes nothing sees no change.
-2. **String extraction.** Move literals into `messages/en-IN.json`, one module at
-   a time (billing, then patients, then appointments…). Mechanical and highly
-   parallelizable once step 1 sets the conventions.
-3. **Tax provider abstraction** plus the schema migration and backfill.
-4. **Per-country seed data** — medications, procedures, state/region lists.
-5. **A second locale end-to-end** as the proof. A non-English, non-INR locale
-   (e.g. `de-DE`) exercises VAT, decimal-comma formatting and string expansion
-   all at once; a second _English_ locale would mostly exercise currency only.
+2. ~~**String extraction.**~~ **Done (client UI).** Literals moved into
+   `messages/en-IN.json` (+ a byte-identical `en-US.json`). Server-route API
+   messages are the remaining deferred piece.
+3. ~~**Tax provider abstraction**~~ **Done.** `lib/tax/` providers (India GST,
+   EU VAT, US sales tax) + the `Invoice.taxComponents`/`taxAmount` schema
+   migration and backfill.
+4. ~~**Per-country seed data**~~ **Done.** `prisma/seed-data/{IN,US,DE}` via
+   `getSeedData`, short-scale `numberToWords`, and `lib/geo/regions` + the
+   `RegionField` for state/region lists.
+5. ~~**A second locale end-to-end**~~ **Done.** `de-DE` (EUR, Europe/Berlin)
+   exercises VAT (MwSt.), decimal-comma formatting and string expansion; its
+   catalogue is a complete clone of `en-IN` with real German on the core flows
+   and English fallback for the long tail.
 
 ## 4. Conventions
 

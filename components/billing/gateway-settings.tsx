@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,6 +35,7 @@ interface GatewayConfig {
 
 export function GatewaySettings() {
   const { toast } = useToast()
+  const t = useTranslations('billing.gateway')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -94,8 +96,8 @@ export function GatewaySettings() {
   const handleSave = async () => {
     if (!provider) {
       toast({
-        title: 'Error',
-        description: 'Please select a payment provider',
+        title: t('errorTitle'),
+        description: t('errSelectProvider'),
         variant: 'destructive',
       })
       return
@@ -130,16 +132,16 @@ export function GatewaySettings() {
       setWebhookUrl(data.config?.webhookUrl || '')
 
       toast({
-        title: 'Success',
-        description: 'Payment gateway settings saved',
+        title: t('successTitle'),
+        description: t('saved'),
       })
 
       // Refresh to get masked secrets
       fetchConfig()
     } catch (err: unknown) {
       toast({
-        title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed to save settings',
+        title: t('errorTitle'),
+        description: err instanceof Error ? err.message : t('saveError'),
         variant: 'destructive',
       })
     } finally {
@@ -172,25 +174,22 @@ export function GatewaySettings() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Payment Gateway
+              {t('title')}
             </CardTitle>
-            <CardDescription>
-              Connect your own Razorpay, PhonePe, or Paytm merchant account to accept online
-              payments
-            </CardDescription>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             {isEnabled && (
               <Badge variant="default" className="bg-green-100 text-green-700 border-0">
-                Active
+                {t('active')}
               </Badge>
             )}
             {isLiveMode && (
               <Badge variant="default" className="bg-blue-100 text-blue-700 border-0">
-                Live
+                {t('live')}
               </Badge>
             )}
-            {!isLiveMode && provider && <Badge variant="secondary">Test Mode</Badge>}
+            {!isLiveMode && provider && <Badge variant="secondary">{t('testMode')}</Badge>}
           </div>
         </div>
       </CardHeader>
@@ -198,10 +197,10 @@ export function GatewaySettings() {
         {/* Provider Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Payment Provider</Label>
+            <Label>{t('provider')}</Label>
             <Select value={provider} onValueChange={setProvider}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a provider" />
+                <SelectValue placeholder={t('selectProvider')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="RAZORPAY">Razorpay</SelectItem>
@@ -209,21 +208,17 @@ export function GatewaySettings() {
                 <SelectItem value="PAYTM">Paytm</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">
-              Use your own merchant account credentials
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{t('providerHint')}</p>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="gateway-enabled">Enable Online Payments</Label>
+              <Label htmlFor="gateway-enabled">{t('enablePayments')}</Label>
               <Switch id="gateway-enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="gateway-live">
-                Live Mode
-                <span className="text-xs text-muted-foreground ml-1">
-                  (uncheck for test/sandbox)
-                </span>
+                {t('liveMode')}
+                <span className="text-xs text-muted-foreground ml-1">{t('liveModeHint')}</span>
               </Label>
               <Switch id="gateway-live" checked={isLiveMode} onCheckedChange={setIsLiveMode} />
             </div>
@@ -233,21 +228,21 @@ export function GatewaySettings() {
         {/* Razorpay Credentials */}
         {provider === 'RAZORPAY' && (
           <div className="space-y-4 border-t pt-4">
-            <h4 className="font-medium text-sm">Razorpay Credentials</h4>
+            <h4 className="font-medium text-sm">{t('razorpayCreds')}</h4>
             <p className="text-xs text-muted-foreground">
-              Get these from your{' '}
+              {t('getFrom')}{' '}
               <a
                 href="https://dashboard.razorpay.com/app/keys"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary underline inline-flex items-center gap-1"
               >
-                Razorpay Dashboard <ExternalLink className="h-3 w-3" />
+                {t('razorpayDashboard')} <ExternalLink className="h-3 w-3" />
               </a>
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="rzp-key-id">Key ID</Label>
+                <Label htmlFor="rzp-key-id">{t('keyId')}</Label>
                 <Input
                   id="rzp-key-id"
                   value={razorpayKeyId}
@@ -257,7 +252,7 @@ export function GatewaySettings() {
               </div>
               <div>
                 <Label htmlFor="rzp-key-secret">
-                  Key Secret
+                  {t('keySecret')}
                   <Shield className="h-3 w-3 inline ml-1 text-muted-foreground" />
                 </Label>
                 <Input
@@ -265,11 +260,9 @@ export function GatewaySettings() {
                   type="password"
                   value={razorpayKeySecret}
                   onChange={(e) => setRazorpayKeySecret(e.target.value)}
-                  placeholder="Enter key secret"
+                  placeholder={t('enterKeySecret')}
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Stored encrypted. Leave unchanged to keep existing.
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">{t('encryptedNote')}</p>
               </div>
             </div>
           </div>
@@ -278,21 +271,21 @@ export function GatewaySettings() {
         {/* PhonePe Credentials */}
         {provider === 'PHONEPE' && (
           <div className="space-y-4 border-t pt-4">
-            <h4 className="font-medium text-sm">PhonePe PG Credentials</h4>
+            <h4 className="font-medium text-sm">{t('phonepeCreds')}</h4>
             <p className="text-xs text-muted-foreground">
-              Get these from your{' '}
+              {t('getFrom')}{' '}
               <a
                 href="https://business.phonepe.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary underline inline-flex items-center gap-1"
               >
-                PhonePe Business Dashboard <ExternalLink className="h-3 w-3" />
+                {t('phonepeDashboard')} <ExternalLink className="h-3 w-3" />
               </a>
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="pp-merchant-id">Merchant ID</Label>
+                <Label htmlFor="pp-merchant-id">{t('merchantId')}</Label>
                 <Input
                   id="pp-merchant-id"
                   value={phonepeMerchantId}
@@ -302,7 +295,7 @@ export function GatewaySettings() {
               </div>
               <div>
                 <Label htmlFor="pp-salt-key">
-                  Salt Key
+                  {t('saltKey')}
                   <Shield className="h-3 w-3 inline ml-1 text-muted-foreground" />
                 </Label>
                 <Input
@@ -310,11 +303,11 @@ export function GatewaySettings() {
                   type="password"
                   value={phonepeSaltKey}
                   onChange={(e) => setPhonepeSaltKey(e.target.value)}
-                  placeholder="Enter salt key"
+                  placeholder={t('enterSaltKey')}
                 />
               </div>
               <div>
-                <Label htmlFor="pp-salt-index">Salt Index</Label>
+                <Label htmlFor="pp-salt-index">{t('saltIndex')}</Label>
                 <Input
                   id="pp-salt-index"
                   value={phonepeSaltIndex}
@@ -329,21 +322,21 @@ export function GatewaySettings() {
         {/* Paytm Credentials */}
         {provider === 'PAYTM' && (
           <div className="space-y-4 border-t pt-4">
-            <h4 className="font-medium text-sm">Paytm PG Credentials</h4>
+            <h4 className="font-medium text-sm">{t('paytmCreds')}</h4>
             <p className="text-xs text-muted-foreground">
-              Get these from your{' '}
+              {t('getFrom')}{' '}
               <a
                 href="https://business.paytm.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary underline inline-flex items-center gap-1"
               >
-                Paytm Business Dashboard <ExternalLink className="h-3 w-3" />
+                {t('paytmDashboard')} <ExternalLink className="h-3 w-3" />
               </a>
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="ptm-mid">Merchant ID (MID)</Label>
+                <Label htmlFor="ptm-mid">{t('paytmMid')}</Label>
                 <Input
                   id="ptm-mid"
                   value={paytmMid}
@@ -353,7 +346,7 @@ export function GatewaySettings() {
               </div>
               <div>
                 <Label htmlFor="ptm-key">
-                  Merchant Key
+                  {t('merchantKey')}
                   <Shield className="h-3 w-3 inline ml-1 text-muted-foreground" />
                 </Label>
                 <Input
@@ -361,18 +354,18 @@ export function GatewaySettings() {
                   type="password"
                   value={paytmMerchantKey}
                   onChange={(e) => setPaytmMerchantKey(e.target.value)}
-                  placeholder="Enter merchant key"
+                  placeholder={t('enterMerchantKey')}
                 />
               </div>
               <div>
-                <Label htmlFor="ptm-website">Website</Label>
+                <Label htmlFor="ptm-website">{t('website')}</Label>
                 <Select value={paytmWebsite} onValueChange={setPaytmWebsite}>
                   <SelectTrigger id="ptm-website">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="WEBSTAGING">WEBSTAGING (Test)</SelectItem>
-                    <SelectItem value="DEFAULT">DEFAULT (Live)</SelectItem>
+                    <SelectItem value="WEBSTAGING">{t('webstaging')}</SelectItem>
+                    <SelectItem value="DEFAULT">{t('default')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -383,10 +376,11 @@ export function GatewaySettings() {
         {/* Webhook URL */}
         {provider && webhookUrl && (
           <div className="border-t pt-4">
-            <Label>Webhook URL</Label>
+            <Label>{t('webhookUrl')}</Label>
             <p className="text-xs text-muted-foreground mb-2">
-              Configure this URL in your {provider.charAt(0) + provider.slice(1).toLowerCase()}{' '}
-              dashboard to receive payment notifications
+              {t('webhookHint', {
+                provider: provider.charAt(0) + provider.slice(1).toLowerCase(),
+              })}
             </p>
             <div className="flex items-center gap-2">
               <Input value={webhookUrl} readOnly className="font-mono text-xs bg-muted" />
@@ -409,7 +403,7 @@ export function GatewaySettings() {
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            {saving ? 'Saving...' : 'Save Gateway Settings'}
+            {saving ? t('saving') : t('save')}
           </Button>
         </div>
       </CardContent>

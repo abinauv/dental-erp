@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkStaffLimit, generateToken } from '@/lib/api-helpers'
 import { Role, StaffInviteStatus } from '@prisma/client'
 import { sendInviteEmail } from '@/lib/email-helpers'
+import { logger } from '@/lib/logger'
 
 const inviteSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -129,7 +130,7 @@ export async function POST(request: Request) {
       }),
     })
   } catch (error) {
-    console.error('Create invite error:', error)
+    logger.error({ err: error }, 'Create invite error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }
@@ -161,7 +162,7 @@ export async function GET() {
 
     return NextResponse.json({ invites })
   } catch (error) {
-    console.error('List invites error:', error)
+    logger.error({ err: error }, 'List invites error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

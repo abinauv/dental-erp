@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,7 +29,6 @@ import {
   Stethoscope,
   Package,
 } from 'lucide-react'
-import { format } from 'date-fns'
 import {
   LineChart,
   Line,
@@ -48,6 +48,7 @@ import {
 } from 'recharts'
 
 import { ReportBuilder } from '@/components/ai/report-builder'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 // Chart colors
 const CHART_COLORS = [
@@ -61,19 +62,19 @@ const CHART_COLORS = [
   '#FF6B6B',
 ]
 
-// Date range presets
-const dateRangePresets = [
-  { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
-  { label: 'This Week', value: 'this_week' },
-  { label: 'Last Week', value: 'last_week' },
-  { label: 'This Month', value: 'this_month' },
-  { label: 'Last Month', value: 'last_month' },
-  { label: 'This Quarter', value: 'this_quarter' },
-  { label: 'Last Quarter', value: 'last_quarter' },
-  { label: 'This Year', value: 'this_year' },
-  { label: 'Last Year', value: 'last_year' },
-  { label: 'Custom Range', value: 'custom' },
+// Date range preset values; labels come from the catalogue (reports.preset.*).
+const DATE_PRESETS = [
+  'today',
+  'yesterday',
+  'this_week',
+  'last_week',
+  'this_month',
+  'last_month',
+  'this_quarter',
+  'last_quarter',
+  'this_year',
+  'last_year',
+  'custom',
 ]
 
 interface PatientAnalytics {
@@ -157,6 +158,10 @@ interface OperationalAnalytics {
 }
 
 export default function ReportsPage() {
+  const t = useTranslations('reports')
+  const tMethod = useTranslations('billing.paymentMethods')
+  const tRole = useTranslations('staff.role')
+  const { formatCurrency: fmtCurrency } = useClinicFormatters()
   const [loading, setLoading] = useState(true)
   const [datePreset, setDatePreset] = useState('this_month')
   const [dateFrom, setDateFrom] = useState('')
@@ -240,17 +245,11 @@ export default function ReportsPage() {
       document.body.removeChild(a)
     } catch (error) {
       console.error('Export error:', error)
-      alert('Failed to export report')
+      alert(t('exportFailed'))
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) => fmtCurrency(amount, { maximumFractionDigits: 0 })
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`
@@ -261,10 +260,8 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports & Analytics Dashboard</h1>
-          <p className="text-muted-foreground">
-            Comprehensive analytics and insights for your dental practice
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Select
@@ -278,12 +275,12 @@ export default function ReportsPage() {
             }}
           >
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select period" />
+              <SelectValue placeholder={t('selectPeriod')} />
             </SelectTrigger>
             <SelectContent>
-              {dateRangePresets.map((preset) => (
-                <SelectItem key={preset.value} value={preset.value}>
-                  {preset.label}
+              {DATE_PRESETS.map((preset) => (
+                <SelectItem key={preset} value={preset}>
+                  {t(`preset.${preset}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -295,25 +292,25 @@ export default function ReportsPage() {
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
                 className="w-[140px]"
-                placeholder="From"
+                placeholder={t('fromPlaceholder')}
               />
               <Input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
                 className="w-[140px]"
-                placeholder="To"
+                placeholder={t('toPlaceholder')}
               />
             </>
           )}
           <Select onValueChange={(value) => handleExport(value as 'pdf' | 'excel')}>
             <SelectTrigger className="w-[140px]">
               <Download className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Export" />
+              <SelectValue placeholder={t('export')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pdf">Export as PDF</SelectItem>
-              <SelectItem value="excel">Export as Excel</SelectItem>
+              <SelectItem value="pdf">{t('exportPdf')}</SelectItem>
+              <SelectItem value="excel">{t('exportExcel')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -331,19 +328,19 @@ export default function ReportsPage() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="patient" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Patient Analytics
+            {t('tabPatient')}
           </TabsTrigger>
           <TabsTrigger value="clinical" className="flex items-center gap-2">
             <Stethoscope className="h-4 w-4" />
-            Clinical Analytics
+            {t('tabClinical')}
           </TabsTrigger>
           <TabsTrigger value="financial" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            Financial Analytics
+            {t('tabFinancial')}
           </TabsTrigger>
           <TabsTrigger value="operational" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            Operational Analytics
+            {t('tabOperational')}
           </TabsTrigger>
         </TabsList>
 
@@ -352,7 +349,7 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">New Patients</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('newPatients')}</CardTitle>
                 <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -367,7 +364,7 @@ export default function ReportsPage() {
                             (patientAnalytics.newPatients / patientAnalytics.totalPatients) * 100
                           )
                         : '0%'}{' '}
-                      of total
+                      {t('ofTotal')}
                     </p>
                   </>
                 )}
@@ -376,7 +373,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Returning Patients</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('returningPatients')}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -394,7 +391,7 @@ export default function ReportsPage() {
                               100
                           )
                         : '0%'}{' '}
-                      of total
+                      {t('ofTotal')}
                     </p>
                   </>
                 )}
@@ -403,7 +400,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalPatients')}</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -417,7 +414,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Retention Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('retentionRate')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -428,7 +425,7 @@ export default function ReportsPage() {
                     <div className="text-2xl font-bold text-green-600">
                       {formatPercentage(patientAnalytics?.retentionRate || 0)}
                     </div>
-                    <p className="text-xs text-muted-foreground">Patients with repeat visits</p>
+                    <p className="text-xs text-muted-foreground">{t('repeatVisits')}</p>
                   </>
                 )}
               </CardContent>
@@ -439,8 +436,8 @@ export default function ReportsPage() {
             {/* Demographics Breakdown */}
             <Card>
               <CardHeader>
-                <CardTitle>Gender Distribution</CardTitle>
-                <CardDescription>Patient demographics breakdown</CardDescription>
+                <CardTitle>{t('genderDistribution')}</CardTitle>
+                <CardDescription>{t('demographicsBreakdown')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {loading ? (
@@ -452,7 +449,7 @@ export default function ReportsPage() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Male</span>
+                      <span className="text-sm font-medium">{t('male')}</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-32 bg-blue-100 rounded-full overflow-hidden">
                           <div
@@ -468,7 +465,7 @@ export default function ReportsPage() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Female</span>
+                      <span className="text-sm font-medium">{t('female')}</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-32 bg-pink-100 rounded-full overflow-hidden">
                           <div
@@ -484,7 +481,7 @@ export default function ReportsPage() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Other</span>
+                      <span className="text-sm font-medium">{t('other')}</span>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-32 bg-muted rounded-full overflow-hidden">
                           <div
@@ -507,8 +504,8 @@ export default function ReportsPage() {
             {/* Patient Acquisition Sources */}
             <Card>
               <CardHeader>
-                <CardTitle>Acquisition Sources</CardTitle>
-                <CardDescription>How patients found your practice</CardDescription>
+                <CardTitle>{t('acquisitionSources')}</CardTitle>
+                <CardDescription>{t('howFound')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {loading ? (
@@ -519,15 +516,18 @@ export default function ReportsPage() {
                   </>
                 ) : patientAnalytics?.acquisitionSources.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No acquisition data available
+                    {t('noAcquisition')}
                   </p>
                 ) : (
                   patientAnalytics?.acquisitionSources.map((source) => (
                     <div key={source.source} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{source.source || 'Unknown'}</span>
+                        <span className="font-medium">{source.source || t('unknown')}</span>
                         <span className="text-muted-foreground">
-                          {source.count} ({formatPercentage(source.percentage)})
+                          {t('sourceCount', {
+                            count: source.count,
+                            percentage: formatPercentage(source.percentage),
+                          })}
                         </span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -546,8 +546,8 @@ export default function ReportsPage() {
           {/* Age Groups */}
           <Card>
             <CardHeader>
-              <CardTitle>Age Distribution</CardTitle>
-              <CardDescription>Patients by age group</CardDescription>
+              <CardTitle>{t('ageDistribution')}</CardTitle>
+              <CardDescription>{t('byAgeGroup')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -560,7 +560,7 @@ export default function ReportsPage() {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="count" fill="#8884D8" name="Patients" radius={[4, 4, 0, 0]}>
+                    <Bar dataKey="count" fill="#8884D8" name={t('patients')} radius={[4, 4, 0, 0]}>
                       {patientAnalytics.ageGroups.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
@@ -571,7 +571,7 @@ export default function ReportsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-8">No age data available</p>
+                <p className="text-center text-muted-foreground py-8">{t('noAgeData')}</p>
               )}
             </CardContent>
           </Card>
@@ -582,7 +582,7 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Treatments</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalTreatments')}</CardTitle>
                 <Stethoscope className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -598,7 +598,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('completed')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -610,7 +610,9 @@ export default function ReportsPage() {
                       {clinicalAnalytics?.completedTreatments || 0}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {formatPercentage(clinicalAnalytics?.completionRate || 0)} completion rate
+                      {t('completionRate', {
+                        rate: formatPercentage(clinicalAnalytics?.completionRate || 0),
+                      })}
                     </p>
                   </>
                 )}
@@ -619,7 +621,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('inProgress')}</CardTitle>
                 <Activity className="h-4 w-4 text-orange-600" />
               </CardHeader>
               <CardContent>
@@ -635,7 +637,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Duration</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('avgDuration')}</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -646,7 +648,7 @@ export default function ReportsPage() {
                     <div className="text-2xl font-bold">
                       {clinicalAnalytics?.avgTreatmentDuration || 0}
                     </div>
-                    <p className="text-xs text-muted-foreground">minutes per treatment</p>
+                    <p className="text-xs text-muted-foreground">{t('minutesPerTreatment')}</p>
                   </>
                 )}
               </CardContent>
@@ -657,8 +659,8 @@ export default function ReportsPage() {
             {/* Most Common Procedures */}
             <Card>
               <CardHeader>
-                <CardTitle>Most Common Procedures</CardTitle>
-                <CardDescription>Top procedures by frequency</CardDescription>
+                <CardTitle>{t('mostCommonProcedures')}</CardTitle>
+                <CardDescription>{t('topByFrequency')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {loading ? (
@@ -669,7 +671,7 @@ export default function ReportsPage() {
                   </>
                 ) : clinicalAnalytics?.commonProcedures.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No procedure data available
+                    {t('noProcedureData')}
                   </p>
                 ) : (
                   clinicalAnalytics?.commonProcedures.map((proc, index) => (
@@ -686,7 +688,7 @@ export default function ReportsPage() {
                       <div className="text-right">
                         <div className="font-bold">{proc.count}</div>
                         <div className="text-xs text-green-600">
-                          {formatPercentage(proc.successRate)} success
+                          {t('successRate', { rate: formatPercentage(proc.successRate) })}
                         </div>
                       </div>
                     </div>
@@ -698,8 +700,8 @@ export default function ReportsPage() {
             {/* Procedures by Category */}
             <Card>
               <CardHeader>
-                <CardTitle>Procedures by Category</CardTitle>
-                <CardDescription>Treatment distribution by type</CardDescription>
+                <CardTitle>{t('proceduresByCategory')}</CardTitle>
+                <CardDescription>{t('distributionByType')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -735,7 +737,7 @@ export default function ReportsPage() {
                   </ResponsiveContainer>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No category data available
+                    {t('noCategoryData')}
                   </p>
                 )}
               </CardContent>
@@ -748,7 +750,7 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalRevenue')}</CardTitle>
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -764,7 +766,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalExpenses')}</CardTitle>
                 <DollarSign className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
@@ -780,7 +782,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('profitMargin')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -791,7 +793,7 @@ export default function ReportsPage() {
                     <div className="text-2xl font-bold">
                       {formatPercentage(financialAnalytics?.profitMargin || 0)}
                     </div>
-                    <p className="text-xs text-muted-foreground">Net margin</p>
+                    <p className="text-xs text-muted-foreground">{t('netMargin')}</p>
                   </>
                 )}
               </CardContent>
@@ -799,7 +801,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Bill Value</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('avgBillValue')}</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -815,7 +817,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Collection Efficiency</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('collectionEfficiency')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -827,7 +829,9 @@ export default function ReportsPage() {
                       {formatPercentage(financialAnalytics?.collectionEfficiency || 0)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Outstanding: {formatCurrency(financialAnalytics?.outstandingAmount || 0)}
+                      {t('outstanding', {
+                        amount: formatCurrency(financialAnalytics?.outstandingAmount || 0),
+                      })}
                     </p>
                   </>
                 )}
@@ -838,8 +842,8 @@ export default function ReportsPage() {
           {/* Payment Method Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle>Payment Method Breakdown</CardTitle>
-              <CardDescription>Revenue by payment method</CardDescription>
+              <CardTitle>{t('paymentMethodBreakdown')}</CardTitle>
+              <CardDescription>{t('revenueByMethod')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -853,9 +857,9 @@ export default function ReportsPage() {
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
-                        data={financialAnalytics.paymentMethodBreakdown.map((m) => ({
-                          name: m.method,
-                          value: m.amount,
+                        data={financialAnalytics.paymentMethodBreakdown.map((pm) => ({
+                          name: tMethod.has(pm.method) ? tMethod(pm.method) : pm.method,
+                          value: pm.amount,
                         }))}
                         cx="50%"
                         cy="50%"
@@ -892,7 +896,9 @@ export default function ReportsPage() {
                             className="w-4 h-4 rounded-full"
                             style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                           />
-                          <span className="font-medium">{method.method}</span>
+                          <span className="font-medium">
+                            {tMethod.has(method.method) ? tMethod(method.method) : method.method}
+                          </span>
                         </div>
                         <div className="text-right">
                           <div className="font-bold">{formatCurrency(method.amount)}</div>
@@ -905,7 +911,7 @@ export default function ReportsPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">No payment data available</p>
+                <p className="text-center text-muted-foreground py-8">{t('noPaymentData')}</p>
               )}
             </CardContent>
           </Card>
@@ -913,8 +919,8 @@ export default function ReportsPage() {
           {/* Revenue Trends */}
           <Card>
             <CardHeader>
-              <CardTitle>Revenue Trends</CardTitle>
-              <CardDescription>Monthly revenue, expenses, and profit</CardDescription>
+              <CardTitle>{t('revenueTrends')}</CardTitle>
+              <CardDescription>{t('monthlyRevExpProfit')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -932,19 +938,19 @@ export default function ReportsPage() {
                       }
                     />
                     <Legend />
-                    <Bar dataKey="revenue" fill="#00C49F" name="Revenue" />
-                    <Bar dataKey="expenses" fill="#FF6B6B" name="Expenses" />
+                    <Bar dataKey="revenue" fill="#00C49F" name={t('revenue')} />
+                    <Bar dataKey="expenses" fill="#FF6B6B" name={t('expenses')} />
                     <Line
                       type="monotone"
                       dataKey="profit"
                       stroke="#8884D8"
                       strokeWidth={3}
-                      name="Profit"
+                      name={t('profit')}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-muted-foreground py-8">No revenue data available</p>
+                <p className="text-center text-muted-foreground py-8">{t('noRevenueData')}</p>
               )}
             </CardContent>
           </Card>
@@ -955,7 +961,7 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalAppointments')}</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -971,7 +977,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('completed')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
@@ -983,8 +989,9 @@ export default function ReportsPage() {
                       {operationalAnalytics?.completedAppointments || 0}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {formatPercentage(operationalAnalytics?.appointmentUtilization || 0)}{' '}
-                      utilization
+                      {t('utilization', {
+                        rate: formatPercentage(operationalAnalytics?.appointmentUtilization || 0),
+                      })}
                     </p>
                   </>
                 )}
@@ -993,7 +1000,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">No-Show Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('noShowRate')}</CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
@@ -1005,7 +1012,7 @@ export default function ReportsPage() {
                       {formatPercentage(operationalAnalytics?.noShowRate || 0)}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {operationalAnalytics?.noShowCount || 0} appointments
+                      {t('appointmentsCount', { count: operationalAnalytics?.noShowCount || 0 })}
                     </p>
                   </>
                 )}
@@ -1014,7 +1021,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Wait Time</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('avgWaitTime')}</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -1025,7 +1032,7 @@ export default function ReportsPage() {
                     <div className="text-2xl font-bold">
                       {operationalAnalytics?.avgWaitTime || 0}
                     </div>
-                    <p className="text-xs text-muted-foreground">minutes</p>
+                    <p className="text-xs text-muted-foreground">{t('minutes')}</p>
                   </>
                 )}
               </CardContent>
@@ -1035,8 +1042,8 @@ export default function ReportsPage() {
           {/* Staff Productivity */}
           <Card>
             <CardHeader>
-              <CardTitle>Staff Productivity</CardTitle>
-              <CardDescription>Performance metrics by staff member</CardDescription>
+              <CardTitle>{t('staffProductivity')}</CardTitle>
+              <CardDescription>{t('performanceByStaff')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -1054,19 +1061,21 @@ export default function ReportsPage() {
                     >
                       <div>
                         <div className="font-medium">{staff.name}</div>
-                        <div className="text-sm text-muted-foreground">{staff.role}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {tRole.has(staff.role) ? tRole(staff.role) : staff.role}
+                        </div>
                       </div>
                       <div className="flex gap-8 text-center">
                         <div>
-                          <div className="text-sm text-muted-foreground">Appointments</div>
+                          <div className="text-sm text-muted-foreground">{t('appointments')}</div>
                           <div className="text-xl font-bold">{staff.appointmentsHandled}</div>
                         </div>
                         <div>
-                          <div className="text-sm text-muted-foreground">Treatments</div>
+                          <div className="text-sm text-muted-foreground">{t('treatments')}</div>
                           <div className="text-xl font-bold">{staff.treatmentsCompleted}</div>
                         </div>
                         <div>
-                          <div className="text-sm text-muted-foreground">Revenue</div>
+                          <div className="text-sm text-muted-foreground">{t('revenueCol')}</div>
                           <div className="text-xl font-bold text-green-600">
                             {formatCurrency(staff.revenue)}
                           </div>
@@ -1083,8 +1092,8 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Inventory Turnover</CardTitle>
-                <CardDescription>How quickly inventory is being used</CardDescription>
+                <CardTitle>{t('inventoryTurnover')}</CardTitle>
+                <CardDescription>{t('turnoverDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -1094,9 +1103,7 @@ export default function ReportsPage() {
                     <div className="text-3xl font-bold">
                       {operationalAnalytics?.inventoryTurnover?.toFixed(2) || '0.00'}x
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Average turnover rate per period
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('turnoverRate')}</p>
                   </div>
                 )}
               </CardContent>
@@ -1104,8 +1111,8 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Low Stock Alert</CardTitle>
-                <CardDescription>Items requiring reorder</CardDescription>
+                <CardTitle>{t('lowStockAlert')}</CardTitle>
+                <CardDescription>{t('itemsReorder')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -1115,7 +1122,7 @@ export default function ReportsPage() {
                     <div className="text-3xl font-bold text-orange-600">
                       {operationalAnalytics?.lowStockItems || 0}
                     </div>
-                    <p className="text-sm text-muted-foreground">Items below reorder level</p>
+                    <p className="text-sm text-muted-foreground">{t('belowReorder')}</p>
                   </div>
                 )}
               </CardContent>

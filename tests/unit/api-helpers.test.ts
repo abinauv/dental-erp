@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { requireRole, generateToken, PLAN_LIMITS } from '@/lib/api-helpers'
 import { NextResponse } from 'next/server'
 
-// Mock the auth module
+// Mock the auth module (Better Auth instance: web session via auth.api.getSession)
 vi.mock('@/lib/auth', () => ({
-  auth: vi.fn(),
+  auth: { api: { getSession: vi.fn() } },
 }))
 
 // Mock prisma

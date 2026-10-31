@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 interface SearchResult {
   id: string
@@ -176,7 +177,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(result)
   } catch (err) {
-    console.error('Global search error:', err)
+    logger.error({ err }, 'Global search error:')
     return NextResponse.json({ error: 'Search failed' }, { status: 500 })
   }
 }

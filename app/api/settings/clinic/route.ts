@@ -2,11 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { isSupportedLocale } from '@/lib/i18n/config'
+import { logger } from '@/lib/logger'
 
 const optionalString = z.preprocess(
   (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
   z.string().optional()
 )
+
+/** A string that parses to a real IANA time zone (e.g. "Asia/Kolkata"). */
+function isValidTimeZone(tz: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
 
 const clinicInfoSchema = z.object({
   name: z.string().min(1),
@@ -35,6 +47,20 @@ const clinicInfoSchema = z.object({
   bankIfsc: optionalString,
   upiId: optionalString,
   patientPortalEnabled: z.boolean().optional(),
+  // Regional settings. All have non-null DB defaults, so each is optional here
+  // and an omitted field leaves the stored value unchanged.
+  locale: optionalString.refine((v) => v === undefined || isSupportedLocale(v), {
+    message: 'Unsupported locale',
+  }),
+  country: optionalString.refine((v) => v === undefined || /^[A-Z]{2}$/.test(v), {
+    message: 'Country must be a 2-letter ISO 3166-1 code',
+  }),
+  currency: optionalString.refine((v) => v === undefined || /^[A-Z]{3}$/.test(v), {
+    message: 'Currency must be a 3-letter ISO 4217 code',
+  }),
+  timezone: optionalString.refine((v) => v === undefined || isValidTimeZone(v), {
+    message: 'Unknown time zone',
+  }),
 })
 
 // GET /api/settings/clinic - Get clinic information
@@ -70,6 +96,10 @@ export async function GET(req: NextRequest) {
         upiId: true,
         slug: true,
         patientPortalEnabled: true,
+        locale: true,
+        country: true,
+        currency: true,
+        timezone: true,
       },
     })
 
@@ -86,7 +116,7 @@ export async function GET(req: NextRequest) {
       data: clinicInfo,
     })
   } catch (error: any) {
-    console.error('Get clinic info error:', error)
+    logger.error({ err: error }, 'Get clinic info error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get clinic information' },
       { status: 500 }
@@ -116,7 +146,7 @@ export async function POST(req: NextRequest) {
       message: 'Clinic information saved successfully',
     })
   } catch (error: any) {
-    console.error('Update clinic info error:', error)
+    logger.error({ err: error }, 'Update clinic info error:')
     return NextResponse.json(
       { error: error.message || 'Failed to update clinic information' },
       { status: 500 }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +30,7 @@ import {
   toothSurfaceLabels,
   getToothType,
 } from '@/lib/treatment-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface DentalChartEntry {
   id: string
@@ -83,6 +85,13 @@ export function DentalChart({
   selectedTeeth = EMPTY_TEETH,
   onTeethSelect,
 }: DentalChartProps) {
+  const t = useTranslations('treatments.chart')
+  const tCondition = useTranslations('treatments.toothCondition')
+  const tSurface = useTranslations('treatments.toothSurface')
+  const fmt = useClinicFormatters()
+  const conditionLabel = (c: string) =>
+    tCondition.has(c) ? tCondition(c) : toothConditionConfig[c]?.label || c
+  const surfaceLabel = (s: string) => (tSurface.has(s) ? tSurface(s) : toothSurfaceLabels[s] || s)
   const [chartData, setChartData] = useState<Record<number, DentalChartEntry[]>>({})
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -301,7 +310,7 @@ export function DentalChart({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Dental Chart</CardTitle>
+          <CardTitle className="text-lg">{t('title')}</CardTitle>
           <div className="flex gap-2 flex-wrap">
             {Object.entries(toothConditionConfig).map(([key, config]) => (
               <div key={key} className="flex items-center gap-1 text-xs">
@@ -309,7 +318,7 @@ export function DentalChart({
                   className="w-3 h-3 rounded-full border border-border"
                   style={{ backgroundColor: config.fillColor }}
                 />
-                <span className="text-muted-foreground">{config.label}</span>
+                <span className="text-muted-foreground">{conditionLabel(key)}</span>
               </div>
             ))}
           </div>
@@ -319,7 +328,7 @@ export function DentalChart({
         <div className="flex flex-col items-center gap-8 py-4">
           {/* Upper Jaw */}
           <div className="text-center">
-            <div className="text-sm font-medium text-muted-foreground mb-2">Upper Jaw</div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">{t('upperJaw')}</div>
             <div className="flex gap-1 justify-center">
               {/* Upper Right (18-11) */}
               <div className="flex gap-1 border-r-2 border-border pr-2">
@@ -347,14 +356,14 @@ export function DentalChart({
                 {toothNumbers.lowerLeft.map((num) => renderTooth(num, 'lower'))}
               </div>
             </div>
-            <div className="text-sm font-medium text-muted-foreground mt-2">Lower Jaw</div>
+            <div className="text-sm font-medium text-muted-foreground mt-2">{t('lowerJaw')}</div>
           </div>
         </div>
 
         {/* Selected teeth display */}
         {selectedTeeth.length > 0 && (
           <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-            <div className="text-sm font-medium mb-2">Selected Teeth:</div>
+            <div className="text-sm font-medium mb-2">{t('selectedTeeth')}</div>
             <div className="flex flex-wrap gap-2">
               {selectedTeeth
                 .sort((a, b) => a - b)
@@ -373,14 +382,17 @@ export function DentalChart({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Tooth {selectedTooth} - {selectedTooth && toothNames[selectedTooth]}
+              {t('toothTitle', {
+                number: selectedTooth ?? '',
+                name: selectedTooth ? toothNames[selectedTooth] : '',
+              })}
             </DialogTitle>
             <DialogDescription>
               {dialogMode === 'view'
-                ? 'View tooth condition and history'
+                ? t('viewDesc')
                 : dialogMode === 'add'
-                  ? 'Add new condition record'
-                  : 'Update tooth condition'}
+                  ? t('addDesc')
+                  : t('editDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -395,18 +407,18 @@ export function DentalChart({
                         <Badge
                           className={`${toothConditionConfig[entry.condition]?.bgColor} ${toothConditionConfig[entry.condition]?.color}`}
                         >
-                          {toothConditionConfig[entry.condition]?.label}
+                          {conditionLabel(entry.condition)}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(entry.recordedDate).toLocaleDateString()}
+                          {fmt.formatDate(entry.recordedDate)}
                         </span>
                       </div>
                       {entry.surfaces && (
                         <div className="text-sm mb-1">
-                          <span className="font-medium">Surfaces:</span>{' '}
+                          <span className="font-medium">{t('surfacesLabel')}</span>{' '}
                           {entry.surfaces
                             .split(',')
-                            .map((s) => toothSurfaceLabels[s] || s)
+                            .map((s) => surfaceLabel(s))
                             .join(', ')}
                         </div>
                       )}
@@ -415,27 +427,27 @@ export function DentalChart({
                       )}
                       {entry.recordedBy && (
                         <div className="text-xs text-muted-foreground mt-2">
-                          Recorded by Dr. {entry.recordedBy.firstName} {entry.recordedBy.lastName}
+                          {t('recordedBy', {
+                            name: `${entry.recordedBy.firstName} ${entry.recordedBy.lastName}`,
+                          })}
                         </div>
                       )}
                     </div>
                   ))
               ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  No conditions recorded for this tooth
-                </div>
+                <div className="text-center py-4 text-muted-foreground">{t('noConditions')}</div>
               )}
             </div>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Condition</Label>
+                <Label>{t('condition')}</Label>
                 <Select
                   value={formData.condition}
                   onValueChange={(value) => setFormData({ ...formData, condition: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select condition" />
+                    <SelectValue placeholder={t('selectCondition')} />
                   </SelectTrigger>
                   <SelectContent>
                     {conditions.map((condition) => (
@@ -445,7 +457,7 @@ export function DentalChart({
                             className="w-3 h-3 rounded-full"
                             style={{ backgroundColor: toothConditionConfig[condition]?.fillColor }}
                           />
-                          {toothConditionConfig[condition]?.label}
+                          {conditionLabel(condition)}
                         </div>
                       </SelectItem>
                     ))}
@@ -454,7 +466,7 @@ export function DentalChart({
               </div>
 
               <div className="space-y-2">
-                <Label>Affected Surfaces</Label>
+                <Label>{t('affectedSurfaces')}</Label>
                 <div className="flex flex-wrap gap-2">
                   {surfaces.map((surface) => (
                     <label
@@ -475,7 +487,7 @@ export function DentalChart({
                         }}
                       />
                       <span className="text-sm">
-                        {surface} ({toothSurfaceLabels[surface]})
+                        {t('surfaceOption', { code: surface, label: surfaceLabel(surface) })}
                       </span>
                     </label>
                   ))}
@@ -483,11 +495,11 @@ export function DentalChart({
               </div>
 
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t('notes')}</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Add any observations or notes..."
+                  placeholder={t('notesPlaceholder')}
                   rows={3}
                 />
               </div>
@@ -496,11 +508,11 @@ export function DentalChart({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              {dialogMode === 'view' ? 'Close' : 'Cancel'}
+              {dialogMode === 'view' ? t('close') : t('cancel')}
             </Button>
             {dialogMode !== 'view' && (
               <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save'}
+                {isSubmitting ? t('saving') : t('save')}
               </Button>
             )}
           </DialogFooter>

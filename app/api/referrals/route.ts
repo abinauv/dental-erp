@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err) {
-    console.error('Error fetching referrals:', err)
+    logger.error({ err }, 'Error fetching referrals:')
     return NextResponse.json({ error: 'Failed to fetch referrals' }, { status: 500 })
   }
 }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(referral, { status: 201 })
   } catch (err) {
-    console.error('Error creating referral:', err)
+    logger.error({ err }, 'Error creating referral:')
     return NextResponse.json({ error: 'Failed to create referral' }, { status: 500 })
   }
 }

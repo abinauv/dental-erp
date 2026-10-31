@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       )
     }
-    console.error('Create insurance provider error:', err)
+    logger.error({ err }, 'Create insurance provider error:')
     return NextResponse.json({ error: 'Failed to create provider' }, { status: 500 })
   }
 }

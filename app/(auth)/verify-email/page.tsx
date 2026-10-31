@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, CheckCircle2, XCircle, Mail } from 'lucide-react'
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast'
 
 function VerifyEmailContent() {
+  const t = useTranslations('auth.verifyEmail')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -23,14 +25,12 @@ function VerifyEmailContent() {
       verifyEmail(token)
     } else if (email) {
       setStatus('pending')
-      setMessage(
-        `We've sent a verification email to ${email}. Please check your inbox and click the verification link.`
-      )
+      setMessage(t('pendingMsg', { email }))
     } else {
       setStatus('error')
-      setMessage('No verification token or email provided.')
+      setMessage(t('noToken'))
     }
-  }, [token, email])
+  }, [token, email, t])
 
   const verifyEmail = async (verificationToken: string) => {
     try {
@@ -44,18 +44,18 @@ function VerifyEmailContent() {
 
       if (response.ok) {
         setStatus('success')
-        setMessage('Your email has been verified successfully!')
+        setMessage(t('successMsg'))
         toast({
-          title: 'Email verified!',
-          description: 'You can now log in to your account.',
+          title: t('toastVerifiedTitle'),
+          description: t('toastVerifiedDesc'),
         })
       } else {
         setStatus('error')
-        setMessage(result.error || 'Verification failed. Please try again.')
+        setMessage(result.error || t('failMsg'))
       }
     } catch {
       setStatus('error')
-      setMessage('An error occurred during verification. Please try again.')
+      setMessage(t('errorMsg'))
     }
   }
 
@@ -63,8 +63,8 @@ function VerifyEmailContent() {
     if (!email) return
 
     toast({
-      title: 'Verification email sent',
-      description: 'Please check your inbox for the verification link.',
+      title: t('resendToastTitle'),
+      description: t('resendToastDesc'),
     })
   }
 
@@ -94,27 +94,27 @@ function VerifyEmailContent() {
           )}
         </div>
         <CardTitle className="text-2xl font-bold">
-          {status === 'loading' && 'Verifying...'}
-          {status === 'success' && 'Email Verified!'}
-          {status === 'error' && 'Verification Failed'}
-          {status === 'pending' && 'Check Your Email'}
+          {status === 'loading' && t('titleLoading')}
+          {status === 'success' && t('titleSuccess')}
+          {status === 'error' && t('titleError')}
+          {status === 'pending' && t('titlePending')}
         </CardTitle>
         <CardDescription className="text-base">{message}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {status === 'success' && (
           <Button asChild className="w-full">
-            <Link href="/login">Continue to Login</Link>
+            <Link href="/login">{t('continueToLogin')}</Link>
           </Button>
         )}
 
         {status === 'error' && (
           <div className="space-y-2">
             <Button asChild variant="outline" className="w-full">
-              <Link href="/signup">Try signing up again</Link>
+              <Link href="/signup">{t('trySignup')}</Link>
             </Button>
             <Button asChild variant="ghost" className="w-full">
-              <Link href="/login">Back to Login</Link>
+              <Link href="/login">{t('backToLogin')}</Link>
             </Button>
           </div>
         )}
@@ -122,14 +122,14 @@ function VerifyEmailContent() {
         {status === 'pending' && (
           <div className="space-y-4">
             <div className="text-center text-sm text-muted-foreground">
-              <p>Didn&apos;t receive the email?</p>
-              <p>Check your spam folder or click below to resend.</p>
+              <p>{t('noEmailQ')}</p>
+              <p>{t('checkSpam')}</p>
             </div>
             <Button variant="outline" className="w-full" onClick={resendVerification}>
-              Resend Verification Email
+              {t('resendButton')}
             </Button>
             <Button asChild variant="ghost" className="w-full">
-              <Link href="/login">Back to Login</Link>
+              <Link href="/login">{t('backToLogin')}</Link>
             </Button>
           </div>
         )}
@@ -138,22 +138,25 @@ function VerifyEmailContent() {
   )
 }
 
+function VerifyEmailFallback() {
+  const t = useTranslations('auth.verifyEmail')
+  return (
+    <Card className="shadow-lg">
+      <CardHeader className="space-y-1 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+        <CardTitle className="text-2xl font-bold">{t('loading')}</CardTitle>
+      </CardHeader>
+    </Card>
+  )
+}
+
 export default function VerifyEmailPage() {
   return (
-    <Suspense
-      fallback={
-        <Card className="shadow-lg">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
-          </CardHeader>
-        </Card>
-      }
-    >
+    <Suspense fallback={<VerifyEmailFallback />}>
       <VerifyEmailContent />
     </Suspense>
   )

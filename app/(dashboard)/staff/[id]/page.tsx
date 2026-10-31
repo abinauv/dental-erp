@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -23,8 +25,29 @@ import {
   Clock,
   FileText,
   AlertCircle,
+  Upload,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { uploadUrl } from '@/lib/storage/keys'
+
+interface StaffDoc {
+  id: string
+  originalName: string
+  fileType: string
+  fileSize: number
+  filePath: string
+  documentType: string | null
+  description: string | null
+  createdAt: string
+}
+
+const DOC_TYPES = ['contract', 'idProof', 'certificate', 'licence', 'other']
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 interface StaffDetail {
   id: string
@@ -95,13 +118,82 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export default function StaffDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
+  const t = useTranslations('staff.detail')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
+  const roleLabel = (role: string) =>
+    t.has(`roles.${role}`) ? t(`roles.${role}`) : roleLabels[role]
+  const genderLabel = (g: string | null) =>
+    g && t.has(`gender.${g}`) ? t(`gender.${g}`) : g || '-'
   const [staff, setStaff] = useState<StaffDetail | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [documents, setDocuments] = useState<StaffDoc[]>([])
+  const [docLoading, setDocLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [uploadType, setUploadType] = useState('contract')
+  const [uploadDesc, setUploadDesc] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     fetchStaff()
+    fetchDocuments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedParams.id])
+
+  const fetchDocuments = async () => {
+    setDocLoading(true)
+    try {
+      const res = await fetch(`/api/staff/${resolvedParams.id}/documents`)
+      const data = await res.json()
+      if (data.success) setDocuments(data.documents)
+    } catch {
+      // non-fatal; the tab just shows empty
+    } finally {
+      setDocLoading(false)
+    }
+  }
+
+  const handleUploadDocument = async (file: File) => {
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('documentType', uploadType)
+      if (uploadDesc.trim()) form.append('description', uploadDesc.trim())
+      const res = await fetch(`/api/staff/${resolvedParams.id}/documents`, {
+        method: 'POST',
+        body: form,
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || t('uploadError'))
+      toast({ title: t('uploadSuccess') })
+      setUploadDesc('')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      fetchDocuments()
+    } catch (err) {
+      toast({
+        title: err instanceof Error ? err.message : t('uploadError'),
+        variant: 'destructive',
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!window.confirm(t('deleteConfirm'))) return
+    try {
+      const res = await fetch(`/api/staff/${resolvedParams.id}/documents/${documentId}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error()
+      toast({ title: t('deleteSuccess') })
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId))
+    } catch {
+      toast({ title: t('deleteError'), variant: 'destructive' })
+    }
+  }
 
   const fetchStaff = async () => {
     try {
@@ -111,8 +203,8 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
         if (response.status === 404) {
           toast({
             variant: 'destructive',
-            title: 'Not Found',
-            description: 'Staff member not found',
+            title: t('notFoundToast'),
+            description: t('staffNotFound'),
           })
           router.push('/staff')
           return
@@ -126,31 +218,19 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
       console.error('Error fetching staff:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch staff details',
+        title: t('error'),
+        description: t('fetchFailed'),
       })
     } finally {
       setLoading(false)
     }
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
+  const formatDate = (dateString: string | null) =>
+    fmt.formatDate(dateString, { day: 'numeric', month: 'long', year: 'numeric' })
 
-  const formatCurrency = (amount: number | null) => {
-    if (amount === null) return '-'
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number | null) =>
+    amount === null ? '-' : fmt.formatCurrency(amount, { maximumFractionDigits: 0 })
 
   if (loading) {
     return (
@@ -182,9 +262,9 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="flex flex-col items-center justify-center h-[400px] gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Staff member not found</p>
+        <p className="text-muted-foreground">{t('staffNotFound')}</p>
         <Link href="/staff">
-          <Button>Back to Staff List</Button>
+          <Button>{t('backToStaff')}</Button>
         </Link>
       </div>
     )
@@ -210,13 +290,13 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                   {staff.firstName} {staff.lastName}
                 </h1>
                 <Badge variant={staff.isActive ? 'default' : 'secondary'}>
-                  {staff.isActive ? 'Active' : 'Inactive'}
+                  {staff.isActive ? t('active') : t('inactive')}
                 </Badge>
               </div>
               <div className="flex items-center gap-4 mt-1 text-muted-foreground">
                 <span>{staff.employeeId}</span>
                 <Badge className={`${roleColors[staff.user.role]} border-0`}>
-                  {roleLabels[staff.user.role]}
+                  {roleLabel(staff.user.role)}
                 </Badge>
               </div>
             </div>
@@ -226,7 +306,7 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
           <Link href={`/staff/${staff.id}/edit`}>
             <Button>
               <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
+              {t('editProfile')}
             </Button>
           </Link>
         </div>
@@ -234,9 +314,9 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="schedule">Work Schedule</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="profile">{t('tabProfile')}</TabsTrigger>
+          <TabsTrigger value="schedule">{t('tabSchedule')}</TabsTrigger>
+          <TabsTrigger value="documents">{t('tabDocuments')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -246,29 +326,29 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
-                  Contact Information
+                  {t('contactInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Primary Phone</p>
+                    <p className="text-sm text-muted-foreground">{t('primaryPhone')}</p>
                     <p className="font-medium">{staff.phone}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Alternate Phone</p>
+                    <p className="text-sm text-muted-foreground">{t('alternatePhone')}</p>
                     <p className="font-medium">{staff.alternatePhone || '-'}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="text-sm text-muted-foreground">{t('email')}</p>
                   <p className="font-medium">{staff.email}</p>
                 </div>
                 <Separator />
                 <div>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    Address
+                    {t('address')}
                   </p>
                   <p className="font-medium">
                     {staff.address ? (
@@ -291,37 +371,40 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  Personal Details
+                  {t('personalDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Date of Birth</p>
+                    <p className="text-sm text-muted-foreground">{t('dateOfBirth')}</p>
                     <p className="font-medium">{formatDate(staff.dateOfBirth)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Gender</p>
-                    <p className="font-medium">{staff.gender || '-'}</p>
+                    <p className="text-sm text-muted-foreground">{t('genderLabel')}</p>
+                    <p className="font-medium">{genderLabel(staff.gender)}</p>
                   </div>
                 </div>
                 <Separator />
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Aadhar Number</p>
+                    <p className="text-sm text-muted-foreground">{t('aadharNumber')}</p>
                     <p className="font-medium">{staff.aadharNumber || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">PAN Number</p>
+                    <p className="text-sm text-muted-foreground">{t('panNumber')}</p>
                     <p className="font-medium">{staff.panNumber || '-'}</p>
                   </div>
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm text-muted-foreground">Emergency Contact</p>
+                  <p className="text-sm text-muted-foreground">{t('emergencyContact')}</p>
                   <p className="font-medium">
                     {staff.emergencyContact
-                      ? `${staff.emergencyContact} (${staff.emergencyPhone || 'No phone'})`
+                      ? t('emergencyValue', {
+                          name: staff.emergencyContact,
+                          phone: staff.emergencyPhone || t('noPhone'),
+                        })
                       : '-'}
                   </p>
                 </div>
@@ -333,27 +416,27 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4" />
-                  Professional Details
+                  {t('professionalDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Qualification</p>
+                    <p className="text-sm text-muted-foreground">{t('qualification')}</p>
                     <p className="font-medium">{staff.qualification || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Specialization</p>
+                    <p className="text-sm text-muted-foreground">{t('specialization')}</p>
                     <p className="font-medium">{staff.specialization || '-'}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">License Number</p>
+                    <p className="text-sm text-muted-foreground">{t('licenseNumber')}</p>
                     <p className="font-medium">{staff.licenseNumber || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Joining Date</p>
+                    <p className="text-sm text-muted-foreground">{t('joiningDate')}</p>
                     <p className="font-medium">{formatDate(staff.joiningDate)}</p>
                   </div>
                 </div>
@@ -365,19 +448,19 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                         <p className="text-2xl font-bold text-blue-700">
                           {staff._count.appointments}
                         </p>
-                        <p className="text-sm text-blue-600">Appointments</p>
+                        <p className="text-sm text-blue-600">{t('appointments')}</p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded-lg">
                         <p className="text-2xl font-bold text-green-700">
                           {staff._count.treatments}
                         </p>
-                        <p className="text-sm text-green-600">Treatments</p>
+                        <p className="text-sm text-green-600">{t('treatments')}</p>
                       </div>
                       <div className="text-center p-3 bg-purple-50 rounded-lg">
                         <p className="text-2xl font-bold text-purple-700">
                           {staff._count.prescriptions}
                         </p>
-                        <p className="text-sm text-purple-600">Prescriptions</p>
+                        <p className="text-sm text-purple-600">{t('prescriptions')}</p>
                       </div>
                     </div>
                   </>
@@ -390,12 +473,12 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4" />
-                  Financial Details
+                  {t('financialDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Monthly Salary</p>
+                  <p className="text-sm text-muted-foreground">{t('monthlySalary')}</p>
                   <p className="text-2xl font-bold">
                     {formatCurrency(staff.salary ? Number(staff.salary) : null)}
                   </p>
@@ -403,11 +486,11 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                 <Separator />
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Bank Account No.</p>
+                    <p className="text-sm text-muted-foreground">{t('bankAccountNo')}</p>
                     <p className="font-medium">{staff.bankAccountNo || '-'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">IFSC Code</p>
+                    <p className="text-sm text-muted-foreground">{t('ifscCode')}</p>
                     <p className="font-medium">{staff.bankIfsc || '-'}</p>
                   </div>
                 </div>
@@ -421,18 +504,18 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Work Schedule
+                {t('workSchedule')}
               </CardTitle>
-              <CardDescription>Weekly work schedule for {staff.firstName}</CardDescription>
+              <CardDescription>{t('scheduleDesc', { name: staff.firstName })}</CardDescription>
             </CardHeader>
             <CardContent>
               {staff.shifts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No work schedule configured</p>
+                  <p>{t('noSchedule')}</p>
                   <Link href={`/staff/${staff.id}/edit`}>
                     <Button variant="outline" className="mt-4">
-                      Configure Schedule
+                      {t('configureSchedule')}
                     </Button>
                   </Link>
                 </div>
@@ -447,15 +530,15 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
                           shift && shift.isActive ? 'bg-green-50' : 'bg-muted/50'
                         }`}
                       >
-                        <span className="font-medium">{day}</span>
+                        <span className="font-medium">{t(`days.${index}`)}</span>
                         <span
                           className={
                             shift && shift.isActive ? 'text-green-700' : 'text-muted-foreground'
                           }
                         >
                           {shift && shift.isActive
-                            ? `${shift.startTime} - ${shift.endTime}`
-                            : 'Off'}
+                            ? t('scheduleRange', { start: shift.startTime, end: shift.endTime })
+                            : t('off')}
                         </span>
                       </div>
                     )
@@ -471,15 +554,103 @@ export default function StaffDetailPage({ params }: { params: Promise<{ id: stri
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Documents
+                {t('documents')}
               </CardTitle>
-              <CardDescription>Staff documents and certifications</CardDescription>
+              <CardDescription>{t('documentsDesc')}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Document management coming soon</p>
+            <CardContent className="space-y-4">
+              {/* Upload row */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-end border-b pb-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {t('docTypeLabel')}
+                  </label>
+                  <select
+                    value={uploadType}
+                    onChange={(e) => setUploadType(e.target.value)}
+                    className="block w-full sm:w-40 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  >
+                    {DOC_TYPES.map((v) => (
+                      <option key={v} value={v}>
+                        {t(`docTypes.${v}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <input
+                  value={uploadDesc}
+                  onChange={(e) => setUploadDesc(e.target.value)}
+                  placeholder={t('descriptionPlaceholder')}
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleUploadDocument(file)
+                  }}
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploading ? t('uploading') : t('upload')}
+                </Button>
               </div>
+
+              {/* Document list */}
+              {docLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : documents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>{t('docEmpty')}</p>
+                </div>
+              ) : (
+                <div className="rounded-md border divide-y">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <a
+                          href={uploadUrl(doc.filePath)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:underline truncate block"
+                        >
+                          {doc.originalName}
+                        </a>
+                        <div className="text-xs text-muted-foreground">
+                          {doc.documentType && t.has(`docTypes.${doc.documentType}`)
+                            ? t(`docTypes.${doc.documentType}`)
+                            : doc.documentType || '—'}
+                          {' · '}
+                          {formatBytes(doc.fileSize)}
+                          {' · '}
+                          {fmt.formatDate(doc.createdAt)}
+                          {doc.description ? ` · ${doc.description}` : ''}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                      >
+                        {t('deleteDoc')}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

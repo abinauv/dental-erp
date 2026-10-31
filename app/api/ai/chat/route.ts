@@ -6,6 +6,8 @@ import { complete, extractJSON, streamResponse } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { executeIntent } from '@/lib/ai/command-executors'
 import type { ChatMessage } from '@/lib/ai/openrouter'
+import { logger } from '@/lib/logger'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // ---------------------------------------------------------------------------
 // Intent detection prompt — analyses full conversation to detect actions
@@ -114,20 +116,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Rate-limit: max 100 requests/min checked via last-minute audit logs
-    const oneMinuteAgo = new Date(Date.now() - 60_000)
-    const recentCount = await prisma.auditLog.count({
-      where: {
-        hospitalId,
-        userId: user.id,
-        action: 'AI_INTERACTION',
-        createdAt: { gte: oneMinuteAgo },
-      },
-    })
-    if (recentCount >= 100) {
+    // Rate-limit: max 100 requests/min per user via the shared limiter.
+    const aiLimit = await checkRateLimit(`ai-chat:${hospitalId}:${user.id}`, 100, 60_000)
+    if (!aiLimit.allowed) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Try again shortly.' },
-        { status: 429 }
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(aiLimit.retryAfterMs / 1000)) },
+        }
       )
     }
 
@@ -265,7 +262,7 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
           context: context as any,
         },
       })
-      .catch((e: any) => console.error('AI conversation log failed:', e.message))
+      .catch((e: any) => logger.error({ err: e.message }, 'AI conversation log failed'))
 
     prisma.auditLog
       .create({
@@ -277,7 +274,7 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
           entityId: skillName || 'chat',
         },
       })
-      .catch((e: any) => console.error('AI audit log failed:', e.message))
+      .catch((e: any) => logger.error({ err: e.message }, 'AI audit log failed'))
 
     // -----------------------------------------------------------------------
     // Smart model routing — Flash Lite by default, escalate only when needed
@@ -304,14 +301,14 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
       const { content } = await complete(allMessages, model)
       return NextResponse.json({ response: content })
     } catch (err) {
-      console.error('AI response error:', err)
+      logger.error({ err }, 'AI response error:')
       return NextResponse.json(
         { error: err instanceof Error ? err.message : 'AI service error' },
         { status: 502 }
       )
     }
   } catch (err: any) {
-    console.error('AI chat route error:', err)
+    logger.error({ err }, 'AI chat route error:')
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Plus, Trash2, FileCheck } from 'lucide-react'
-import { formatCurrency } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Patient {
   id: string
@@ -44,6 +45,11 @@ interface Procedure {
 export default function NewPreAuthPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const t = useTranslations('billing.preAuthNew')
+  const tCommon = useTranslations('common')
+  const { formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
   const [patients, setPatients] = useState<Patient[]>([])
   const [policies, setPolicies] = useState<Policy[]>([])
   const [patientSearch, setPatientSearch] = useState('')
@@ -111,16 +117,16 @@ export default function NewPreAuthPage() {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !selectedPolicyId) {
-      toast({ title: 'Please select a patient and insurance policy', variant: 'destructive' })
+      toast({ title: t('errSelectPolicy'), variant: 'destructive' })
       return
     }
     const validProcedures = procedures.filter((p) => p.name.trim())
     if (validProcedures.length === 0) {
-      toast({ title: 'Add at least one procedure', variant: 'destructive' })
+      toast({ title: t('errProcedure'), variant: 'destructive' })
       return
     }
     if (totalCost <= 0) {
-      toast({ title: 'Total estimated cost must be greater than 0', variant: 'destructive' })
+      toast({ title: t('errCost'), variant: 'destructive' })
       return
     }
 
@@ -147,7 +153,7 @@ export default function NewPreAuthPage() {
         throw new Error(data.error || 'Failed to create')
       }
 
-      toast({ title: 'Pre-authorization request created' })
+      toast({ title: t('created') })
       router.push('/billing/insurance/pre-auth')
     } catch (err: any) {
       toast({ title: err.message, variant: 'destructive' })
@@ -165,15 +171,15 @@ export default function NewPreAuthPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Pre-Authorization</h1>
-          <p className="text-muted-foreground">Request insurance pre-approval for treatment</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
       {/* Step 1: Patient Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">1. Select Patient</CardTitle>
+          <CardTitle className="text-base">{t('step1')}</CardTitle>
         </CardHeader>
         <CardContent>
           {selectedPatient ? (
@@ -192,13 +198,13 @@ export default function NewPreAuthPage() {
                   setPatientSearch('')
                 }}
               >
-                Change
+                {t('change')}
               </Button>
             </div>
           ) : (
             <div className="relative">
               <Input
-                placeholder="Search patient by name, ID, or phone..."
+                placeholder={t('searchPlaceholder')}
                 value={patientSearch}
                 onChange={(e) => setPatientSearch(e.target.value)}
               />
@@ -232,18 +238,16 @@ export default function NewPreAuthPage() {
       {selectedPatient && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">2. Select Insurance Policy</CardTitle>
+            <CardTitle className="text-base">{t('step2')}</CardTitle>
           </CardHeader>
           <CardContent>
             {policies.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No active insurance policies found for this patient.
-              </p>
+              <p className="text-sm text-muted-foreground">{t('noPolicies')}</p>
             ) : (
               <div className="space-y-3">
                 <Select value={selectedPolicyId} onValueChange={setSelectedPolicyId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select policy" />
+                    <SelectValue placeholder={t('selectPolicy')} />
                   </SelectTrigger>
                   <SelectContent>
                     {policies.map((p) => (
@@ -256,16 +260,16 @@ export default function NewPreAuthPage() {
                 {selectedPolicy && (
                   <div className="grid grid-cols-2 gap-3 text-sm bg-muted/50 rounded-lg p-3">
                     <div>
-                      <p className="text-muted-foreground">Member ID</p>
+                      <p className="text-muted-foreground">{t('memberId')}</p>
                       <p className="font-medium">{selectedPolicy.memberId}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Subscriber</p>
+                      <p className="text-muted-foreground">{t('subscriber')}</p>
                       <p className="font-medium">{selectedPolicy.subscriberName}</p>
                     </div>
                     {selectedPolicy.annualMaximum && (
                       <div>
-                        <p className="text-muted-foreground">Annual Maximum</p>
+                        <p className="text-muted-foreground">{t('annualMaximum')}</p>
                         <p className="font-medium">
                           {formatCurrency(Number(selectedPolicy.annualMaximum))}
                         </p>
@@ -273,7 +277,7 @@ export default function NewPreAuthPage() {
                     )}
                     {selectedPolicy.remainingAmount != null && (
                       <div>
-                        <p className="text-muted-foreground">Remaining</p>
+                        <p className="text-muted-foreground">{t('remaining')}</p>
                         <p className="font-medium text-green-600">
                           {formatCurrency(Number(selectedPolicy.remainingAmount))}
                         </p>
@@ -292,9 +296,9 @@ export default function NewPreAuthPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">3. Procedures</CardTitle>
+              <CardTitle className="text-base">{t('step3')}</CardTitle>
               <Button variant="outline" size="sm" onClick={addProcedure}>
-                <Plus className="h-4 w-4 mr-1" /> Add Procedure
+                <Plus className="h-4 w-4 mr-1" /> {t('addProcedure')}
               </Button>
             </div>
           </CardHeader>
@@ -303,23 +307,23 @@ export default function NewPreAuthPage() {
               {procedures.map((proc, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 items-end">
                   <div className="col-span-5">
-                    {i === 0 && <Label className="text-xs">Procedure Name *</Label>}
+                    {i === 0 && <Label className="text-xs">{t('procedureName')}</Label>}
                     <Input
-                      placeholder="e.g., Root Canal Treatment"
+                      placeholder={t('procedureNamePlaceholder')}
                       value={proc.name}
                       onChange={(e) => updateProcedure(i, 'name', e.target.value)}
                     />
                   </div>
                   <div className="col-span-3">
-                    {i === 0 && <Label className="text-xs">Code</Label>}
+                    {i === 0 && <Label className="text-xs">{t('code')}</Label>}
                     <Input
-                      placeholder="e.g., D3310"
+                      placeholder={t('codePlaceholder')}
                       value={proc.code}
                       onChange={(e) => updateProcedure(i, 'code', e.target.value)}
                     />
                   </div>
                   <div className="col-span-3">
-                    {i === 0 && <Label className="text-xs">Cost (₹) *</Label>}
+                    {i === 0 && <Label className="text-xs">{t('cost')}</Label>}
                     <Input
                       type="number"
                       placeholder="0"
@@ -341,7 +345,7 @@ export default function NewPreAuthPage() {
               ))}
               <div className="flex justify-end pt-2 border-t">
                 <p className="text-sm font-medium">
-                  Total Estimated Cost: <span className="text-lg">{formatCurrency(totalCost)}</span>
+                  {t('totalEstimated')} <span className="text-lg">{formatCurrency(totalCost)}</span>
                 </p>
               </div>
             </div>
@@ -353,22 +357,22 @@ export default function NewPreAuthPage() {
       {selectedPolicyId && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">4. Additional Notes</CardTitle>
+            <CardTitle className="text-base">{t('step4')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Any additional notes for the pre-authorization request..."
+              placeholder={t('notesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
             />
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => router.back()}>
-                Cancel
+                {tCommon('actions.cancel')}
               </Button>
               <Button onClick={handleSubmit} disabled={saving}>
                 <FileCheck className="h-4 w-4 mr-2" />
-                {saving ? 'Creating...' : 'Create Pre-Authorization'}
+                {saving ? t('creating') : t('create')}
               </Button>
             </div>
           </CardContent>

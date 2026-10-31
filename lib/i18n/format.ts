@@ -120,17 +120,54 @@ export function formatDateTime(
   }).format(value)
 }
 
+const TIME_DEFAULTS: Intl.DateTimeFormatOptions = {
+  hour: '2-digit',
+  minute: '2-digit',
+}
+
+/** Format the time-of-day only, with locale conventions (12h vs 24h). */
+export function formatTime(
+  date: Date | string | number | null | undefined,
+  options: DateFormatOptions = {}
+): string {
+  const { locale, fallback = '-', ...dateTimeOptions } = options
+  const value = toDate(date)
+  if (value === null) return fallback
+
+  return new Intl.DateTimeFormat(resolveLocale(locale), {
+    ...TIME_DEFAULTS,
+    ...dateTimeOptions,
+  }).format(value)
+}
+
 /**
  * Build a set of formatters bound to one clinic's locale, so call sites in a
  * request handler do not have to thread the locale through every call.
+ *
+ * `currencyOverride` is the clinic's billing currency (`Hospital.currency`). A
+ * person's locale changes how amounts are grouped and punctuated, but never
+ * which currency the clinic bills in — so currency is passed explicitly rather
+ * than derived from the locale. Omitted, it falls back to the locale's default.
  */
-export function createFormatters(locale: string | null | undefined = defaultLocale) {
+export function createFormatters(
+  locale: string | null | undefined = defaultLocale,
+  currencyOverride?: string | null
+) {
   const resolved = resolveLocale(locale)
-  const { currency } = getLocaleDefaults(resolved)
+  const currency = currencyOverride || getLocaleDefaults(resolved).currency
+
+  // The bare currency symbol (e.g. ₹, $, €), derived from the locale+currency
+  // via Intl, for places that need the glyph in a label rather than a formatted
+  // amount. Falls back to the ISO code if no distinct symbol part is emitted.
+  const currencySymbol =
+    new Intl.NumberFormat(resolved, { style: 'currency', currency })
+      .formatToParts(0)
+      .find((part) => part.type === 'currency')?.value || currency
 
   return {
     locale: resolved,
     currency,
+    currencySymbol,
     formatCurrency: (amount: number | string | null | undefined, o: CurrencyFormatOptions = {}) =>
       formatCurrency(amount, { locale: resolved, currency, ...o }),
     formatNumber: (value: number | string | null | undefined, o: Intl.NumberFormatOptions = {}) =>
@@ -139,5 +176,7 @@ export function createFormatters(locale: string | null | undefined = defaultLoca
       formatDate(date, { locale: resolved, ...o }),
     formatDateTime: (date: Date | string | number | null | undefined, o: DateFormatOptions = {}) =>
       formatDateTime(date, { locale: resolved, ...o }),
+    formatTime: (date: Date | string | number | null | undefined, o: DateFormatOptions = {}) =>
+      formatTime(date, { locale: resolved, ...o }),
   }
 }

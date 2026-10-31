@@ -1,0 +1,78 @@
+/**
+ * India medication catalogue. Extracted verbatim from prisma/seed.ts. Generic
+ * drug names as prescribed in India (e.g. Paracetamol). Selected when country is IN.
+ */
+export const medications = [
+  {
+    name: 'Amoxicillin 500mg',
+    genericName: 'Amoxicillin',
+    category: 'Antibiotic',
+    form: 'Capsule',
+    defaultDosage: '500mg',
+    defaultFrequency: 'Three times daily',
+    defaultDuration: '5 days',
+  },
+  {
+    name: 'Ibuprofen 400mg',
+    genericName: 'Ibuprofen',
+    category: 'Pain Relief',
+    form: 'Tablet',
+    defaultDosage: '400mg',
+    defaultFrequency: 'Three times daily',
+    defaultDuration: '3 days',
+  },
+  {
+    name: 'Paracetamol 500mg',
+    genericName: 'Paracetamol',
+    category: 'Pain Relief',
+    form: 'Tablet',
+    defaultDosage: '500mg',
+    defaultFrequency: 'As needed (max 4/day)',
+    defaultDuration: '3 days',
+  },
+  {
+    name: 'Metronidazole 400mg',
+    genericName: 'Metronidazole',
+    category: 'Antibiotic',
+    form: 'Tablet',
+    defaultDosage: '400mg',
+    defaultFrequency: 'Three times daily',
+    defaultDuration: '5 days',
+  },
+  {
+    name: 'Chlorhexidine Mouthwash',
+    genericName: 'Chlorhexidine',
+    category: 'Antiseptic',
+    form: 'Liquid',
+    defaultDosage: '10ml',
+    defaultFrequency: 'Twice daily',
+    defaultDuration: '7 days',
+  },
+  {
+    name: 'Diclofenac 50mg',
+    genericName: 'Diclofenac',
+    category: 'Pain Relief',
+    form: 'Tablet',
+    defaultDosage: '50mg',
+    defaultFrequency: 'Twice daily',
+    defaultDuration: '3 days',
+  },
+  {
+    name: 'Omeprazole 20mg',
+    genericName: 'Omeprazole',
+    category: 'Antacid',
+    form: 'Capsule',
+    defaultDosage: '20mg',
+    defaultFrequency: 'Once daily (before breakfast)',
+    defaultDuration: '5 days',
+  },
+  {
+    name: 'Clindamycin 300mg',
+    genericName: 'Clindamycin',
+    category: 'Antibiotic',
+    form: 'Capsule',
+    defaultDosage: '300mg',
+    defaultFrequency: 'Three times daily',
+    defaultDuration: '7 days',
+  },
+]

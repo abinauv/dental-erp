@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -81,6 +82,9 @@ const TIMINGS = [
 let rowKey = 0
 
 export default function NewPrescriptionPage() {
+  const t = useTranslations('prescriptions.new')
+  const tRoute = useTranslations('prescriptions.route')
+  const tTiming = useTranslations('prescriptions.timing')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -227,7 +231,7 @@ export default function NewPrescriptionPage() {
 
   const handleSubmit = async () => {
     if (!selectedPatient) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a patient' })
+      toast({ variant: 'destructive', title: t('errorTitle'), description: t('selectPatient') })
       return
     }
 
@@ -237,8 +241,8 @@ export default function NewPrescriptionPage() {
     if (validMeds.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Add at least one medication with dosage, frequency, and duration',
+        title: t('errorTitle'),
+        description: t('addMedError'),
       })
       return
     }
@@ -270,12 +274,12 @@ export default function NewPrescriptionPage() {
       if (!res.ok) throw new Error(result.error)
 
       toast({
-        title: 'Prescription created',
-        description: `${result.data.prescriptionNo} saved successfully`,
+        title: t('createdTitle'),
+        description: t('createdDesc', { no: result.data.prescriptionNo }),
       })
       router.push(`/prescriptions/${result.data.id}`)
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message })
+      toast({ variant: 'destructive', title: t('errorTitle'), description: err.message })
     } finally {
       setSaving(false)
     }
@@ -284,23 +288,23 @@ export default function NewPrescriptionPage() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <Button variant="ghost" className="mb-4" onClick={() => router.push('/prescriptions')}>
-        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Prescriptions
+        <ArrowLeft className="h-4 w-4 mr-2" /> {t('back')}
       </Button>
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <ClipboardList className="h-8 w-8" />
-          New Prescription
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground">Create a new e-prescription for a patient</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <div className="space-y-6">
         {/* Patient Selection */}
         <Card>
           <CardHeader>
-            <CardTitle>Patient</CardTitle>
-            <CardDescription>Select the patient for this prescription</CardDescription>
+            <CardTitle>{t('patient')}</CardTitle>
+            <CardDescription>{t('patientDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {selectedPatient ? (
@@ -313,20 +317,20 @@ export default function NewPrescriptionPage() {
                     {selectedPatient.patientId} · {selectedPatient.phone}
                     {selectedPatient.allergies && (
                       <span className="text-destructive ml-2">
-                        Allergies: {selectedPatient.allergies}
+                        {t('allergiesLabel', { allergies: selectedPatient.allergies })}
                       </span>
                     )}
                   </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => setSelectedPatient(null)}>
-                  Change
+                  {t('change')}
                 </Button>
               </div>
             ) : (
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search patient by name, ID, or phone..."
+                  placeholder={t('patientSearchPlaceholder')}
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
                   className="pl-9"
@@ -335,7 +339,7 @@ export default function NewPrescriptionPage() {
                   <div className="absolute z-10 mt-1 w-full bg-popover border rounded-md shadow-md max-h-60 overflow-y-auto">
                     {searchingPatients ? (
                       <div className="p-3 text-center text-sm text-muted-foreground">
-                        Searching...
+                        {t('searching')}
                       </div>
                     ) : (
                       patients.map((p) => (
@@ -367,20 +371,20 @@ export default function NewPrescriptionPage() {
         {/* Diagnosis */}
         <Card>
           <CardHeader>
-            <CardTitle>Diagnosis</CardTitle>
+            <CardTitle>{t('diagnosis')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Diagnosis / Condition</Label>
+              <Label>{t('diagnosisLabel')}</Label>
               <Input
                 value={diagnosis}
                 onChange={(e) => setDiagnosis(e.target.value)}
-                placeholder="e.g., Dental caries, Periodontal disease"
+                placeholder={t('diagnosisPlaceholder')}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Valid Until</Label>
+                <Label>{t('validUntil')}</Label>
                 <Input
                   type="date"
                   value={validUntil}
@@ -394,17 +398,15 @@ export default function NewPrescriptionPage() {
         {/* Medications */}
         <Card>
           <CardHeader>
-            <CardTitle>Medications</CardTitle>
-            <CardDescription>
-              Add medications from your drug catalog or type manually
-            </CardDescription>
+            <CardTitle>{t('medications')}</CardTitle>
+            <CardDescription>{t('medicationsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {medications.map((med, index) => (
               <div key={med.key} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Medication {index + 1}
+                    {t('medicationN', { n: index + 1 })}
                   </span>
                   {medications.length > 1 && (
                     <Button
@@ -420,7 +422,7 @@ export default function NewPrescriptionPage() {
 
                 {/* Medication name with search */}
                 <div className="relative">
-                  <Label>Medication Name *</Label>
+                  <Label>{t('medNameLabel')}</Label>
                   <Input
                     value={activeMedRow === index ? medSearch : med.medicationName}
                     onChange={(e) => {
@@ -430,7 +432,7 @@ export default function NewPrescriptionPage() {
                       updateMedRow(index, 'medicationId', '')
                     }}
                     onFocus={() => setActiveMedRow(index)}
-                    placeholder="Search from catalog or type name..."
+                    placeholder={t('medNamePlaceholder')}
                   />
                   {activeMedRow === index && medOptions.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
@@ -456,31 +458,31 @@ export default function NewPrescriptionPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <div>
-                    <Label>Dosage *</Label>
+                    <Label>{t('dosageLabel')}</Label>
                     <Input
                       value={med.dosage}
                       onChange={(e) => updateMedRow(index, 'dosage', e.target.value)}
-                      placeholder="1 tablet"
+                      placeholder={t('dosagePlaceholder')}
                     />
                   </div>
                   <div>
-                    <Label>Frequency *</Label>
+                    <Label>{t('frequencyLabel')}</Label>
                     <Input
                       value={med.frequency}
                       onChange={(e) => updateMedRow(index, 'frequency', e.target.value)}
-                      placeholder="3 times a day"
+                      placeholder={t('frequencyPlaceholder')}
                     />
                   </div>
                   <div>
-                    <Label>Duration *</Label>
+                    <Label>{t('durationLabel')}</Label>
                     <Input
                       value={med.duration}
                       onChange={(e) => updateMedRow(index, 'duration', e.target.value)}
-                      placeholder="5 days"
+                      placeholder={t('durationPlaceholder')}
                     />
                   </div>
                   <div>
-                    <Label>Route</Label>
+                    <Label>{t('routeLabel')}</Label>
                     <Select
                       value={med.route}
                       onValueChange={(v) => updateMedRow(index, 'route', v)}
@@ -491,47 +493,47 @@ export default function NewPrescriptionPage() {
                       <SelectContent>
                         {ROUTES.map((r) => (
                           <SelectItem key={r} value={r}>
-                            {r}
+                            {tRoute.has(r) ? tRoute(r) : r}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Timing</Label>
+                    <Label>{t('timingLabel')}</Label>
                     <Select
                       value={med.timing || undefined}
                       onValueChange={(v) => updateMedRow(index, 'timing', v)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder={t('timingPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        {TIMINGS.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
+                        {TIMINGS.map((tm) => (
+                          <SelectItem key={tm} value={tm}>
+                            {tTiming.has(tm) ? tTiming(tm) : tm}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Quantity</Label>
+                    <Label>{t('quantityLabel')}</Label>
                     <Input
                       type="number"
                       value={med.quantity}
                       onChange={(e) => updateMedRow(index, 'quantity', e.target.value)}
-                      placeholder="10"
+                      placeholder={t('quantityPlaceholder')}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label>Special Instructions</Label>
+                  <Label>{t('instructionsLabel')}</Label>
                   <Input
                     value={med.instructions}
                     onChange={(e) => updateMedRow(index, 'instructions', e.target.value)}
-                    placeholder="Take with warm water, avoid dairy..."
+                    placeholder={t('instructionsPlaceholder')}
                   />
                 </div>
               </div>
@@ -539,7 +541,7 @@ export default function NewPrescriptionPage() {
 
             <Button variant="outline" onClick={addMedRow} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
-              Add Another Medication
+              {t('addAnother')}
             </Button>
           </CardContent>
         </Card>
@@ -547,13 +549,13 @@ export default function NewPrescriptionPage() {
         {/* Notes */}
         <Card>
           <CardHeader>
-            <CardTitle>Additional Notes</CardTitle>
+            <CardTitle>{t('additionalNotes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="General advice, follow-up instructions..."
+              placeholder={t('notesPlaceholder')}
               rows={3}
             />
           </CardContent>
@@ -562,11 +564,11 @@ export default function NewPrescriptionPage() {
         {/* Submit */}
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={() => router.push('/prescriptions')}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={saving} size="lg">
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Create Prescription
+            {t('createPrescription')}
           </Button>
         </div>
       </div>

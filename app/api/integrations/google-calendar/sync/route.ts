@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { syncAppointments } from '@/lib/services/google-calendar'
+import { logger } from '@/lib/logger'
 
 // POST /api/integrations/google-calendar/sync — Trigger sync
 export async function POST(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
       ...result,
     })
   } catch (err) {
-    console.error('Calendar sync error:', err)
+    logger.error({ err }, 'Calendar sync error:')
     return NextResponse.json({ error: 'Failed to sync calendar' }, { status: 500 })
   }
 }
@@ -73,7 +74,7 @@ export async function GET(req: NextRequest) {
       integration,
     })
   } catch (err) {
-    console.error('Error fetching sync status:', err)
+    logger.error({ err }, 'Error fetching sync status:')
     return NextResponse.json({ error: 'Failed to fetch sync status' }, { status: 500 })
   }
 }

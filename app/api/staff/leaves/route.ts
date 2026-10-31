@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get leave requests with filters
 export async function GET(request: NextRequest) {
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching leaves:', error)
+    logger.error({ err: error }, 'Error fetching leaves:')
     return NextResponse.json({ error: 'Failed to fetch leave requests' }, { status: 500 })
   }
 }
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(leave, { status: 201 })
   } catch (error) {
-    console.error('Error creating leave:', error)
+    logger.error({ err: error }, 'Error creating leave:')
     return NextResponse.json({ error: 'Failed to create leave request' }, { status: 500 })
   }
 }

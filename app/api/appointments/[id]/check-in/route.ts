@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // POST - Check in patient for appointment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json(updatedAppointment)
   } catch (error) {
-    console.error('Error checking in appointment:', error)
+    logger.error({ err: error }, 'Error checking in appointment:')
     return NextResponse.json({ error: 'Failed to check in' }, { status: 500 })
   }
 }

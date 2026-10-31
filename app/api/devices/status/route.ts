@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/devices/status — Get all devices and their statuses
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ devices, summary })
   } catch (err) {
-    console.error('Device status error:', err)
+    logger.error({ err }, 'Device status error:')
     return NextResponse.json({ error: 'Failed to fetch device statuses' }, { status: 500 })
   }
 }
@@ -107,7 +108,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updated)
   } catch (err) {
-    console.error('Device update error:', err)
+    logger.error({ err }, 'Device update error:')
     return NextResponse.json({ error: 'Failed to update device' }, { status: 500 })
   }
 }
@@ -138,7 +139,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ deleted: true })
   } catch (err) {
-    console.error('Device delete error:', err)
+    logger.error({ err }, 'Device delete error:')
     return NextResponse.json({ error: 'Failed to delete device' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // POST /api/integrations/google-calendar/disconnect — Remove integration
 export async function POST(req: NextRequest) {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Google Calendar disconnected' })
   } catch (err) {
-    console.error('Error disconnecting calendar:', err)
+    logger.error({ err }, 'Error disconnecting calendar:')
     return NextResponse.json({ error: 'Failed to disconnect calendar' }, { status: 500 })
   }
 }

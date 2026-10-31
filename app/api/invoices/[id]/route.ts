@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
 import { DiscountType, InvoiceStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - Get single invoice with full details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(invoice)
   } catch (error) {
-    console.error('Error fetching invoice:', error)
+    logger.error({ err: error }, 'Error fetching invoice:')
     return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 })
   }
 }
@@ -101,12 +102,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id, hospitalId },
       include: {
         payments: true,
+        patient: { select: { state: true } },
       },
     })
 
     if (!existingInvoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
+
+    // Clinic country/region for the tax provider + place-of-supply split.
+    const hospital = await prisma.hospital.findUnique({
+      where: { id: hospitalId },
+      select: { country: true, state: true },
+    })
 
     // Don't allow editing paid or refunded invoices
     if (existingInvoice.status === 'PAID' || existingInvoice.status === 'REFUNDED') {
@@ -155,7 +163,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         (discountType || existingInvoice.discountType) as DiscountType,
         discountValue !== undefined ? discountValue : Number(existingInvoice.discountValue),
         cgstRate,
-        sgstRate
+        sgstRate,
+        {
+          country: hospital?.country,
+          placeOfSupply: existingInvoice.patient?.state ?? undefined,
+          clinicRegion: hospital?.state ?? undefined,
+        }
       )
 
       updateData = {
@@ -169,6 +182,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         cgstAmount: calculatedTotals.cgstAmount,
         sgstRate,
         sgstAmount: calculatedTotals.sgstAmount,
+        taxComponents: calculatedTotals.taxComponents,
+        taxAmount: calculatedTotals.taxAmount,
         totalAmount: calculatedTotals.totalAmount,
         balanceAmount: calculatedTotals.totalAmount - Number(existingInvoice.paidAmount),
       }
@@ -255,7 +270,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(invoice)
   } catch (error) {
-    console.error('Error updating invoice:', error)
+    logger.error({ err: error }, 'Error updating invoice:')
     return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 })
   }
 }
@@ -325,7 +340,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Invoice deleted successfully' })
   } catch (error) {
-    console.error('Error deleting invoice:', error)
+    logger.error({ err: error }, 'Error deleting invoice:')
     return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 })
   }
 }

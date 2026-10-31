@@ -166,6 +166,59 @@ describe('Google Calendar Service', () => {
         })
       ).rejects.toThrow('Failed to create calendar event')
     })
+
+    it('uses the given clinic timezone with a floating local time', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ id: 'event-tz' }),
+      })
+
+      await createCalendarEvent(
+        'token',
+        'primary',
+        {
+          id: 'apt-1',
+          scheduledDate: '2026-03-10',
+          scheduledTime: '10:00',
+          duration: 30,
+          patientName: 'John Doe',
+          doctorName: 'Dr. Smith',
+          chiefComplaint: null,
+          appointmentType: 'CONSULTATION',
+        },
+        'America/New_York'
+      )
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(body.start.timeZone).toBe('America/New_York')
+      expect(body.end.timeZone).toBe('America/New_York')
+      // Floating local wall-clock time (no UTC 'Z'), interpreted in the zone.
+      expect(body.start.dateTime).toBe('2026-03-10T10:00:00')
+      expect(body.end.dateTime).toBe('2026-03-10T10:30:00')
+    })
+
+    it('defaults to Asia/Kolkata when no timezone is given', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ id: 'event-def' }),
+      })
+
+      await createCalendarEvent('token', 'primary', {
+        id: 'apt-1',
+        scheduledDate: '2026-03-10',
+        scheduledTime: '09:15',
+        duration: 60,
+        patientName: 'John',
+        doctorName: 'Dr. A',
+        chiefComplaint: null,
+        appointmentType: 'CHECKUP',
+      })
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(body.start.timeZone).toBe('Asia/Kolkata')
+      expect(body.start.dateTime).toBe('2026-03-10T09:15:00')
+      expect(body.end.dateTime).toBe('2026-03-10T10:15:00')
+    })
   })
 
   describe('deleteCalendarEvent', () => {

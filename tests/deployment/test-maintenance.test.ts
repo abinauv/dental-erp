@@ -252,14 +252,19 @@ describe('12.2 Git Hooks — Pre-commit & Pre-push', () => {
 
   it('lint-staged type checks the whole project, not individual files', () => {
     const config = readFile('lint-staged.config.mjs')
+    const pkg = JSON.parse(readFile('package.json'))
+    // The type-check runs as the whole-project `npm run typecheck` script, whose
     // `-p tsconfig.json` is what keeps the `@/*` path alias resolvable.
-    expect(config).toMatch(/tsc --noEmit -p tsconfig\.json/)
+    expect(config).toContain('npm run typecheck')
+    expect(pkg.scripts.typecheck).toMatch(/tsc --noEmit -p tsconfig\.json/)
   })
 
-  it('lint-staged runs eslint directly', () => {
-    // `next lint` was removed in Next.js 16.
+  it('lint-staged runs eslint directly, without auto-fixing', () => {
+    // `next lint` was removed in Next.js 16; and the hook must not rewrite code
+    // on commit (eslint --fix churns diffs after any rule change).
     const config = readFile('lint-staged.config.mjs')
-    expect(config).toContain('eslint --fix')
+    expect(config).toContain('eslint')
+    expect(config).not.toContain('eslint --fix')
     expect(config).not.toContain('next lint')
   })
 })

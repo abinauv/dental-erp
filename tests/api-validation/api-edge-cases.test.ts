@@ -69,10 +69,6 @@ vi.mock('@/lib/auth.config', () => ({
   default: {},
 }))
 
-vi.mock('next-auth', () => ({
-  default: vi.fn(),
-}))
-
 vi.mock('@/lib/api-helpers', () => ({
   requireRole: vi.fn(() => true),
   requireAuthAndRole: vi.fn(async () => mockSession),
@@ -83,10 +79,6 @@ vi.mock('@/lib/api-helpers', () => ({
     ENTERPRISE: { patients: -1, staff: -1 },
   },
   generateToken: vi.fn(() => 'test-token'),
-}))
-
-vi.mock('next-auth/next', () => ({
-  getServerSession: vi.fn(async () => mockSession),
 }))
 
 // ---------------------------------------------------------------------------

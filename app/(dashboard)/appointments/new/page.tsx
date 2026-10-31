@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -44,6 +45,9 @@ interface TimeSlot {
 
 export default function NewAppointmentPage() {
   const router = useRouter()
+  const t = useTranslations('appointments.new')
+  const tType = useTranslations('appointments.type')
+  const tPriority = useTranslations('appointments.priority')
   const searchParams = useSearchParams()
   const preselectedPatientId = searchParams.get('patientId')
 
@@ -128,7 +132,7 @@ export default function NewAppointmentPage() {
             setTimeSlots(data.slots)
           } else {
             setTimeSlots([])
-            setError(data.reason || 'No slots available')
+            setError(data.reason || t('noSlotsAvailable'))
           }
         }
       } catch (err) {
@@ -139,7 +143,7 @@ export default function NewAppointmentPage() {
     }
 
     fetchSlots()
-  }, [selectedDoctor, selectedDate, duration])
+  }, [selectedDoctor, selectedDate, duration, t])
 
   // Filter patients based on search
   const filteredPatients = patients.filter(
@@ -155,22 +159,22 @@ export default function NewAppointmentPage() {
     setError('')
 
     if (!selectedPatient) {
-      setError('Please select a patient')
+      setError(t('selectPatientError'))
       return
     }
 
     if (!selectedDoctor) {
-      setError('Please select a doctor')
+      setError(t('selectDoctorError'))
       return
     }
 
     if (!selectedDate) {
-      setError('Please select a date')
+      setError(t('selectDateError'))
       return
     }
 
     if (!selectedTime) {
-      setError('Please select a time slot')
+      setError(t('selectTimeError'))
       return
     }
 
@@ -197,7 +201,7 @@ export default function NewAppointmentPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to create appointment')
+        throw new Error(data.error || t('createFailed'))
       }
 
       router.push('/appointments')
@@ -240,8 +244,8 @@ export default function NewAppointmentPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Appointment</h1>
-          <p className="text-muted-foreground">Schedule a new appointment for a patient</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -252,9 +256,9 @@ export default function NewAppointmentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Patient
+                {t('patient')}
               </CardTitle>
-              <CardDescription>Select the patient for this appointment</CardDescription>
+              <CardDescription>{t('patientDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedPatient ? (
@@ -273,7 +277,7 @@ export default function NewAppointmentPage() {
                       size="sm"
                       onClick={() => setSelectedPatient(null)}
                     >
-                      Change
+                      {t('change')}
                     </Button>
                   </div>
                 </div>
@@ -282,7 +286,7 @@ export default function NewAppointmentPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="Search patient by name, phone, or ID..."
+                      placeholder={t('searchPatient')}
                       value={patientSearch}
                       onChange={(e) => setPatientSearch(e.target.value)}
                       className="pl-9"
@@ -291,10 +295,10 @@ export default function NewAppointmentPage() {
                   <div className="max-h-48 overflow-y-auto rounded-lg border">
                     {filteredPatients.length === 0 ? (
                       <div className="p-4 text-center text-muted-foreground">
-                        <p>No patients found</p>
+                        <p>{t('noPatients')}</p>
                         <Link href="/patients/new">
                           <Button variant="link" size="sm">
-                            Add New Patient
+                            {t('addPatient')}
                           </Button>
                         </Link>
                       </div>
@@ -330,22 +334,28 @@ export default function NewAppointmentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Schedule
+                {t('schedule')}
               </CardTitle>
-              <CardDescription>Select doctor, date, and time for the appointment</CardDescription>
+              <CardDescription>{t('scheduleDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Doctor *</Label>
+                <Label>{t('doctor')}</Label>
                 <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a doctor" />
+                    <SelectValue placeholder={t('selectDoctor')} />
                   </SelectTrigger>
                   <SelectContent>
                     {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id}>
-                        Dr. {doctor.firstName} {doctor.lastName}
-                        {doctor.specialization && ` (${doctor.specialization})`}
+                        {doctor.specialization
+                          ? t('doctorNameSpec', {
+                              name: `${doctor.firstName} ${doctor.lastName}`,
+                              spec: doctor.specialization,
+                            })
+                          : t('doctorName', {
+                              name: `${doctor.firstName} ${doctor.lastName}`,
+                            })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -354,7 +364,7 @@ export default function NewAppointmentPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Date *</Label>
+                  <Label>{t('date')}</Label>
                   <Input
                     type="date"
                     value={selectedDate}
@@ -366,18 +376,18 @@ export default function NewAppointmentPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Duration</Label>
+                  <Label>{t('duration')}</Label>
                   <Select value={duration} onValueChange={setDuration}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="45">45 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="90">1.5 hours</SelectItem>
-                      <SelectItem value="120">2 hours</SelectItem>
+                      <SelectItem value="15">{t('durations.15')}</SelectItem>
+                      <SelectItem value="30">{t('durations.30')}</SelectItem>
+                      <SelectItem value="45">{t('durations.45')}</SelectItem>
+                      <SelectItem value="60">{t('durations.60')}</SelectItem>
+                      <SelectItem value="90">{t('durations.90')}</SelectItem>
+                      <SelectItem value="120">{t('durations.120')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -385,20 +395,16 @@ export default function NewAppointmentPage() {
 
               {/* Time Slots */}
               <div className="space-y-2">
-                <Label>Time Slot *</Label>
+                <Label>{t('timeSlot')}</Label>
                 {loadingSlots ? (
                   <div className="flex items-center gap-2 p-4 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading available slots...
+                    {t('loadingSlots')}
                   </div>
                 ) : !selectedDoctor || !selectedDate ? (
-                  <p className="p-4 text-sm text-muted-foreground">
-                    Select doctor and date to see available slots
-                  </p>
+                  <p className="p-4 text-sm text-muted-foreground">{t('selectDoctorDate')}</p>
                 ) : timeSlots.length === 0 ? (
-                  <p className="p-4 text-sm text-muted-foreground">
-                    No available slots for this date
-                  </p>
+                  <p className="p-4 text-sm text-muted-foreground">{t('noSlots')}</p>
                 ) : (
                   <div className="grid grid-cols-4 gap-2">
                     {timeSlots.map((slot) => (
@@ -432,55 +438,55 @@ export default function NewAppointmentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Appointment Details
+                {t('appointmentDetails')}
               </CardTitle>
-              <CardDescription>Additional information about the appointment</CardDescription>
+              <CardDescription>{t('appointmentDetailsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>Appointment Type</Label>
+                  <Label>{t('appointmentType')}</Label>
                   <Select value={appointmentType} onValueChange={setAppointmentType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CONSULTATION">Consultation</SelectItem>
-                      <SelectItem value="PROCEDURE">Procedure</SelectItem>
-                      <SelectItem value="FOLLOW_UP">Follow Up</SelectItem>
-                      <SelectItem value="EMERGENCY">Emergency</SelectItem>
-                      <SelectItem value="CHECK_UP">Check Up</SelectItem>
+                      <SelectItem value="CONSULTATION">{tType('CONSULTATION')}</SelectItem>
+                      <SelectItem value="PROCEDURE">{tType('PROCEDURE')}</SelectItem>
+                      <SelectItem value="FOLLOW_UP">{tType('FOLLOW_UP')}</SelectItem>
+                      <SelectItem value="EMERGENCY">{tType('EMERGENCY')}</SelectItem>
+                      <SelectItem value="CHECK_UP">{tType('CHECK_UP')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Priority</Label>
+                  <Label>{t('priority')}</Label>
                   <Select value={priority} onValueChange={setPriority}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="LOW">Low</SelectItem>
-                      <SelectItem value="NORMAL">Normal</SelectItem>
-                      <SelectItem value="HIGH">High</SelectItem>
-                      <SelectItem value="URGENT">Urgent</SelectItem>
+                      <SelectItem value="LOW">{tPriority('LOW')}</SelectItem>
+                      <SelectItem value="NORMAL">{tPriority('NORMAL')}</SelectItem>
+                      <SelectItem value="HIGH">{tPriority('HIGH')}</SelectItem>
+                      <SelectItem value="URGENT">{tPriority('URGENT')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Chair Number</Label>
+                  <Label>{t('chairNumber')}</Label>
                   <Select value={chairNumber} onValueChange={setChairNumber}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select chair" />
+                      <SelectValue placeholder={t('selectChair')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Chair 1</SelectItem>
-                      <SelectItem value="2">Chair 2</SelectItem>
-                      <SelectItem value="3">Chair 3</SelectItem>
-                      <SelectItem value="4">Chair 4</SelectItem>
-                      <SelectItem value="5">Chair 5</SelectItem>
+                      <SelectItem value="1">{t('chair', { number: 1 })}</SelectItem>
+                      <SelectItem value="2">{t('chair', { number: 2 })}</SelectItem>
+                      <SelectItem value="3">{t('chair', { number: 3 })}</SelectItem>
+                      <SelectItem value="4">{t('chair', { number: 4 })}</SelectItem>
+                      <SelectItem value="5">{t('chair', { number: 5 })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -489,28 +495,26 @@ export default function NewAppointmentPage() {
                   <div className="space-y-0.5">
                     <Label className="flex items-center gap-2">
                       <Video className="h-4 w-4 text-blue-600" />
-                      Virtual Visit (Video Consultation)
+                      {t('virtualVisit')}
                     </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Enable to create a tele-dentistry video consultation for this appointment
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t('virtualVisitDesc')}</p>
                   </div>
                   <Switch checked={isVirtual} onCheckedChange={setIsVirtual} />
                 </div>
 
                 <div className="space-y-2 md:col-span-3">
-                  <Label>Chief Complaint</Label>
+                  <Label>{t('chiefComplaint')}</Label>
                   <Input
-                    placeholder="Patient's main concern or reason for visit"
+                    placeholder={t('chiefComplaintPlaceholder')}
                     value={chiefComplaint}
                     onChange={(e) => setChiefComplaint(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2 md:col-span-3">
-                  <Label>Notes</Label>
+                  <Label>{t('notes')}</Label>
                   <Input
-                    placeholder="Additional notes about the appointment"
+                    placeholder={t('notesPlaceholder')}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                   />
@@ -529,19 +533,19 @@ export default function NewAppointmentPage() {
         <div className="mt-6 flex justify-end gap-4">
           <Link href="/appointments">
             <Button type="button" variant="outline">
-              Cancel
+              {t('cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                {t('creating')}
               </>
             ) : (
               <>
                 <Calendar className="mr-2 h-4 w-4" />
-                Book Appointment
+                {t('bookAppointment')}
               </>
             )}
           </Button>

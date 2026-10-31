@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { getDateRangeFromPreset } from '@/lib/billing-utils'
+import { logger } from '@/lib/logger'
 
 // GET - Generate billing reports
 export async function GET(request: NextRequest) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
   } catch (error) {
-    console.error('Error generating report:', error)
+    logger.error({ err: error }, 'Error generating report:')
     return NextResponse.json(
       {
         error: 'Failed to generate report',
@@ -182,6 +183,7 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
       discountAmount: true,
       cgstAmount: true,
       sgstAmount: true,
+      taxAmount: true,
     },
     orderBy: { createdAt: 'asc' },
   })
@@ -214,7 +216,10 @@ async function getRevenueReport(startDate: Date, endDate: Date, hospitalId: stri
     dailyRevenue[dateKey].billed += Number(invoice.totalAmount)
     dailyRevenue[dateKey].collected += Number(invoice.paidAmount)
     dailyRevenue[dateKey].discount += Number(invoice.discountAmount)
-    dailyRevenue[dateKey].tax += Number(invoice.cgstAmount) + Number(invoice.sgstAmount)
+    // taxAmount is the country-agnostic scalar total (IGST/VAT included); it is
+    // backfilled from cgst+sgst for historical rows, but guard just in case.
+    dailyRevenue[dateKey].tax +=
+      Number(invoice.taxAmount) || Number(invoice.cgstAmount) + Number(invoice.sgstAmount)
     dailyRevenue[dateKey].count += 1
   })
 

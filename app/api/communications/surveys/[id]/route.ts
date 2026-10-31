@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const updateSurveySchema = z.object({
   title: z.string().optional(),
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       data: parsedSurvey,
     })
   } catch (error: any) {
-    console.error('Get survey error:', error)
+    logger.error({ err: error }, 'Get survey error:')
     return NextResponse.json({ error: error.message || 'Failed to get survey' }, { status: 500 })
   }
 }
@@ -103,7 +104,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data: survey,
     })
   } catch (error: any) {
-    console.error('Update survey error:', error)
+    logger.error({ err: error }, 'Update survey error:')
     return NextResponse.json({ error: error.message || 'Failed to update survey' }, { status: 500 })
   }
 }
@@ -141,7 +142,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       message: 'Survey deleted successfully',
     })
   } catch (error: any) {
-    console.error('Delete survey error:', error)
+    logger.error({ err: error }, 'Delete survey error:')
     return NextResponse.json({ error: error.message || 'Failed to delete survey' }, { status: 500 })
   }
 }

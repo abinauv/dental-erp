@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -34,7 +36,7 @@ import {
   AlertCircle,
   GripVertical,
 } from 'lucide-react'
-import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
+import { procedureCategoryConfig } from '@/lib/treatment-utils'
 
 interface Patient {
   id: string
@@ -65,6 +67,9 @@ interface PlanItem {
 
 export default function NewTreatmentPlanPage() {
   const router = useRouter()
+  const t = useTranslations('treatments.planNew')
+  const tCategory = useTranslations('treatments.category')
+  const fmt = useClinicFormatters()
   const searchParams = useSearchParams()
   const preselectedPatientId = searchParams.get('patientId')
 
@@ -177,17 +182,17 @@ export default function NewTreatmentPlanPage() {
     setError('')
 
     if (!selectedPatient) {
-      setError('Please select a patient')
+      setError(t('selectPatientError'))
       return
     }
 
     if (!title) {
-      setError('Please enter a title for the treatment plan')
+      setError(t('titleError'))
       return
     }
 
     if (items.length === 0) {
-      setError('Please add at least one procedure to the plan')
+      setError(t('itemsError'))
       return
     }
 
@@ -215,7 +220,7 @@ export default function NewTreatmentPlanPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to create treatment plan')
+        throw new Error(data.error || t('createFailed'))
       }
 
       const plan = await response.json()
@@ -237,10 +242,8 @@ export default function NewTreatmentPlanPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Treatment Plan</h1>
-          <p className="text-muted-foreground">
-            Create a comprehensive treatment plan for a patient
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -257,7 +260,7 @@ export default function NewTreatmentPlanPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Patient
+              {t('patient')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -277,7 +280,7 @@ export default function NewTreatmentPlanPage() {
                   </div>
                 </div>
                 <Button type="button" variant="outline" onClick={() => setSelectedPatient(null)}>
-                  Change
+                  {t('change')}
                 </Button>
               </div>
             ) : (
@@ -285,7 +288,7 @@ export default function NewTreatmentPlanPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search patients..."
+                    placeholder={t('searchPatients')}
                     value={patientSearch}
                     onChange={(e) => setPatientSearch(e.target.value)}
                     className="pl-9"
@@ -321,33 +324,33 @@ export default function NewTreatmentPlanPage() {
         {/* Plan Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Plan Details</CardTitle>
+            <CardTitle>{t('planDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">{t('planTitle')}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Full Mouth Rehabilitation, Orthodontic Treatment"
+                placeholder={t('titlePlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t('notes')}</Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional notes about the treatment plan..."
+                placeholder={t('notesPlaceholder')}
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Expected Start Date</Label>
+                <Label htmlFor="startDate">{t('startDate')}</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -356,7 +359,7 @@ export default function NewTreatmentPlanPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="expectedEndDate">Expected End Date</Label>
+                <Label htmlFor="expectedEndDate">{t('endDate')}</Label>
                 <Input
                   id="expectedEndDate"
                   type="date"
@@ -371,30 +374,30 @@ export default function NewTreatmentPlanPage() {
         {/* Procedures */}
         <Card>
           <CardHeader>
-            <CardTitle>Procedures</CardTitle>
-            <CardDescription>
-              Add procedures to the treatment plan in order of priority
-            </CardDescription>
+            <CardTitle>{t('procedures')}</CardTitle>
+            <CardDescription>{t('proceduresDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Add Procedure Form */}
             <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Procedure</Label>
+                  <Label>{t('procedure')}</Label>
                   <Select value={selectedProcedureId} onValueChange={setSelectedProcedureId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select procedure" />
+                      <SelectValue placeholder={t('selectProcedure')} />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(groupedProcedures).map(([category, procs]) => (
                         <div key={category}>
                           <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                            {procedureCategoryConfig[category]?.label || category}
+                            {tCategory.has(category)
+                              ? tCategory(category)
+                              : procedureCategoryConfig[category]?.label || category}
                           </div>
                           {procs.map((proc) => (
                             <SelectItem key={proc.id} value={proc.id}>
-                              {proc.code} - {proc.name}
+                              {t('procedureOption', { code: proc.code, name: proc.name })}
                             </SelectItem>
                           ))}
                         </div>
@@ -403,17 +406,17 @@ export default function NewTreatmentPlanPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tooth Numbers</Label>
+                  <Label>{t('toothNumbers')}</Label>
                   <Input
                     value={itemToothNumbers}
                     onChange={(e) => setItemToothNumbers(e.target.value)}
-                    placeholder="e.g., 11,12,13 or 11-13"
+                    placeholder={t('toothPlaceholder')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Estimated Cost</Label>
+                  <Label>{t('estimatedCost')}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -421,17 +424,21 @@ export default function NewTreatmentPlanPage() {
                     onChange={(e) => setItemCost(e.target.value)}
                     placeholder={
                       selectedProcedureId
-                        ? `Default: ${formatCurrency(procedures.find((p) => p.id === selectedProcedureId)?.basePrice || 0)}`
-                        : 'Enter cost'
+                        ? t('costDefault', {
+                            price: fmt.formatCurrency(
+                              procedures.find((p) => p.id === selectedProcedureId)?.basePrice || 0
+                            ),
+                          })
+                        : t('costPlaceholder')
                     }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Notes</Label>
+                  <Label>{t('itemNotes')}</Label>
                   <Input
                     value={itemNotes}
                     onChange={(e) => setItemNotes(e.target.value)}
-                    placeholder="Procedure notes..."
+                    placeholder={t('itemNotesPlaceholder')}
                   />
                 </div>
               </div>
@@ -442,7 +449,7 @@ export default function NewTreatmentPlanPage() {
                 disabled={!selectedProcedureId}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Procedure
+                {t('addProcedure')}
               </Button>
             </div>
 
@@ -453,9 +460,9 @@ export default function NewTreatmentPlanPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
-                      <TableHead>Procedure</TableHead>
-                      <TableHead>Teeth</TableHead>
-                      <TableHead>Cost</TableHead>
+                      <TableHead>{t('colProcedure')}</TableHead>
+                      <TableHead>{t('colTeeth')}</TableHead>
+                      <TableHead>{t('colCost')}</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -475,11 +482,13 @@ export default function NewTreatmentPlanPage() {
                             variant="outline"
                             className={`mt-1 ${procedureCategoryConfig[item.category]?.bgColor} ${procedureCategoryConfig[item.category]?.color} border-0`}
                           >
-                            {procedureCategoryConfig[item.category]?.label}
+                            {tCategory.has(item.category)
+                              ? tCategory(item.category)
+                              : procedureCategoryConfig[item.category]?.label}
                           </Badge>
                         </TableCell>
                         <TableCell>{item.toothNumbers || '-'}</TableCell>
-                        <TableCell>{formatCurrency(item.estimatedCost)}</TableCell>
+                        <TableCell>{fmt.formatCurrency(item.estimatedCost)}</TableCell>
                         <TableCell>
                           <Button
                             type="button"
@@ -494,10 +503,10 @@ export default function NewTreatmentPlanPage() {
                     ))}
                     <TableRow>
                       <TableCell colSpan={3} className="text-right font-medium">
-                        Total Estimated Cost:
+                        {t('totalCost')}
                       </TableCell>
                       <TableCell className="font-bold text-lg">
-                        {formatCurrency(calculateTotalCost())}
+                        {fmt.formatCurrency(calculateTotalCost())}
                       </TableCell>
                       <TableCell></TableCell>
                     </TableRow>
@@ -512,16 +521,16 @@ export default function NewTreatmentPlanPage() {
         <div className="flex justify-end gap-4">
           <Link href="/treatments/plans">
             <Button type="button" variant="outline">
-              Cancel
+              {t('cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={loading}>
             {loading ? (
-              'Creating...'
+              t('creating')
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Create Treatment Plan
+                {t('createPlan')}
               </>
             )}
           </Button>

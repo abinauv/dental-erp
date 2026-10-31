@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface CalendarStatus {
   connected: boolean
@@ -30,257 +31,279 @@ interface CalendarStatus {
   } | null
 }
 
+type ProviderKey = 'google' | 'outlook'
+
+interface ProviderConfig {
+  key: ProviderKey
+  name: string
+  base: string
+  descKey: 'gcalDesc' | 'outlookDesc'
+  envVars: string
+  iconBg: string
+  iconColor: string
+}
+
+// Both calendar providers share one backend shape (CalendarIntegration rows keyed
+// by provider) and one set of REST routes, so a single card renders each from the
+// same config.
+const PROVIDERS: ProviderConfig[] = [
+  {
+    key: 'google',
+    name: 'Google Calendar',
+    base: '/api/integrations/google-calendar',
+    descKey: 'gcalDesc',
+    envVars: 'GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET',
+    iconBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+  },
+  {
+    key: 'outlook',
+    name: 'Outlook Calendar',
+    base: '/api/integrations/outlook-calendar',
+    descKey: 'outlookDesc',
+    envVars: 'OUTLOOK_CALENDAR_CLIENT_ID and OUTLOOK_CALENDAR_CLIENT_SECRET',
+    iconBg: 'bg-sky-50',
+    iconColor: 'text-sky-700',
+  },
+]
+
 export default function IntegrationsPage() {
+  const t = useTranslations('settings.integrations')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const searchParams = useSearchParams()
-  const [calendarStatus, setCalendarStatus] = useState<CalendarStatus | null>(null)
+  const [statuses, setStatuses] = useState<Record<ProviderKey, CalendarStatus | null>>({
+    google: null,
+    outlook: null,
+  })
   const [loading, setLoading] = useState(true)
-  const [connecting, setConnecting] = useState(false)
-  const [syncing, setSyncing] = useState(false)
-  const [disconnecting, setDisconnecting] = useState(false)
+  const [connecting, setConnecting] = useState<ProviderKey | null>(null)
+  const [syncing, setSyncing] = useState<ProviderKey | null>(null)
+  const [disconnecting, setDisconnecting] = useState<ProviderKey | null>(null)
 
   // Show success/error from OAuth callback
   useEffect(() => {
     const success = searchParams.get('success')
     const error = searchParams.get('error')
     if (success === 'connected') {
-      toast({ title: 'Google Calendar connected successfully' })
+      toast({ title: t('connectedToast') })
     } else if (error) {
       const messages: Record<string, string> = {
-        denied: 'Calendar access was denied',
-        missing_params: 'Missing parameters from Google',
-        invalid_state: 'Invalid session state',
-        token_exchange: 'Failed to exchange authentication token',
+        denied: t('errDenied'),
+        missing_params: t('errMissingParams'),
+        invalid_state: t('errInvalidState'),
+        token_exchange: t('errTokenExchange'),
       }
       toast({
         variant: 'destructive',
-        title: 'Connection Failed',
-        description: messages[error] || 'An error occurred',
+        title: t('connectionFailed'),
+        description: messages[error] || t('genericError'),
       })
     }
-  }, [searchParams, toast])
+  }, [searchParams, toast, t])
 
   useEffect(() => {
-    fetchCalendarStatus()
+    fetchStatuses()
   }, [])
 
-  const fetchCalendarStatus = async () => {
+  const fetchStatuses = async () => {
     try {
       setLoading(true)
-      const res = await fetch('/api/integrations/google-calendar/sync')
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      setCalendarStatus(data)
-    } catch {
-      setCalendarStatus({ connected: false, integration: null })
+      const results = await Promise.all(
+        PROVIDERS.map(async (p) => {
+          try {
+            const res = await fetch(`${p.base}/sync`)
+            if (!res.ok) throw new Error()
+            return [p.key, (await res.json()) as CalendarStatus] as const
+          } catch {
+            return [p.key, { connected: false, integration: null }] as const
+          }
+        })
+      )
+      setStatuses(Object.fromEntries(results) as Record<ProviderKey, CalendarStatus>)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleConnect = async () => {
+  const handleConnect = async (p: ProviderConfig) => {
     try {
-      setConnecting(true)
-      const res = await fetch('/api/integrations/google-calendar/auth')
+      setConnecting(p.key)
+      const res = await fetch(`${p.base}/auth`)
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || 'Failed to start connection')
+        throw new Error(err.error || t('startConnectionFailed'))
       }
       const data = await res.json()
       window.location.href = data.authUrl
     } catch (err: any) {
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: t('error'),
         description: err.message,
       })
-      setConnecting(false)
+      setConnecting(null)
     }
   }
 
-  const handleSync = async () => {
+  const handleSync = async (p: ProviderConfig) => {
     try {
-      setSyncing(true)
-      const res = await fetch('/api/integrations/google-calendar/sync', {
-        method: 'POST',
-      })
+      setSyncing(p.key)
+      const res = await fetch(`${p.base}/sync`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: 'Sync Complete', description: data.message })
-      fetchCalendarStatus()
+      toast({ title: t('syncComplete'), description: data.message })
+      fetchStatuses()
     } catch (err: any) {
       toast({
         variant: 'destructive',
-        title: 'Sync Failed',
+        title: t('syncFailed'),
         description: err.message,
       })
     } finally {
-      setSyncing(false)
+      setSyncing(null)
     }
   }
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = async (p: ProviderConfig) => {
     const ok = await confirm({
-      title: 'Disconnect Google Calendar?',
-      description: "Your synced events won't be removed from Google.",
-      confirmLabel: 'Yes, proceed',
+      title: t('disconnectTitle', { provider: p.name }),
+      description: t('disconnectDesc', { provider: p.name }),
+      confirmLabel: t('disconnectConfirm'),
     })
     if (!ok) return
     try {
-      setDisconnecting(true)
-      const res = await fetch('/api/integrations/google-calendar/disconnect', {
-        method: 'POST',
-      })
-      if (!res.ok) throw new Error('Failed to disconnect')
-      toast({ title: 'Google Calendar disconnected' })
-      setCalendarStatus({ connected: false, integration: null })
+      setDisconnecting(p.key)
+      const res = await fetch(`${p.base}/disconnect`, { method: 'POST' })
+      if (!res.ok) throw new Error(t('disconnectFailed'))
+      toast({ title: t('disconnectedToast', { provider: p.name }) })
+      setStatuses((prev) => ({ ...prev, [p.key]: { connected: false, integration: null } }))
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message })
+      toast({ variant: 'destructive', title: t('error'), description: err.message })
     } finally {
-      setDisconnecting(false)
+      setDisconnecting(null)
     }
   }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Integrations</h1>
-        <p className="text-muted-foreground">Connect external services to enhance your workflow</p>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
-      {/* Google Calendar */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle>Google Calendar</CardTitle>
-                <CardDescription>
-                  Sync your appointments to Google Calendar automatically
-                </CardDescription>
-              </div>
-            </div>
-            {!loading && (
-              <Badge variant={calendarStatus?.connected ? 'default' : 'secondary'}>
-                {calendarStatus?.connected ? 'Connected' : 'Not Connected'}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading...
-            </div>
-          ) : calendarStatus?.connected ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Calendar ID</p>
-                  <p className="font-medium">
-                    {calendarStatus.integration?.calendarId || 'primary'}
-                  </p>
+      {PROVIDERS.map((p) => {
+        const status = statuses[p.key]
+        return (
+          <Card key={p.key}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-lg ${p.iconBg}`}
+                  >
+                    <Calendar className={`h-6 w-6 ${p.iconColor}`} />
+                  </div>
+                  <div>
+                    <CardTitle>{p.name}</CardTitle>
+                    <CardDescription>{t(p.descKey)}</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Connected Since</p>
-                  <p className="font-medium">
-                    {calendarStatus.integration?.createdAt
-                      ? format(new Date(calendarStatus.integration.createdAt), 'PPP')
-                      : '—'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Last Sync</p>
-                  <p className="font-medium">
-                    {calendarStatus.integration?.lastSyncAt
-                      ? format(new Date(calendarStatus.integration.lastSyncAt), 'PPp')
-                      : 'Never'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Status</p>
-                  <p className="font-medium flex items-center gap-1">
-                    <Check className="h-4 w-4 text-green-600" />
-                    {calendarStatus.integration?.syncEnabled ? 'Sync Enabled' : 'Sync Disabled'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleSync} disabled={syncing}>
-                  {syncing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <RefreshCcw className="h-4 w-4 mr-2" />
-                  )}
-                  Sync Now
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleDisconnect}
-                  disabled={disconnecting}
-                  className="text-destructive"
-                >
-                  {disconnecting ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Unplug className="h-4 w-4 mr-2" />
-                  )}
-                  Disconnect
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Connect your Google Calendar to automatically sync appointments. When you create or
-                update appointments in the system, they'll appear on your Google Calendar.
-              </p>
-              <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                <p className="text-xs text-amber-800">
-                  Requires Google Calendar API credentials configured by the system administrator
-                  (GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET environment
-                  variables).
-                </p>
-              </div>
-              <Button onClick={handleConnect} disabled={connecting}>
-                {connecting ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                {!loading && (
+                  <Badge variant={status?.connected ? 'default' : 'secondary'}>
+                    {status?.connected ? t('connected') : t('notConnected')}
+                  </Badge>
                 )}
-                Connect Google Calendar
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('loading')}
+                </div>
+              ) : status?.connected ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">{t('calendarId')}</p>
+                      <p className="font-medium">{status.integration?.calendarId || 'primary'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('connectedSince')}</p>
+                      <p className="font-medium">
+                        {status.integration?.createdAt
+                          ? fmt.formatDate(status.integration.createdAt)
+                          : '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('lastSync')}</p>
+                      <p className="font-medium">
+                        {status.integration?.lastSyncAt
+                          ? fmt.formatDateTime(status.integration.lastSyncAt)
+                          : t('never')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('statusLabel')}</p>
+                      <p className="font-medium flex items-center gap-1">
+                        <Check className="h-4 w-4 text-green-600" />
+                        {status.integration?.syncEnabled ? t('syncEnabled') : t('syncDisabled')}
+                      </p>
+                    </div>
+                  </div>
 
-      {/* Future integrations placeholder */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50">
-              <Calendar className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div>
-              <CardTitle className="text-muted-foreground">Microsoft Outlook Calendar</CardTitle>
-              <CardDescription>Coming soon</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Outlook Calendar integration is planned for a future update.
-          </p>
-        </CardContent>
-      </Card>
+                  <div className="flex gap-2">
+                    <Button onClick={() => handleSync(p)} disabled={syncing === p.key}>
+                      {syncing === p.key ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                      )}
+                      {t('syncNow')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDisconnect(p)}
+                      disabled={disconnecting === p.key}
+                      className="text-destructive"
+                    >
+                      {disconnecting === p.key ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Unplug className="h-4 w-4 mr-2" />
+                      )}
+                      {t('disconnect')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('connectIntro', { provider: p.name })}
+                  </p>
+                  <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                    <p className="text-xs text-amber-800">
+                      {t('credentialsNote', { envVars: p.envVars })}
+                    </p>
+                  </div>
+                  <Button onClick={() => handleConnect(p)} disabled={connecting === p.key}>
+                    {connecting === p.key ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                    )}
+                    {t('connectButton', { provider: p.name })}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })}
       {ConfirmDialogComponent}
     </div>
   )

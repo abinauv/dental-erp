@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const submitResponseSchema = z.object({
   patientId: z.string().optional(),
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       message: 'Thank you for your feedback!',
     })
   } catch (error: any) {
-    console.error('Submit survey response error:', error)
+    logger.error({ err: error }, 'Submit survey response error:')
     return NextResponse.json(
       { error: error.message || 'Failed to submit response' },
       { status: 500 }
@@ -127,7 +128,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     })
   } catch (error: any) {
-    console.error('Get survey responses error:', error)
+    logger.error({ err: error }, 'Get survey responses error:')
     return NextResponse.json({ error: error.message || 'Failed to get responses' }, { status: 500 })
   }
 }

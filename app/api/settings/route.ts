@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const updateSettingSchema = z.object({
   key: z.string(),
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
       grouped,
     })
   } catch (error: any) {
-    console.error('Get settings error:', error)
+    logger.error({ err: error }, 'Get settings error:')
     return NextResponse.json({ error: error.message || 'Failed to get settings' }, { status: 500 })
   }
 }
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
       data: setting,
     })
   } catch (error: any) {
-    console.error('Update setting error:', error)
+    logger.error({ err: error }, 'Update setting error:')
     return NextResponse.json(
       { error: error.message || 'Failed to update setting' },
       { status: 500 }
@@ -135,7 +136,7 @@ export async function PUT(req: NextRequest) {
       count: results.length,
     })
   } catch (error: any) {
-    console.error('Bulk update settings error:', error)
+    logger.error({ err: error }, 'Bulk update settings error:')
     return NextResponse.json(
       { error: error.message || 'Failed to update settings' },
       { status: 500 }

@@ -12,6 +12,8 @@ import {
   formatDate as baseFormatDate,
   formatDateTime as baseFormatDateTime,
 } from '@/lib/i18n/format'
+import { getTaxProvider, type TaxComponent } from '@/lib/tax'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 
 // Invoice Status Configuration
 export const invoiceStatusConfig: Record<
@@ -286,13 +288,25 @@ export function calculateDiscount(
   }
 }
 
+// Optional tax context: which country's provider to use and, for India, where
+// the supply is consumed (patient region) versus the clinic's own region, which
+// decides the intra-state (CGST+SGST) vs inter-state (IGST) split. Omitted, it
+// behaves exactly as before: India GST, intra-state, CGST+SGST at cgstRate/sgstRate.
+export interface InvoiceTaxContext {
+  country?: string
+  placeOfSupply?: string
+  clinicRegion?: string
+  igstRate?: number
+}
+
 // Calculate invoice totals
 export function calculateInvoiceTotals(
   items: Array<{ quantity: number; unitPrice: number; taxable: boolean }>,
   discountType: DiscountType = 'FIXED',
   discountValue: number = 0,
   cgstRate: number = gstConfig.cgstRate,
-  sgstRate: number = gstConfig.sgstRate
+  sgstRate: number = gstConfig.sgstRate,
+  taxContext?: InvoiceTaxContext
 ): {
   subtotal: number
   discountAmount: number
@@ -302,6 +316,8 @@ export function calculateInvoiceTotals(
   sgstAmount: number
   totalTax: number
   totalAmount: number
+  taxComponents: TaxComponent[]
+  taxAmount: number
 } {
   // Calculate subtotals
   let taxableSubtotal = 0
@@ -327,10 +343,21 @@ export function calculateInvoiceTotals(
   const taxableAmount = taxableSubtotal - taxableDiscount
   const nonTaxableAmount = nonTaxableSubtotal - (discountAmount - taxableDiscount)
 
-  // Calculate GST only on taxable amount
-  const cgstAmount = (taxableAmount * cgstRate) / 100
-  const sgstAmount = (taxableAmount * sgstRate) / 100
-  const totalTax = cgstAmount + sgstAmount
+  // Compute tax on the taxable amount via the country's provider. With no
+  // context this resolves to India GST intra-state (CGST+SGST), identical to
+  // the previous inline maths.
+  const provider = getTaxProvider(taxContext?.country)
+  const taxResult = provider.calculate(taxableAmount, {
+    placeOfSupply: taxContext?.placeOfSupply,
+    clinicRegion: taxContext?.clinicRegion,
+    rates: { cgstRate, sgstRate, igstRate: taxContext?.igstRate },
+  })
+
+  // Legacy CGST/SGST columns, derived from the component list so existing GST
+  // invoices stay byte-identical (0 for IGST/VAT/sales-tax breakdowns).
+  const cgstAmount = taxResult.components.find((c) => c.code === 'CGST')?.amount ?? 0
+  const sgstAmount = taxResult.components.find((c) => c.code === 'SGST')?.amount ?? 0
+  const totalTax = taxResult.totalTax
 
   const totalAmount = taxableAmount + nonTaxableAmount + totalTax
 
@@ -339,10 +366,12 @@ export function calculateInvoiceTotals(
     discountAmount: Math.round(discountAmount * 100) / 100,
     taxableAmount: Math.round(taxableAmount * 100) / 100,
     nonTaxableAmount: Math.round(nonTaxableAmount * 100) / 100,
-    cgstAmount: Math.round(cgstAmount * 100) / 100,
-    sgstAmount: Math.round(sgstAmount * 100) / 100,
-    totalTax: Math.round(totalTax * 100) / 100,
+    cgstAmount,
+    sgstAmount,
+    totalTax,
     totalAmount: Math.round(totalAmount * 100) / 100,
+    taxComponents: taxResult.components,
+    taxAmount: taxResult.totalTax,
   }
 }
 
@@ -550,8 +579,35 @@ export function calculateDueDate(invoiceDate: Date, paymentTermDays: number): Da
   return dueDate
 }
 
-// Number to words (Indian format) for invoice amounts
-export function numberToWords(num: number): string {
+// Major/minor currency unit names for the amount-in-words line. Falls back to
+// the ISO code as the major unit and generic "Cents" for the minor.
+const CURRENCY_WORDS: Record<string, { major: string; minor: string }> = {
+  INR: { major: 'Rupees', minor: 'Paise' },
+  USD: { major: 'Dollars', minor: 'Cents' },
+  EUR: { major: 'Euros', minor: 'Cents' },
+  GBP: { major: 'Pounds', minor: 'Pence' },
+  AED: { major: 'Dirhams', minor: 'Fils' },
+  SGD: { major: 'Dollars', minor: 'Cents' },
+  AUD: { major: 'Dollars', minor: 'Cents' },
+  CAD: { major: 'Dollars', minor: 'Cents' },
+  JPY: { major: 'Yen', minor: 'Sen' },
+}
+
+/**
+ * Amount in words for an invoice, e.g. "One Thousand One Hundred Eighty Rupees
+ * Only". The numbering system follows the currency — INR uses the Indian
+ * Lakh/Crore grouping, every other currency uses short-scale
+ * (Thousand/Million/Billion/Trillion) — and the unit names follow the currency.
+ * With no options it defaults to INR, so existing invoices are unchanged.
+ */
+export function numberToWords(
+  num: number,
+  options: { currency?: string; locale?: string } = {}
+): string {
+  const currency = (options.currency ?? getLocaleDefaults(options.locale).currency).toUpperCase()
+  const units = CURRENCY_WORDS[currency] ?? { major: currency, minor: 'Cents' }
+  const useIndianSystem = currency === 'INR'
+
   if (num === 0) return 'Zero'
 
   const ones = [
@@ -590,8 +646,6 @@ export function numberToWords(num: number): string {
     'Ninety',
   ]
 
-  const scales = ['', 'Thousand', 'Lakh', 'Crore']
-
   function convertGroup(n: number): string {
     if (n === 0) return ''
     if (n < 20) return ones[n]
@@ -599,39 +653,55 @@ export function numberToWords(num: number): string {
     return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convertGroup(n % 100) : '')
   }
 
-  // Handle Indian numbering system
-  const rupees = Math.floor(num)
-  const paise = Math.round((num - rupees) * 100)
-
-  let result = ''
-
-  // Crores (10,000,000+)
-  if (rupees >= 10000000) {
-    result += convertGroup(Math.floor(rupees / 10000000)) + ' Crore '
+  // Indian system: Crore/Lakh/Thousand (…,##,##,###). Preserves the original
+  // output exactly for INR.
+  function toWordsIndian(whole: number): string {
+    let out = ''
+    if (whole >= 10000000) {
+      out += convertGroup(Math.floor(whole / 10000000)) + ' Crore '
+    }
+    const afterCrore = whole % 10000000
+    if (afterCrore >= 100000) {
+      out += convertGroup(Math.floor(afterCrore / 100000)) + ' Lakh '
+    }
+    const afterLakh = afterCrore % 100000
+    if (afterLakh >= 1000) {
+      out += convertGroup(Math.floor(afterLakh / 1000)) + ' Thousand '
+    }
+    const afterThousand = afterLakh % 1000
+    if (afterThousand > 0) {
+      out += convertGroup(afterThousand)
+    }
+    return out.trim()
   }
 
-  // Lakhs (100,000 - 9,999,999)
-  const afterCrore = rupees % 10000000
-  if (afterCrore >= 100000) {
-    result += convertGroup(Math.floor(afterCrore / 100000)) + ' Lakh '
+  // Short scale: Thousand/Million/Billion/Trillion (groups of three).
+  function toWordsShort(whole: number): string {
+    if (whole === 0) return ''
+    const scales = ['', 'Thousand', 'Million', 'Billion', 'Trillion', 'Quadrillion']
+    const groups: number[] = []
+    let n = whole
+    while (n > 0) {
+      groups.push(n % 1000)
+      n = Math.floor(n / 1000)
+    }
+    const parts: string[] = []
+    for (let g = groups.length - 1; g >= 0; g--) {
+      if (groups[g] > 0) {
+        parts.push(convertGroup(groups[g]) + (scales[g] ? ' ' + scales[g] : ''))
+      }
+    }
+    return parts.join(' ')
   }
 
-  // Thousands (1,000 - 99,999)
-  const afterLakh = afterCrore % 100000
-  if (afterLakh >= 1000) {
-    result += convertGroup(Math.floor(afterLakh / 1000)) + ' Thousand '
-  }
+  const whole = Math.floor(num)
+  const fraction = Math.round((num - whole) * 100)
 
-  // Hundreds and below
-  const afterThousand = afterLakh % 1000
-  if (afterThousand > 0) {
-    result += convertGroup(afterThousand)
-  }
+  let result = useIndianSystem ? toWordsIndian(whole) : toWordsShort(whole)
+  result = result.trim() + ' ' + units.major
 
-  result = result.trim() + ' Rupees'
-
-  if (paise > 0) {
-    result += ' and ' + convertGroup(paise) + ' Paise'
+  if (fraction > 0) {
+    result += ' and ' + convertGroup(fraction) + ' ' + units.minor
   }
 
   result += ' Only'

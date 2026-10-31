@@ -1,19 +1,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-const EXAMPLE_QUERIES = [
-  'Monthly revenue by procedure for last 3 months',
-  "Patients who haven't visited in 6 months",
-  'Overdue invoices sorted by amount',
-  'Appointment no-show rate by day of week',
-  'Top 5 most performed procedures this quarter',
-  'Inventory items running low on stock',
-]
 
 interface QueryResult {
   /** Set by our fetch handler */
@@ -33,6 +22,7 @@ interface QueryResult {
  * results as a dynamic table.  Supports exporting results as JSON.
  */
 export function ReportBuilder() {
+  const t = useTranslations('ai.reportBuilder')
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<QueryResult | null>(null)
@@ -53,15 +43,15 @@ export function ReportBuilder() {
       if (res.ok) {
         setResult({ success: true, ...data })
       } else {
-        setResult({ success: false, error: data.error || 'Query failed' })
+        setResult({ success: false, error: data.error || t('queryFailed') })
       }
       setHistory((prev) => [query.trim(), ...prev.filter((h) => h !== query.trim())].slice(0, 10))
     } catch {
-      setResult({ success: false, error: 'Failed to execute query' })
+      setResult({ success: false, error: t('executeFailed') })
     } finally {
       setLoading(false)
     }
-  }, [query, loading])
+  }, [query, loading, t])
 
   // ---------------------------------------------------------------
   const exportJSON = () => {
@@ -84,11 +74,9 @@ export function ReportBuilder() {
       {/* header */}
       <div>
         <h3 className="text-sm font-semibold flex items-center gap-2">
-          <span>🤖</span> Natural Language Report Builder
+          <span>🤖</span> {t('title')}
         </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Ask questions in plain English — AI queries your data and returns results.
-        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">{t('subtitle')}</p>
       </div>
 
       {/* input row */}
@@ -103,7 +91,7 @@ export function ReportBuilder() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') execute()
           }}
-          placeholder="e.g. 'Show revenue by procedure for last month'"
+          placeholder={t('placeholder')}
           className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
         />
         <button
@@ -111,13 +99,13 @@ export function ReportBuilder() {
           disabled={loading || !query.trim()}
           className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
         >
-          {loading ? 'Generating…' : 'Generate'}
+          {loading ? t('generating') : t('generate')}
         </button>
       </div>
 
       {/* example chips */}
       <div className="flex flex-wrap gap-2">
-        {EXAMPLE_QUERIES.map((ex) => (
+        {(t.raw('examples') as string[]).map((ex) => (
           <button
             key={ex}
             onClick={() => {
@@ -134,7 +122,7 @@ export function ReportBuilder() {
       {/* recent history (shown when idle) */}
       {history.length > 0 && !result && !loading && (
         <div>
-          <p className="text-xs text-muted-foreground font-medium mb-1">Recent queries</p>
+          <p className="text-xs text-muted-foreground font-medium mb-1">{t('recentQueries')}</p>
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {history.slice(0, 5).map((h, i) => (
               <button
@@ -156,7 +144,7 @@ export function ReportBuilder() {
       {loading && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />
-          <span>Querying your data…</span>
+          <span>{t('querying')}</span>
         </div>
       )}
 
@@ -172,7 +160,7 @@ export function ReportBuilder() {
 
           {/* error */}
           {!result.success && (
-            <div className="p-3 text-sm text-red-600">{result.error || 'Query failed'}</div>
+            <div className="p-3 text-sm text-red-600">{result.error || t('queryFailed')}</div>
           )}
 
           {/* data table */}
@@ -211,9 +199,7 @@ export function ReportBuilder() {
 
           {/* empty state */}
           {result.success && (!result.rows || result.rows.length === 0) && (
-            <div className="p-3 text-sm text-muted-foreground">
-              No results found for this query.
-            </div>
+            <div className="p-3 text-sm text-muted-foreground">{t('noResults')}</div>
           )}
 
           {/* export button */}
@@ -223,7 +209,7 @@ export function ReportBuilder() {
                 onClick={exportJSON}
                 className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
-                ⬇ Export JSON
+                {t('exportJson')}
               </button>
             </div>
           )}

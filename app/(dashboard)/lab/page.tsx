@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -104,6 +106,11 @@ interface Stats {
 
 export default function LabWorkPage() {
   const router = useRouter()
+  const t = useTranslations('lab.list')
+  const tStatus = useTranslations('lab.status')
+  const tPriority = useTranslations('lab.priority')
+  const tWorkType = useTranslations('lab.workType')
+  const fmt = useClinicFormatters()
   const [orders, setOrders] = useState<LabOrder[]>([])
   const [vendors, setVendors] = useState<LabVendor[]>([])
   const [loading, setLoading] = useState(true)
@@ -243,62 +250,52 @@ export default function LabWorkPage() {
 
     const config = configs[status] || configs.CREATED
     const Icon = config.icon
+    const label = tStatus.has(status) ? tStatus(status) : config.label
 
     return (
       <Badge className={config.className}>
         <Icon className="mr-1 h-3 w-3" />
-        {config.label}
+        {label}
       </Badge>
     )
   }
 
   const getPriorityBadge = (priority: string) => {
-    const configs: Record<string, { label: string; className: string }> = {
-      normal: { label: 'Normal', className: 'bg-muted text-foreground' },
-      urgent: { label: 'Urgent', className: 'bg-orange-100 text-orange-800' },
-      rush: { label: 'Rush', className: 'bg-red-100 text-red-800' },
+    const configs: Record<string, { className: string }> = {
+      normal: { className: 'bg-muted text-foreground' },
+      urgent: { className: 'bg-orange-100 text-orange-800' },
+      rush: { className: 'bg-red-100 text-red-800' },
     }
 
     const config = configs[priority] || configs.normal
-    return <Badge className={config.className}>{config.label}</Badge>
+    const label = tPriority.has(priority) ? tPriority(priority) : priority
+    return <Badge className={config.className}>{label}</Badge>
   }
 
-  // workType is the LabWorkType enum (NIGHT_GUARD, ...), so lower-case the
-  // tail rather than leaving it shouting.
-  const formatWorkType = (workType: string) => {
-    return workType
-      .toLowerCase()
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-  }
+  // workType is the LabWorkType enum (NIGHT_GUARD, ...); prefer the catalogue
+  // label, falling back to title-casing the enum.
+  const formatWorkType = (workType: string) =>
+    tWorkType.has(workType)
+      ? tWorkType(workType)
+      : workType
+          .toLowerCase()
+          .split('_')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
+  const formatDate = (dateString: string | null) =>
+    fmt.formatDate(dateString, { day: '2-digit', month: 'short', year: 'numeric' })
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) =>
+    fmt.formatCurrency(amount, { maximumFractionDigits: 0 })
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lab Work Management</h1>
-          <p className="text-muted-foreground">
-            Manage lab orders, vendors, and track work progress
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <ExportMenu
@@ -329,11 +326,11 @@ export default function LabWorkPage() {
           />
           <Button variant="outline" onClick={() => router.push('/lab/vendors')}>
             <Users className="mr-2 h-4 w-4" />
-            Manage Vendors
+            {t('manageVendors')}
           </Button>
           <Button onClick={() => router.push('/lab/orders/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            New Lab Order
+            {t('newLabOrder')}
           </Button>
         </div>
       </div>
@@ -342,7 +339,7 @@ export default function LabWorkPage() {
       <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalOrders')}</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -351,7 +348,7 @@ export default function LabWorkPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sent to Lab</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('sentToLab')}</CardTitle>
             <Truck className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -360,7 +357,7 @@ export default function LabWorkPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('inProgress')}</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -369,7 +366,7 @@ export default function LabWorkPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ready</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('ready')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -378,7 +375,7 @@ export default function LabWorkPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('delivered')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
@@ -387,7 +384,7 @@ export default function LabWorkPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('cancelled')}</CardTitle>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -396,7 +393,7 @@ export default function LabWorkPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Created</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('created')}</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -412,7 +409,7 @@ export default function LabWorkPage() {
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search orders, patients..."
+                placeholder={t('searchPlaceholder')}
                 className="pl-8"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -420,27 +417,27 @@ export default function LabWorkPage() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="All Statuses" />
+                <SelectValue placeholder={t('allStatuses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="CREATED">Created</SelectItem>
-                <SelectItem value="SENT_TO_LAB">Sent to Lab</SelectItem>
-                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                <SelectItem value="QUALITY_CHECK">Quality Check</SelectItem>
-                <SelectItem value="READY">Ready</SelectItem>
-                <SelectItem value="DELIVERED">Delivered</SelectItem>
-                <SelectItem value="FITTED">Fitted</SelectItem>
-                <SelectItem value="REMAKE_REQUIRED">Remake Required</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="CREATED">{tStatus('CREATED')}</SelectItem>
+                <SelectItem value="SENT_TO_LAB">{tStatus('SENT_TO_LAB')}</SelectItem>
+                <SelectItem value="IN_PROGRESS">{tStatus('IN_PROGRESS')}</SelectItem>
+                <SelectItem value="QUALITY_CHECK">{tStatus('QUALITY_CHECK')}</SelectItem>
+                <SelectItem value="READY">{tStatus('READY')}</SelectItem>
+                <SelectItem value="DELIVERED">{tStatus('DELIVERED')}</SelectItem>
+                <SelectItem value="FITTED">{tStatus('FITTED')}</SelectItem>
+                <SelectItem value="REMAKE_REQUIRED">{tStatus('REMAKE_REQUIRED')}</SelectItem>
+                <SelectItem value="CANCELLED">{tStatus('CANCELLED')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={vendorFilter} onValueChange={setVendorFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="All Vendors" />
+                <SelectValue placeholder={t('allVendors')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Vendors</SelectItem>
+                <SelectItem value="all">{t('allVendors')}</SelectItem>
                 {vendors.map((vendor) => (
                   <SelectItem key={vendor.id} value={vendor.id}>
                     {vendor.name}
@@ -450,33 +447,33 @@ export default function LabWorkPage() {
             </Select>
             <Select value={workTypeFilter} onValueChange={setWorkTypeFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="All Work Types" />
+                <SelectValue placeholder={t('allWorkTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Work Types</SelectItem>
-                <SelectItem value="CROWN">Crown</SelectItem>
-                <SelectItem value="BRIDGE">Bridge</SelectItem>
-                <SelectItem value="DENTURE">Denture</SelectItem>
-                <SelectItem value="PARTIAL_DENTURE">Partial Denture</SelectItem>
-                <SelectItem value="IMPLANT_CROWN">Implant Crown</SelectItem>
-                <SelectItem value="VENEER">Veneer</SelectItem>
-                <SelectItem value="INLAY_ONLAY">Inlay/Onlay</SelectItem>
-                <SelectItem value="NIGHT_GUARD">Night Guard</SelectItem>
-                <SelectItem value="RETAINER">Retainer</SelectItem>
-                <SelectItem value="ALIGNER">Aligner</SelectItem>
-                <SelectItem value="MODEL">Model</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
+                <SelectItem value="all">{t('allWorkTypes')}</SelectItem>
+                <SelectItem value="CROWN">{tWorkType('CROWN')}</SelectItem>
+                <SelectItem value="BRIDGE">{tWorkType('BRIDGE')}</SelectItem>
+                <SelectItem value="DENTURE">{tWorkType('DENTURE')}</SelectItem>
+                <SelectItem value="PARTIAL_DENTURE">{tWorkType('PARTIAL_DENTURE')}</SelectItem>
+                <SelectItem value="IMPLANT_CROWN">{tWorkType('IMPLANT_CROWN')}</SelectItem>
+                <SelectItem value="VENEER">{tWorkType('VENEER')}</SelectItem>
+                <SelectItem value="INLAY_ONLAY">{tWorkType('INLAY_ONLAY')}</SelectItem>
+                <SelectItem value="NIGHT_GUARD">{tWorkType('NIGHT_GUARD')}</SelectItem>
+                <SelectItem value="RETAINER">{tWorkType('RETAINER')}</SelectItem>
+                <SelectItem value="ALIGNER">{tWorkType('ALIGNER')}</SelectItem>
+                <SelectItem value="MODEL">{tWorkType('MODEL')}</SelectItem>
+                <SelectItem value="OTHER">{tWorkType('OTHER')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="All Priorities" />
+                <SelectValue placeholder={t('allPriorities')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="rush">Rush</SelectItem>
+                <SelectItem value="all">{t('allPriorities')}</SelectItem>
+                <SelectItem value="normal">{tPriority('normal')}</SelectItem>
+                <SelectItem value="urgent">{tPriority('urgent')}</SelectItem>
+                <SelectItem value="rush">{tPriority('rush')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -495,11 +492,11 @@ export default function LabWorkPage() {
           ) : orders.length === 0 ? (
             <div className="text-center py-12">
               <FlaskConical className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No lab orders found</h3>
-              <p className="text-muted-foreground">Get started by creating your first lab order</p>
+              <h3 className="mt-4 text-lg font-semibold">{t('noOrders')}</h3>
+              <p className="text-muted-foreground">{t('noOrdersHint')}</p>
               <Button className="mt-4" onClick={() => router.push('/lab/orders/new')}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Lab Order
+                {t('createLabOrder')}
               </Button>
             </div>
           ) : (
@@ -507,16 +504,16 @@ export default function LabWorkPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order No.</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Work Type</TableHead>
-                    <TableHead>Vendor</TableHead>
-                    <TableHead>Order Date</TableHead>
-                    <TableHead>Expected</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Cost</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('colOrderNo')}</TableHead>
+                    <TableHead>{t('colPatient')}</TableHead>
+                    <TableHead>{t('colWorkType')}</TableHead>
+                    <TableHead>{t('colVendor')}</TableHead>
+                    <TableHead>{t('colOrderDate')}</TableHead>
+                    <TableHead>{t('colExpected')}</TableHead>
+                    <TableHead>{t('colStatus')}</TableHead>
+                    <TableHead>{t('colPriority')}</TableHead>
+                    <TableHead>{t('colCost')}</TableHead>
+                    <TableHead className="text-right">{t('colActions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -553,13 +550,13 @@ export default function LabWorkPage() {
                               onClick={() => router.push(`/lab/orders/${order.id}`)}
                             >
                               <Eye className="mr-2 h-4 w-4" />
-                              View Details
+                              {t('viewDetails')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => router.push(`/lab/orders/${order.id}/edit`)}
                             >
                               <Edit className="mr-2 h-4 w-4" />
-                              Edit Order
+                              {t('editOrder')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -572,9 +569,11 @@ export default function LabWorkPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                  {pagination.total} orders
+                  {t('showing', {
+                    from: (pagination.page - 1) * pagination.limit + 1,
+                    to: Math.min(pagination.page * pagination.limit, pagination.total),
+                    total: pagination.total,
+                  })}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -584,7 +583,7 @@ export default function LabWorkPage() {
                     onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t('previous')}
                   </Button>
                   <Button
                     variant="outline"
@@ -592,7 +591,7 @@ export default function LabWorkPage() {
                     disabled={pagination.page === pagination.pages}
                     onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                   >
-                    Next
+                    {t('next')}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

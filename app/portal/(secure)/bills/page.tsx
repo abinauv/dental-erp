@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,7 @@ import {
   Receipt,
   CheckCircle,
 } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Invoice {
   id: string
@@ -57,6 +59,10 @@ const statusColors: Record<string, string> = {
 }
 
 export default function PatientBills() {
+  const t = useTranslations('portal.bills')
+  const tStatus = useTranslations('billing.status')
+  const tMethod = useTranslations('billing.paymentMethods')
+  const { formatCurrency, formatDate } = useClinicFormatters()
   const [statusFilter, setStatusFilter] = useState('all')
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 })
@@ -86,30 +92,16 @@ export default function PatientBills() {
     fetchBills(1)
   }, [fetchBills])
 
-  const formatCurrency = (val: number | string) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-    }).format(Number(val))
-
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Bills & Payments</h1>
+      <h1 className="text-2xl font-bold">{t('title')}</h1>
 
       <Tabs value={statusFilter} onValueChange={setStatusFilter}>
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="PENDING">Pending</TabsTrigger>
-          <TabsTrigger value="PARTIALLY_PAID">Partial</TabsTrigger>
-          <TabsTrigger value="PAID">Paid</TabsTrigger>
+          <TabsTrigger value="all">{t('tabAll')}</TabsTrigger>
+          <TabsTrigger value="PENDING">{t('tabPending')}</TabsTrigger>
+          <TabsTrigger value="PARTIALLY_PAID">{t('tabPartial')}</TabsTrigger>
+          <TabsTrigger value="PAID">{t('tabPaid')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value={statusFilter} className="mt-4">
@@ -123,7 +115,7 @@ export default function PatientBills() {
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 <Receipt className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p>No bills found</p>
+                <p>{t('noBills')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -139,19 +131,21 @@ export default function PatientBills() {
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{inv.invoiceNo}</p>
                           <Badge className={statusColors[inv.status] || 'bg-muted text-foreground'}>
-                            {inv.status.replace('_', ' ')}
+                            {tStatus.has(inv.status)
+                              ? tStatus(inv.status)
+                              : inv.status.replace('_', ' ')}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(inv.createdAt)}
-                          {inv.dueDate && ` · Due: ${formatDate(inv.dueDate)}`}
+                          {inv.dueDate && t('dueSuffix', { date: formatDate(inv.dueDate) })}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
                           <p className="font-semibold">{formatCurrency(inv.balanceAmount)}</p>
                           <p className="text-xs text-muted-foreground">
-                            of {formatCurrency(inv.totalAmount)}
+                            {t('ofTotal', { total: formatCurrency(inv.totalAmount) })}
                           </p>
                         </div>
                         {expandedId === inv.id ? (
@@ -168,11 +162,14 @@ export default function PatientBills() {
 
                         {/* Items */}
                         <div>
-                          <p className="text-sm font-medium mb-2">Items</p>
+                          <p className="text-sm font-medium mb-2">{t('items')}</p>
                           {inv.items.map((item, i) => (
                             <div key={i} className="flex justify-between text-sm py-1">
                               <span className="text-muted-foreground">
-                                {item.description} x{item.quantity}
+                                {t('itemLine', {
+                                  description: item.description,
+                                  quantity: item.quantity,
+                                })}
                               </span>
                               <span>{formatCurrency(item.amount)}</span>
                             </div>
@@ -183,15 +180,20 @@ export default function PatientBills() {
                         {inv.payments.length > 0 && (
                           <div>
                             <Separator className="mb-3" />
-                            <p className="text-sm font-medium mb-2">Payment History</p>
+                            <p className="text-sm font-medium mb-2">{t('paymentHistory')}</p>
                             {inv.payments.map((p) => (
                               <div
                                 key={p.id}
                                 className="flex justify-between items-center text-sm py-1"
                               >
                                 <span className="text-muted-foreground">
-                                  {p.paymentNo} — {p.paymentMethod.replace('_', ' ')} —{' '}
-                                  {formatDate(p.paymentDate)}
+                                  {t('paymentLine', {
+                                    no: p.paymentNo,
+                                    method: tMethod.has(p.paymentMethod)
+                                      ? tMethod(p.paymentMethod)
+                                      : p.paymentMethod.replace('_', ' '),
+                                    date: formatDate(p.paymentDate),
+                                  })}
                                 </span>
                                 <div className="flex items-center gap-1">
                                   <CheckCircle className="h-3 w-3 text-green-500" />
@@ -213,7 +215,7 @@ export default function PatientBills() {
                               }
                             >
                               <CreditCard className="h-4 w-4 mr-2" />
-                              Pay {formatCurrency(inv.balanceAmount)} Online
+                              {t('payOnline', { amount: formatCurrency(inv.balanceAmount) })}
                             </Button>
                           </>
                         )}
@@ -234,7 +236,7 @@ export default function PatientBills() {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                    Page {pagination.page} of {pagination.totalPages}
+                    {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                   </span>
                   <Button
                     variant="outline"

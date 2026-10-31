@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,8 +46,6 @@ import {
   treatmentPlanStatusConfig,
   treatmentPlanItemStatusConfig,
   procedureCategoryConfig,
-  formatCurrency,
-  formatDate,
   calculatePlanProgress,
 } from '@/lib/treatment-utils'
 
@@ -99,6 +99,11 @@ interface TreatmentPlan {
 export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const t = useTranslations('treatments.planDetail')
+  const tStatus = useTranslations('treatments.planStatus')
+  const tItemStatus = useTranslations('treatments.itemStatus')
+  const tCategory = useTranslations('treatments.category')
+  const fmt = useClinicFormatters()
   const [plan, setPlan] = useState<TreatmentPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -185,9 +190,8 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
       color: 'text-foreground',
       bgColor: 'bg-muted',
     }
-    return (
-      <Badge className={`${config.bgColor} ${config.color} border-0 text-sm`}>{config.label}</Badge>
-    )
+    const label = tStatus.has(status) ? tStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0 text-sm`}>{label}</Badge>
   }
 
   const getItemStatusBadge = (status: string) => {
@@ -196,7 +200,8 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
       color: 'text-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tItemStatus.has(status) ? tItemStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   if (loading) {
@@ -215,9 +220,9 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Treatment plan not found</p>
+        <p className="text-muted-foreground">{t('notFound')}</p>
         <Link href="/treatments/plans">
-          <Button variant="outline">Back to Treatment Plans</Button>
+          <Button variant="outline">{t('backToPlans')}</Button>
         </Link>
       </div>
     )
@@ -242,7 +247,7 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
               {plan.consentGiven && (
                 <Badge variant="outline" className="bg-green-50 text-green-700">
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Consent Given
+                  {t('consentGiven')}
                 </Badge>
               )}
             </div>
@@ -253,19 +258,19 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
           {plan.status === 'DRAFT' && (
             <Button onClick={() => handleStatusChange('PROPOSED')} disabled={actionLoading}>
               <FileText className="h-4 w-4 mr-2" />
-              Propose to Patient
+              {t('proposeToPatient')}
             </Button>
           )}
           {plan.status === 'PROPOSED' && !plan.consentGiven && (
             <Button onClick={() => setConsentDialogOpen(true)}>
               <ClipboardCheck className="h-4 w-4 mr-2" />
-              Record Consent
+              {t('recordConsent')}
             </Button>
           )}
           {plan.status === 'ACCEPTED' && (
             <Button onClick={() => handleStatusChange('IN_PROGRESS')} disabled={actionLoading}>
               <Play className="h-4 w-4 mr-2" />
-              Start Treatment
+              {t('startTreatment')}
             </Button>
           )}
           {!['COMPLETED', 'CANCELLED'].includes(plan.status) && (
@@ -273,7 +278,7 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
               <Link href={`/treatments/plans/${id}/edit`}>
                 <Button variant="outline">
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                  {t('edit')}
                 </Button>
               </Link>
               <Button
@@ -282,13 +287,13 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
                 onClick={() => setCancelDialogOpen(true)}
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Cancel Plan
+                {t('cancelPlan')}
               </Button>
             </>
           )}
           <Button variant="outline">
             <Printer className="h-4 w-4 mr-2" />
-            Print
+            {t('print')}
           </Button>
         </div>
       </div>
@@ -299,14 +304,16 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
           {/* Progress */}
           <Card>
             <CardHeader>
-              <CardTitle>Treatment Progress</CardTitle>
+              <CardTitle>{t('treatmentProgress')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    {plan.items.filter((i) => i.status === 'COMPLETED').length} of{' '}
-                    {plan.items.length} procedures completed
+                    {t('proceduresCompleted', {
+                      completed: plan.items.filter((i) => i.status === 'COMPLETED').length,
+                      total: plan.items.length,
+                    })}
                   </span>
                   <span className="text-sm font-medium">{progress}%</span>
                 </div>
@@ -318,20 +325,18 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
           {/* Procedures */}
           <Card>
             <CardHeader>
-              <CardTitle>Treatment Procedures</CardTitle>
-              <CardDescription>
-                Procedures in this treatment plan, ordered by priority
-              </CardDescription>
+              <CardTitle>{t('treatmentProcedures')}</CardTitle>
+              <CardDescription>{t('treatmentProceduresDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
-                    <TableHead>Procedure</TableHead>
-                    <TableHead>Teeth</TableHead>
-                    <TableHead>Cost</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('colProcedure')}</TableHead>
+                    <TableHead>{t('colTeeth')}</TableHead>
+                    <TableHead>{t('colCost')}</TableHead>
+                    <TableHead>{t('colStatus')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -346,14 +351,16 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
                           variant="outline"
                           className={`mt-1 ${procedureCategoryConfig[item.procedure.category]?.bgColor} ${procedureCategoryConfig[item.procedure.category]?.color} border-0`}
                         >
-                          {procedureCategoryConfig[item.procedure.category]?.label}
+                          {tCategory.has(item.procedure.category)
+                            ? tCategory(item.procedure.category)
+                            : procedureCategoryConfig[item.procedure.category]?.label}
                         </Badge>
                         {item.notes && (
                           <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
                         )}
                       </TableCell>
                       <TableCell>{item.toothNumbers || '-'}</TableCell>
-                      <TableCell>{formatCurrency(item.estimatedCost)}</TableCell>
+                      <TableCell>{fmt.formatCurrency(item.estimatedCost)}</TableCell>
                       <TableCell>{getItemStatusBadge(item.status)}</TableCell>
                       <TableCell>
                         {item.status === 'PENDING' && plan.status === 'IN_PROGRESS' && (
@@ -361,7 +368,7 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
                             href={`/treatments/new?patientId=${plan.patient.id}&procedureId=${item.procedure.id}`}
                           >
                             <Button size="sm" variant="outline">
-                              Start
+                              {t('start')}
                             </Button>
                           </Link>
                         )}
@@ -370,10 +377,10 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
                   ))}
                   <TableRow>
                     <TableCell colSpan={3} className="text-right font-medium">
-                      Total Estimated Cost:
+                      {t('totalCost')}
                     </TableCell>
                     <TableCell className="font-bold text-lg">
-                      {formatCurrency(plan.estimatedCost)}
+                      {fmt.formatCurrency(plan.estimatedCost)}
                     </TableCell>
                     <TableCell colSpan={2}></TableCell>
                   </TableRow>
@@ -386,7 +393,7 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
           {plan.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notes</CardTitle>
+                <CardTitle>{t('notes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">{plan.notes}</p>
@@ -402,7 +409,7 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Patient
+                {t('patient')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -435,7 +442,7 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
 
               <Link href={`/patients/${plan.patient.id}`}>
                 <Button variant="outline" className="w-full">
-                  View Patient Profile
+                  {t('viewProfile')}
                 </Button>
               </Link>
             </CardContent>
@@ -444,24 +451,26 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
           {/* Plan Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Plan Summary</CardTitle>
+              <CardTitle>{t('planSummary')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">Total Cost</div>
-                  <div className="font-bold text-lg">{formatCurrency(plan.estimatedCost)}</div>
+                  <div className="text-sm text-muted-foreground">{t('totalCostLabel')}</div>
+                  <div className="font-bold text-lg">{fmt.formatCurrency(plan.estimatedCost)}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Procedures</div>
+                  <div className="text-sm text-muted-foreground">{t('procedures')}</div>
                   <div className="font-bold text-lg">{plan.items.length}</div>
                 </div>
               </div>
 
               {plan.estimatedDuration && (
                 <div>
-                  <div className="text-sm text-muted-foreground">Est. Duration</div>
-                  <div className="font-medium">{Math.round(plan.estimatedDuration / 60)} hours</div>
+                  <div className="text-sm text-muted-foreground">{t('estDuration')}</div>
+                  <div className="font-medium">
+                    {t('durationHours', { hours: Math.round(plan.estimatedDuration / 60) })}
+                  </div>
                 </div>
               )}
 
@@ -469,25 +478,25 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Created</span>
-                  <span>{formatDate(plan.createdAt)}</span>
+                  <span className="text-muted-foreground">{t('created')}</span>
+                  <span>{fmt.formatDate(plan.createdAt)}</span>
                 </div>
                 {plan.startDate && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Start Date</span>
-                    <span>{formatDate(plan.startDate)}</span>
+                    <span className="text-muted-foreground">{t('startDate')}</span>
+                    <span>{fmt.formatDate(plan.startDate)}</span>
                   </div>
                 )}
                 {plan.expectedEndDate && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expected End</span>
-                    <span>{formatDate(plan.expectedEndDate)}</span>
+                    <span className="text-muted-foreground">{t('expectedEnd')}</span>
+                    <span>{fmt.formatDate(plan.expectedEndDate)}</span>
                   </div>
                 )}
                 {plan.completedDate && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Completed</span>
-                    <span>{formatDate(plan.completedDate)}</span>
+                    <span className="text-muted-foreground">{t('completed')}</span>
+                    <span>{fmt.formatDate(plan.completedDate)}</span>
                   </div>
                 )}
               </div>
@@ -500,26 +509,24 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
       <Dialog open={consentDialogOpen} onOpenChange={setConsentDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Record Patient Consent</DialogTitle>
-            <DialogDescription>
-              Confirm that the patient has given consent to proceed with this treatment plan.
-            </DialogDescription>
+            <DialogTitle>{t('consentTitle')}</DialogTitle>
+            <DialogDescription>{t('consentDesc')}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-muted-foreground">By recording consent, you confirm that:</p>
+            <p className="text-sm text-muted-foreground">{t('consentIntro')}</p>
             <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
-              <li>The treatment plan has been explained to the patient</li>
-              <li>All questions have been answered</li>
-              <li>The patient understands the costs and procedures involved</li>
-              <li>The patient has agreed to proceed</li>
+              <li>{t('consentItem1')}</li>
+              <li>{t('consentItem2')}</li>
+              <li>{t('consentItem3')}</li>
+              <li>{t('consentItem4')}</li>
             </ul>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConsentDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleConsentGiven} disabled={actionLoading}>
-              {actionLoading ? 'Recording...' : 'Confirm Consent'}
+              {actionLoading ? t('recording') : t('confirmConsent')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -529,17 +536,15 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel Treatment Plan</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to cancel this treatment plan? This action cannot be undone.
-            </DialogDescription>
+            <DialogTitle>{t('cancelTitle')}</DialogTitle>
+            <DialogDescription>{t('cancelDesc')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
-              Keep Plan
+              {t('keepPlan')}
             </Button>
             <Button variant="destructive" onClick={handleCancelPlan} disabled={actionLoading}>
-              {actionLoading ? 'Cancelling...' : 'Cancel Plan'}
+              {actionLoading ? t('cancelling') : t('cancelPlan')}
             </Button>
           </DialogFooter>
         </DialogContent>

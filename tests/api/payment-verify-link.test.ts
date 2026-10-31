@@ -144,10 +144,11 @@ describe('POST /api/payments/verify', () => {
     expect(res.status).toBe(400)
   })
 
-  it('verifies payment and creates record', async () => {
+  it('verifies payment and settles the invoice', async () => {
     mockHospitalAuth()
     vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
       id: 'inv1',
+      hospitalId: 'h1',
       balanceAmount: 5000,
       paidAmount: 0,
       totalAmount: 5000,
@@ -163,14 +164,14 @@ describe('POST /api/payments/verify', () => {
       },
       credentials: { provider: 'RAZORPAY' },
     } as any)
-    vi.mocked(prisma.payment.findFirst).mockResolvedValue({ paymentNo: 'PAY00010' } as any)
-    vi.mocked(prisma.$transaction).mockResolvedValue([
-      {
-        id: 'pay1',
-        paymentNo: 'PAY00011',
-        amount: 5000,
-      },
-    ] as any)
+    // No pre-reserved row in this test → settlePayment creates one.
+    vi.mocked(prisma.payment.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.payment.create).mockResolvedValue({
+      id: 'pay1',
+      paymentNo: 'PAY00001',
+      amount: 5000,
+    } as any)
+    vi.mocked(prisma.invoice.update).mockResolvedValue({} as any)
 
     const res = await verifyPOST(
       makeReq('/api/payments/verify', 'POST', {
@@ -185,6 +186,10 @@ describe('POST /api/payments/verify', () => {
     expect(res.status).toBe(200)
     expect(body.success).toBe(true)
     expect(body.payment.status).toBe('COMPLETED')
+    expect(body.payment.paymentNo).toBe('PAY00001')
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'PAID' }) })
+    )
   })
 })
 

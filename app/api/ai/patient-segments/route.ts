@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/ai/patient-segments
@@ -213,7 +214,7 @@ Return ONLY valid JSON, no markdown.`,
 
     return NextResponse.json({ ...result, model: response.model })
   } catch (error: any) {
-    console.error('Patient segmentation error:', error)
+    logger.error({ err: error }, 'Patient segmentation error:')
     return NextResponse.json(
       { error: error.message || 'Failed to generate segments' },
       { status: error.message?.includes('Unauthorized') ? 401 : 500 }

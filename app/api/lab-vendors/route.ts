@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET - Fetch all lab vendors
 export async function GET(request: NextRequest) {
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error fetching lab vendors:', error)
+    logger.error({ err: error }, 'Error fetching lab vendors:')
     return NextResponse.json(
       { error: 'Failed to fetch lab vendors', details: error.message },
       { status: 500 }
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Error creating lab vendor:', error)
+    logger.error({ err: error }, 'Error creating lab vendor:')
     return NextResponse.json(
       { error: 'Failed to create lab vendor', details: error.message },
       { status: 500 }

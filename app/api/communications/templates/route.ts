@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { templateService } from '@/lib/services/template.service'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const createTemplateSchema = z.object({
   name: z.string().min(1),
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       data: template,
     })
   } catch (error: any) {
-    console.error('Create template error:', error)
+    logger.error({ err: error }, 'Create template error:')
     return NextResponse.json(
       { error: error.message || 'Failed to create template' },
       { status: 500 }
@@ -107,7 +108,7 @@ export async function GET(req: NextRequest) {
       count: templates.length,
     })
   } catch (error: any) {
-    console.error('Get templates error:', error)
+    logger.error({ err: error }, 'Get templates error:')
     return NextResponse.json({ error: error.message || 'Failed to get templates' }, { status: 500 })
   }
 }

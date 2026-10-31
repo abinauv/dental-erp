@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -89,6 +91,12 @@ interface PaginationInfo {
 
 export default function InventoryPage() {
   const router = useRouter()
+  const t = useTranslations('inventory.list')
+  const tStatus = useTranslations('inventory.stockStatus')
+  const tType = useTranslations('inventory.itemType')
+  const tTrend = useTranslations('inventory.trend')
+  const tUrgency = useTranslations('inventory.urgency')
+  const fmt = useClinicFormatters()
   const [items, setItems] = useState<InventoryItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -173,35 +181,34 @@ export default function InventoryPage() {
   }, [pagination.page, search, categoryFilter, typeFilter, statusFilter, lowStockOnly])
 
   // itemType arrives as the InventoryItemType enum (DENTAL_MATERIAL, ...).
+  // Prefer a catalogue label, falling back to title-casing the enum.
   const formatItemType = (type: string) =>
-    type
-      .toLowerCase()
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
+    tType.has(type)
+      ? tType(type)
+      : type
+          .toLowerCase()
+          .split('_')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
 
   const getStockStatusBadge = (status: string) => {
     const configs = {
       out_of_stock: {
-        label: 'Out of Stock',
         color: 'text-red-700',
         bgColor: 'bg-red-100',
         icon: XCircle,
       },
       low_stock: {
-        label: 'Low Stock',
         color: 'text-orange-700',
         bgColor: 'bg-orange-100',
         icon: AlertTriangle,
       },
       reorder: {
-        label: 'Reorder',
         color: 'text-yellow-700',
         bgColor: 'bg-yellow-100',
         icon: AlertTriangle,
       },
       sufficient: {
-        label: 'Sufficient',
         color: 'text-green-700',
         bgColor: 'bg-green-100',
         icon: CheckCircle,
@@ -210,48 +217,44 @@ export default function InventoryPage() {
 
     const config = configs[status as keyof typeof configs] || configs.sufficient
     const Icon = config.icon
+    const label = tStatus.has(status) ? tStatus(status) : status
 
     return (
       <Badge className={`${config.bgColor} ${config.color} border-0`}>
         <Icon className="h-3 w-3 mr-1" />
-        {config.label}
+        {label}
       </Badge>
     )
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) =>
+    fmt.formatCurrency(amount, { minimumFractionDigits: 2 })
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
-          <p className="text-muted-foreground">Manage inventory items and stock levels</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/inventory/suppliers">
             <Button variant="outline">
               <Users className="h-4 w-4 mr-2" />
-              Suppliers
+              {t('suppliers')}
             </Button>
           </Link>
           <Link href="/inventory/transactions">
             <Button variant="outline">
               <TrendingUp className="h-4 w-4 mr-2" />
-              Transactions
+              {t('transactions')}
             </Button>
           </Link>
           <Link href="/inventory/reports">
             <Button variant="outline">
               <FileText className="h-4 w-4 mr-2" />
-              Reports
+              {t('reports')}
             </Button>
           </Link>
           <ExportMenu
@@ -281,12 +284,12 @@ export default function InventoryPage() {
             ) : (
               <Brain className="h-4 w-4 mr-2" />
             )}
-            AI Forecast
+            {t('aiForecast')}
           </Button>
           <Link href="/inventory/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Item
+              {t('newItem')}
             </Button>
           </Link>
         </div>
@@ -302,7 +305,7 @@ export default function InventoryPage() {
                 <div className="text-2xl font-bold text-red-700">
                   {forecastData.summary?.criticalItems || 0}
                 </div>
-                <div className="text-xs text-red-600">Critical (stockout &le;7d)</div>
+                <div className="text-xs text-red-600">{t('critical')}</div>
               </CardContent>
             </Card>
             <Card className="border-amber-200 bg-amber-50">
@@ -310,7 +313,7 @@ export default function InventoryPage() {
                 <div className="text-2xl font-bold text-amber-700">
                   {forecastData.summary?.reorderItems || 0}
                 </div>
-                <div className="text-xs text-amber-600">Need Reorder</div>
+                <div className="text-xs text-amber-600">{t('needReorder')}</div>
               </CardContent>
             </Card>
             <Card className="border-green-200 bg-green-50">
@@ -318,7 +321,7 @@ export default function InventoryPage() {
                 <div className="text-2xl font-bold text-green-700">
                   {forecastData.summary?.excessItems || 0}
                 </div>
-                <div className="text-xs text-green-600">Excess Stock</div>
+                <div className="text-xs text-green-600">{t('excessStock')}</div>
               </CardContent>
             </Card>
             <Card className="border-blue-200 bg-blue-50">
@@ -326,7 +329,7 @@ export default function InventoryPage() {
                 <div className="text-2xl font-bold text-blue-700">
                   {formatCurrency(forecastData.summary?.totalReorderValue || 0)}
                 </div>
-                <div className="text-xs text-blue-600">Reorder Value</div>
+                <div className="text-xs text-blue-600">{t('reorderValue')}</div>
               </CardContent>
             </Card>
           </div>
@@ -338,14 +341,12 @@ export default function InventoryPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Brain className="h-5 w-5 text-purple-600" />
-                    AI Demand Forecast
+                    {t('demandForecast')}
                   </CardTitle>
-                  <CardDescription>
-                    Projected usage and reorder suggestions for next 30/60/90 days
-                  </CardDescription>
+                  <CardDescription>{t('demandForecastDesc')}</CardDescription>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowForecast(false)}>
-                  Hide
+                  {t('hide')}
                 </Button>
               </div>
             </CardHeader>
@@ -353,14 +354,14 @@ export default function InventoryPage() {
               <Table className="min-w-[850px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Current Stock</TableHead>
-                    <TableHead>Daily Usage</TableHead>
-                    <TableHead>Trend</TableHead>
-                    <TableHead>30d / 60d / 90d</TableHead>
-                    <TableHead>Stockout In</TableHead>
-                    <TableHead>Suggested Order</TableHead>
-                    <TableHead>Urgency</TableHead>
+                    <TableHead>{t('fcItem')}</TableHead>
+                    <TableHead>{t('fcCurrentStock')}</TableHead>
+                    <TableHead>{t('fcDailyUsage')}</TableHead>
+                    <TableHead>{t('fcTrend')}</TableHead>
+                    <TableHead>{t('fcProjection')}</TableHead>
+                    <TableHead>{t('fcStockoutIn')}</TableHead>
+                    <TableHead>{t('fcSuggestedOrder')}</TableHead>
+                    <TableHead>{t('fcUrgency')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -386,7 +387,9 @@ export default function InventoryPage() {
                             {forecast.trend === 'STABLE' && (
                               <Minus className="h-3 w-3 text-muted-foreground" />
                             )}
-                            <span className="text-xs">{forecast.trend}</span>
+                            <span className="text-xs">
+                              {tTrend.has(forecast.trend) ? tTrend(forecast.trend) : forecast.trend}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-xs">
@@ -403,8 +406,12 @@ export default function InventoryPage() {
                                   : ''
                             }
                           >
-                            {forecast.daysUntilStockout > 365 ? '365+' : forecast.daysUntilStockout}{' '}
-                            days
+                            {t('stockoutDays', {
+                              days:
+                                forecast.daysUntilStockout > 365
+                                  ? '365+'
+                                  : forecast.daysUntilStockout,
+                            })}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -427,7 +434,9 @@ export default function InventoryPage() {
                                     : 'bg-green-100 text-green-700 border-0'
                             }
                           >
-                            {forecast.urgency}
+                            {tUrgency.has(forecast.urgency)
+                              ? tUrgency(forecast.urgency)
+                              : forecast.urgency}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -447,7 +456,7 @@ export default function InventoryPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, item code, or description..."
+                  placeholder={t('searchPlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -456,39 +465,39 @@ export default function InventoryPage() {
               <div className="flex gap-2">
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Category" />
+                    <SelectValue placeholder={t('categoryPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all">{t('allCategories')}</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name} ({cat.item_count})
+                        {t('categoryOption', { name: cat.name, count: cat.item_count })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Type" />
+                    <SelectValue placeholder={t('typePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="DENTAL_MATERIAL">Dental Material</SelectItem>
-                    <SelectItem value="INSTRUMENT">Instrument</SelectItem>
-                    <SelectItem value="CONSUMABLE">Consumable</SelectItem>
-                    <SelectItem value="MEDICINE">Medicine</SelectItem>
-                    <SelectItem value="OFFICE_SUPPLY">Office Supply</SelectItem>
-                    <SelectItem value="EQUIPMENT">Equipment</SelectItem>
+                    <SelectItem value="all">{t('allTypes')}</SelectItem>
+                    <SelectItem value="DENTAL_MATERIAL">{tType('DENTAL_MATERIAL')}</SelectItem>
+                    <SelectItem value="INSTRUMENT">{tType('INSTRUMENT')}</SelectItem>
+                    <SelectItem value="CONSUMABLE">{tType('CONSUMABLE')}</SelectItem>
+                    <SelectItem value="MEDICINE">{tType('MEDICINE')}</SelectItem>
+                    <SelectItem value="OFFICE_SUPPLY">{tType('OFFICE_SUPPLY')}</SelectItem>
+                    <SelectItem value="EQUIPMENT">{tType('EQUIPMENT')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Status" />
+                    <SelectValue placeholder={t('statusPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="active">{t('active')}</SelectItem>
+                    <SelectItem value="inactive">{t('inactive')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -503,7 +512,7 @@ export default function InventoryPage() {
                 htmlFor="lowStock"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                Show only low stock items
+                {t('lowStockOnly')}
               </label>
             </div>
           </div>
@@ -516,14 +525,14 @@ export default function InventoryPage() {
           <Table className="min-w-[850px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Item Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Unit Price</TableHead>
-                <TableHead>Stock Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('colItemCode')}</TableHead>
+                <TableHead>{t('colName')}</TableHead>
+                <TableHead>{t('colCategory')}</TableHead>
+                <TableHead>{t('colType')}</TableHead>
+                <TableHead>{t('colStock')}</TableHead>
+                <TableHead>{t('colUnitPrice')}</TableHead>
+                <TableHead>{t('colStockStatus')}</TableHead>
+                <TableHead className="text-right">{t('colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -561,11 +570,11 @@ export default function InventoryPage() {
                   <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Package className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No inventory items found</p>
+                      <p className="text-muted-foreground">{t('noItems')}</p>
                       <Link href="/inventory/new">
                         <Button variant="outline" size="sm">
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Item
+                          {t('addItem')}
                         </Button>
                       </Link>
                     </div>
@@ -593,7 +602,7 @@ export default function InventoryPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">{item.categoryName || 'Uncategorized'}</div>
+                      <div className="text-sm">{item.categoryName || t('uncategorized')}</div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{formatItemType(item.itemType)}</Badge>
@@ -604,7 +613,7 @@ export default function InventoryPage() {
                           {item.currentStock} {item.unit}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Min: {item.minimumStock}
+                          {t('minStock', { count: item.minimumStock })}
                         </div>
                       </div>
                     </TableCell>
@@ -612,7 +621,7 @@ export default function InventoryPage() {
                       <div className="font-medium">{formatCurrency(item.purchasePrice)}</div>
                       {item.sellingPrice > 0 && (
                         <div className="text-xs text-muted-foreground">
-                          Selling: {formatCurrency(item.sellingPrice)}
+                          {t('selling', { price: formatCurrency(item.sellingPrice) })}
                         </div>
                       )}
                     </TableCell>
@@ -621,7 +630,7 @@ export default function InventoryPage() {
                         {getStockStatusBadge(item.stockStatus)}
                         {!item.isActive && (
                           <Badge className="bg-muted text-muted-foreground border-0">
-                            Inactive
+                            {t('inactive')}
                           </Badge>
                         )}
                       </div>
@@ -636,20 +645,20 @@ export default function InventoryPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => router.push(`/inventory/${item.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            {t('viewDetails')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => router.push(`/inventory/${item.id}/edit`)}
                           >
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
+                            {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => router.push(`/inventory/transactions?item=${item.id}`)}
                           >
                             <TrendingUp className="h-4 w-4 mr-2" />
-                            Stock History
+                            {t('stockHistory')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -664,9 +673,11 @@ export default function InventoryPage() {
           {!loading && pagination.pages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} items
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -676,10 +687,10 @@ export default function InventoryPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t('previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.pages}
+                  {t('pageOf', { page: pagination.page, total: pagination.pages })}
                 </div>
                 <Button
                   variant="outline"
@@ -687,7 +698,7 @@ export default function InventoryPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.pages}
                 >
-                  Next
+                  {t('next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

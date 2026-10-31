@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,7 +16,6 @@ import {
   Package,
 } from 'lucide-react'
 import Link from 'next/link'
-import { format } from 'date-fns'
 import {
   LineChart,
   Line,
@@ -33,6 +33,7 @@ import {
 } from 'recharts'
 import { InsightsPanel } from '@/components/ai/insights-panel'
 import { CHART_COLORS } from '@/lib/chart-theme'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface DashboardStats {
   overview: {
@@ -76,6 +77,15 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations('dashboard')
+  const tStatus = useTranslations('appointments.status')
+  const {
+    formatCurrency: fmtCurrency,
+    formatNumber,
+    formatDate,
+    formatDateTime,
+    currencySymbol,
+  } = useClinicFormatters()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -90,7 +100,7 @@ export default function DashboardPage() {
       const response = await fetch('/api/dashboard/stats')
 
       if (!response.ok) {
-        throw new Error('Failed to fetch dashboard statistics')
+        throw new Error(t('failedSubtitle'))
       }
 
       const data = await response.json()
@@ -103,13 +113,7 @@ export default function DashboardPage() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) => fmtCurrency(amount, { maximumFractionDigits: 0 })
 
   const getGrowthIcon = (growth: number) => {
     if (growth > 0) return <ArrowUpRight className="h-4 w-4 text-green-600" />
@@ -127,8 +131,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Loading your practice data...</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('loadingSubtitle')}</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
@@ -151,17 +155,17 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-red-600">Failed to load dashboard data</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground text-red-600">{t('failedSubtitle')}</p>
         </div>
         <Card className="border-red-200">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />
-              <p>{error || 'An error occurred'}</p>
+              <p>{error || t('genericError')}</p>
             </div>
             <Button onClick={fetchDashboardStats} className="mt-4">
-              Retry
+              {t('retry')}
             </Button>
           </CardContent>
         </Card>
@@ -173,10 +177,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome message */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Here&apos;s what&apos;s happening at your dental practice today.
-        </p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('welcomeSubtitle')}</p>
       </div>
 
       {/* AI Insights */}
@@ -187,20 +189,18 @@ export default function DashboardPage() {
         {/* Total Patients */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalPatients')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.overview.totalPatients.toLocaleString()}
-            </div>
+            <div className="text-2xl font-bold">{formatNumber(stats.overview.totalPatients)}</div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {getGrowthIcon(stats.overview.patientGrowth)}
               <span className={getGrowthColor(stats.overview.patientGrowth)}>
                 {stats.overview.patientGrowth > 0 ? '+' : ''}
                 {stats.overview.patientGrowth.toFixed(1)}%
               </span>
-              <span className="text-muted-foreground">from last month</span>
+              <span className="text-muted-foreground">{t('fromLastMonth')}</span>
             </div>
           </CardContent>
         </Card>
@@ -208,14 +208,16 @@ export default function DashboardPage() {
         {/* Today's Appointments */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today&apos;s Appointments</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('todayAppointments')}</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.overview.todayAppointments}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.overview.completedAppointmentsToday} completed,{' '}
-              {stats.overview.pendingAppointments} pending
+              {t('completedPending', {
+                completed: stats.overview.completedAppointmentsToday,
+                pending: stats.overview.pendingAppointments,
+              })}
             </p>
           </CardContent>
         </Card>
@@ -223,7 +225,7 @@ export default function DashboardPage() {
         {/* This Month Revenue */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('thisMonthRevenue')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -236,7 +238,7 @@ export default function DashboardPage() {
                 {stats.overview.revenueGrowth > 0 ? '+' : ''}
                 {stats.overview.revenueGrowth.toFixed(1)}%
               </span>
-              <span className="text-muted-foreground">from last month</span>
+              <span className="text-muted-foreground">{t('fromLastMonth')}</span>
             </div>
           </CardContent>
         </Card>
@@ -244,14 +246,14 @@ export default function DashboardPage() {
         {/* Pending Payments */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('pendingPayments')}</CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(stats.overview.pendingPayments)}
             </div>
-            <p className="text-xs text-muted-foreground">Outstanding receivables</p>
+            <p className="text-xs text-muted-foreground">{t('outstandingReceivables')}</p>
           </CardContent>
         </Card>
       </div>
@@ -261,15 +263,19 @@ export default function DashboardPage() {
         {/* Revenue Chart */}
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Last 7 days revenue trend</CardDescription>
+            <CardTitle>{t('revenueOverview')}</CardTitle>
+            <CardDescription>{t('last7Days')}</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
             {stats.charts.last7DaysRevenue && stats.charts.last7DaysRevenue.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart
                   data={stats.charts.last7DaysRevenue.map((item: any) => ({
-                    date: format(new Date(item.date), 'MMM dd'),
+                    date: formatDate(item.date, {
+                      year: undefined,
+                      day: '2-digit',
+                      month: 'short',
+                    }),
                     revenue: Number(item.revenue),
                   }))}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -288,12 +294,12 @@ export default function DashboardPage() {
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     activeDot={{ r: 8 }}
-                    name="Revenue"
+                    name={t('revenue')}
                   />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No revenue data available</p>
+              <p className="text-muted-foreground text-center py-8">{t('noRevenueData')}</p>
             )}
           </CardContent>
         </Card>
@@ -301,8 +307,8 @@ export default function DashboardPage() {
         {/* Upcoming Appointments */}
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Upcoming Appointments</CardTitle>
-            <CardDescription>Next 5 scheduled appointments</CardDescription>
+            <CardTitle>{t('upcomingAppointments')}</CardTitle>
+            <CardDescription>{t('next5')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -314,18 +320,18 @@ export default function DashboardPage() {
                     <div className="flex-1 space-y-1">
                       <p className="font-medium">{apt.patientName}</p>
                       <p className="text-muted-foreground text-xs">
-                        {format(new Date(apt.date), 'MMM dd, yyyy HH:mm')} • {apt.doctorName}
+                        {formatDateTime(apt.date)} • {apt.doctorName}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-muted-foreground text-center py-8">No upcoming appointments</p>
+                <p className="text-muted-foreground text-center py-8">{t('noUpcoming')}</p>
               )}
             </div>
             <Link href="/appointments">
               <Button variant="outline" className="w-full mt-4">
-                View All Appointments
+                {t('viewAllAppointments')}
               </Button>
             </Link>
           </CardContent>
@@ -336,8 +342,8 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Appointments by Status</CardTitle>
-            <CardDescription>This month's appointment distribution</CardDescription>
+            <CardTitle>{t('appointmentsByStatus')}</CardTitle>
+            <CardDescription>{t('thisMonthDistribution')}</CardDescription>
           </CardHeader>
           <CardContent>
             {stats.charts.appointmentsByStatus && stats.charts.appointmentsByStatus.length > 0 ? (
@@ -345,7 +351,7 @@ export default function DashboardPage() {
                 <PieChart>
                   <Pie
                     data={stats.charts.appointmentsByStatus.map((item: any) => ({
-                      name: item.status,
+                      name: tStatus.has(item.status) ? tStatus(item.status) : item.status,
                       value: item.count,
                     }))}
                     cx="50%"
@@ -370,9 +376,7 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">
-                No appointment data available
-              </p>
+              <p className="text-muted-foreground text-center py-8">{t('noAppointmentData')}</p>
             )}
           </CardContent>
         </Card>
@@ -380,8 +384,8 @@ export default function DashboardPage() {
         {/* Monthly Revenue Trend */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Revenue Trend</CardTitle>
-            <CardDescription>Last 6 months revenue comparison</CardDescription>
+            <CardTitle>{t('monthlyRevenueTrend')}</CardTitle>
+            <CardDescription>{t('last6Months')}</CardDescription>
           </CardHeader>
           <CardContent>
             {stats.charts.last6MonthsRevenue && stats.charts.last6MonthsRevenue.length > 0 ? (
@@ -400,11 +404,11 @@ export default function DashboardPage() {
                     formatter={(value) => (typeof value === 'number' ? formatCurrency(value) : '')}
                   />
                   <Legend />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Revenue" />
+                  <Bar dataKey="revenue" fill="hsl(var(--primary))" name={t('revenue')} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No revenue data available</p>
+              <p className="text-muted-foreground text-center py-8">{t('noRevenueData')}</p>
             )}
           </CardContent>
         </Card>
@@ -415,8 +419,8 @@ export default function DashboardPage() {
         {/* Top Procedures */}
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Top Procedures</CardTitle>
-            <CardDescription>Most common procedures this month</CardDescription>
+            <CardTitle>{t('topProcedures')}</CardTitle>
+            <CardDescription>{t('mostCommon')}</CardDescription>
           </CardHeader>
           <CardContent>
             {stats.charts.topProcedures && stats.charts.topProcedures.length > 0 ? (
@@ -444,12 +448,17 @@ export default function DashboardPage() {
                     }}
                   />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="count" fill="#8884d8" name="Count" />
-                  <Bar yAxisId="right" dataKey="revenue" fill="#82ca9d" name="Revenue (₹)" />
+                  <Bar yAxisId="left" dataKey="count" fill="#8884d8" name={t('count')} />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="revenue"
+                    fill="#82ca9d"
+                    name={t('revenueWithCurrency', { currency: currencySymbol })}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No procedure data available</p>
+              <p className="text-muted-foreground text-center py-8">{t('noProcedureData')}</p>
             )}
           </CardContent>
         </Card>
@@ -459,9 +468,9 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Low Stock Alerts
+              {t('lowStockAlerts')}
             </CardTitle>
-            <CardDescription>Items below minimum stock level</CardDescription>
+            <CardDescription>{t('belowMinimum')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -472,7 +481,7 @@ export default function DashboardPage() {
                     <div className="flex-1">
                       <p className="font-medium">{item.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Min: {item.minimumStock} {item.unit}
+                        {t('minStock', { min: item.minimumStock, unit: item.unit })}
                       </p>
                     </div>
                     <div className="text-red-600 font-medium">
@@ -481,12 +490,12 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-muted-foreground text-center py-8">All items in stock</p>
+                <p className="text-muted-foreground text-center py-8">{t('allInStock')}</p>
               )}
             </div>
             <Link href="/inventory">
               <Button variant="outline" className="w-full mt-4">
-                View Inventory
+                {t('viewInventory')}
               </Button>
             </Link>
           </CardContent>
@@ -496,8 +505,8 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common tasks you can do right now</CardDescription>
+          <CardTitle>{t('quickActions')}</CardTitle>
+          <CardDescription>{t('commonTasks')}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-4">
           <Link
@@ -508,8 +517,8 @@ export default function DashboardPage() {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium">Add Patient</p>
-              <p className="text-sm text-muted-foreground">Register new</p>
+              <p className="font-medium">{t('addPatient')}</p>
+              <p className="text-sm text-muted-foreground">{t('registerNew')}</p>
             </div>
           </Link>
           <Link
@@ -520,8 +529,8 @@ export default function DashboardPage() {
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium">Book Appointment</p>
-              <p className="text-sm text-muted-foreground">Schedule visit</p>
+              <p className="font-medium">{t('bookAppointment')}</p>
+              <p className="text-sm text-muted-foreground">{t('scheduleVisit')}</p>
             </div>
           </Link>
           <Link
@@ -532,8 +541,8 @@ export default function DashboardPage() {
               <Receipt className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium">Create Invoice</p>
-              <p className="text-sm text-muted-foreground">Bill patient</p>
+              <p className="font-medium">{t('createInvoice')}</p>
+              <p className="text-sm text-muted-foreground">{t('billPatient')}</p>
             </div>
           </Link>
           <Link
@@ -544,8 +553,8 @@ export default function DashboardPage() {
               <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium">View Reports</p>
-              <p className="text-sm text-muted-foreground">Analytics</p>
+              <p className="font-medium">{t('viewReports')}</p>
+              <p className="text-sm text-muted-foreground">{t('analytics')}</p>
             </div>
           </Link>
         </CardContent>

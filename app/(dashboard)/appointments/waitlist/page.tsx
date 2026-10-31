@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -34,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Clock, Plus, Trash2, Users, Bell, CheckCircle2, Loader2, Search } from 'lucide-react'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface WaitlistEntry {
   id: string
@@ -82,6 +83,8 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function WaitlistPage() {
+  const t = useTranslations('appointments.waitlist')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [entries, setEntries] = useState<WaitlistEntry[]>([])
@@ -114,11 +117,11 @@ export default function WaitlistPage() {
       setEntries(data.entries)
       setSummary(data.summary)
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to load waitlist' })
+      toast({ variant: 'destructive', title: t('error'), description: t('loadFailed') })
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, toast])
+  }, [statusFilter, toast, t])
 
   useEffect(() => {
     fetchWaitlist()
@@ -155,7 +158,7 @@ export default function WaitlistPage() {
 
   const handleAdd = async () => {
     if (!selectedPatient) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select a patient' })
+      toast({ variant: 'destructive', title: t('error'), description: t('selectPatient') })
       return
     }
 
@@ -175,15 +178,15 @@ export default function WaitlistPage() {
 
       if (!response.ok) {
         const err = await response.json()
-        throw new Error(err.error || 'Failed to add')
+        throw new Error(err.error || t('addFailed'))
       }
 
-      toast({ title: 'Added to waitlist' })
+      toast({ title: t('added') })
       setDialogOpen(false)
       resetForm()
       fetchWaitlist()
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message })
+      toast({ variant: 'destructive', title: t('error'), description: err.message })
     } finally {
       setAdding(false)
     }
@@ -191,18 +194,18 @@ export default function WaitlistPage() {
 
   const handleRemove = async (id: string) => {
     const ok = await confirm({
-      title: 'Remove from waitlist?',
-      description: 'Remove this patient from the waitlist?',
-      confirmLabel: 'Delete',
+      title: t('removeConfirmTitle'),
+      description: t('removeConfirmDesc'),
+      confirmLabel: t('delete'),
     })
     if (!ok) return
     try {
       const response = await fetch(`/api/appointments/waitlist?id=${id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Failed to remove')
-      toast({ title: 'Removed from waitlist' })
+      toast({ title: t('removed') })
       fetchWaitlist()
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to remove' })
+      toast({ variant: 'destructive', title: t('error'), description: t('removeFailed') })
     }
   }
 
@@ -224,8 +227,8 @@ export default function WaitlistPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Waitlist</h1>
-          <p className="text-muted-foreground">Manage patients waiting for appointment slots</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Dialog
           open={dialogOpen}
@@ -237,20 +240,18 @@ export default function WaitlistPage() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add to Waitlist
+              {t('addToWaitlist')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Add to Waitlist</DialogTitle>
-              <DialogDescription>
-                Add a patient to the waitlist for the next available slot
-              </DialogDescription>
+              <DialogTitle>{t('addToWaitlist')}</DialogTitle>
+              <DialogDescription>{t('addDialogDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {/* Patient Search */}
               <div className="space-y-2">
-                <Label>Patient *</Label>
+                <Label>{t('patient')}</Label>
                 {selectedPatient ? (
                   <div className="flex items-center justify-between bg-muted p-2 rounded">
                     <span className="text-sm font-medium">
@@ -258,14 +259,14 @@ export default function WaitlistPage() {
                       {selectedPatient.patientId})
                     </span>
                     <Button variant="ghost" size="sm" onClick={() => setSelectedPatient(null)}>
-                      Change
+                      {t('change')}
                     </Button>
                   </div>
                 ) : (
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search patient by name or ID..."
+                      placeholder={t('searchPatient')}
                       className="pl-9"
                       value={patientSearch}
                       onChange={(e) => setPatientSearch(e.target.value)}
@@ -296,16 +297,16 @@ export default function WaitlistPage() {
 
               {/* Doctor Preference */}
               <div className="space-y-2">
-                <Label>Preferred Doctor (optional)</Label>
+                <Label>{t('preferredDoctor')}</Label>
                 <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Any doctor" />
+                    <SelectValue placeholder={t('anyDoctor')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Any doctor</SelectItem>
+                    <SelectItem value="any">{t('anyDoctor')}</SelectItem>
                     {doctors.map((d: any) => (
                       <SelectItem key={d.id} value={d.id}>
-                        Dr. {d.firstName} {d.lastName}
+                        {t('doctorName', { name: `${d.firstName} ${d.lastName}` })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -314,7 +315,7 @@ export default function WaitlistPage() {
 
               {/* Preferred Days */}
               <div className="space-y-2">
-                <Label>Preferred Days (optional)</Label>
+                <Label>{t('preferredDays')}</Label>
                 <div className="flex flex-wrap gap-1">
                   {DAYS.map((day) => (
                     <Button
@@ -325,7 +326,7 @@ export default function WaitlistPage() {
                       className="text-xs h-7"
                       onClick={() => toggleDay(day)}
                     >
-                      {day.slice(0, 3)}
+                      {t(`days.${day}`)}
                     </Button>
                   ))}
                 </div>
@@ -333,16 +334,16 @@ export default function WaitlistPage() {
 
               {/* Preferred Time */}
               <div className="space-y-2">
-                <Label>Preferred Time (optional)</Label>
+                <Label>{t('preferredTime')}</Label>
                 <Select value={selectedTime} onValueChange={setSelectedTime}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Any time" />
+                    <SelectValue placeholder={t('anyTime')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Any time</SelectItem>
+                    <SelectItem value="any">{t('anyTime')}</SelectItem>
                     {TIME_SLOTS.map((slot) => (
                       <SelectItem key={slot.value} value={slot.value}>
-                        {slot.label}
+                        {t(`timeSlots.${slot.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -351,9 +352,9 @@ export default function WaitlistPage() {
 
               {/* Notes */}
               <div className="space-y-2">
-                <Label>Notes (optional)</Label>
+                <Label>{t('notesOptional')}</Label>
                 <Textarea
-                  placeholder="Any additional notes..."
+                  placeholder={t('notesPlaceholder')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -361,11 +362,11 @@ export default function WaitlistPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t('cancel')}
               </Button>
               <Button onClick={handleAdd} disabled={adding || !selectedPatient}>
                 {adding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Add to Waitlist
+                {t('addToWaitlist')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -382,7 +383,7 @@ export default function WaitlistPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{summary.active}</p>
-                <p className="text-sm text-muted-foreground">Waiting</p>
+                <p className="text-sm text-muted-foreground">{t('waiting')}</p>
               </div>
             </div>
           </CardContent>
@@ -395,7 +396,7 @@ export default function WaitlistPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{summary.notified}</p>
-                <p className="text-sm text-muted-foreground">Notified</p>
+                <p className="text-sm text-muted-foreground">{t('notified')}</p>
               </div>
             </div>
           </CardContent>
@@ -408,7 +409,7 @@ export default function WaitlistPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{summary.booked}</p>
-                <p className="text-sm text-muted-foreground">Booked</p>
+                <p className="text-sm text-muted-foreground">{t('booked')}</p>
               </div>
             </div>
           </CardContent>
@@ -424,7 +425,7 @@ export default function WaitlistPage() {
             size="sm"
             onClick={() => setStatusFilter(s)}
           >
-            {s.charAt(0) + s.slice(1).toLowerCase()}
+            {t(`status.${s}`)}
           </Button>
         ))}
       </div>
@@ -434,11 +435,9 @@ export default function WaitlistPage() {
         <CardHeader>
           <CardTitle>
             <Users className="h-5 w-5 inline mr-2" />
-            Waitlist Entries
+            {t('entriesTitle')}
           </CardTitle>
-          <CardDescription>
-            Patients are automatically notified when matching slots open up
-          </CardDescription>
+          <CardDescription>{t('entriesDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -448,19 +447,19 @@ export default function WaitlistPage() {
           ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[200px] text-center">
               <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No waitlist entries</p>
+              <p className="text-muted-foreground">{t('noEntries')}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Doctor Preference</TableHead>
-                  <TableHead>Preferred Days</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('colPatient')}</TableHead>
+                  <TableHead>{t('colDoctorPref')}</TableHead>
+                  <TableHead>{t('colPreferredDays')}</TableHead>
+                  <TableHead>{t('colTime')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  <TableHead>{t('colAdded')}</TableHead>
+                  <TableHead className="text-right">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -468,23 +467,35 @@ export default function WaitlistPage() {
                   <TableRow key={entry.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{entry.patient?.name || 'Unknown'}</p>
+                        <p className="font-medium">{entry.patient?.name || t('unknown')}</p>
                         <p className="text-xs text-muted-foreground">
                           {entry.patient?.patientId} | {entry.patient?.phone}
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell>{entry.doctor?.name || 'Any'}</TableCell>
+                    <TableCell>{entry.doctor?.name || t('any')}</TableCell>
                     <TableCell>
                       {entry.preferredDays && (entry.preferredDays as string[]).length > 0
-                        ? (entry.preferredDays as string[]).map((d) => d.slice(0, 3)).join(', ')
-                        : 'Any'}
+                        ? (entry.preferredDays as string[])
+                            .map((d) => (t.has(`days.${d}`) ? t(`days.${d}`) : d))
+                            .join(', ')
+                        : t('any')}
                     </TableCell>
-                    <TableCell>{entry.preferredTime || 'Any'}</TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[entry.status] || ''}>{entry.status}</Badge>
+                      {entry.preferredTime
+                        ? t.has(`timeShort.${entry.preferredTime}`)
+                          ? t(`timeShort.${entry.preferredTime}`)
+                          : entry.preferredTime
+                        : t('any')}
                     </TableCell>
-                    <TableCell>{format(new Date(entry.createdAt), 'PP')}</TableCell>
+                    <TableCell>
+                      <Badge className={STATUS_COLORS[entry.status] || ''}>
+                        {t.has(`status.${entry.status}`)
+                          ? t(`status.${entry.status}`)
+                          : entry.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{fmt.formatDate(entry.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       {entry.status === 'ACTIVE' && (
                         <Button variant="ghost" size="icon" onClick={() => handleRemove(entry.id)}>
@@ -493,12 +504,12 @@ export default function WaitlistPage() {
                       )}
                       {entry.notifiedAt && (
                         <span className="text-xs text-muted-foreground block">
-                          Notified {format(new Date(entry.notifiedAt), 'PP')}
+                          {t('notifiedOn', { date: fmt.formatDate(entry.notifiedAt) })}
                         </span>
                       )}
                       {entry.bookedAt && (
                         <span className="text-xs text-green-600 block">
-                          Booked {format(new Date(entry.bookedAt), 'PP')}
+                          {t('bookedOn', { date: fmt.formatDate(entry.bookedAt) })}
                         </span>
                       )}
                     </TableCell>

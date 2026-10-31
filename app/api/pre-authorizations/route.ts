@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(preAuth, { status: 201 })
   } catch (err) {
-    console.error('Create pre-authorization error:', err)
+    logger.error({ err }, 'Create pre-authorization error:')
     return NextResponse.json({ error: 'Failed to create pre-authorization' }, { status: 500 })
   }
 }

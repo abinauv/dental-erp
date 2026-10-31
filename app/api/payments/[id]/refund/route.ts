@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // POST - Process refund for a payment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       payment: updatedPayment,
     })
   } catch (error) {
-    console.error('Error processing refund:', error)
+    logger.error({ err: error }, 'Error processing refund:')
     return NextResponse.json({ error: 'Failed to process refund' }, { status: 500 })
   }
 }

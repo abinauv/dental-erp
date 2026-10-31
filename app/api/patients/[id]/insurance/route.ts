@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json(policy, { status: 201 })
   } catch (err) {
-    console.error('Create patient insurance error:', err)
+    logger.error({ err }, 'Create patient insurance error:')
     return NextResponse.json({ error: 'Failed to create insurance policy' }, { status: 500 })
   }
 }
@@ -158,7 +159,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('Update patient insurance error:', err)
+    logger.error({ err }, 'Update patient insurance error:')
     return NextResponse.json({ error: 'Failed to update insurance policy' }, { status: 500 })
   }
 }

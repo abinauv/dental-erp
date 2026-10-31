@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get available time slots for a doctor on a specific date
 export async function GET(request: NextRequest) {
@@ -166,7 +167,7 @@ export async function GET(request: NextRequest) {
         : workingHours,
     })
   } catch (error) {
-    console.error('Error fetching time slots:', error)
+    logger.error({ err: error }, 'Error fetching time slots:')
     return NextResponse.json({ error: 'Failed to fetch time slots' }, { status: 500 })
   }
 }

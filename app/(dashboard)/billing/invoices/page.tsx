@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -49,7 +50,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { invoiceStatusConfig, formatCurrency, formatDate, getDueDays } from '@/lib/billing-utils'
+import { invoiceStatusConfig, getDueDays } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Invoice {
   id: string
@@ -85,6 +87,13 @@ interface PaginationInfo {
 
 export default function InvoicesPage() {
   const router = useRouter()
+  const t = useTranslations('billing.invoices')
+  const tStatus = useTranslations('billing.status')
+  const tCommon = useTranslations('common')
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  // Invoices always show both decimal places (unlike summary figures elsewhere).
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -139,14 +148,15 @@ export default function InvoicesPage() {
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tStatus.has(status) ? tStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
-      title: 'Cancel Invoice',
-      description: 'Are you sure you want to delete/cancel this invoice?',
-      confirmLabel: 'Cancel Invoice',
+      title: t('cancelDialog.title'),
+      description: t('cancelDialog.description'),
+      confirmLabel: t('cancelDialog.confirm'),
     })
     if (!ok) return
 
@@ -166,13 +176,13 @@ export default function InvoicesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-          <p className="text-muted-foreground">Manage patient invoices and billing</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Link href="/billing/invoices/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            New Invoice
+            {t('new')}
           </Button>
         </Link>
       </div>
@@ -184,7 +194,7 @@ export default function InvoicesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by invoice number, patient name, or phone..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -193,17 +203,17 @@ export default function InvoicesPage() {
             <div className="flex gap-2 flex-wrap">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('columns.status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
-                  <SelectItem value="PAID">Paid</SelectItem>
-                  <SelectItem value="OVERDUE">Overdue</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                  <SelectItem value="REFUNDED">Refunded</SelectItem>
+                  <SelectItem value="all">{tStatus('all')}</SelectItem>
+                  <SelectItem value="DRAFT">{tStatus('DRAFT')}</SelectItem>
+                  <SelectItem value="PENDING">{tStatus('PENDING')}</SelectItem>
+                  <SelectItem value="PARTIALLY_PAID">{tStatus('PARTIALLY_PAID')}</SelectItem>
+                  <SelectItem value="PAID">{tStatus('PAID')}</SelectItem>
+                  <SelectItem value="OVERDUE">{tStatus('OVERDUE')}</SelectItem>
+                  <SelectItem value="CANCELLED">{tStatus('CANCELLED')}</SelectItem>
+                  <SelectItem value="REFUNDED">{tStatus('REFUNDED')}</SelectItem>
                 </SelectContent>
               </Select>
               <Input
@@ -226,7 +236,7 @@ export default function InvoicesPage() {
                 size="sm"
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
-                Overdue Only
+                {t('overdueOnly')}
               </Button>
             </div>
           </div>
@@ -239,14 +249,14 @@ export default function InvoicesPage() {
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Patient</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">Paid</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('columns.invoice')}</TableHead>
+                <TableHead>{t('columns.patient')}</TableHead>
+                <TableHead className="text-right">{t('columns.amount')}</TableHead>
+                <TableHead className="text-right">{t('columns.paid')}</TableHead>
+                <TableHead className="text-right">{t('columns.balance')}</TableHead>
+                <TableHead>{t('columns.dueDate')}</TableHead>
+                <TableHead>{t('columns.status')}</TableHead>
+                <TableHead className="text-right">{t('columns.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -284,11 +294,11 @@ export default function InvoicesPage() {
                   <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <FileText className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No invoices found</p>
+                      <p className="text-muted-foreground">{t('empty')}</p>
                       <Link href="/billing/invoices/new">
                         <Button variant="outline" size="sm">
                           <Plus className="h-4 w-4 mr-2" />
-                          Create New Invoice
+                          {t('createNew')}
                         </Button>
                       </Link>
                     </div>
@@ -364,14 +374,14 @@ export default function InvoicesPage() {
                               onClick={() => router.push(`/billing/invoices/${invoice.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              View Details
+                              {t('actions.view')}
                             </DropdownMenuItem>
                             {invoice.status === 'DRAFT' && (
                               <DropdownMenuItem
                                 onClick={() => router.push(`/billing/invoices/${invoice.id}/edit`)}
                               >
                                 <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                {t('actions.edit')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
@@ -382,17 +392,17 @@ export default function InvoicesPage() {
                                 }
                               >
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                Record Payment
+                                {t('actions.recordPayment')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => window.print()}>
                               <Printer className="h-4 w-4 mr-2" />
-                              Print Invoice
+                              {t('actions.print')}
                             </DropdownMenuItem>
                             {invoice.patient.email && (
                               <DropdownMenuItem>
                                 <Mail className="h-4 w-4 mr-2" />
-                                Send via Email
+                                {t('actions.sendEmail')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
@@ -402,7 +412,7 @@ export default function InvoicesPage() {
                                 className="text-red-600"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Cancel Invoice
+                                {t('actions.cancel')}
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -419,9 +429,11 @@ export default function InvoicesPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} invoices
+                {t('pagination.showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -431,10 +443,13 @@ export default function InvoicesPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {tCommon('actions.previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {t('pagination.page', {
+                    page: pagination.page,
+                    totalPages: pagination.totalPages,
+                  })}
                 </div>
                 <Button
                   variant="outline"
@@ -442,7 +457,7 @@ export default function InvoicesPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {tCommon('actions.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

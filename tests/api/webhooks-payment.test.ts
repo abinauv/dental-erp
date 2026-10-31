@@ -86,11 +86,14 @@ describe('POST /api/webhooks/payment/[provider]', () => {
     expect(body.status).toBe('already_processed')
   })
 
-  it('handles razorpay webhook — updates pending payment on verified', async () => {
+  it('settles the pending payment AND the invoice on a verified webhook', async () => {
+    // The reserved pending payment — carries the hospital, invoice and amount.
     vi.mocked(prisma.payment.findFirst).mockResolvedValue({
       id: 'pay1',
       hospitalId: 'h1',
       status: 'PENDING',
+      invoiceId: 'inv1',
+      amount: 5000,
       gatewayOrderId: 'order_456',
     } as any)
 
@@ -101,7 +104,18 @@ describe('POST /api/webhooks/payment/[provider]', () => {
       gateway: mockGateway,
       credentials: { webhookSecret: 'whsec_123' },
     })
-    vi.mocked(prisma.payment.update).mockResolvedValue({} as any)
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
+      id: 'inv1',
+      paidAmount: 0,
+      totalAmount: 5000,
+      balanceAmount: 5000,
+    } as any)
+    vi.mocked(prisma.payment.update).mockResolvedValue({
+      id: 'pay1',
+      paymentNo: 'PAY00001',
+      amount: 5000,
+    } as any)
+    vi.mocked(prisma.invoice.update).mockResolvedValue({} as any)
 
     const res = await webhookPOST(
       makeReq(
@@ -120,10 +134,49 @@ describe('POST /api/webhooks/payment/[provider]', () => {
     const body = await res.json()
 
     expect(body.status).toBe('ok')
-    expect(prisma.payment.update).toHaveBeenCalledWith({
-      where: { id: 'pay1' },
-      data: { gatewayStatus: 'captured', status: 'COMPLETED' },
+    expect(mockGateway.verifyWebhook).toHaveBeenCalled()
+    // Payment marked COMPLETED...
+    expect(prisma.payment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'pay1' },
+        data: expect.objectContaining({ status: 'COMPLETED' }),
+      })
+    )
+    // ...and, crucially, the invoice is settled (the old code skipped this).
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'inv1' },
+        data: expect.objectContaining({ status: 'PAID' }),
+      })
+    )
+  })
+
+  it('rejects a webhook whose signature does not verify', async () => {
+    vi.mocked(prisma.payment.findFirst).mockResolvedValue({
+      id: 'pay9',
+      hospitalId: 'h1',
+      status: 'PENDING',
+      invoiceId: 'inv9',
+      amount: 1000,
+      gatewayOrderId: 'order_bad',
+    } as any)
+    mockGetGateway.mockResolvedValue({
+      gateway: { verifyWebhook: vi.fn().mockReturnValue(false) },
+      credentials: { webhookSecret: 'whsec_123' },
     })
+
+    const res = await webhookPOST(
+      makeReq(
+        'razorpay',
+        { payload: { payment: { entity: { order_id: 'order_bad' } } } },
+        { 'x-razorpay-signature': 'forged' }
+      ),
+      makeParams('razorpay') as any
+    )
+    const body = await res.json()
+
+    expect(body.status).toBe('invalid_signature')
+    expect(prisma.invoice.update).not.toHaveBeenCalled()
   })
 
   it('handles phonepe webhook — decodes base64 response', async () => {

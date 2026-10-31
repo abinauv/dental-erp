@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface FormSubmission {
   id: string
@@ -44,21 +46,24 @@ const typeIcons: Record<string, React.ReactNode> = {
   CUSTOM: <FileText className="h-5 w-5" />,
 }
 
+// Status icon + badge variant; the label comes from the catalogue
+// (portal.forms.status.*), keyed by the status value.
 const statusConfig: Record<
   string,
   {
     icon: React.ReactNode
-    label: string
     variant: 'default' | 'secondary' | 'destructive' | 'outline'
   }
 > = {
-  SUBMITTED: { icon: <Clock className="h-3 w-3" />, label: 'Submitted', variant: 'secondary' },
-  REVIEWED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Reviewed', variant: 'outline' },
-  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Approved', variant: 'default' },
-  REJECTED: { icon: <XCircle className="h-3 w-3" />, label: 'Rejected', variant: 'destructive' },
+  SUBMITTED: { icon: <Clock className="h-3 w-3" />, variant: 'secondary' },
+  REVIEWED: { icon: <CheckCircle2 className="h-3 w-3" />, variant: 'outline' },
+  APPROVED: { icon: <CheckCircle2 className="h-3 w-3" />, variant: 'default' },
+  REJECTED: { icon: <XCircle className="h-3 w-3" />, variant: 'destructive' },
 }
 
 export default function PatientFormsPage() {
+  const t = useTranslations('portal.forms')
+  const { formatDate } = useClinicFormatters()
   const [submissions, setSubmissions] = useState<FormSubmission[]>([])
   const [templates, setTemplates] = useState<AvailableTemplate[]>([])
   const [loading, setLoading] = useState(true)
@@ -74,7 +79,7 @@ export default function PatientFormsPage() {
       if (data.submissions) setSubmissions(data.submissions)
       if (data.availableTemplates) setTemplates(data.availableTemplates)
     } catch {
-      toast.error('Failed to load forms')
+      toast.error(t('loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -82,7 +87,7 @@ export default function PatientFormsPage() {
 
   // Filter out templates that have already been submitted
   const submittedTemplateIds = new Set(submissions.map((s) => s.template.id))
-  const pendingTemplates = templates.filter((t) => !submittedTemplateIds.has(t.id))
+  const pendingTemplates = templates.filter((tpl) => !submittedTemplateIds.has(tpl.id))
 
   if (loading) {
     return (
@@ -95,37 +100,35 @@ export default function PatientFormsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Forms</h1>
-        <p className="text-muted-foreground">
-          Complete forms and consent documents required by your clinic
-        </p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Pending Forms (not yet submitted) */}
       {pendingTemplates.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Forms to Complete</CardTitle>
+            <CardTitle className="text-lg">{t('toComplete')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {pendingTemplates.map((t) => (
+            {pendingTemplates.map((tpl) => (
               <Link
-                key={t.id}
-                href={`/portal/forms/${t.id}`}
+                key={tpl.id}
+                href={`/portal/forms/${tpl.id}`}
                 className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent transition-colors"
               >
                 <div className="text-primary">
-                  {typeIcons[t.type] || <FileText className="h-5 w-5" />}
+                  {typeIcons[tpl.type] || <FileText className="h-5 w-5" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium">{t.name}</div>
-                  {t.description && (
+                  <div className="font-medium">{tpl.name}</div>
+                  {tpl.description && (
                     <div className="text-sm text-muted-foreground line-clamp-1">
-                      {t.description}
+                      {tpl.description}
                     </div>
                   )}
                 </div>
-                <Button size="sm">Fill Out</Button>
+                <Button size="sm">{t('fillOut')}</Button>
               </Link>
             ))}
           </CardContent>
@@ -135,13 +138,13 @@ export default function PatientFormsPage() {
       {/* Submitted Forms */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Submitted Forms</CardTitle>
+          <CardTitle className="text-lg">{t('submittedForms')}</CardTitle>
         </CardHeader>
         <CardContent>
           {submissions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p>No forms submitted yet</p>
+              <p>{t('noSubmitted')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -155,17 +158,12 @@ export default function PatientFormsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{s.template.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        Submitted:{' '}
-                        {new Date(s.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
+                        {t('submittedOn', { date: formatDate(s.createdAt) })}
                       </div>
                     </div>
                     <Badge variant={sc.variant} className="flex items-center gap-1">
                       {sc.icon}
-                      {sc.label}
+                      {t(`status.${s.status}`)}
                     </Badge>
                   </div>
                 )
@@ -176,9 +174,7 @@ export default function PatientFormsPage() {
       </Card>
 
       {pendingTemplates.length === 0 && submissions.length > 0 && (
-        <p className="text-center text-sm text-muted-foreground">
-          All forms are complete. Your clinic will review the submissions.
-        </p>
+        <p className="text-center text-sm text-muted-foreground">{t('allComplete')}</p>
       )}
     </div>
   )

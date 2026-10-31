@@ -4,6 +4,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { getModelForSkill } from '@/lib/ai/models'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getSkill } from '@/lib/ai/skills'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/ai/pricing-suggestions — AI-powered pricing recommendations
@@ -165,7 +166,7 @@ REVENUE (Last 30 days):
       tokensUsed: response.usage.totalTokens,
     })
   } catch (err) {
-    console.error('Pricing suggestions error:', err)
+    logger.error({ err }, 'Pricing suggestions error:')
     return NextResponse.json({ error: 'Failed to generate pricing suggestions' }, { status: 500 })
   }
 }

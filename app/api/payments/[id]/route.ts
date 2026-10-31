@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get single payment details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(payment)
   } catch (error) {
-    console.error('Error fetching payment:', error)
+    logger.error({ err: error }, 'Error fetching payment:')
     return NextResponse.json({ error: 'Failed to fetch payment' }, { status: 500 })
   }
 }
@@ -155,7 +156,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(payment)
   } catch (error) {
-    console.error('Error updating payment:', error)
+    logger.error({ err: error }, 'Error updating payment:')
     return NextResponse.json({ error: 'Failed to update payment' }, { status: 500 })
   }
 }
@@ -205,7 +206,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Payment deleted successfully' })
   } catch (error) {
-    console.error('Error deleting payment:', error)
+    logger.error({ err: error }, 'Error deleting payment:')
     return NextResponse.json({ error: 'Failed to delete payment' }, { status: 500 })
   }
 }

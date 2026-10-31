@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
 import bcrypt from 'bcryptjs'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   const { error, session, hospitalId } = await requireAuthAndRole(['ADMIN'])
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest) {
       errors: importErrors.slice(0, 50),
     })
   } catch (err: any) {
-    console.error('Data import commit error:', err)
+    logger.error({ err }, 'Data import commit error:')
     return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 })
   }
 }
@@ -656,6 +657,9 @@ async function importInvoices(
       const taxableAmount = row.taxableAmount ?? subtotal
       const cgstAmount = row.cgstAmount ?? 0
       const sgstAmount = row.sgstAmount ?? 0
+      // Scalar tax total for the country-agnostic model; imported rows are
+      // historical GST, so derive it from the legacy columns.
+      const taxAmount = Math.round((Number(cgstAmount) + Number(sgstAmount)) * 100) / 100
 
       await prisma.invoice.create({
         data: {
@@ -669,6 +673,7 @@ async function importInvoices(
           taxableAmount,
           cgstAmount,
           sgstAmount,
+          taxAmount,
           discountAmount: row.discountAmount || 0,
           status:
             row.status ||

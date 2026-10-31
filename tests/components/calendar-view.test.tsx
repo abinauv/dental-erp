@@ -156,7 +156,7 @@ describe('CalendarView', () => {
   it('shows loading state initially', () => {
     fetchMock.mockImplementation(() => new Promise(() => {}))
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
-    expect(screen.getByText('Loading calendar...')).toBeInTheDocument()
+    expect(screen.getByText('Loading calendar…')).toBeInTheDocument()
   })
 
   it('renders Today button', async () => {
@@ -175,7 +175,7 @@ describe('CalendarView', () => {
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
       // Week view shows day of week headers
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
     // Fetch should include view=week
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('view=week'))
@@ -198,7 +198,7 @@ describe('CalendarView', () => {
   it('switches to day view', async () => {
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByTestId('select-item-day'))
@@ -211,7 +211,7 @@ describe('CalendarView', () => {
   it('switches to month view', async () => {
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByTestId('select-item-month'))
@@ -234,7 +234,7 @@ describe('CalendarView', () => {
   it('renders month view with day-of-week headers', async () => {
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
 
     // Switch to month view
@@ -270,7 +270,7 @@ describe('CalendarView', () => {
 
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByTestId('select-item-day'))
@@ -295,7 +295,7 @@ describe('CalendarView', () => {
 
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByTestId('select-item-month'))
@@ -312,7 +312,7 @@ describe('CalendarView', () => {
 
     render(<CalendarView initialDate={new Date('2025-06-15')} />)
     await waitFor(() => {
-      expect(screen.queryByText('Loading calendar...')).not.toBeInTheDocument()
+      expect(screen.queryByText('Loading calendar…')).not.toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByTestId('select-item-day'))

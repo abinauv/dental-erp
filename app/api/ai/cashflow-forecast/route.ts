@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/ai/cashflow-forecast
@@ -185,7 +186,7 @@ Consider weekday/weekend patterns. Flag shortfalls. Return ONLY valid JSON, no m
 
     return NextResponse.json({ ...result, model: response.model })
   } catch (error: any) {
-    console.error('Cash flow forecast error:', error)
+    logger.error({ err: error }, 'Cash flow forecast error:')
     return NextResponse.json(
       { error: error.message || 'Failed to generate forecast' },
       { status: error.message?.includes('Unauthorized') ? 401 : 500 }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { StaffInviteStatus } from '@prisma/client'
 import { sendInviteEmail } from '@/lib/email-helpers'
+import { logger } from '@/lib/logger'
 
 // Cancel/revoke an invite
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -37,7 +38,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       message: 'Invite cancelled successfully',
     })
   } catch (error) {
-    console.error('Cancel invite error:', error)
+    logger.error({ err: error }, 'Cancel invite error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }
@@ -100,7 +101,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       emailSent,
     })
   } catch (error) {
-    console.error('Resend invite error:', error)
+    logger.error({ err: error }, 'Resend invite error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generateInvoiceNo, calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
-import { DiscountType, InvoiceStatus } from '@prisma/client'
+import { DiscountType, InvoiceStatus, Prisma } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - List invoices with filters
 export async function GET(request: NextRequest) {
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching invoices:', error)
+    logger.error({ err: error }, 'Error fetching invoices:')
     return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 })
   }
 }
@@ -204,6 +205,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
+    // Tax provider is driven by the clinic's country; place-of-supply (the
+    // patient's region vs the clinic's) decides India's intra/inter-state split.
+    const hospital = await prisma.hospital.findUnique({
+      where: { id: hospitalId },
+      select: { country: true, state: true },
+    })
+
     // Validate items
     for (const item of items) {
       if (!item.description || item.quantity <= 0 || item.unitPrice < 0) {
@@ -227,7 +235,12 @@ export async function POST(request: NextRequest) {
       discountType as DiscountType,
       discountValue,
       cgstRate,
-      sgstRate
+      sgstRate,
+      {
+        country: hospital?.country,
+        placeOfSupply: patient.state ?? undefined,
+        clinicRegion: hospital?.state ?? undefined,
+      }
     )
 
     // Generate invoice number
@@ -259,6 +272,8 @@ export async function POST(request: NextRequest) {
         cgstAmount: calculatedTotals.cgstAmount,
         sgstRate,
         sgstAmount: calculatedTotals.sgstAmount,
+        taxComponents: calculatedTotals.taxComponents as unknown as Prisma.InputJsonValue,
+        taxAmount: calculatedTotals.taxAmount,
         totalAmount: calculatedTotals.totalAmount,
         paidAmount: 0,
         balanceAmount: calculatedTotals.totalAmount,
@@ -308,7 +323,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(invoice, { status: 201 })
   } catch (error) {
-    console.error('Error creating invoice:', error)
+    logger.error({ err: error }, 'Error creating invoice:')
     return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 })
   }
 }

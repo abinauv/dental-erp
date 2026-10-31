@@ -6,6 +6,7 @@ import { smsService } from './sms.service'
 import { emailService } from './email.service'
 import { templateService } from './template.service'
 import { addDays, startOfDay, endOfDay, format, subDays } from 'date-fns'
+import { logger } from '@/lib/logger'
 
 class CommunicationTriggersService {
   // Send appointment reminders (24 hours before)
@@ -35,7 +36,7 @@ class CommunicationTriggersService {
       },
     })
 
-    console.log(`Found ${appointments.length} appointments for tomorrow`)
+    logger.info(`Found ${appointments.length} appointments for tomorrow`)
 
     for (const appointment of appointments) {
       try {
@@ -45,7 +46,7 @@ class CommunicationTriggersService {
         })
 
         if (preferences && !preferences.appointmentReminders) {
-          console.log(`Patient ${appointment.patientId} has disabled appointment reminders`)
+          logger.info(`Patient ${appointment.patientId} has disabled appointment reminders`)
           continue
         }
 
@@ -85,7 +86,7 @@ class CommunicationTriggersService {
               templateId: smsTemplate.id,
             })
 
-            console.log(
+            logger.info(
               `SMS reminder sent to ${appointment.patient.phone} for appointment ${appointment.appointmentNo}`
             )
           }
@@ -115,7 +116,7 @@ class CommunicationTriggersService {
               templateId: emailTemplate.id,
             })
 
-            console.log(
+            logger.info(
               `Email reminder sent to ${appointment.patient.email} for appointment ${appointment.appointmentNo}`
             )
           }
@@ -132,7 +133,10 @@ class CommunicationTriggersService {
           },
         })
       } catch (error) {
-        console.error(`Error sending reminder for appointment ${appointment.appointmentNo}:`, error)
+        logger.error(
+          { err: error },
+          `Error sending reminder for appointment ${appointment.appointmentNo}:`
+        )
       }
     }
   }
@@ -160,7 +164,7 @@ class CommunicationTriggersService {
       return dob.getMonth() + 1 === todayMonth && dob.getDate() === todayDate
     })
 
-    console.log(`Found ${birthdayPatients.length} patients with birthday today`)
+    logger.info(`Found ${birthdayPatients.length} patients with birthday today`)
 
     for (const patient of birthdayPatients) {
       try {
@@ -203,7 +207,7 @@ class CommunicationTriggersService {
           }
         }
       } catch (error) {
-        console.error(`Error sending birthday wish to patient ${patient.id}:`, error)
+        logger.error({ err: error }, `Error sending birthday wish to patient ${patient.id}:`)
       }
     }
   }
@@ -230,7 +234,7 @@ class CommunicationTriggersService {
       },
     })
 
-    console.log(`Found ${overdueInvoices.length} overdue invoices`)
+    logger.info(`Found ${overdueInvoices.length} overdue invoices`)
 
     for (const invoice of overdueInvoices) {
       try {
@@ -278,7 +282,10 @@ class CommunicationTriggersService {
           }
         }
       } catch (error) {
-        console.error(`Error sending payment reminder for invoice ${invoice.invoiceNo}:`, error)
+        logger.error(
+          { err: error },
+          `Error sending payment reminder for invoice ${invoice.invoiceNo}:`
+        )
       }
     }
   }
@@ -295,7 +302,7 @@ class CommunicationTriggersService {
       },
     })
 
-    console.log(`Found ${labOrders.length} ready lab orders`)
+    logger.info(`Found ${labOrders.length} ready lab orders`)
 
     for (const order of labOrders) {
       try {
@@ -344,7 +351,10 @@ class CommunicationTriggersService {
           },
         })
       } catch (error) {
-        console.error(`Error sending lab work notification for order ${order.orderNumber}:`, error)
+        logger.error(
+          { err: error },
+          `Error sending lab work notification for order ${order.orderNumber}:`
+        )
       }
     }
   }
@@ -439,21 +449,21 @@ class CommunicationTriggersService {
                 patientId: appt.patientId,
               })
 
-              console.log(`Review request sent to ${appt.patient.phone}`)
+              logger.info(`Review request sent to ${appt.patient.phone}`)
             }
           } catch (err) {
-            console.error(`Error sending review request for appointment ${appt.id}:`, err)
+            logger.error({ err }, `Error sending review request for appointment ${appt.id}:`)
           }
         }
       } catch (err) {
-        console.error(`Error processing review requests for hospital ${hospital.id}:`, err)
+        logger.error({ err }, `Error processing review requests for hospital ${hospital.id}:`)
       }
     }
   }
 
   // Main cron job runner - should be called periodically (e.g., every hour)
   async runAllTriggers() {
-    console.log('Starting communication triggers...')
+    logger.info('Starting communication triggers...')
 
     try {
       await this.sendAppointmentReminders24Hours()
@@ -462,9 +472,9 @@ class CommunicationTriggersService {
       await this.sendLabWorkReadyNotifications()
       await this.sendReviewRequests()
 
-      console.log('Communication triggers completed successfully')
+      logger.info('Communication triggers completed successfully')
     } catch (error) {
-      console.error('Error running communication triggers:', error)
+      logger.error({ err: error }, 'Error running communication triggers:')
     }
   }
 }
