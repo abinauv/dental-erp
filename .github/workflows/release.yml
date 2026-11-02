@@ -84,7 +84,7 @@ jobs:
       # are attached once, to the manifest list, in the job below.
       - name: Build
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
