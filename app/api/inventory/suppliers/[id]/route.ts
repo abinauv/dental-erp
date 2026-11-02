@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, PurchaseOrderStatus, SupplierStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
 
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
   } catch (error: any) {
-    console.error('Error fetching supplier:', error)
+    logger.error({ err: error }, 'Error fetching supplier:')
     return NextResponse.json(
       { error: 'Failed to fetch supplier', details: error.message },
       { status: 500 }
@@ -150,7 +151,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, message: 'Supplier updated successfully' })
   } catch (error: any) {
-    console.error('Error updating supplier:', error)
+    logger.error({ err: error }, 'Error updating supplier:')
     return NextResponse.json(
       { error: 'Failed to update supplier', details: error.message },
       { status: 500 }
@@ -199,7 +200,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Supplier deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting supplier:', error)
+    logger.error({ err: error }, 'Error deleting supplier:')
     return NextResponse.json(
       { error: 'Failed to delete supplier', details: error.message },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/devices/register — Register a new IoT device
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(device, { status: 201 })
   } catch (err) {
-    console.error('Device registration error:', err)
+    logger.error({ err }, 'Device registration error:')
     return NextResponse.json({ error: 'Failed to register device' }, { status: 500 })
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: Public endpoint — list active doctors for a hospital by slug.
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
     return NextResponse.json({ doctors, hospitalName: hospital.name })
   } catch (err: unknown) {
-    console.error('Public doctors error:', err)
+    logger.error({ err }, 'Public doctors error:')
     return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 })
   }
 }

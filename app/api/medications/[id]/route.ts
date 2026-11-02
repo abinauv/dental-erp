@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET — single medication
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, data: medication })
   } catch (err: any) {
-    console.error('Error fetching medication:', err)
+    logger.error({ err }, 'Error fetching medication:')
     return NextResponse.json(
       { error: err.message || 'Failed to fetch medication' },
       { status: 500 }
@@ -64,7 +65,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, data: medication })
   } catch (err: any) {
-    console.error('Error updating medication:', err)
+    logger.error({ err }, 'Error updating medication:')
     return NextResponse.json(
       { error: err.message || 'Failed to update medication' },
       { status: 500 }
@@ -93,7 +94,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Medication deactivated' })
   } catch (err: any) {
-    console.error('Error deleting medication:', err)
+    logger.error({ err }, 'Error deleting medication:')
     return NextResponse.json(
       { error: err.message || 'Failed to delete medication' },
       { status: 500 }

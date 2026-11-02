@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -52,18 +54,15 @@ const typeIcons: Record<string, React.ReactNode> = {
   CUSTOM: <FileText className="h-4 w-4" />,
 }
 
-const typeLabels: Record<string, string> = {
-  MEDICAL_HISTORY: 'Medical History',
-  CONSENT: 'Consent',
-  INTAKE: 'Intake',
-  FEEDBACK: 'Feedback',
-  CUSTOM: 'Custom',
-}
-
 export default function FormsSettingsPage() {
+  const t = useTranslations('settings.formsList')
+  const fmt = useClinicFormatters()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const [templates, setTemplates] = useState<FormTemplate[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Type labels prefer the catalogue, falling back to the raw enum value.
+  const typeLabel = (type: string) => (t.has(`type.${type}`) ? t(`type.${type}`) : type)
 
   useEffect(() => {
     fetchTemplates()
@@ -75,7 +74,7 @@ export default function FormsSettingsPage() {
       const data = await res.json()
       if (data.templates) setTemplates(data.templates)
     } catch {
-      toast.error('Failed to load form templates')
+      toast.error(t('loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -89,32 +88,32 @@ export default function FormsSettingsPage() {
         toast.success(data.message)
         fetchTemplates()
       } else {
-        toast.error(data.error || 'Failed to load defaults')
+        toast.error(data.error || t('loadDefaultsFailed'))
       }
     } catch {
-      toast.error('Failed to load defaults')
+      toast.error(t('loadDefaultsFailed'))
     }
   }
 
   const handleDelete = async (id: string, name: string) => {
     const ok = await confirm({
-      title: 'Delete Template',
-      description: `Delete "${name}"? Templates with submissions will be deactivated instead.`,
-      confirmLabel: 'Delete',
+      title: t('deleteTitle'),
+      description: t('deleteDesc', { name }),
+      confirmLabel: t('deleteConfirm'),
     })
     if (!ok) return
 
     try {
       const res = await fetch(`/api/settings/forms/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast.success('Template removed')
+        toast.success(t('templateRemoved'))
         fetchTemplates()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to delete')
+        toast.error(data.error || t('deleteFailed'))
       }
     } catch {
-      toast.error('Failed to delete template')
+      toast.error(t('deleteFailedCatch'))
     }
   }
 
@@ -122,42 +121,38 @@ export default function FormsSettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Form Templates</h1>
-          <p className="text-muted-foreground">
-            Create and manage intake forms, consent forms, and custom forms
-          </p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button asChild>
           <Link href="/settings/forms/new">
             <Plus className="h-4 w-4 mr-2" />
-            New Template
+            {t('newTemplate')}
           </Link>
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Templates</CardTitle>
+          <CardTitle>{t('allTemplates')}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
           ) : templates.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium mb-1">No form templates yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first form template to start collecting patient information
-              </p>
+              <h3 className="text-lg font-medium mb-1">{t('emptyTitle')}</h3>
+              <p className="text-muted-foreground mb-4">{t('emptyBody')}</p>
               <div className="flex items-center gap-3 justify-center">
                 <Button asChild>
                   <Link href="/settings/forms/new">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Template
+                    {t('createTemplate')}
                   </Link>
                 </Button>
                 <Button variant="outline" onClick={handleSeedDefaults}>
-                  Load Default Templates
+                  {t('loadDefaults')}
                 </Button>
               </div>
             </div>
@@ -165,46 +160,46 @@ export default function FormsSettingsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Submissions</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>{t('colName')}</TableHead>
+                  <TableHead>{t('colType')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  <TableHead className="text-right">{t('colSubmissions')}</TableHead>
+                  <TableHead>{t('colCreated')}</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {templates.map((t) => (
-                  <TableRow key={t.id}>
+                {templates.map((tpl) => (
+                  <TableRow key={tpl.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {typeIcons[t.type]}
+                        {typeIcons[tpl.type]}
                         <div>
-                          <div className="font-medium">{t.name}</div>
-                          {t.description && (
+                          <div className="font-medium">{tpl.name}</div>
+                          {tpl.description && (
                             <div className="text-xs text-muted-foreground line-clamp-1">
-                              {t.description}
+                              {tpl.description}
                             </div>
                           )}
                         </div>
-                        {t.isDefault && (
+                        {tpl.isDefault && (
                           <Badge variant="secondary" className="text-xs">
-                            Default
+                            {t('default')}
                           </Badge>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{typeLabels[t.type] || t.type}</Badge>
+                      <Badge variant="outline">{typeLabel(tpl.type)}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={t.isActive ? 'default' : 'secondary'}>
-                        {t.isActive ? 'Active' : 'Inactive'}
+                      <Badge variant={tpl.isActive ? 'default' : 'secondary'}>
+                        {tpl.isActive ? t('active') : t('inactive')}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">{t._count.submissions}</TableCell>
+                    <TableCell className="text-right">{tpl._count.submissions}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {new Date(t.createdAt).toLocaleDateString('en-IN')}
+                      {fmt.formatDate(tpl.createdAt)}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -215,17 +210,17 @@ export default function FormsSettingsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/settings/forms/${t.id}`}>
+                            <Link href={`/settings/forms/${tpl.id}`}>
                               <Eye className="h-4 w-4 mr-2" />
-                              View / Edit
+                              {t('viewEdit')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => handleDelete(t.id, t.name)}
+                            onClick={() => handleDelete(tpl.id, tpl.name)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+                            {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

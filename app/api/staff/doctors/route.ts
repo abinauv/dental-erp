@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - List doctors only (for appointments)
 export async function GET(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ doctors })
   } catch (error) {
-    console.error('Error fetching doctors:', error)
+    logger.error({ err: error }, 'Error fetching doctors:')
     return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 })
   }
 }

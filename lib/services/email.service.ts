@@ -4,6 +4,7 @@
 import prisma from '@/lib/prisma'
 import nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
+import { enqueue, isQueueEnabled } from '@/lib/queue'
 
 export interface EmailConfig {
   host: string
@@ -131,12 +132,35 @@ class EmailService {
       },
     })
 
-    // If scheduled for later, return
+    // Scheduled for later: the row stays PENDING. With a queue, schedule a
+    // delayed dispatch job; without one nothing is sent now (unchanged).
     if (payload.scheduledFor && payload.scheduledFor > new Date()) {
+      if (isQueueEnabled()) {
+        await enqueue(
+          'send-email',
+          { emailLogId: emailLog.id, payload },
+          { jobId: `email:${emailLog.id}`, delayMs: payload.scheduledFor.getTime() - Date.now() }
+        )
+      }
       return emailLog.id
     }
 
-    // Send email immediately
+    // Dispatch now. With a queue configured this enqueues and returns
+    // immediately, letting the worker send with retries; without one it runs
+    // inline and throws on failure, exactly as before.
+    await enqueue(
+      'send-email',
+      { emailLogId: emailLog.id, payload },
+      { jobId: `email:${emailLog.id}` }
+    )
+
+    return emailLog.id
+  }
+
+  // Perform the actual SMTP send for an already-created email log row and record
+  // the outcome. This is the unit the queue runs (inline or in the worker); it
+  // throws on failure so BullMQ retries and the inline path surfaces the error.
+  async dispatchLog(emailLogId: string, payload: EmailPayload): Promise<void> {
     try {
       if (!this.transporter || !this.config) {
         await this.initialize()
@@ -148,24 +172,20 @@ class EmailService {
         replyTo: this.config!.replyTo || this.config!.from.email,
         subject: payload.subject,
         html: payload.body,
-        attachments: payload.attachments || [],
+        attachments: this.normalizeAttachments(payload.attachments),
       })
 
-      // Update email log
       await prisma.emailLog.update({
-        where: { id: emailLog.id },
+        where: { id: emailLogId },
         data: {
           status: 'SENT',
           sentAt: new Date(),
           messageId: result.messageId,
         },
       })
-
-      return emailLog.id
     } catch (error: any) {
-      // Update email log with error
       await prisma.emailLog.update({
-        where: { id: emailLog.id },
+        where: { id: emailLogId },
         data: {
           status: 'FAILED',
           failedAt: new Date(),
@@ -175,6 +195,26 @@ class EmailService {
 
       throw error
     }
+  }
+
+  // Attachment Buffers survive an in-process (inline) enqueue unchanged, but a
+  // Buffer round-tripped through Redis/JSON comes back as
+  // { type: 'Buffer', data: number[] }; rehydrate those so nodemailer gets a
+  // real Buffer either way.
+  private normalizeAttachments(attachments?: EmailAttachment[]): EmailAttachment[] {
+    if (!attachments) return []
+    return attachments.map((a) => {
+      const content = a.content as any
+      if (
+        content &&
+        typeof content === 'object' &&
+        content.type === 'Buffer' &&
+        Array.isArray(content.data)
+      ) {
+        return { ...a, content: Buffer.from(content.data) }
+      }
+      return a
+    })
   }
 
   async sendBulkEmail(payloads: EmailPayload[]): Promise<string[]> {

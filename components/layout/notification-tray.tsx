@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Bell,
   Check,
@@ -23,6 +24,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Notification {
   id: string
@@ -47,23 +49,25 @@ const TYPE_CONFIG: Record<string, { icon: typeof Info; color: string }> = {
   SYSTEM: { icon: Settings, color: 'text-muted-foreground' },
 }
 
-function timeAgo(dateStr: string) {
-  const now = Date.now()
-  const then = new Date(dateStr).getTime()
-  const diff = Math.floor((now - then) / 1000)
-
-  if (diff < 60) return 'just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
-  return new Date(dateStr).toLocaleDateString()
-}
-
 export function NotificationTray() {
+  const t = useTranslations('layout.notifications')
+  const { formatDate } = useClinicFormatters()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+
+  const timeAgo = (dateStr: string) => {
+    const now = Date.now()
+    const then = new Date(dateStr).getTime()
+    const diff = Math.floor((now - then) / 1000)
+
+    if (diff < 60) return t('justNow')
+    if (diff < 3600) return t('minutesAgo', { m: Math.floor(diff / 60) })
+    if (diff < 86400) return t('hoursAgo', { h: Math.floor(diff / 3600) })
+    if (diff < 604800) return t('daysAgo', { d: Math.floor(diff / 86400) })
+    return formatDate(dateStr)
+  }
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -140,12 +144,12 @@ export function NotificationTray() {
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">{t('notifications')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[min(320px,calc(100vw-2rem))] p-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <DropdownMenuLabel className="p-0 text-base">Notifications</DropdownMenuLabel>
+          <DropdownMenuLabel className="p-0 text-base">{t('notifications')}</DropdownMenuLabel>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -154,7 +158,7 @@ export function NotificationTray() {
               onClick={markAllRead}
             >
               <CheckCheck className="mr-1 h-3 w-3" />
-              Mark all read
+              {t('markAllRead')}
             </Button>
           )}
         </div>
@@ -162,12 +166,12 @@ export function NotificationTray() {
         <ScrollArea className="h-[340px]">
           {loading && notifications.length === 0 ? (
             <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              Loading...
+              {t('loading')}
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground">
               <Bell className="mb-2 h-8 w-8 opacity-30" />
-              No notifications yet
+              {t('empty')}
             </div>
           ) : (
             <div>

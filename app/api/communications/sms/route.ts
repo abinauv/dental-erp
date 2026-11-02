@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { smsService } from '@/lib/services/sms.service'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const sendSMSSchema = z.object({
   phone: z.string().min(10),
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
       message: data.scheduledFor ? 'SMS scheduled successfully' : 'SMS sent successfully',
     })
   } catch (error: any) {
-    console.error('SMS send error:', error)
+    logger.error({ err: error }, 'SMS send error:')
     return NextResponse.json({ error: error.message || 'Failed to send SMS' }, { status: 500 })
   }
 }
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
       count: history.length,
     })
   } catch (error: any) {
-    console.error('Get SMS history error:', error)
+    logger.error({ err: error }, 'Get SMS history error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get SMS history' },
       { status: 500 }

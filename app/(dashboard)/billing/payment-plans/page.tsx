@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,7 +27,7 @@ import {
   IndianRupee,
   Eye,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface PaymentPlan {
   id: string
@@ -67,6 +68,13 @@ interface Summary {
 
 export default function PaymentPlansPage() {
   const { toast } = useToast()
+  const t = useTranslations('billing.paymentPlans')
+  const tPlanStatus = useTranslations('billing.planStatus')
+  const tFreq = useTranslations('billing.frequency')
+  const tCommon = useTranslations('common')
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
   const [plans, setPlans] = useState<PaymentPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -96,56 +104,42 @@ export default function PaymentPlansPage() {
       setTotalPages(data.totalPages)
       setSummary(data.summary)
     } catch {
-      toast({ variant: 'destructive', title: 'Failed to load payment plans' })
+      toast({ variant: 'destructive', title: t('loadError') })
     } finally {
       setLoading(false)
     }
   }
 
   const statusBadge = (status: string) => {
+    const label = tPlanStatus.has(status) ? tPlanStatus(status) : status
     switch (status) {
       case 'ACTIVE':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Active</Badge>
+        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">{label}</Badge>
       case 'COMPLETED':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Completed</Badge>
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{label}</Badge>
       case 'DEFAULTED':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Defaulted</Badge>
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{label}</Badge>
       case 'CANCELLED':
-        return <Badge variant="secondary">Cancelled</Badge>
+        return <Badge variant="secondary">{label}</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{label}</Badge>
     }
   }
 
-  const frequencyLabel = (freq: string) => {
-    switch (freq) {
-      case 'WEEKLY':
-        return 'Weekly'
-      case 'BIWEEKLY':
-        return 'Bi-weekly'
-      case 'MONTHLY':
-        return 'Monthly'
-      default:
-        return freq
-    }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-  }
+  const frequencyLabel = (freq: string) => (tFreq.has(freq) ? tFreq(freq) : freq)
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payment Plans</h1>
-          <p className="text-muted-foreground">Manage installment payment plans for invoices</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Link href="/billing/payment-plans/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            New Payment Plan
+            {t('new')}
           </Button>
         </Link>
       </div>
@@ -154,7 +148,7 @@ export default function PaymentPlansPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Plans</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('activePlans')}</CardTitle>
             <CalendarClock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -167,7 +161,7 @@ export default function PaymentPlansPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('completed')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -180,7 +174,7 @@ export default function PaymentPlansPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Defaulted</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('defaulted')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -193,7 +187,7 @@ export default function PaymentPlansPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('outstanding')}</CardTitle>
             <IndianRupee className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
@@ -211,11 +205,11 @@ export default function PaymentPlansPage() {
       {/* Status Filters */}
       <div className="flex gap-2">
         {[
-          { value: '', label: 'All' },
-          { value: 'ACTIVE', label: 'Active' },
-          { value: 'COMPLETED', label: 'Completed' },
-          { value: 'DEFAULTED', label: 'Defaulted' },
-          { value: 'CANCELLED', label: 'Cancelled' },
+          { value: '', label: tPlanStatus('all') },
+          { value: 'ACTIVE', label: tPlanStatus('ACTIVE') },
+          { value: 'COMPLETED', label: tPlanStatus('COMPLETED') },
+          { value: 'DEFAULTED', label: tPlanStatus('DEFAULTED') },
+          { value: 'CANCELLED', label: tPlanStatus('CANCELLED') },
         ].map((f) => (
           <Button
             key={f.value}
@@ -237,15 +231,15 @@ export default function PaymentPlansPage() {
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Patient</TableHead>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Total Amount</TableHead>
-                <TableHead>Installments</TableHead>
-                <TableHead>Frequency</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Next Due</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead>{t('cols.patient')}</TableHead>
+                <TableHead>{t('cols.invoice')}</TableHead>
+                <TableHead>{t('cols.totalAmount')}</TableHead>
+                <TableHead>{t('cols.installments')}</TableHead>
+                <TableHead>{t('cols.frequency')}</TableHead>
+                <TableHead>{t('cols.progress')}</TableHead>
+                <TableHead>{t('cols.nextDue')}</TableHead>
+                <TableHead>{t('cols.status')}</TableHead>
+                <TableHead className="w-[80px]">{t('cols.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -262,7 +256,7 @@ export default function PaymentPlansPage() {
               ) : plans.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                    No payment plans found
+                    {t('empty')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -309,13 +303,11 @@ export default function PaymentPlansPage() {
                       </div>
                       {plan.overdueInstallments > 0 && (
                         <span className="text-xs text-red-600">
-                          {plan.overdueInstallments} overdue
+                          {t('overdue', { count: plan.overdueInstallments })}
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      {plan.nextDueDate ? format(new Date(plan.nextDueDate), 'dd MMM yyyy') : '—'}
-                    </TableCell>
+                    <TableCell>{plan.nextDueDate ? formatDate(plan.nextDueDate) : '—'}</TableCell>
                     <TableCell>{statusBadge(plan.status)}</TableCell>
                     <TableCell>
                       <Link href={`/billing/payment-plans/${plan.id}`}>
@@ -344,7 +336,7 @@ export default function PaymentPlansPage() {
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            {tCommon('pagination.page', { page, totalPages })}
           </span>
           <Button
             variant="outline"

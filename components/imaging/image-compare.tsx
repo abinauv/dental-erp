@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { X, Columns2, SplitSquareHorizontal } from 'lucide-react'
@@ -19,6 +20,7 @@ interface ImageCompareProps {
 }
 
 export function ImageCompare({ open, onOpenChange, before, after }: ImageCompareProps) {
+  const t = useTranslations('imaging.compare')
   const [mode, setMode] = useState<'side-by-side' | 'slider'>('side-by-side')
   const [sliderPos, setSliderPos] = useState(50) // percentage
   const [isDragging, setIsDragging] = useState(false)
@@ -110,7 +112,7 @@ export function ImageCompare({ open, onOpenChange, before, after }: ImageCompare
           {/* Toolbar */}
           <div className="flex items-center justify-between px-4 py-2 bg-black/80 text-white z-10">
             <div className="flex items-center gap-4">
-              <h3 className="text-sm font-medium">Compare Images</h3>
+              <h3 className="text-sm font-medium">{t('title')}</h3>
               <div className="flex items-center gap-1 bg-white/10 rounded-md p-0.5">
                 <Button
                   variant="ghost"
@@ -123,7 +125,7 @@ export function ImageCompare({ open, onOpenChange, before, after }: ImageCompare
                   onClick={() => setMode('side-by-side')}
                 >
                   <Columns2 className="h-3.5 w-3.5 mr-1" />
-                  Side by Side
+                  {t('sideBySide')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -134,7 +136,7 @@ export function ImageCompare({ open, onOpenChange, before, after }: ImageCompare
                   onClick={() => setMode('slider')}
                 >
                   <SplitSquareHorizontal className="h-3.5 w-3.5 mr-1" />
-                  Slider
+                  {t('slider')}
                 </Button>
               </div>
             </div>
@@ -162,7 +164,7 @@ export function ImageCompare({ open, onOpenChange, before, after }: ImageCompare
                 {/* Before */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="px-3 py-1 bg-zinc-900 text-center">
-                    <span className="text-xs text-zinc-400">Before</span>
+                    <span className="text-xs text-zinc-400">{t('before')}</span>
                     <span className="text-xs text-zinc-500 ml-2">{before.title}</span>
                     {before.date && (
                       <span className="text-xs text-zinc-600 ml-1">({before.date})</span>
@@ -176,7 +178,7 @@ export function ImageCompare({ open, onOpenChange, before, after }: ImageCompare
                 {/* After */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <div className="px-3 py-1 bg-zinc-900 text-center">
-                    <span className="text-xs text-zinc-400">After</span>
+                    <span className="text-xs text-zinc-400">{t('after')}</span>
                     <span className="text-xs text-zinc-500 ml-2">{after.title}</span>
                     {after.date && (
                       <span className="text-xs text-zinc-600 ml-1">({after.date})</span>
@@ -230,10 +232,10 @@ export function ImageCompare({ open, onOpenChange, before, after }: ImageCompare
 
                 {/* Labels */}
                 <div className="absolute top-3 left-3 bg-black/60 px-2 py-1 rounded text-xs text-white z-20">
-                  Before
+                  {t('before')}
                 </div>
                 <div className="absolute top-3 right-3 bg-black/60 px-2 py-1 rounded text-xs text-white z-20">
-                  After
+                  {t('after')}
                 </div>
               </div>
             )}

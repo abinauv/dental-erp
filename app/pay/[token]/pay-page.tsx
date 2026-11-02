@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -64,6 +65,7 @@ export function PayPage({
   isUsed,
   isPaid,
 }: PayPageProps) {
+  const t = useTranslations('pay')
   const [state, setState] = useState<PayState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -86,7 +88,7 @@ export function PayPage({
 
       if (!orderRes.ok) {
         const data = await orderRes.json()
-        throw new Error(data.error || 'Failed to create payment')
+        throw new Error(data.error || t('createFailed'))
       }
 
       const orderData = await orderRes.json()
@@ -105,13 +107,13 @@ export function PayPage({
           handlePaytmRedirect(checkout)
           break
         default:
-          throw new Error('Unsupported provider')
+          throw new Error(t('unsupportedProvider'))
       }
     } catch (err: unknown) {
       setState('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Payment failed')
+      setErrorMsg(err instanceof Error ? err.message : t('paymentFailedGeneric'))
     }
-  }, [token, amount])
+  }, [token, amount, t])
 
   const handleRazorpay = async (
     checkout: Record<string, unknown>,
@@ -134,7 +136,7 @@ export function PayPage({
         amount: checkout.amount,
         currency: 'INR',
         name: hospital.name,
-        description: `Payment for ${invoice.invoiceNo}`,
+        description: t('descriptionFor', { invoiceNo: invoice.invoiceNo }),
         order_id: checkout.orderId,
         prefill: {
           name: patient.name,
@@ -161,7 +163,7 @@ export function PayPage({
       const rzp = new RazorpayConstructor(options)
       rzp.on('payment.failed', () => {
         setState('error')
-        setErrorMsg('Payment failed. Please try again.')
+        setErrorMsg(t('razorpayFailed'))
         reject(new Error('Failed'))
       })
       rzp.open()
@@ -172,7 +174,7 @@ export function PayPage({
     if (url) window.location.href = url
     else {
       setState('error')
-      setErrorMsg('Redirect URL not available')
+      setErrorMsg(t('redirectUnavailable'))
     }
   }
 
@@ -210,12 +212,12 @@ export function PayPage({
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Verification failed')
+        throw new Error(data.error || t('verifyFailed'))
       }
       setState('success')
     } catch (err: unknown) {
       setState('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Verification failed')
+      setErrorMsg(err instanceof Error ? err.message : t('verifyFailed'))
     }
   }
 
@@ -254,46 +256,46 @@ export function PayPage({
           {isExpired && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 text-yellow-700 text-sm">
               <Clock className="h-4 w-4" />
-              This payment link has expired. Please contact the clinic for a new link.
+              {t('expired')}
             </div>
           )}
           {isUsed && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 text-blue-700 text-sm">
               <CheckCircle className="h-4 w-4" />
-              This payment link has already been used.
+              {t('used')}
             </div>
           )}
           {isPaid && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 text-green-700 text-sm">
               <CheckCircle className="h-4 w-4" />
-              This invoice has been fully paid. Thank you!
+              {t('paid')}
             </div>
           )}
 
           {/* Invoice details */}
           <div className="rounded-lg border p-4 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Invoice</span>
+              <span className="text-muted-foreground">{t('invoice')}</span>
               <span className="font-medium">{invoice.invoiceNo}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Patient</span>
+              <span className="text-muted-foreground">{t('patient')}</span>
               <span>{patient.name}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Amount</span>
+              <span className="text-muted-foreground">{t('totalAmount')}</span>
               <span>{formatCurrency(invoice.totalAmount)}</span>
             </div>
             {invoice.paidAmount > 0 && (
               <div className="flex justify-between text-sm text-green-600">
-                <span>Paid</span>
+                <span>{t('paidLabel')}</span>
                 <span>{formatCurrency(invoice.paidAmount)}</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between font-semibold">
-              <span>Amount Due</span>
+              <span>{t('amountDue')}</span>
               <span className="text-lg">{formatCurrency(amount)}</span>
             </div>
           </div>
@@ -302,7 +304,7 @@ export function PayPage({
           {state === 'idle' && canPay && (
             <Button className="w-full" size="lg" onClick={initiatePayment}>
               <CreditCard className="h-4 w-4 mr-2" />
-              Pay {formatCurrency(amount)}
+              {t('pay', { amount: formatCurrency(amount) })}
             </Button>
           )}
 
@@ -310,7 +312,7 @@ export function PayPage({
             <div className="flex flex-col items-center py-4 gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">
-                {state === 'loading' ? 'Preparing payment...' : 'Waiting for payment...'}
+                {state === 'loading' ? t('preparing') : t('waiting')}
               </p>
             </div>
           )}
@@ -318,17 +320,19 @@ export function PayPage({
           {state === 'verifying' && (
             <div className="flex flex-col items-center py-4 gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Verifying payment...</p>
+              <p className="text-sm text-muted-foreground">{t('verifying')}</p>
             </div>
           )}
 
           {state === 'success' && (
             <div className="flex flex-col items-center py-6 gap-3">
               <CheckCircle className="h-12 w-12 text-green-500" />
-              <p className="font-medium text-green-700">Payment Successful!</p>
+              <p className="font-medium text-green-700">{t('successTitle')}</p>
               <p className="text-sm text-muted-foreground text-center">
-                {formatCurrency(amount)} has been received for invoice {invoice.invoiceNo}. Thank
-                you!
+                {t('successBody', {
+                  amount: formatCurrency(amount),
+                  invoiceNo: invoice.invoiceNo,
+                })}
               </p>
             </div>
           )}
@@ -336,19 +340,17 @@ export function PayPage({
           {state === 'error' && (
             <div className="flex flex-col items-center py-4 gap-3">
               <AlertCircle className="h-10 w-10 text-red-500" />
-              <p className="font-medium text-red-600">Payment Failed</p>
+              <p className="font-medium text-red-600">{t('failedTitle')}</p>
               <p className="text-sm text-muted-foreground text-center">{errorMsg}</p>
               {canPay && (
                 <Button onClick={initiatePayment} variant="outline">
-                  Try Again
+                  {t('tryAgain')}
                 </Button>
               )}
             </div>
           )}
 
-          <p className="text-xs text-center text-muted-foreground">
-            Secure payment powered by your clinic&apos;s payment gateway
-          </p>
+          <p className="text-xs text-center text-muted-foreground">{t('securedBy')}</p>
         </CardContent>
       </Card>
     </div>

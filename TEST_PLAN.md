@@ -1,8 +1,8 @@
 # DentalERP — Master Test Plan
 
-> **Status**: In Progress — 4,153 Vitest tests passing across 177 test files + ~478 Playwright E2E tests across 51 spec files
+> **Status**: In Progress — 4,398 Vitest tests passing across 192 test files + ~478 Playwright E2E tests across 51 spec files
 > **Test infrastructure**: Vitest (unit/integration), Playwright (E2E — 6 browsers), React Testing Library (components), axe-core (accessibility)
-> **Last updated**: 2026-03-12
+> **Last updated**: 2026-10-30
 
 ---
 
@@ -828,7 +828,7 @@
 - [x] Status indicators not reliant on color alone — icons+text alongside color (tests/accessibility/accessibility.test.tsx — 1 test)
 - [x] Error states have icons + color — role=alert with text and icon (tests/accessibility/accessibility.test.tsx — 1 test)
 - [x] Focus indicators visible — focus:ring CSS classes verified (tests/accessibility/accessibility.test.tsx — 1 test)
-- [ ] Dark mode / high contrast mode support (if applicable)
+- [x] Dark mode support — next-themes ThemeProvider (system/light/dark, `class` strategy); dedicated high-contrast mode not implemented
 
 ### 7.4 WCAG 2.1 AA Compliance
 
@@ -984,17 +984,17 @@
 
 - [ ] Invalid form submission — clear error messages, focus on first error
 - [ ] Network error during save — toast with retry option
-- [ ] Session expiry — redirect to login with return URL
+- [x] Session expiry — redirect to login with return URL (middleware sets `callbackUrl`)
 - [ ] Payment failure — clear message, option to retry
 - [ ] File upload failure — error message with allowed formats/sizes
 
 ### 11.3 Learnability
 
-- [ ] Setup guide covers all configuration steps
+- [x] Setup guide covers all configuration steps (`settings/setup-guide`)
 - [ ] Tooltips/help text on complex form fields
 - [ ] Empty states with call-to-action (e.g., "No patients yet — add your first patient")
-- [ ] Keyboard shortcut help modal (Cmd+/)
-- [ ] Onboarding wizard for first-time setup
+- [x] Keyboard shortcut help modal (Cmd+/) (`keyboard-shortcut-help.tsx`, tested)
+- [x] Onboarding wizard for first-time setup (`app/(dashboard)/onboarding`)
 
 ### 11.4 Visual Consistency
 
@@ -1025,7 +1025,7 @@
 ### 12.2 CI/CD Integration
 
 - [x] GitHub Actions — test workflow file (.github/workflows/ci.yml)
-- [x] Pre-commit hooks — husky pre-commit runs lint-staged (tsc --noEmit + next lint) (.husky/pre-commit, package.json lint-staged config) (tests/deployment/test-maintenance.test.ts — 4 tests)
+- [x] Pre-commit hooks — husky pre-commit runs lint-staged (tsc --noEmit + eslint --no-warn-ignored + prettier --write) (.husky/pre-commit, lint-staged.config.mjs) (tests/deployment/test-maintenance.test.ts — 4 tests)
 - [x] Pre-push hooks — husky pre-push runs npm test (.husky/pre-push) (tests/deployment/test-maintenance.test.ts — 2 tests)
 - [x] PR checks — all tests must pass before merge (ci.yml on PR)
 - [x] Test result reporting — coverage artifact upload + Playwright HTML report
@@ -1064,7 +1064,7 @@
 | 10        | Localization                                               | ~10          | 45 (localization: 45)                                                                                                                                                                  |
 | 11        | Usability (Manual)                                         | ~15          | 0                                                                                                                                                                                      |
 | 12        | Automation Setup                                           | ~15          | 10 (vitest, RTL, fixtures, utils, setup, CI workflow, coverage, reports, auth fixture, 6 browsers, husky hooks)                                                                        |
-| **Total** |                                                            | **~490**     | **4,153 Vitest tests (177 files) + ~478 Playwright E2E tests (51 spec files, 6 browsers)**                                                                                             |
+| **Total** |                                                            | **~490**     | **4,398 Vitest tests (192 files) + ~478 Playwright E2E tests (51 spec files, 6 browsers)**                                                                                             |
 
 ---
 
@@ -1085,3 +1085,31 @@
 13. **Localization** (10) — formats, currency
 14. **Usability** (11) — manual task completion
 15. **Responsive/UI** (2.2–2.5) — layout, forms, navigation
+
+---
+
+## Roadmap coverage (localization + infrastructure, 2026-10)
+
+Tests added by the localization and infrastructure roadmap (Batches 5–14), all
+run under Vitest with mocked Prisma / Redis / SDKs:
+
+- [x] Tax providers — `lib/tax` India GST (CGST/SGST/IGST), EU VAT, US sales tax,
+      and `calculateInvoiceTotals` (unit tests)
+- [x] i18n — locale cascade, clinic formatters, and a `de-DE` catalogue
+      completeness + placeholder-parity guard (every `en-IN` key present)
+- [x] Per-country seed data + `numberToWords` short-scale + `lib/geo/regions`
+- [x] Background job queue — inline fallback, BullMQ path, worker (mocked bullmq/ioredis)
+- [x] Auth (Better Auth) — bcrypt hash/verify, role helpers, handler exports;
+      middleware cookie/role checks
+- [x] Rate limiter — in-memory window, Redis fallback path, per-key isolation
+- [x] AI provider registry — `AI_PROVIDER` selection, `resolveClaudeModel`, `extractJSON`
+
+**Still pending (runtime / needs real services):**
+
+- [ ] Auth migration staging verification — login, mobile token, patient OTP, OIDC
+      SSO, lockout against a real database (the suite mocks auth; see the Phase 6
+      commit checklist)
+- [ ] Anthropic / Bedrock AI providers — smoke test with real credentials
+- [ ] `de-DE` end-to-end (Playwright) across billing/appointments on a real DB
+- [ ] Job queue + rate limiter against a real Redis (multi-instance behaviour)
+- [ ] Load tests, bundle-size budget, coverage targets, Lighthouse, backup/restore drill

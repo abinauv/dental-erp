@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { LabOrderStatus, Prisma } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const LAB_ORDER_STATUSES = Object.values(LabOrderStatus) as string[]
 
@@ -77,7 +78,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       message: 'Lab order status updated successfully',
     })
   } catch (error: any) {
-    console.error('Error updating lab order status:', error)
+    logger.error({ err: error }, 'Error updating lab order status:')
     return NextResponse.json(
       { error: 'Failed to update lab order status', details: error.message },
       { status: 500 }

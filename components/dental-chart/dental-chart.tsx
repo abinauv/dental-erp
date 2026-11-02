@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { format } from 'date-fns'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Loader2 } from 'lucide-react'
 
 interface DentalChartEntry {
@@ -48,26 +49,25 @@ interface DentalChartProps {
   patientId: string
 }
 
+// Condition/severity display labels live in the `clinical.chart.condition` /
+// `.severity` catalogues, resolved by value; only the value and swatch colour
+// stay in code so the stored enum values remain English.
 const TOOTH_CONDITIONS = [
-  { value: 'HEALTHY', label: 'Healthy', color: 'bg-green-500' },
-  { value: 'CARIES', label: 'Caries', color: 'bg-red-500' },
-  { value: 'FILLED', label: 'Filled', color: 'bg-blue-500' },
-  { value: 'CROWN', label: 'Crown', color: 'bg-yellow-500' },
-  { value: 'BRIDGE', label: 'Bridge', color: 'bg-orange-500' },
-  { value: 'IMPLANT', label: 'Implant', color: 'bg-purple-500' },
-  { value: 'ROOT_CANAL', label: 'Root Canal', color: 'bg-pink-500' },
-  { value: 'EXTRACTION', label: 'Extraction', color: 'bg-gray-700' },
-  { value: 'MISSING', label: 'Missing', color: 'bg-gray-400' },
-  { value: 'FRACTURED', label: 'Fractured', color: 'bg-amber-600' },
-  { value: 'SENSITIVE', label: 'Sensitive', color: 'bg-cyan-500' },
-  { value: 'MOBILITY', label: 'Mobility', color: 'bg-indigo-500' },
+  { value: 'HEALTHY', color: 'bg-green-500' },
+  { value: 'CARIES', color: 'bg-red-500' },
+  { value: 'FILLED', color: 'bg-blue-500' },
+  { value: 'CROWN', color: 'bg-yellow-500' },
+  { value: 'BRIDGE', color: 'bg-orange-500' },
+  { value: 'IMPLANT', color: 'bg-purple-500' },
+  { value: 'ROOT_CANAL', color: 'bg-pink-500' },
+  { value: 'EXTRACTION', color: 'bg-gray-700' },
+  { value: 'MISSING', color: 'bg-gray-400' },
+  { value: 'FRACTURED', color: 'bg-amber-600' },
+  { value: 'SENSITIVE', color: 'bg-cyan-500' },
+  { value: 'MOBILITY', color: 'bg-indigo-500' },
 ]
 
-const SEVERITY_LEVELS = [
-  { value: 'MILD', label: 'Mild' },
-  { value: 'MODERATE', label: 'Moderate' },
-  { value: 'SEVERE', label: 'Severe' },
-]
+const SEVERITY_VALUES = ['MILD', 'MODERATE', 'SEVERE']
 
 // FDI notation tooth positions
 const UPPER_RIGHT = [18, 17, 16, 15, 14, 13, 12, 11]
@@ -75,53 +75,49 @@ const UPPER_LEFT = [21, 22, 23, 24, 25, 26, 27, 28]
 const LOWER_LEFT = [31, 32, 33, 34, 35, 36, 37, 38]
 const LOWER_RIGHT = [48, 47, 46, 45, 44, 43, 42, 41]
 
-const TOOTH_NAMES: Record<number, string> = {
+// Tooth-type keys into the `clinical.chart.toothName` catalogue, by FDI number.
+const TOOTH_NAME_KEYS: Record<number, string> = {
   // Upper right
-  18: 'Third Molar',
-  17: 'Second Molar',
-  16: 'First Molar',
-  15: 'Second Premolar',
-  14: 'First Premolar',
-  13: 'Canine',
-  12: 'Lateral Incisor',
-  11: 'Central Incisor',
+  18: 'thirdMolar',
+  17: 'secondMolar',
+  16: 'firstMolar',
+  15: 'secondPremolar',
+  14: 'firstPremolar',
+  13: 'canine',
+  12: 'lateralIncisor',
+  11: 'centralIncisor',
   // Upper left
-  21: 'Central Incisor',
-  22: 'Lateral Incisor',
-  23: 'Canine',
-  24: 'First Premolar',
-  25: 'Second Premolar',
-  26: 'First Molar',
-  27: 'Second Molar',
-  28: 'Third Molar',
+  21: 'centralIncisor',
+  22: 'lateralIncisor',
+  23: 'canine',
+  24: 'firstPremolar',
+  25: 'secondPremolar',
+  26: 'firstMolar',
+  27: 'secondMolar',
+  28: 'thirdMolar',
   // Lower left
-  31: 'Central Incisor',
-  32: 'Lateral Incisor',
-  33: 'Canine',
-  34: 'First Premolar',
-  35: 'Second Premolar',
-  36: 'First Molar',
-  37: 'Second Molar',
-  38: 'Third Molar',
+  31: 'centralIncisor',
+  32: 'lateralIncisor',
+  33: 'canine',
+  34: 'firstPremolar',
+  35: 'secondPremolar',
+  36: 'firstMolar',
+  37: 'secondMolar',
+  38: 'thirdMolar',
   // Lower right
-  41: 'Central Incisor',
-  42: 'Lateral Incisor',
-  43: 'Canine',
-  44: 'First Premolar',
-  45: 'Second Premolar',
-  46: 'First Molar',
-  47: 'Second Molar',
-  48: 'Third Molar',
+  41: 'centralIncisor',
+  42: 'lateralIncisor',
+  43: 'canine',
+  44: 'firstPremolar',
+  45: 'secondPremolar',
+  46: 'firstMolar',
+  47: 'secondMolar',
+  48: 'thirdMolar',
 }
 
 function getConditionColor(condition: string): string {
   const found = TOOTH_CONDITIONS.find((c) => c.value === condition)
   return found?.color || 'bg-gray-300'
-}
-
-function getConditionLabel(condition: string): string {
-  const found = TOOTH_CONDITIONS.find((c) => c.value === condition)
-  return found?.label || condition
 }
 
 interface ToothProps {
@@ -132,6 +128,7 @@ interface ToothProps {
 }
 
 function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
+  const t = useTranslations('clinical.chart')
   const activeEntry = entries.find((e) => !e.resolvedDate)
   const condition = activeEntry?.condition || 'HEALTHY'
   const isMissing = condition === 'MISSING' || condition === 'EXTRACTION'
@@ -175,13 +172,13 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
         <TooltipContent>
           <div className="text-sm">
             <p className="font-semibold">
-              {number} - {TOOTH_NAMES[number]}
+              {number} - {t(`toothName.${TOOTH_NAME_KEYS[number]}`)}
             </p>
             <p className={`${isMissing ? 'text-muted-foreground' : ''}`}>
-              {getConditionLabel(condition)}
+              {t.has(`condition.${condition}`) ? t(`condition.${condition}`) : condition}
               {activeEntry?.severity &&
                 activeEntry.severity !== 'MILD' &&
-                ` (${activeEntry.severity})`}
+                ` (${t.has(`severity.${activeEntry.severity}`) ? t(`severity.${activeEntry.severity}`) : activeEntry.severity})`}
             </p>
             {activeEntry?.notes && (
               <p className="text-muted-foreground text-xs mt-1">{activeEntry.notes}</p>
@@ -195,6 +192,8 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
 
 export function DentalChart({ patientId }: DentalChartProps) {
   const { toast } = useToast()
+  const t = useTranslations('clinical.chart')
+  const { formatDate } = useClinicFormatters()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [chartData, setChartData] = useState<Record<number, DentalChartEntry[]>>({})
@@ -225,13 +224,13 @@ export function DentalChart({ patientId }: DentalChartProps) {
       console.error('Error fetching dental chart:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load dental chart',
+        title: t('toast.error'),
+        description: t('toast.loadError'),
       })
     } finally {
       setLoading(false)
     }
-  }, [patientId, toast])
+  }, [patientId, toast, t])
 
   useEffect(() => {
     fetchChartData()
@@ -292,12 +291,12 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to save entry')
+        throw new Error(error.error || t('toast.saveError'))
       }
 
       toast({
-        title: 'Success',
-        description: `Tooth ${selectedTooth} updated successfully`,
+        title: t('toast.successTitle'),
+        description: t('toast.toothUpdated', { number: selectedTooth }),
       })
 
       setDialogOpen(false)
@@ -305,8 +304,8 @@ export function DentalChart({ patientId }: DentalChartProps) {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to save entry',
+        title: t('toast.error'),
+        description: error.message || t('toast.saveError'),
       })
     } finally {
       setSaving(false)
@@ -330,10 +329,8 @@ export function DentalChart({ patientId }: DentalChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Interactive Dental Chart</CardTitle>
-        <CardDescription>
-          Click on a tooth to view or update its condition. FDI notation is used.
-        </CardDescription>
+        <CardTitle>{t('title')}</CardTitle>
+        <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
         {/* Legend */}
@@ -341,7 +338,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
           {TOOTH_CONDITIONS.map((condition) => (
             <div key={condition.value} className="flex items-center gap-1 text-xs">
               <div className={`w-3 h-3 rounded ${condition.color}`} />
-              <span>{condition.label}</span>
+              <span>{t(`condition.${condition.value}`)}</span>
             </div>
           ))}
         </div>
@@ -350,7 +347,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
         <div className="relative bg-gradient-to-b from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/20 rounded-xl p-6">
           {/* Upper jaw label */}
           <div className="text-center mb-2 text-sm font-medium text-muted-foreground">
-            Upper Jaw (Maxilla)
+            {t('upperJaw')}
           </div>
 
           {/* Upper teeth row */}
@@ -383,7 +380,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
           {/* Divider */}
           <div className="border-t-2 border-dashed border-border my-4 relative">
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-pink-100 dark:bg-pink-900/20 px-2 text-xs text-muted-foreground">
-              Midline
+              {t('midline')}
             </span>
           </div>
 
@@ -416,14 +413,14 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
           {/* Lower jaw label */}
           <div className="text-center mt-2 text-sm font-medium text-muted-foreground">
-            Lower Jaw (Mandible)
+            {t('lowerJaw')}
           </div>
 
           {/* Quadrant labels */}
-          <div className="absolute top-2 left-2 text-xs text-muted-foreground">Q1 (UR)</div>
-          <div className="absolute top-2 right-2 text-xs text-muted-foreground">Q2 (UL)</div>
-          <div className="absolute bottom-2 left-2 text-xs text-muted-foreground">Q4 (LR)</div>
-          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">Q3 (LL)</div>
+          <div className="absolute top-2 left-2 text-xs text-muted-foreground">{t('q1')}</div>
+          <div className="absolute top-2 right-2 text-xs text-muted-foreground">{t('q2')}</div>
+          <div className="absolute bottom-2 left-2 text-xs text-muted-foreground">{t('q4')}</div>
+          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">{t('q3')}</div>
         </div>
 
         {/* Summary section */}
@@ -440,7 +437,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                         (e.condition === 'MISSING' || e.condition === 'EXTRACTION')
                     ).length}
               </div>
-              <div className="text-sm text-muted-foreground">Present Teeth</div>
+              <div className="text-sm text-muted-foreground">{t('summary.present')}</div>
             </CardContent>
           </Card>
           <Card className="bg-red-50 dark:bg-red-950/20">
@@ -452,7 +449,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                     .filter((e) => !e.resolvedDate && e.condition === 'CARIES').length
                 }
               </div>
-              <div className="text-sm text-muted-foreground">Caries</div>
+              <div className="text-sm text-muted-foreground">{t('summary.caries')}</div>
             </CardContent>
           </Card>
           <Card className="bg-blue-50 dark:bg-blue-950/20">
@@ -464,7 +461,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                     .filter((e) => !e.resolvedDate && e.condition === 'FILLED').length
                 }
               </div>
-              <div className="text-sm text-muted-foreground">Filled</div>
+              <div className="text-sm text-muted-foreground">{t('summary.filled')}</div>
             </CardContent>
           </Card>
           <Card className="bg-muted/50">
@@ -480,7 +477,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                     ).length
                 }
               </div>
-              <div className="text-sm text-muted-foreground">Missing</div>
+              <div className="text-sm text-muted-foreground">{t('summary.missing')}</div>
             </CardContent>
           </Card>
         </div>
@@ -490,15 +487,18 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                Tooth {selectedTooth} - {selectedTooth ? TOOTH_NAMES[selectedTooth] : ''}
+                {t('dialog.title', {
+                  number: selectedTooth ?? '',
+                  name: selectedTooth ? t(`toothName.${TOOTH_NAME_KEYS[selectedTooth]}`) : '',
+                })}
               </DialogTitle>
-              <DialogDescription>View or update the condition of this tooth</DialogDescription>
+              <DialogDescription>{t('dialog.description')}</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               {/* Condition */}
               <div className="space-y-2">
-                <Label>Condition</Label>
+                <Label>{t('dialog.conditionLabel')}</Label>
                 <Select value={formCondition} onValueChange={setFormCondition}>
                   <SelectTrigger>
                     <SelectValue />
@@ -508,7 +508,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
                       <SelectItem key={condition.value} value={condition.value}>
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded ${condition.color}`} />
-                          {condition.label}
+                          {t(`condition.${condition.value}`)}
                         </div>
                       </SelectItem>
                     ))}
@@ -518,15 +518,15 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
               {/* Severity */}
               <div className="space-y-2">
-                <Label>Severity</Label>
+                <Label>{t('dialog.severityLabel')}</Label>
                 <Select value={formSeverity} onValueChange={setFormSeverity}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SEVERITY_LEVELS.map((level) => (
-                      <SelectItem key={level.value} value={level.value}>
-                        {level.label}
+                    {SEVERITY_VALUES.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {t(`severity.${level}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -535,7 +535,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
               {/* Surfaces affected */}
               <div className="space-y-2">
-                <Label>Surfaces Affected</Label>
+                <Label>{t('dialog.surfacesLabel')}</Label>
                 <div className="flex flex-wrap gap-4">
                   {Object.entries(formSurfaces).map(([surface, checked]) => (
                     <div key={surface} className="flex items-center gap-2">
@@ -546,8 +546,8 @@ export function DentalChart({ patientId }: DentalChartProps) {
                           setFormSurfaces((prev) => ({ ...prev, [surface]: !!value }))
                         }
                       />
-                      <label htmlFor={surface} className="text-sm capitalize">
-                        {surface}
+                      <label htmlFor={surface} className="text-sm">
+                        {t(`surfaces.${surface}`)}
                       </label>
                     </div>
                   ))}
@@ -556,9 +556,9 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
               {/* Notes */}
               <div className="space-y-2">
-                <Label>Notes</Label>
+                <Label>{t('dialog.notesLabel')}</Label>
                 <Textarea
-                  placeholder="Add any additional notes..."
+                  placeholder={t('dialog.notesPlaceholder')}
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                 />
@@ -567,19 +567,21 @@ export function DentalChart({ patientId }: DentalChartProps) {
               {/* History */}
               {selectedTooth && chartData[selectedTooth]?.length > 0 && (
                 <div className="space-y-2">
-                  <Label>History</Label>
+                  <Label>{t('dialog.historyLabel')}</Label>
                   <div className="max-h-32 overflow-y-auto space-y-2">
-                    {chartData[selectedTooth].map((entry, i) => (
+                    {chartData[selectedTooth].map((entry) => (
                       <div
                         key={entry.id}
                         className={`text-sm p-2 rounded ${entry.resolvedDate ? 'bg-muted' : 'bg-blue-50 dark:bg-blue-950/20'}`}
                       >
                         <div className="flex justify-between">
                           <Badge variant={entry.resolvedDate ? 'outline' : 'default'}>
-                            {getConditionLabel(entry.condition)}
+                            {t.has(`condition.${entry.condition}`)
+                              ? t(`condition.${entry.condition}`)
+                              : entry.condition}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {format(new Date(entry.diagnosedDate), 'PP')}
+                            {formatDate(entry.diagnosedDate)}
                           </span>
                         </div>
                         {entry.notes && (
@@ -594,11 +596,11 @@ export function DentalChart({ patientId }: DentalChartProps) {
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t('dialog.cancel')}
               </Button>
               <Button onClick={handleSaveEntry} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+                {t('dialog.save')}
               </Button>
             </DialogFooter>
           </DialogContent>

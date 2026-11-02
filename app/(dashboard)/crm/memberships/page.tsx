@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,7 +33,6 @@ import {
   MoreHorizontal,
   Crown,
   Users,
-  IndianRupee,
   UserPlus,
   X,
   ArrowLeft,
@@ -40,6 +40,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -100,6 +101,8 @@ const emptyPlanForm = {
 export default function MembershipPlansPage() {
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
+  const t = useTranslations('crm.memberships')
+  const { formatCurrency, formatDate, currencySymbol } = useClinicFormatters()
 
   // Plan list state
   const [plans, setPlans] = useState<MembershipPlan[]>([])
@@ -139,11 +142,11 @@ export default function MembershipPlansPage() {
       const data = await res.json()
       setPlans(data)
     } catch {
-      toast({ title: 'Failed to load membership plans', variant: 'destructive' })
+      toast({ title: t('toast.loadError'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [toast, t])
 
   useEffect(() => {
     fetchPlans()
@@ -176,15 +179,15 @@ export default function MembershipPlansPage() {
 
   const handleSavePlan = async () => {
     if (!planForm.name.trim()) {
-      toast({ title: 'Plan name is required', variant: 'destructive' })
+      toast({ title: t('toast.nameRequired'), variant: 'destructive' })
       return
     }
     if (!planForm.price || Number(planForm.price) <= 0) {
-      toast({ title: 'Price must be greater than 0', variant: 'destructive' })
+      toast({ title: t('toast.priceInvalid'), variant: 'destructive' })
       return
     }
     if (!planForm.durationMonths || Number(planForm.durationMonths) <= 0) {
-      toast({ title: 'Duration must be at least 1 month', variant: 'destructive' })
+      toast({ title: t('toast.durationInvalid'), variant: 'destructive' })
       return
     }
 
@@ -212,10 +215,10 @@ export default function MembershipPlansPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to save plan')
+        throw new Error(data.error || t('toast.saveError'))
       }
 
-      toast({ title: editingPlanId ? 'Plan updated' : 'Plan created' })
+      toast({ title: editingPlanId ? t('toast.updated') : t('toast.created') })
       setPlanDialogOpen(false)
       fetchPlans()
     } catch (err: any) {
@@ -227,18 +230,18 @@ export default function MembershipPlansPage() {
 
   const handleDeletePlan = async (id: string) => {
     const ok = await confirm({
-      title: 'Delete plan?',
-      description: 'Are you sure you want to delete this plan?',
-      confirmLabel: 'Delete',
+      title: t('toast.deleteConfirmTitle'),
+      description: t('toast.deleteConfirmDescription'),
+      confirmLabel: t('toast.deleteConfirmLabel'),
     })
     if (!ok) return
     try {
       const res = await fetch(`/api/memberships/plans/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to delete')
+        throw new Error(data.error || t('toast.deleteError'))
       }
-      toast({ title: 'Plan deleted' })
+      toast({ title: t('toast.deleted') })
       if (detailPlan?.id === id) setDetailPlan(null)
       fetchPlans()
     } catch (err: any) {
@@ -325,7 +328,7 @@ export default function MembershipPlansPage() {
 
   const handleEnroll = async () => {
     if (!selectedPatient || !enrollPlanId) {
-      toast({ title: 'Please select a patient', variant: 'destructive' })
+      toast({ title: t('toast.selectPatient'), variant: 'destructive' })
       return
     }
 
@@ -343,11 +346,13 @@ export default function MembershipPlansPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to enroll patient')
+        throw new Error(data.error || t('toast.enrollError'))
       }
 
       toast({
-        title: `${selectedPatient.firstName} ${selectedPatient.lastName} enrolled successfully`,
+        title: t('toast.enrolled', {
+          name: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
+        }),
       })
       setEnrollDialogOpen(false)
       fetchPlans()
@@ -372,7 +377,7 @@ export default function MembershipPlansPage() {
       const data = await res.json()
       setDetailMembers(Array.isArray(data) ? data : data.memberships || [])
     } catch {
-      toast({ title: 'Failed to load plan members', variant: 'destructive' })
+      toast({ title: t('toast.membersLoadError'), variant: 'destructive' })
     } finally {
       setLoadingDetail(false)
     }
@@ -390,21 +395,11 @@ export default function MembershipPlansPage() {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  const formatCurrency = (price: number) => `\u20B9${Number(price).toLocaleString('en-IN')}`
-
   const formatDuration = (months: number) => {
-    if (months === 1) return '1 month'
-    if (months === 12) return '1 year'
-    if (months % 12 === 0) return `${months / 12} years`
-    return `${months} months`
-  }
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
+    if (months === 1) return t('duration.oneMonth')
+    if (months === 12) return t('duration.oneYear')
+    if (months % 12 === 0) return t('duration.years', { count: months / 12 })
+    return t('duration.months', { count: months })
   }
 
   // ── Loading state ──────────────────────────────────────────────────────────
@@ -414,8 +409,8 @@ export default function MembershipPlansPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Membership Plans</h1>
-            <p className="text-muted-foreground">Create and manage membership plans for patients</p>
+            <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -448,12 +443,13 @@ export default function MembershipPlansPage() {
             <p className="text-muted-foreground">
               {formatCurrency(detailPlan.price)} / {formatDuration(detailPlan.durationMonths)}
               {' \u2022 '}
-              {detailPlan._count.memberships} member{detailPlan._count.memberships !== 1 ? 's' : ''}
+              {detailPlan._count.memberships}{' '}
+              {detailPlan._count.memberships === 1 ? t('member') : t('members')}
             </p>
           </div>
           <Button onClick={() => openEnrollDialog(detailPlan)}>
             <UserPlus className="h-4 w-4 mr-2" />
-            Enroll Patient
+            {t('detail.enrollPatient')}
           </Button>
         </div>
 
@@ -461,7 +457,7 @@ export default function MembershipPlansPage() {
         {detailPlan.benefits.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Plan Benefits</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('detail.planBenefits')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-1.5">
@@ -472,7 +468,7 @@ export default function MembershipPlansPage() {
                       {b.description}
                       {b.discountPercent ? (
                         <Badge variant="secondary" className="ml-2 text-xs">
-                          {b.discountPercent}% off
+                          {t('benefitOffBadge', { percent: b.discountPercent })}
                         </Badge>
                       ) : null}
                     </span>
@@ -486,7 +482,7 @@ export default function MembershipPlansPage() {
         {/* Members Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Enrolled Patients</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('detail.enrolledPatients')}</CardTitle>
           </CardHeader>
           <CardContent>
             {loadingDetail ? (
@@ -498,21 +494,19 @@ export default function MembershipPlansPage() {
             ) : detailMembers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p className="font-medium">No enrolled patients yet</p>
-                <p className="text-sm">
-                  Click &quot;Enroll Patient&quot; to add members to this plan
-                </p>
+                <p className="font-medium">{t('detail.noMembersTitle')}</p>
+                <p className="text-sm">{t('detail.noMembersDescription')}</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Auto-Renew</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('detail.colPatient')}</TableHead>
+                    <TableHead>{t('detail.colContact')}</TableHead>
+                    <TableHead>{t('detail.colStartDate')}</TableHead>
+                    <TableHead>{t('detail.colEndDate')}</TableHead>
+                    <TableHead>{t('detail.colAutoRenew')}</TableHead>
+                    <TableHead>{t('detail.colStatus')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -528,7 +522,7 @@ export default function MembershipPlansPage() {
                       <TableCell>{formatDate(m.endDate)}</TableCell>
                       <TableCell>
                         <Badge variant={m.autoRenew ? 'default' : 'secondary'}>
-                          {m.autoRenew ? 'Yes' : 'No'}
+                          {m.autoRenew ? t('detail.yes') : t('detail.no')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -541,7 +535,7 @@ export default function MembershipPlansPage() {
                                 : 'secondary'
                           }
                         >
-                          {m.status}
+                          {t.has(`status.${m.status}`) ? t(`status.${m.status}`) : m.status}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -562,12 +556,12 @@ export default function MembershipPlansPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Membership Plans</h1>
-          <p className="text-muted-foreground">Create and manage membership plans for patients</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={openCreatePlan}>
           <Plus className="h-4 w-4 mr-2" />
-          New Plan
+          {t('newPlan')}
         </Button>
       </div>
 
@@ -577,13 +571,11 @@ export default function MembershipPlansPage() {
           <CardContent className="py-16">
             <div className="text-center text-muted-foreground">
               <Crown className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium text-lg">No membership plans yet</p>
-              <p className="text-sm mb-4">
-                Create your first membership plan to start enrolling patients
-              </p>
+              <p className="font-medium text-lg">{t('emptyTitle')}</p>
+              <p className="text-sm mb-4">{t('emptyDescription')}</p>
               <Button onClick={openCreatePlan}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create First Plan
+                {t('createFirstPlan')}
               </Button>
             </div>
           </CardContent>
@@ -606,7 +598,7 @@ export default function MembershipPlansPage() {
                   </div>
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <Badge variant={plan.isActive ? 'default' : 'secondary'}>
-                      {plan.isActive ? 'Active' : 'Inactive'}
+                      {plan.isActive ? t('active') : t('inactive')}
                     </Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -616,16 +608,16 @@ export default function MembershipPlansPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEditPlan(plan)}>
-                          <Edit className="h-4 w-4 mr-2" /> Edit Plan
+                          <Edit className="h-4 w-4 mr-2" /> {t('dialog.editTitle')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEnrollDialog(plan)}>
-                          <UserPlus className="h-4 w-4 mr-2" /> Enroll Patient
+                          <UserPlus className="h-4 w-4 mr-2" /> {t('detail.enrollPatient')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeletePlan(plan.id)}
                           className="text-destructive"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                          <Trash2 className="h-4 w-4 mr-2" /> {t('toast.deleteConfirmLabel')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -638,12 +630,7 @@ export default function MembershipPlansPage() {
               <CardContent className="space-y-3">
                 {/* Price & Duration */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <IndianRupee className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-2xl font-bold">
-                      {Number(plan.price).toLocaleString('en-IN')}
-                    </span>
-                  </div>
+                  <span className="text-2xl font-bold">{formatCurrency(plan.price)}</span>
                   <span className="text-sm text-muted-foreground">
                     / {formatDuration(plan.durationMonths)}
                   </span>
@@ -653,8 +640,9 @@ export default function MembershipPlansPage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Users className="h-4 w-4" />
                   <span>
-                    {plan._count.memberships} member{plan._count.memberships !== 1 ? 's' : ''}
-                    {plan.maxMembers ? ` / ${plan.maxMembers} max` : ''}
+                    {plan._count.memberships}{' '}
+                    {plan._count.memberships === 1 ? t('member') : t('members')}
+                    {plan.maxMembers ? t('maxSuffix', { max: plan.maxMembers }) : ''}
                   </span>
                 </div>
 
@@ -666,14 +654,17 @@ export default function MembershipPlansPage() {
                         <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
                         <span className="text-muted-foreground line-clamp-1">
                           {b.description}
-                          {b.discountPercent ? ` (${b.discountPercent}% off)` : ''}
+                          {b.discountPercent
+                            ? ` ${t('benefitOffInline', { percent: b.discountPercent })}`
+                            : ''}
                         </span>
                       </div>
                     ))}
                     {plan.benefits.length > 3 && (
                       <p className="text-xs text-muted-foreground pl-5">
-                        +{plan.benefits.length - 3} more benefit
-                        {plan.benefits.length - 3 > 1 ? 's' : ''}
+                        {plan.benefits.length - 3 > 1
+                          ? t('moreBenefits', { count: plan.benefits.length - 3 })
+                          : t('moreBenefit', { count: plan.benefits.length - 3 })}
                       </p>
                     )}
                   </div>
@@ -688,26 +679,28 @@ export default function MembershipPlansPage() {
       <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingPlanId ? 'Edit Plan' : 'Create Membership Plan'}</DialogTitle>
+            <DialogTitle>
+              {editingPlanId ? t('dialog.editTitle') : t('dialog.createTitle')}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <Label>Plan Name *</Label>
+              <Label>{t('dialog.nameLabel')}</Label>
               <Input
                 value={planForm.name}
                 onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
-                placeholder="e.g., Gold Membership"
+                placeholder={t('dialog.namePlaceholder')}
               />
             </div>
 
             {/* Description */}
             <div>
-              <Label>Description</Label>
+              <Label>{t('dialog.descriptionLabel')}</Label>
               <Textarea
                 value={planForm.description}
                 onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
-                placeholder="Brief description of the plan..."
+                placeholder={t('dialog.descriptionPlaceholder')}
                 rows={3}
               />
             </div>
@@ -715,46 +708,46 @@ export default function MembershipPlansPage() {
             {/* Price & Duration */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Price (\u20B9) *</Label>
+                <Label>{t('dialog.priceLabel', { symbol: currencySymbol })}</Label>
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={planForm.price}
                   onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
-                  placeholder="e.g., 5000"
+                  placeholder={t('dialog.pricePlaceholder')}
                 />
               </div>
               <div>
-                <Label>Duration (months) *</Label>
+                <Label>{t('dialog.durationLabel')}</Label>
                 <Input
                   type="number"
                   min="1"
                   value={planForm.durationMonths}
                   onChange={(e) => setPlanForm({ ...planForm, durationMonths: e.target.value })}
-                  placeholder="e.g., 12"
+                  placeholder={t('dialog.durationPlaceholder')}
                 />
               </div>
             </div>
 
             {/* Max Members */}
             <div>
-              <Label>Max Members (optional)</Label>
+              <Label>{t('dialog.maxMembersLabel')}</Label>
               <Input
                 type="number"
                 min="1"
                 value={planForm.maxMembers}
                 onChange={(e) => setPlanForm({ ...planForm, maxMembers: e.target.value })}
-                placeholder="Leave blank for unlimited"
+                placeholder={t('dialog.maxMembersPlaceholder')}
               />
             </div>
 
             {/* Benefits */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>Benefits</Label>
+                <Label>{t('dialog.benefitsLabel')}</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addBenefit}>
-                  <Plus className="h-3 w-3 mr-1" /> Add Benefit
+                  <Plus className="h-3 w-3 mr-1" /> {t('dialog.addBenefit')}
                 </Button>
               </div>
               <div className="space-y-2">
@@ -764,7 +757,7 @@ export default function MembershipPlansPage() {
                       <Input
                         value={benefit.description}
                         onChange={(e) => updateBenefit(index, 'description', e.target.value)}
-                        placeholder="Benefit description"
+                        placeholder={t('dialog.benefitPlaceholder')}
                       />
                     </div>
                     <div className="w-24">
@@ -774,7 +767,7 @@ export default function MembershipPlansPage() {
                         max="100"
                         value={benefit.discountPercent ?? ''}
                         onChange={(e) => updateBenefit(index, 'discountPercent', e.target.value)}
-                        placeholder="% off"
+                        placeholder={t('dialog.percentOffPlaceholder')}
                       />
                     </div>
                     <Button
@@ -790,18 +783,14 @@ export default function MembershipPlansPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Add benefit descriptions with optional discount percentages
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('dialog.benefitsHint')}</p>
             </div>
 
             {/* Active Toggle */}
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label className="text-sm font-medium">Active</Label>
-                <p className="text-xs text-muted-foreground">
-                  Inactive plans cannot accept new enrollments
-                </p>
+                <Label className="text-sm font-medium">{t('dialog.activeLabel')}</Label>
+                <p className="text-xs text-muted-foreground">{t('dialog.activeHint')}</p>
               </div>
               <Switch
                 checked={planForm.isActive}
@@ -812,10 +801,14 @@ export default function MembershipPlansPage() {
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setPlanDialogOpen(false)}>
-                Cancel
+                {t('dialog.cancel')}
               </Button>
               <Button onClick={handleSavePlan} disabled={savingPlan}>
-                {savingPlan ? 'Saving...' : editingPlanId ? 'Update Plan' : 'Create Plan'}
+                {savingPlan
+                  ? t('dialog.saving')
+                  : editingPlanId
+                    ? t('dialog.updatePlan')
+                    : t('dialog.createPlan')}
               </Button>
             </div>
           </div>
@@ -826,18 +819,18 @@ export default function MembershipPlansPage() {
       <Dialog open={enrollDialogOpen} onOpenChange={setEnrollDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Enroll Patient in {enrollPlanName}</DialogTitle>
+            <DialogTitle>{t('enroll.title', { plan: enrollPlanName })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {/* Patient Search */}
             <div>
-              <Label>Search Patient *</Label>
+              <Label>{t('enroll.searchLabel')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={patientSearch}
                   onChange={(e) => handlePatientSearchChange(e.target.value)}
-                  placeholder="Type patient name or phone..."
+                  placeholder={t('enroll.searchPlaceholder')}
                   className="pl-9"
                 />
               </div>
@@ -847,7 +840,7 @@ export default function MembershipPlansPage() {
                 <div className="border rounded-md mt-1 bg-background shadow-sm max-h-48 overflow-y-auto">
                   {searchingPatients ? (
                     <div className="p-3 text-sm text-muted-foreground text-center">
-                      Searching...
+                      {t('enroll.searching')}
                     </div>
                   ) : (
                     patientResults.map((p) => (
@@ -861,7 +854,7 @@ export default function MembershipPlansPage() {
                           {p.firstName} {p.lastName}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {p.phone || p.email || 'No contact info'}
+                          {p.phone || p.email || t('enroll.noContact')}
                         </div>
                       </button>
                     ))
@@ -870,7 +863,7 @@ export default function MembershipPlansPage() {
                     patientResults.length === 0 &&
                     patientSearch.length >= 2 && (
                       <div className="p-3 text-sm text-muted-foreground text-center">
-                        No patients found
+                        {t('enroll.noPatients')}
                       </div>
                     )}
                 </div>
@@ -902,10 +895,8 @@ export default function MembershipPlansPage() {
             {/* Auto-Renew Toggle */}
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label className="text-sm font-medium">Auto-Renew</Label>
-                <p className="text-xs text-muted-foreground">
-                  Automatically renew when membership expires
-                </p>
+                <Label className="text-sm font-medium">{t('enroll.autoRenewLabel')}</Label>
+                <p className="text-xs text-muted-foreground">{t('enroll.autoRenewHint')}</p>
               </div>
               <Switch checked={autoRenew} onCheckedChange={setAutoRenew} />
             </div>
@@ -913,10 +904,10 @@ export default function MembershipPlansPage() {
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setEnrollDialogOpen(false)}>
-                Cancel
+                {t('enroll.cancel')}
               </Button>
               <Button onClick={handleEnroll} disabled={enrolling || !selectedPatient}>
-                {enrolling ? 'Enrolling...' : 'Enroll Patient'}
+                {enrolling ? t('enroll.enrolling') : t('enroll.submit')}
               </Button>
             </div>
           </div>

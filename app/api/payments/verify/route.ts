@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { getGateway } from '@/lib/payment-gateways'
+import { settlePayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,60 +60,32 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create Payment record and update Invoice in a transaction
-    const paymentAmount = result.amount || Number(invoice.balanceAmount)
-    const newPaidAmount = Number(invoice.paidAmount) + paymentAmount
-    const newBalance = Number(invoice.totalAmount) - newPaidAmount
-
-    // Generate payment number
-    const lastPayment = await prisma.payment.findFirst({
-      where: { hospitalId },
-      orderBy: { createdAt: 'desc' },
-      select: { paymentNo: true },
+    // Settle the (pre-reserved) payment and apply it to the invoice. Idempotent:
+    // if the webhook already settled this order, this is a no-op.
+    const settlement = await settlePayment({
+      hospitalId,
+      invoiceId: invoice.id,
+      gatewayOrderId: orderId,
+      provider: gatewayResult.credentials.provider,
+      amount: result.amount,
+      gatewayPaymentId: paymentId,
+      transactionId: result.transactionId,
+      gatewayStatus: result.status,
+      notes: `Online payment via ${gatewayResult.credentials.provider}`,
     })
-    const lastNum = lastPayment ? parseInt(lastPayment.paymentNo.replace(/\D/g, '')) || 0 : 0
-    const paymentNo = `PAY${String(lastNum + 1).padStart(5, '0')}`
-
-    const [payment] = await prisma.$transaction([
-      prisma.payment.create({
-        data: {
-          hospitalId,
-          paymentNo,
-          invoiceId: invoice.id,
-          amount: paymentAmount,
-          paymentMethod: 'ONLINE',
-          paymentDate: new Date(),
-          transactionId: result.transactionId,
-          status: 'COMPLETED',
-          gateway: gatewayResult.credentials.provider.toLowerCase(),
-          gatewayOrderId: orderId,
-          gatewayPaymentId: paymentId,
-          gatewayStatus: result.status,
-          notes: `Online payment via ${gatewayResult.credentials.provider}`,
-        },
-      }),
-      prisma.invoice.update({
-        where: { id: invoice.id },
-        data: {
-          paidAmount: newPaidAmount,
-          balanceAmount: Math.max(0, newBalance),
-          status: newBalance <= 0 ? 'PAID' : 'PARTIALLY_PAID',
-        },
-      }),
-    ])
 
     return NextResponse.json({
       success: true,
       payment: {
-        id: payment.id,
-        paymentNo: payment.paymentNo,
-        amount: paymentAmount,
+        id: settlement.paymentId,
+        paymentNo: settlement.paymentNo,
+        amount: settlement.amount,
         transactionId: result.transactionId,
         status: 'COMPLETED',
       },
     })
   } catch (err: unknown) {
-    console.error('Payment verification error:', err)
+    logger.error({ err }, 'Payment verification error:')
     const message = err instanceof Error ? err.message : 'Payment verification failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 
 export default function CommunicationSettingsPage() {
+  const t = useTranslations('settings.communications')
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
@@ -61,7 +63,7 @@ export default function CommunicationSettingsPage() {
       const response = await fetch('/api/settings/communications')
 
       if (!response.ok) {
-        throw new Error('Failed to load settings')
+        throw new Error(t('loadFailed'))
       }
 
       const data = await response.json()
@@ -99,8 +101,8 @@ export default function CommunicationSettingsPage() {
     } catch (error: any) {
       console.error('Error loading settings:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to load settings',
+        title: t('error'),
+        description: t('loadFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -133,16 +135,16 @@ export default function CommunicationSettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save settings')
+        throw new Error(data.error || t('saveFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: 'SMS settings saved successfully',
+        title: t('success'),
+        description: t('smsSaved'),
       })
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -180,16 +182,16 @@ export default function CommunicationSettingsPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save settings')
+        throw new Error(data.error || t('saveFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: 'Email settings saved successfully',
+        title: t('success'),
+        description: t('emailSaved'),
       })
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: t('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -201,8 +203,8 @@ export default function CommunicationSettingsPage() {
   const handleTestSMS = async () => {
     if (!testPhone) {
       toast({
-        title: 'Error',
-        description: 'Please enter a phone number to test',
+        title: t('error'),
+        description: t('enterPhone'),
         variant: 'destructive',
       })
       return
@@ -226,16 +228,16 @@ export default function CommunicationSettingsPage() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.details || data.error || 'Failed to send test SMS')
+        throw new Error(data.details || data.error || t('smsTestFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: data.message || 'Test SMS sent successfully',
+        title: t('success'),
+        description: data.message || t('smsTestSuccess'),
       })
     } catch (error: any) {
       toast({
-        title: 'Test Failed',
+        title: t('testFailed'),
         description: error.message,
         variant: 'destructive',
       })
@@ -247,8 +249,8 @@ export default function CommunicationSettingsPage() {
   const handleTestEmail = async () => {
     if (!testEmail) {
       toast({
-        title: 'Error',
-        description: 'Please enter an email address to test',
+        title: t('error'),
+        description: t('enterEmail'),
         variant: 'destructive',
       })
       return
@@ -272,16 +274,16 @@ export default function CommunicationSettingsPage() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.details || data.error || 'Failed to send test email')
+        throw new Error(data.details || data.error || t('emailTestFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: data.message || 'Test email sent successfully',
+        title: t('success'),
+        description: data.message || t('emailTestSuccess'),
       })
     } catch (error: any) {
       toast({
-        title: 'Test Failed',
+        title: t('testFailed'),
         description: error.message,
         variant: 'destructive',
       })
@@ -306,11 +308,11 @@ export default function CommunicationSettingsPage() {
       })
 
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Failed to save settings')
+      if (!response.ok) throw new Error(data.error || t('saveFailed'))
 
-      toast({ title: 'Success', description: 'Review settings saved successfully' })
+      toast({ title: t('success'), description: t('reviewsSaved') })
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' })
+      toast({ title: t('error'), description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -320,11 +322,11 @@ export default function CommunicationSettingsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Communication Settings</h1>
-          <p className="text-muted-foreground">Configure SMS and Email gateways</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading settings...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -333,29 +335,29 @@ export default function CommunicationSettingsPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Communication Settings</h1>
-        <p className="text-muted-foreground">Configure SMS and Email gateways</p>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <Tabs defaultValue="sms" className="w-full">
         <TabsList>
-          <TabsTrigger value="sms">SMS Configuration</TabsTrigger>
-          <TabsTrigger value="email">Email Configuration</TabsTrigger>
-          <TabsTrigger value="reviews">Google Reviews</TabsTrigger>
+          <TabsTrigger value="sms">{t('tabSms')}</TabsTrigger>
+          <TabsTrigger value="email">{t('tabEmail')}</TabsTrigger>
+          <TabsTrigger value="reviews">{t('tabReviews')}</TabsTrigger>
         </TabsList>
 
         {/* SMS Configuration */}
         <TabsContent value="sms">
           <Card>
             <CardHeader>
-              <CardTitle>SMS Gateway Settings</CardTitle>
-              <CardDescription>Configure your Indian SMS gateway provider</CardDescription>
+              <CardTitle>{t('smsCardTitle')}</CardTitle>
+              <CardDescription>{t('smsCardDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Enable SMS</Label>
-                  <p className="text-sm text-muted-foreground">Turn on/off SMS communication</p>
+                  <Label>{t('enableSms')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('enableSmsHint')}</p>
                 </div>
                 <Switch checked={smsEnabled} onCheckedChange={setSmsEnabled} />
               </div>
@@ -364,7 +366,7 @@ export default function CommunicationSettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="sms-gateway">SMS Gateway</Label>
+                  <Label htmlFor="sms-gateway">{t('smsGateway')}</Label>
                   <Select value={smsGateway} onValueChange={setSmsGateway}>
                     <SelectTrigger id="sms-gateway">
                       <SelectValue />
@@ -379,60 +381,56 @@ export default function CommunicationSettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sms-sender-id">Sender ID</Label>
+                  <Label htmlFor="sms-sender-id">{t('senderId')}</Label>
                   <Input
                     id="sms-sender-id"
                     placeholder="DENTAL"
                     value={smsSenderId}
                     onChange={(e) => setSmsSenderId(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">Approved sender ID from gateway</p>
+                  <p className="text-xs text-muted-foreground">{t('senderIdHint')}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sms-api-key">API Key / Auth Key</Label>
+                  <Label htmlFor="sms-api-key">{t('apiKey')}</Label>
                   <Input
                     id="sms-api-key"
                     type="password"
-                    placeholder="Enter your API key"
+                    placeholder={t('apiKeyPlaceholder')}
                     value={smsApiKey}
                     onChange={(e) => setSmsApiKey(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sms-route">Route (for MSG91/TextLocal)</Label>
+                  <Label htmlFor="sms-route">{t('route')}</Label>
                   <Input
                     id="sms-route"
                     placeholder="4"
                     value={smsRoute}
                     onChange={(e) => setSmsRoute(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Route 4 = Transactional, Route 1 = Promotional
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('routeHint')}</p>
                 </div>
               </div>
 
               <Separator />
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">Test SMS Connection</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('testSmsHeading')}</h3>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="test-phone">Test Phone Number</Label>
+                    <Label htmlFor="test-phone">{t('testPhone')}</Label>
                     <Input
                       id="test-phone"
                       placeholder="9876543210"
                       value={testPhone}
                       onChange={(e) => setTestPhone(e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Enter a 10-digit Indian mobile number
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t('testPhoneHint')}</p>
                   </div>
                   <Button onClick={handleTestSMS} disabled={testing} variant="outline">
-                    {testing ? 'Sending...' : 'Send Test SMS'}
+                    {testing ? t('sending') : t('sendTestSms')}
                   </Button>
                 </div>
               </div>
@@ -440,16 +438,16 @@ export default function CommunicationSettingsPage() {
               <Separator />
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">TRAI Compliance</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">{t('traiTitle')}</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• SMS will only be sent between 9 AM - 9 PM IST</li>
-                  <li>• DND registry will be checked before sending</li>
-                  <li>• Patient consent is required for promotional messages</li>
+                  <li>• {t('trai1')}</li>
+                  <li>• {t('trai2')}</li>
+                  <li>• {t('trai3')}</li>
                 </ul>
               </div>
 
               <Button onClick={handleSaveSMSSettings} disabled={loading}>
-                {loading ? 'Saving...' : 'Save SMS Settings'}
+                {loading ? t('saving') : t('saveSms')}
               </Button>
             </CardContent>
           </Card>
@@ -459,16 +457,14 @@ export default function CommunicationSettingsPage() {
         <TabsContent value="email">
           <Card>
             <CardHeader>
-              <CardTitle>Email SMTP Settings</CardTitle>
-              <CardDescription>
-                Configure your email server (Hostinger, Gmail, etc.)
-              </CardDescription>
+              <CardTitle>{t('emailCardTitle')}</CardTitle>
+              <CardDescription>{t('emailCardDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Enable Email</Label>
-                  <p className="text-sm text-muted-foreground">Turn on/off email communication</p>
+                  <Label>{t('enableEmail')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('enableEmailHint')}</p>
                 </div>
                 <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
               </div>
@@ -476,10 +472,10 @@ export default function CommunicationSettingsPage() {
               <Separator />
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">SMTP Server Configuration</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('smtpHeading')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email-host">SMTP Host</Label>
+                    <Label htmlFor="email-host">{t('smtpHost')}</Label>
                     <Input
                       id="email-host"
                       placeholder="smtp.hostinger.com"
@@ -489,7 +485,7 @@ export default function CommunicationSettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email-port">SMTP Port</Label>
+                    <Label htmlFor="email-port">{t('smtpPort')}</Label>
                     <Input
                       id="email-port"
                       placeholder="587"
@@ -499,7 +495,7 @@ export default function CommunicationSettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email-user">SMTP Username</Label>
+                    <Label htmlFor="email-user">{t('smtpUser')}</Label>
                     <Input
                       id="email-user"
                       placeholder="info@yourclinic.com"
@@ -509,11 +505,11 @@ export default function CommunicationSettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email-password">SMTP Password</Label>
+                    <Label htmlFor="email-password">{t('smtpPassword')}</Label>
                     <Input
                       id="email-password"
                       type="password"
-                      placeholder="Enter SMTP password"
+                      placeholder={t('smtpPasswordPlaceholder')}
                       value={emailPassword}
                       onChange={(e) => setEmailPassword(e.target.value)}
                     />
@@ -522,27 +518,27 @@ export default function CommunicationSettingsPage() {
 
                 <div className="flex items-center space-x-2 mt-4">
                   <Switch checked={emailSecure} onCheckedChange={setEmailSecure} />
-                  <Label>Use SSL/TLS (for port 465)</Label>
+                  <Label>{t('useSsl')}</Label>
                 </div>
               </div>
 
               <Separator />
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">Email Sender Details</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('senderHeading')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email-from-name">From Name</Label>
+                    <Label htmlFor="email-from-name">{t('fromName')}</Label>
                     <Input
                       id="email-from-name"
-                      placeholder="Your Dental Clinic"
+                      placeholder={t('fromNamePlaceholder')}
                       value={emailFromName}
                       onChange={(e) => setEmailFromName(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email-from-email">From Email</Label>
+                    <Label htmlFor="email-from-email">{t('fromEmail')}</Label>
                     <Input
                       id="email-from-email"
                       type="email"
@@ -553,7 +549,7 @@ export default function CommunicationSettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email-reply-to">Reply-To Email (Optional)</Label>
+                    <Label htmlFor="email-reply-to">{t('replyTo')}</Label>
                     <Input
                       id="email-reply-to"
                       type="email"
@@ -568,10 +564,10 @@ export default function CommunicationSettingsPage() {
               <Separator />
 
               <div>
-                <h3 className="text-lg font-semibold mb-4">Test Email Connection</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('testEmailHeading')}</h3>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="test-email">Test Email Address</Label>
+                    <Label htmlFor="test-email">{t('testEmailLabel')}</Label>
                     <Input
                       id="test-email"
                       type="email"
@@ -579,12 +575,10 @@ export default function CommunicationSettingsPage() {
                       value={testEmail}
                       onChange={(e) => setTestEmail(e.target.value)}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Enter an email address to receive the test email
-                    </p>
+                    <p className="text-xs text-muted-foreground">{t('testEmailHint')}</p>
                   </div>
                   <Button onClick={handleTestEmail} disabled={testing} variant="outline">
-                    {testing ? 'Sending...' : 'Send Test Email'}
+                    {testing ? t('sending') : t('sendTestEmail')}
                   </Button>
                 </div>
               </div>
@@ -592,18 +586,16 @@ export default function CommunicationSettingsPage() {
               <Separator />
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">
-                  Recommended Settings for Hostinger
-                </h4>
+                <h4 className="font-semibold text-green-900 mb-2">{t('hostingerTitle')}</h4>
                 <ul className="text-sm text-green-800 space-y-1">
-                  <li>• SMTP Host: smtp.hostinger.com</li>
-                  <li>• SMTP Port: 587 (STARTTLS) or 465 (SSL)</li>
-                  <li>• Use your email and password for authentication</li>
+                  <li>• {t('hostinger1')}</li>
+                  <li>• {t('hostinger2')}</li>
+                  <li>• {t('hostinger3')}</li>
                 </ul>
               </div>
 
               <Button onClick={handleSaveEmailSettings} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Email Settings'}
+                {loading ? t('saving') : t('saveEmail')}
               </Button>
             </CardContent>
           </Card>
@@ -612,40 +604,33 @@ export default function CommunicationSettingsPage() {
         <TabsContent value="reviews">
           <Card>
             <CardHeader>
-              <CardTitle>Google Reviews Settings</CardTitle>
-              <CardDescription>
-                Automatically request Google reviews from satisfied patients
-              </CardDescription>
+              <CardTitle>{t('reviewsCardTitle')}</CardTitle>
+              <CardDescription>{t('reviewsCardDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="google-review-url">Google Review URL</Label>
+                <Label htmlFor="google-review-url">{t('reviewUrl')}</Label>
                 <Input
                   id="google-review-url"
                   placeholder="https://g.page/r/YOUR_PLACE_ID/review"
                   value={googleReviewUrl}
                   onChange={(e) => setGoogleReviewUrl(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Your Google Business review link. Find it in Google Business Profile &gt; Get more
-                  reviews.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('reviewUrlHint')}</p>
               </div>
 
               <Separator />
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Auto-Request Reviews</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically send review requests after appointments
-                  </p>
+                  <Label>{t('autoRequest')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('autoRequestHint')}</p>
                 </div>
                 <Switch checked={autoReviewRequests} onCheckedChange={setAutoReviewRequests} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="review-delay">Review Request Delay (hours)</Label>
+                <Label htmlFor="review-delay">{t('reviewDelay')}</Label>
                 <Input
                   id="review-delay"
                   type="number"
@@ -655,30 +640,23 @@ export default function CommunicationSettingsPage() {
                   value={reviewRequestDelay}
                   onChange={(e) => setReviewRequestDelay(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Hours after appointment completion before sending the review request SMS
-                </p>
+                <p className="text-xs text-muted-foreground">{t('reviewDelayHint')}</p>
               </div>
 
               <Separator />
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-semibold text-amber-900 mb-2">Review Gating</h4>
+                <h4 className="font-semibold text-amber-900 mb-2">{t('gatingTitle')}</h4>
                 <ul className="text-sm text-amber-800 space-y-1">
-                  <li>
-                    • Review requests are only sent to patients who rated their satisfaction 4/5 or
-                    higher
-                  </li>
-                  <li>• Patients must have submitted a survey response within the last 30 days</li>
-                  <li>• Only one review request per patient per 30 days</li>
-                  <li>
-                    • Patients who opted out of promotional messages will not receive requests
-                  </li>
+                  <li>• {t('gating1')}</li>
+                  <li>• {t('gating2')}</li>
+                  <li>• {t('gating3')}</li>
+                  <li>• {t('gating4')}</li>
                 </ul>
               </div>
 
               <Button onClick={handleSaveReviewSettings} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Review Settings'}
+                {loading ? t('saving') : t('saveReviews')}
               </Button>
             </CardContent>
           </Card>

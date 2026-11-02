@@ -52,18 +52,23 @@ Two known infrastructure defects were listed here when this document was first p
 
 Phases ship **one per pull request**, in order, each branched from a freshly merged `main`.
 
-| Phase | Goal                                                                  | Status  |
-| ----- | --------------------------------------------------------------------- | ------- |
-| 1     | Containerised dev environment + the two defects above                 | Shipped |
-| 2     | Per-user and per-patient locale override                              | Shipped |
-| 3     | Pluggable storage — local disk and S3-compatible                      | Shipped |
-| 4     | Production self-hosting bundle — published images, production compose | Shipped |
-| —     | _Reassessment point — everything below is drafted, not committed_     |         |
-| 5     | Background job queue (BullMQ)                                         | Drafted |
-| 6     | Auth migration and SSO                                                | Drafted |
-| 7     | Structured logging, Dependabot, CodeQL, community files               | Drafted |
+| Phase | Goal                                                                  | Status   |
+| ----- | --------------------------------------------------------------------- | -------- |
+| 1     | Containerised dev environment + the two defects above                 | Shipped  |
+| 2     | Per-user and per-patient locale override                              | Shipped  |
+| 3     | Pluggable storage — local disk and S3-compatible                      | Shipped  |
+| 4     | Production self-hosting bundle — published images, production compose | Shipped  |
+| 5     | Background job queue (BullMQ), Redis-optional with an inline fallback | Shipped  |
+| 6     | Auth migration (Better Auth) and OIDC SSO                             | Shipped¹ |
+| 7     | Structured logging (pino), Dependabot, CodeQL, community files        | Shipped  |
 
-Phases 5–7 are deliberately **not committed**. They were sized before Phases 1–4 had taught us anything about real pace or real demand, and we would rather decide with evidence than up front. If one of them matters to you, saying so is the most useful thing you can do.
+¹ Phase 6 is implemented but must be smoke-tested against a real database on
+staging (login, mobile token, patient OTP, SSO) before it goes to production —
+the automated tests mock auth. See the checklist in the Phase 6 commit.
+
+Phases 5–7 were drafted after Phases 1–4; they were ultimately built once the
+feature-completion and localization work had landed. The reassessment they
+called for happened, and the answer was to proceed.
 
 ---
 
@@ -158,9 +163,13 @@ Three decisions worth knowing:
 
 ## Contributing to this
 
-Phases 0–4 were the committed scope and are now all shipped, which means **this is the reassess point** rather than a queue of work waiting to be picked up. Phases 5–7 are drafted, not agreed, and were sized before Phases 1–4 taught us anything about real pace or real demand.
+Phases 1–7 have all shipped, alongside the localization and feature-completion
+work. What remains is not more drafted phases but **evidence from real use.**
 
-So the most valuable feedback right now is evidence rather than opinion: whether anyone is actually self-hosting this, whether the cron jobs are failing in practice (Phase 5 is justified by a defect class — it is worth confirming it bites before spending the largest phase on it), and whether anything has surfaced from real use that outranks what is drafted.
+So the most valuable feedback right now is evidence rather than opinion: whether
+anyone is actually self-hosting this, whether the job queue and logging earn
+their keep under real load, and whether anything has surfaced from real use that
+outranks what was planned.
 
 The decisions already shipped are still worth arguing with, and some are expensive to revisit: the locale cascade's semantics, the storage key format, and the database credentials the compose stack creates on first start all become migrations rather than edits. An objection now is much cheaper than an objection in six months.
 

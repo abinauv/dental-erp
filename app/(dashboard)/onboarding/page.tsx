@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations, useLocale } from 'next-intl'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -19,27 +20,27 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import { RegionField } from '@/components/geo/region-field'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 import { Checkbox } from '@/components/ui/checkbox'
 
-const onboardingSchema = z.object({
-  tagline: z.string().optional(),
-  address: z.string().min(1, 'Address is required'),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  pincode: z.string().min(5, 'Valid pincode is required'),
-  alternatePhone: z.string().optional(),
-  website: z.string().optional(),
-  gstNumber: z.string().optional(),
-  registrationNo: z.string().optional(),
-  workingHours: z.string().optional(),
-  upiId: z.string().optional(),
-  bankName: z.string().optional(),
-  bankAccountNo: z.string().optional(),
-  bankIfsc: z.string().optional(),
-  bankAccountName: z.string().optional(),
-})
-
-type OnboardingFormData = z.infer<typeof onboardingSchema>
+interface OnboardingFormData {
+  tagline?: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+  alternatePhone?: string
+  website?: string
+  gstNumber?: string
+  registrationNo?: string
+  workingHours?: string
+  upiId?: string
+  bankName?: string
+  bankAccountNo?: string
+  bankIfsc?: string
+  bankAccountName?: string
+}
 
 const defaultWorkingHours = {
   monday: { open: '09:00', close: '18:00', closed: false },
@@ -51,26 +52,52 @@ const defaultWorkingHours = {
   sunday: { open: null, close: null, closed: true },
 }
 
+// Step titles live in the `onboarding.steps` catalogue, resolved by key.
 const steps = [
-  { id: 1, title: 'Clinic Details', icon: Building2 },
-  { id: 2, title: 'Working Hours', icon: Clock },
-  { id: 3, title: 'Payment Setup', icon: CreditCard },
-  { id: 4, title: 'Complete', icon: CheckCircle2 },
+  { id: 1, key: 'clinicDetails', icon: Building2 },
+  { id: 2, key: 'workingHours', icon: Clock },
+  { id: 3, key: 'paymentSetup', icon: CreditCard },
+  { id: 4, key: 'complete', icon: CheckCircle2 },
 ]
 
 export default function OnboardingPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const t = useTranslations('onboarding')
+  const clinicCountry = getLocaleDefaults(useLocale()).country
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [hospitalName, setHospitalName] = useState('')
   const [workingHours, setWorkingHours] = useState(defaultWorkingHours)
+
+  const onboardingSchema = useMemo(
+    () =>
+      z.object({
+        tagline: z.string().optional(),
+        address: z.string().min(1, t('validation.address')),
+        city: z.string().min(1, t('validation.city')),
+        state: z.string().min(1, t('validation.state')),
+        pincode: z.string().min(5, t('validation.pincode')),
+        alternatePhone: z.string().optional(),
+        website: z.string().optional(),
+        gstNumber: z.string().optional(),
+        registrationNo: z.string().optional(),
+        workingHours: z.string().optional(),
+        upiId: z.string().optional(),
+        bankName: z.string().optional(),
+        bankAccountNo: z.string().optional(),
+        bankIfsc: z.string().optional(),
+        bankAccountName: z.string().optional(),
+      }),
+    [t]
+  )
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -141,22 +168,22 @@ export default function OnboardingPage() {
       if (!response.ok) {
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: result.error || 'Something went wrong. Please try again.',
+          title: t('toast.error'),
+          description: result.error || t('toast.genericError'),
         })
         return
       }
 
       setCurrentStep(4)
       toast({
-        title: 'Setup complete!',
-        description: 'Your clinic is ready to use.',
+        title: t('toast.successTitle'),
+        description: t('toast.successDescription'),
       })
     } catch {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        title: t('toast.error'),
+        description: t('toast.genericError'),
       })
     } finally {
       setIsLoading(false)
@@ -189,7 +216,9 @@ export default function OnboardingPage() {
                   >
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="mt-2 text-xs text-muted-foreground">{step.title}</span>
+                  <span className="mt-2 text-xs text-muted-foreground">
+                    {t(`steps.${step.key}`)}
+                  </span>
                 </div>
               )
             })}
@@ -199,14 +228,11 @@ export default function OnboardingPage() {
         <Card className="shadow-lg">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">
-              {currentStep === 4 ? "You're all set!" : `Setup ${hospitalName || 'your clinic'}`}
+              {currentStep === 4
+                ? t('allSet')
+                : t('setupTitle', { name: hospitalName || t('yourClinic') })}
             </CardTitle>
-            <CardDescription>
-              {currentStep === 1 && "Enter your clinic's location details"}
-              {currentStep === 2 && 'Set your working hours'}
-              {currentStep === 3 && 'Configure payment options (optional)'}
-              {currentStep === 4 && 'Your clinic is ready to accept patients'}
-            </CardDescription>
+            <CardDescription>{t(`stepDescription.${currentStep}`)}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -214,17 +240,21 @@ export default function OnboardingPage() {
               {currentStep === 1 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="tagline">Tagline (optional)</Label>
+                    <Label htmlFor="tagline">{t('fields.tagline')}</Label>
                     <Input
                       id="tagline"
-                      placeholder="Your smile, our priority"
+                      placeholder={t('placeholders.tagline')}
                       {...register('tagline')}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address *</Label>
-                    <Input id="address" placeholder="123, Main Street" {...register('address')} />
+                    <Label htmlFor="address">{t('fields.address')}</Label>
+                    <Input
+                      id="address"
+                      placeholder={t('placeholders.address')}
+                      {...register('address')}
+                    />
                     {errors.address && (
                       <p className="text-sm text-destructive">{errors.address.message}</p>
                     )}
@@ -232,15 +262,21 @@ export default function OnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="city">City *</Label>
-                      <Input id="city" placeholder="Chennai" {...register('city')} />
+                      <Label htmlFor="city">{t('fields.city')}</Label>
+                      <Input id="city" placeholder={t('placeholders.city')} {...register('city')} />
                       {errors.city && (
                         <p className="text-sm text-destructive">{errors.city.message}</p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="state">State *</Label>
-                      <Input id="state" placeholder="Tamil Nadu" {...register('state')} />
+                      <Label htmlFor="state">{t('fields.state')}</Label>
+                      <RegionField
+                        id="state"
+                        country={clinicCountry}
+                        value={watch('state') || ''}
+                        onChange={(v) => setValue('state', v, { shouldValidate: true })}
+                        placeholder={t('placeholders.state')}
+                      />
                       {errors.state && (
                         <p className="text-sm text-destructive">{errors.state.message}</p>
                       )}
@@ -249,17 +285,21 @@ export default function OnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="pincode">Pincode *</Label>
-                      <Input id="pincode" placeholder="600001" {...register('pincode')} />
+                      <Label htmlFor="pincode">{t('fields.pincode')}</Label>
+                      <Input
+                        id="pincode"
+                        placeholder={t('placeholders.pincode')}
+                        {...register('pincode')}
+                      />
                       {errors.pincode && (
                         <p className="text-sm text-destructive">{errors.pincode.message}</p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="alternatePhone">Alternate Phone</Label>
+                      <Label htmlFor="alternatePhone">{t('fields.alternatePhone')}</Label>
                       <Input
                         id="alternatePhone"
-                        placeholder="9876543210"
+                        placeholder={t('placeholders.alternatePhone')}
                         {...register('alternatePhone')}
                       />
                     </div>
@@ -267,24 +307,28 @@ export default function OnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      <Input id="website" placeholder="www.myclinic.com" {...register('website')} />
+                      <Label htmlFor="website">{t('fields.website')}</Label>
+                      <Input
+                        id="website"
+                        placeholder={t('placeholders.website')}
+                        {...register('website')}
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="gstNumber">GST Number</Label>
+                      <Label htmlFor="gstNumber">{t('fields.gstNumber')}</Label>
                       <Input
                         id="gstNumber"
-                        placeholder="33AAACX1234X1ZX"
+                        placeholder={t('placeholders.gstNumber')}
                         {...register('gstNumber')}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="registrationNo">Registration Number</Label>
+                    <Label htmlFor="registrationNo">{t('fields.registrationNo')}</Label>
                     <Input
                       id="registrationNo"
-                      placeholder="MED-2024-12345"
+                      placeholder={t('placeholders.registrationNo')}
                       {...register('registrationNo')}
                     />
                   </div>
@@ -296,7 +340,7 @@ export default function OnboardingPage() {
                 <div className="space-y-4">
                   {Object.entries(workingHours).map(([day, hours]) => (
                     <div key={day} className="flex items-center gap-4">
-                      <div className="w-24 font-medium capitalize">{day}</div>
+                      <div className="w-24 font-medium">{t(`days.${day}`)}</div>
                       <div className="flex items-center gap-2">
                         <Checkbox
                           checked={!hours.closed}
@@ -304,7 +348,7 @@ export default function OnboardingPage() {
                             handleWorkingHoursChange(day, 'closed', !checked)
                           }
                         />
-                        <span className="text-sm text-muted-foreground">Open</span>
+                        <span className="text-sm text-muted-foreground">{t('hours.open')}</span>
                       </div>
                       {!hours.closed && (
                         <>
@@ -314,7 +358,7 @@ export default function OnboardingPage() {
                             onChange={(e) => handleWorkingHoursChange(day, 'open', e.target.value)}
                             className="w-32"
                           />
-                          <span className="text-muted-foreground">to</span>
+                          <span className="text-muted-foreground">{t('hours.to')}</span>
                           <Input
                             type="time"
                             value={hours.close || '18:00'}
@@ -324,7 +368,7 @@ export default function OnboardingPage() {
                         </>
                       )}
                       {hours.closed && (
-                        <span className="text-sm text-muted-foreground">Closed</span>
+                        <span className="text-sm text-muted-foreground">{t('hours.closed')}</span>
                       )}
                     </div>
                   ))}
@@ -334,49 +378,51 @@ export default function OnboardingPage() {
               {/* Step 3: Payment Setup */}
               {currentStep === 3 && (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Configure your payment options for invoices. All fields are optional.
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">{t('payment.intro')}</p>
 
                   <div className="space-y-2">
-                    <Label htmlFor="upiId">UPI ID</Label>
-                    <Input id="upiId" placeholder="clinic@upi" {...register('upiId')} />
+                    <Label htmlFor="upiId">{t('fields.upiId')}</Label>
+                    <Input
+                      id="upiId"
+                      placeholder={t('placeholders.upiId')}
+                      {...register('upiId')}
+                    />
                   </div>
 
                   <div className="border-t pt-4 mt-4">
-                    <h4 className="font-medium mb-4">Bank Details</h4>
+                    <h4 className="font-medium mb-4">{t('payment.bankDetails')}</h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="bankName">Bank Name</Label>
+                        <Label htmlFor="bankName">{t('fields.bankName')}</Label>
                         <Input
                           id="bankName"
-                          placeholder="State Bank of India"
+                          placeholder={t('placeholders.bankName')}
                           {...register('bankName')}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="bankAccountNo">Account Number</Label>
+                          <Label htmlFor="bankAccountNo">{t('fields.bankAccountNo')}</Label>
                           <Input
                             id="bankAccountNo"
-                            placeholder="1234567890"
+                            placeholder={t('placeholders.bankAccountNo')}
                             {...register('bankAccountNo')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="bankIfsc">IFSC Code</Label>
+                          <Label htmlFor="bankIfsc">{t('fields.bankIfsc')}</Label>
                           <Input
                             id="bankIfsc"
-                            placeholder="SBIN0001234"
+                            placeholder={t('placeholders.bankIfsc')}
                             {...register('bankIfsc')}
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bankAccountName">Account Holder Name</Label>
+                        <Label htmlFor="bankAccountName">{t('fields.bankAccountName')}</Label>
                         <Input
                           id="bankAccountName"
-                          placeholder="Dr. John Smith"
+                          placeholder={t('placeholders.bankAccountName')}
                           {...register('bankAccountName')}
                         />
                       </div>
@@ -393,13 +439,10 @@ export default function OnboardingPage() {
                       <CheckCircle2 className="h-8 w-8 text-green-600" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">Setup Complete!</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Your clinic is now ready. Start by adding your first patient or exploring the
-                    dashboard.
-                  </p>
+                  <h3 className="text-lg font-semibold mb-2">{t('complete.title')}</h3>
+                  <p className="text-muted-foreground mb-6">{t('complete.description')}</p>
                   <Button onClick={() => router.push('/dashboard')} className="w-full">
-                    Go to Dashboard
+                    {t('complete.goToDashboard')}
                   </Button>
                 </div>
               )}
@@ -414,18 +457,18 @@ export default function OnboardingPage() {
                     disabled={currentStep === 1}
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    Back
+                    {t('nav.back')}
                   </Button>
 
                   {currentStep < 3 ? (
                     <Button type="button" onClick={nextStep}>
-                      Next
+                      {t('nav.next')}
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   ) : (
                     <Button type="submit" disabled={isLoading}>
                       {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Complete Setup
+                      {t('nav.completeSetup')}
                     </Button>
                   )}
                 </div>
@@ -435,9 +478,7 @@ export default function OnboardingPage() {
         </Card>
 
         {currentStep < 4 && (
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            You can always update these settings later from the Settings page.
-          </p>
+          <p className="text-center text-sm text-muted-foreground mt-4">{t('footer')}</p>
         )}
       </div>
     </div>

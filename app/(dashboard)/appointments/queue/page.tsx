@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -84,6 +86,10 @@ interface Doctor {
 
 export default function QueueManagementPage() {
   const router = useRouter()
+  const t = useTranslations('appointments.queue')
+  const tStatus = useTranslations('appointments.status')
+  const tType = useTranslations('appointments.type')
+  const fmt = useClinicFormatters()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -213,7 +219,8 @@ export default function QueueManagementPage() {
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tStatus.has(status) ? tStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   const getTypeBadge = (type: string) => {
@@ -222,9 +229,10 @@ export default function QueueManagementPage() {
       color: 'text-muted-foreground',
       bgColor: 'bg-muted/50',
     }
+    const label = tType.has(type) ? tType(type) : config.label
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0 text-xs`}>
-        {config.label}
+        {label}
       </Badge>
     )
   }
@@ -274,7 +282,9 @@ export default function QueueManagementPage() {
               {getDoctorName(appointment.doctor)}
             </p>
             {appointment.chairNumber && (
-              <p className="text-xs text-muted-foreground">Chair {appointment.chairNumber}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('chair', { number: appointment.chairNumber })}
+              </p>
             )}
           </div>
         </div>
@@ -285,7 +295,7 @@ export default function QueueManagementPage() {
           {appointment.waitTime !== null && appointment.waitTime > 0 && (
             <Badge variant="outline" className="text-xs">
               <Timer className="h-3 w-3 mr-1" />
-              {appointment.waitTime} min wait
+              {t('minWait', { minutes: appointment.waitTime })}
             </Badge>
           )}
         </div>
@@ -302,11 +312,11 @@ export default function QueueManagementPage() {
               <>
                 <Button size="sm" onClick={() => handleCheckIn(appointment.id)}>
                   <LogIn className="h-4 w-4 mr-1" />
-                  Check In
+                  {t('checkIn')}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => handleNoShow(appointment.id)}>
                   <XCircle className="h-4 w-4 mr-1" />
-                  No Show
+                  {t('noShowAction')}
                 </Button>
               </>
             )}
@@ -314,14 +324,14 @@ export default function QueueManagementPage() {
               <>
                 <Button size="sm" onClick={() => handleStartProgress(appointment.id)}>
                   <Play className="h-4 w-4 mr-1" />
-                  Start
+                  {t('start')}
                 </Button>
               </>
             )}
             {['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
               <Button size="sm" variant="outline" onClick={() => handleCheckOut(appointment.id)}>
                 <LogOut className="h-4 w-4 mr-1" />
-                Complete
+                {t('complete')}
               </Button>
             )}
             <Button
@@ -329,7 +339,7 @@ export default function QueueManagementPage() {
               variant="ghost"
               onClick={() => router.push(`/appointments/${appointment.id}`)}
             >
-              View
+              {t('view')}
             </Button>
           </div>
         )}
@@ -337,7 +347,7 @@ export default function QueueManagementPage() {
     </Card>
   )
 
-  const today = new Date().toLocaleDateString('en-IN', {
+  const today = fmt.formatDate(new Date(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -349,31 +359,31 @@ export default function QueueManagementPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Today&apos;s Queue</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">{today}</p>
         </div>
         <div className="flex gap-2">
           <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Doctors" />
+              <SelectValue placeholder={t('allDoctors')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Doctors</SelectItem>
+              <SelectItem value="all">{t('allDoctors')}</SelectItem>
               {doctors.map((doctor) => (
                 <SelectItem key={doctor.id} value={doctor.id}>
-                  Dr. {doctor.firstName} {doctor.lastName}
+                  {t('doctorName', { name: `${doctor.firstName} ${doctor.lastName}` })}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('refresh')}
           </Button>
           <Link href="/appointments/new">
             <Button>
               <Calendar className="h-4 w-4 mr-2" />
-              New Appointment
+              {t('newAppointment')}
             </Button>
           </Link>
         </div>
@@ -385,7 +395,7 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-sm text-muted-foreground">{t('total')}</span>
             </div>
             <p className="text-2xl font-bold">{stats.total}</p>
           </CardContent>
@@ -394,7 +404,7 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-amber-600" />
-              <span className="text-sm text-amber-700">Waiting</span>
+              <span className="text-sm text-amber-700">{t('waiting')}</span>
             </div>
             <p className="text-2xl font-bold text-amber-700">{stats.waiting}</p>
           </CardContent>
@@ -403,7 +413,7 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Play className="h-4 w-4 text-purple-600" />
-              <span className="text-sm text-purple-700">In Progress</span>
+              <span className="text-sm text-purple-700">{t('inProgress')}</span>
             </div>
             <p className="text-2xl font-bold text-purple-700">{stats.inProgress}</p>
           </CardContent>
@@ -412,7 +422,7 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-blue-700">Upcoming</span>
+              <span className="text-sm text-blue-700">{t('upcoming')}</span>
             </div>
             <p className="text-2xl font-bold text-blue-700">{stats.upcoming}</p>
           </CardContent>
@@ -421,7 +431,7 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-green-700">Completed</span>
+              <span className="text-sm text-green-700">{t('completed')}</span>
             </div>
             <p className="text-2xl font-bold text-green-700">{stats.completed}</p>
           </CardContent>
@@ -430,7 +440,7 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-red-600" />
-              <span className="text-sm text-red-700">No Show</span>
+              <span className="text-sm text-red-700">{t('noShow')}</span>
             </div>
             <p className="text-2xl font-bold text-red-700">{stats.noShow}</p>
           </CardContent>
@@ -439,16 +449,16 @@ export default function QueueManagementPage() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Timer className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Avg Wait</span>
+              <span className="text-sm text-muted-foreground">{t('avgWait')}</span>
             </div>
-            <p className="text-2xl font-bold">{stats.avgWaitTime} min</p>
+            <p className="text-2xl font-bold">{t('minutes', { minutes: stats.avgWaitTime })}</p>
           </CardContent>
         </Card>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-muted-foreground">Loading queue...</div>
+          <div className="animate-pulse text-muted-foreground">{t('loading')}</div>
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
@@ -457,13 +467,13 @@ export default function QueueManagementPage() {
             <CardHeader className="bg-amber-50 border-b border-amber-200">
               <CardTitle className="flex items-center gap-2 text-amber-700">
                 <Clock className="h-5 w-5" />
-                Waiting ({queue.waiting.length})
+                {t('waitingCount', { count: queue.waiting.length })}
               </CardTitle>
-              <CardDescription>Patients checked in and waiting</CardDescription>
+              <CardDescription>{t('waitingDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 max-h-[500px] overflow-y-auto">
               {queue.waiting.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No patients waiting</p>
+                <p className="text-center text-muted-foreground py-8">{t('noWaiting')}</p>
               ) : (
                 queue.waiting.map((apt) => <AppointmentCard key={apt.id} appointment={apt} />)
               )}
@@ -475,13 +485,13 @@ export default function QueueManagementPage() {
             <CardHeader className="bg-purple-50 border-b border-purple-200">
               <CardTitle className="flex items-center gap-2 text-purple-700">
                 <Play className="h-5 w-5" />
-                In Progress ({queue.inProgress.length})
+                {t('inProgressCount', { count: queue.inProgress.length })}
               </CardTitle>
-              <CardDescription>Currently being attended</CardDescription>
+              <CardDescription>{t('inProgressDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 max-h-[500px] overflow-y-auto">
               {queue.inProgress.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No treatments in progress</p>
+                <p className="text-center text-muted-foreground py-8">{t('noInProgress')}</p>
               ) : (
                 queue.inProgress.map((apt) => <AppointmentCard key={apt.id} appointment={apt} />)
               )}
@@ -493,13 +503,13 @@ export default function QueueManagementPage() {
             <CardHeader className="bg-blue-50 border-b border-blue-200">
               <CardTitle className="flex items-center gap-2 text-blue-700">
                 <Calendar className="h-5 w-5" />
-                Upcoming ({queue.upcoming.length})
+                {t('upcomingCount', { count: queue.upcoming.length })}
               </CardTitle>
-              <CardDescription>Scheduled appointments today</CardDescription>
+              <CardDescription>{t('upcomingDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 max-h-[500px] overflow-y-auto">
               {queue.upcoming.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No more appointments today</p>
+                <p className="text-center text-muted-foreground py-8">{t('noUpcoming')}</p>
               ) : (
                 queue.upcoming.map((apt) => <AppointmentCard key={apt.id} appointment={apt} />)
               )}
@@ -514,7 +524,7 @@ export default function QueueManagementPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
               <CheckCircle className="h-5 w-5" />
-              Completed Today ({queue.completed.length})
+              {t('completedToday', { count: queue.completed.length })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -526,7 +536,9 @@ export default function QueueManagementPage() {
             {queue.completed.length > 6 && (
               <div className="text-center mt-4">
                 <Link href="/appointments?status=COMPLETED">
-                  <Button variant="outline">View All Completed ({queue.completed.length})</Button>
+                  <Button variant="outline">
+                    {t('viewAllCompleted', { count: queue.completed.length })}
+                  </Button>
                 </Link>
               </div>
             )}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,6 +27,7 @@ import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Loader2, Calculator, Search } from 'lucide-react'
 import { format, addDays, addWeeks, addMonths } from 'date-fns'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Invoice {
   id: string
@@ -52,6 +54,11 @@ export default function NewPaymentPlanPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const t = useTranslations('billing.planNew')
+  const tFreq = useTranslations('billing.frequency')
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
   const preselectedInvoiceId = searchParams.get('invoiceId')
 
   const [invoiceSearch, setInvoiceSearch] = useState('')
@@ -195,7 +202,7 @@ export default function NewPaymentPlanPage() {
 
   const handleSubmit = async () => {
     if (!selectedInvoice) {
-      toast({ variant: 'destructive', title: 'Please select an invoice' })
+      toast({ variant: 'destructive', title: t('errSelectInvoice') })
       return
     }
 
@@ -216,23 +223,20 @@ export default function NewPaymentPlanPage() {
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to create plan')
+      if (!res.ok) throw new Error(data.error || t('errCreate'))
 
-      toast({ title: 'Payment plan created successfully' })
+      toast({ title: t('created') })
       router.push(`/billing/payment-plans/${data.id}`)
     } catch (err: any) {
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: t('errorTitle'),
         description: err.message,
       })
     } finally {
       setSubmitting(false)
     }
   }
-
-  const formatCurrency = (amount: number) =>
-    `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
   return (
     <div className="space-y-6">
@@ -244,10 +248,8 @@ export default function NewPaymentPlanPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Payment Plan</h1>
-          <p className="text-muted-foreground">
-            Set up an installment plan for an outstanding invoice
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -257,8 +259,8 @@ export default function NewPaymentPlanPage() {
           {/* Invoice Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Select Invoice</CardTitle>
-              <CardDescription>Choose an unpaid or partially paid invoice</CardDescription>
+              <CardTitle>{t('selectInvoice')}</CardTitle>
+              <CardDescription>{t('selectInvoiceDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!selectedInvoice ? (
@@ -266,7 +268,7 @@ export default function NewPaymentPlanPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search by invoice number or patient name..."
+                      placeholder={t('searchPlaceholder')}
                       value={invoiceSearch}
                       onChange={(e) => setInvoiceSearch(e.target.value)}
                       className="pl-10"
@@ -275,7 +277,7 @@ export default function NewPaymentPlanPage() {
                   {searchLoading && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Searching...
+                      {t('searching')}
                     </div>
                   )}
                   {invoices.length > 0 && (
@@ -303,7 +305,7 @@ export default function NewPaymentPlanPage() {
                                 {formatCurrency(inv.balanceAmount)}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                of {formatCurrency(inv.totalAmount)}
+                                {t('of', { amount: formatCurrency(inv.totalAmount) })}
                               </div>
                             </div>
                           </div>
@@ -322,24 +324,24 @@ export default function NewPaymentPlanPage() {
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => setSelectedInvoice(null)}>
-                      Change
+                      {t('change')}
                     </Button>
                   </div>
                   <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
                     <div>
-                      <div className="text-muted-foreground">Total</div>
+                      <div className="text-muted-foreground">{t('total')}</div>
                       <div className="font-medium">
                         {formatCurrency(selectedInvoice.totalAmount)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Paid</div>
+                      <div className="text-muted-foreground">{t('paid')}</div>
                       <div className="font-medium text-green-600">
                         {formatCurrency(selectedInvoice.paidAmount)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Balance</div>
+                      <div className="text-muted-foreground">{t('balance')}</div>
                       <div className="font-medium text-red-600">
                         {formatCurrency(selectedInvoice.balanceAmount)}
                       </div>
@@ -353,13 +355,13 @@ export default function NewPaymentPlanPage() {
           {/* Plan Configuration */}
           <Card>
             <CardHeader>
-              <CardTitle>Plan Configuration</CardTitle>
-              <CardDescription>Configure installment frequency, count, and terms</CardDescription>
+              <CardTitle>{t('config')}</CardTitle>
+              <CardDescription>{t('configDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Number of Installments</Label>
+                  <Label>{t('numInstallments')}</Label>
                   <Input
                     type="number"
                     min={2}
@@ -369,15 +371,15 @@ export default function NewPaymentPlanPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Frequency</Label>
+                  <Label>{t('frequency')}</Label>
                   <Select value={frequency} onValueChange={setFrequency}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="WEEKLY">Weekly</SelectItem>
-                      <SelectItem value="BIWEEKLY">Bi-weekly</SelectItem>
-                      <SelectItem value="MONTHLY">Monthly</SelectItem>
+                      <SelectItem value="WEEKLY">{tFreq('WEEKLY')}</SelectItem>
+                      <SelectItem value="BIWEEKLY">{tFreq('BIWEEKLY')}</SelectItem>
+                      <SelectItem value="MONTHLY">{tFreq('MONTHLY')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -385,7 +387,7 @@ export default function NewPaymentPlanPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Down Payment (₹)</Label>
+                  <Label>{t('downPayment')}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -394,7 +396,7 @@ export default function NewPaymentPlanPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Interest Rate (%)</Label>
+                  <Label>{t('interestRate')}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -407,7 +409,7 @@ export default function NewPaymentPlanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label>{t('startDate')}</Label>
                 <Input
                   type="date"
                   value={startDate}
@@ -416,9 +418,9 @@ export default function NewPaymentPlanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Notes (Optional)</Label>
+                <Label>{t('notesOptional')}</Label>
                 <Textarea
-                  placeholder="Any additional terms or notes..."
+                  placeholder={t('notesPlaceholder')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
@@ -436,44 +438,44 @@ export default function NewPaymentPlanPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  Plan Summary
+                  {t('summary')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <div className="text-muted-foreground">Invoice Balance</div>
+                    <div className="text-muted-foreground">{t('invoiceBalance')}</div>
                     <div className="font-medium text-lg">
                       {formatCurrency(selectedInvoice.balanceAmount)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Down Payment</div>
+                    <div className="text-muted-foreground">{t('downPayment')}</div>
                     <div className="font-medium text-lg">
                       {formatCurrency(Math.min(downPayment, selectedInvoice.balanceAmount))}
                     </div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Interest Amount</div>
+                    <div className="text-muted-foreground">{t('interestAmount')}</div>
                     <div className="font-medium text-lg">{formatCurrency(interestAmount())}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Total Plan Amount</div>
+                    <div className="text-muted-foreground">{t('totalPlanAmount')}</div>
                     <div className="font-medium text-lg text-blue-600">
                       {formatCurrency(totalPlanAmount())}
                     </div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">EMI Amount</div>
+                    <div className="text-muted-foreground">{t('emiAmount')}</div>
                     <div className="font-bold text-xl text-green-600">
                       {schedule.length > 0 ? formatCurrency(schedule[0].amount) : '—'}
                     </div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Last Payment Date</div>
+                    <div className="text-muted-foreground">{t('lastPaymentDate')}</div>
                     <div className="font-medium">
                       {schedule.length > 0
-                        ? format(schedule[schedule.length - 1].dueDate, 'dd MMM yyyy')
+                        ? formatDate(schedule[schedule.length - 1].dueDate)
                         : '—'}
                     </div>
                   </div>
@@ -486,8 +488,8 @@ export default function NewPaymentPlanPage() {
           {schedule.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Installment Schedule</CardTitle>
-                <CardDescription>Preview of {installments} installments</CardDescription>
+                <CardTitle>{t('schedule')}</CardTitle>
+                <CardDescription>{t('schedulePreview', { count: installments })}</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-[400px] overflow-y-auto">
@@ -495,15 +497,15 @@ export default function NewPaymentPlanPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[60px]">#</TableHead>
-                        <TableHead>Due Date</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>{t('dueDate')}</TableHead>
+                        <TableHead className="text-right">{t('amount')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {schedule.map((item) => (
                         <TableRow key={item.installmentNo}>
                           <TableCell className="font-medium">{item.installmentNo}</TableCell>
-                          <TableCell>{format(item.dueDate, 'dd MMM yyyy')}</TableCell>
+                          <TableCell>{formatDate(item.dueDate)}</TableCell>
                           <TableCell className="text-right font-medium">
                             {formatCurrency(item.amount)}
                           </TableCell>
@@ -526,10 +528,10 @@ export default function NewPaymentPlanPage() {
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Creating Plan...
+                {t('creating')}
               </>
             ) : (
-              'Create Payment Plan'
+              t('create')
             )}
           </Button>
         </div>

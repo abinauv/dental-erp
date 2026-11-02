@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { exchangeCodeForTokens, listCalendars } from '@/lib/services/google-calendar'
+import { logger } from '@/lib/logger'
 
 // GET /api/integrations/google-calendar/callback — OAuth callback
 export async function GET(req: NextRequest) {
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.redirect(new URL('/settings/integrations?success=connected', req.url))
   } catch (err) {
-    console.error('Google Calendar callback error:', err)
+    logger.error({ err }, 'Google Calendar callback error:')
     return NextResponse.redirect(new URL('/settings/integrations?error=token_exchange', req.url))
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -44,12 +45,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  paymentMethodConfig,
-  paymentStatusConfig,
-  formatCurrency,
-  formatDate,
-} from '@/lib/billing-utils'
+import { paymentMethodConfig, paymentStatusConfig } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { ExportMenu } from '@/components/ui/export-menu'
 
 interface Payment {
@@ -91,6 +88,13 @@ interface Summary {
 
 export default function PaymentsPage() {
   const router = useRouter()
+  const t = useTranslations('billing.payments')
+  const tPayStatus = useTranslations('billing.paymentStatus')
+  const tMethods = useTranslations('billing.paymentMethods')
+  const tCommon = useTranslations('common')
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<Summary>({ totalReceived: 0, totalRefunded: 0 })
@@ -146,7 +150,8 @@ export default function PaymentsPage() {
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tPayStatus.has(status) ? tPayStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   const getPaymentMethodIcon = (method: string) => {
@@ -169,8 +174,8 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payments</h1>
-          <p className="text-muted-foreground">View and manage all payment transactions</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <ExportMenu
           filename="payments"
@@ -196,7 +201,7 @@ export default function PaymentsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Received</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalReceived')}</CardTitle>
             <IndianRupee className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -212,7 +217,7 @@ export default function PaymentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Refunded</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalRefunded')}</CardTitle>
             <RotateCcw className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -228,7 +233,7 @@ export default function PaymentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Collection</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('netCollection')}</CardTitle>
             <IndianRupee className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -250,7 +255,7 @@ export default function PaymentsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by payment number, invoice, or patient..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -259,29 +264,29 @@ export default function PaymentsPage() {
             <div className="flex gap-2 flex-wrap">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="FAILED">Failed</SelectItem>
-                  <SelectItem value="REFUNDED">Refunded</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  <SelectItem value="all">{tPayStatus('all')}</SelectItem>
+                  <SelectItem value="PENDING">{tPayStatus('PENDING')}</SelectItem>
+                  <SelectItem value="COMPLETED">{tPayStatus('COMPLETED')}</SelectItem>
+                  <SelectItem value="FAILED">{tPayStatus('FAILED')}</SelectItem>
+                  <SelectItem value="REFUNDED">{tPayStatus('REFUNDED')}</SelectItem>
+                  <SelectItem value="CANCELLED">{tPayStatus('CANCELLED')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={methodFilter} onValueChange={setMethodFilter}>
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Method" />
+                  <SelectValue placeholder={t('method')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Methods</SelectItem>
-                  <SelectItem value="CASH">Cash</SelectItem>
-                  <SelectItem value="CARD">Card</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
-                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                  <SelectItem value="CHEQUE">Cheque</SelectItem>
-                  <SelectItem value="INSURANCE">Insurance</SelectItem>
+                  <SelectItem value="all">{t('allMethods')}</SelectItem>
+                  <SelectItem value="CASH">{tMethods('CASH')}</SelectItem>
+                  <SelectItem value="CARD">{tMethods('CARD')}</SelectItem>
+                  <SelectItem value="UPI">{tMethods('UPI')}</SelectItem>
+                  <SelectItem value="BANK_TRANSFER">{tMethods('BANK_TRANSFER')}</SelectItem>
+                  <SelectItem value="CHEQUE">{tMethods('CHEQUE')}</SelectItem>
+                  <SelectItem value="INSURANCE">{tMethods('INSURANCE')}</SelectItem>
                 </SelectContent>
               </Select>
               <Input
@@ -307,14 +312,14 @@ export default function PaymentsPage() {
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Payment</TableHead>
-                <TableHead>Patient</TableHead>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('cols.payment')}</TableHead>
+                <TableHead>{t('cols.patient')}</TableHead>
+                <TableHead>{t('cols.invoice')}</TableHead>
+                <TableHead>{t('cols.date')}</TableHead>
+                <TableHead>{t('cols.method')}</TableHead>
+                <TableHead className="text-right">{t('cols.amount')}</TableHead>
+                <TableHead>{t('cols.status')}</TableHead>
+                <TableHead className="text-right">{t('cols.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -352,7 +357,7 @@ export default function PaymentsPage() {
                   <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <CreditCard className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No payments found</p>
+                      <p className="text-muted-foreground">{t('empty')}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -363,7 +368,7 @@ export default function PaymentsPage() {
                       <div className="font-medium">{payment.paymentNo}</div>
                       {payment.transactionId && (
                         <div className="text-sm text-muted-foreground">
-                          TXN: {payment.transactionId}
+                          {t('txn', { id: payment.transactionId })}
                         </div>
                       )}
                     </TableCell>
@@ -395,9 +400,11 @@ export default function PaymentsPage() {
                       <div className="flex items-center gap-2">
                         {getPaymentMethodIcon(payment.paymentMethod)}
                         <span>
-                          {paymentMethodConfig[
-                            payment.paymentMethod as keyof typeof paymentMethodConfig
-                          ]?.label || payment.paymentMethod}
+                          {tMethods.has(payment.paymentMethod)
+                            ? tMethods(payment.paymentMethod)
+                            : paymentMethodConfig[
+                                payment.paymentMethod as keyof typeof paymentMethodConfig
+                              ]?.label || payment.paymentMethod}
                         </span>
                       </div>
                     </TableCell>
@@ -405,7 +412,7 @@ export default function PaymentsPage() {
                       <div className="font-medium">{formatCurrency(payment.amount)}</div>
                       {payment.refundAmount && Number(payment.refundAmount) > 0 && (
                         <div className="text-sm text-red-600">
-                          Refund: {formatCurrency(payment.refundAmount)}
+                          {t('refund', { amount: formatCurrency(payment.refundAmount) })}
                         </div>
                       )}
                     </TableCell>
@@ -422,14 +429,14 @@ export default function PaymentsPage() {
                             onClick={() => router.push(`/billing/invoices/${payment.invoice.id}`)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
-                            View Invoice
+                            {t('viewInvoice')}
                           </DropdownMenuItem>
                           {payment.status === 'COMPLETED' && (
                             <DropdownMenuItem
                               onClick={() => router.push(`/billing/payments/${payment.id}/refund`)}
                             >
                               <RotateCcw className="h-4 w-4 mr-2" />
-                              Process Refund
+                              {t('processRefund')}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -445,9 +452,11 @@ export default function PaymentsPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} payments
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -457,10 +466,13 @@ export default function PaymentsPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {tCommon('actions.previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {tCommon('pagination.page', {
+                    page: pagination.page,
+                    totalPages: pagination.totalPages,
+                  })}
                 </div>
                 <Button
                   variant="outline"
@@ -468,7 +480,7 @@ export default function PaymentsPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {tCommon('actions.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

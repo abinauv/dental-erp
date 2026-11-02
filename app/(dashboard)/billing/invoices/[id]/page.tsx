@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -60,13 +61,10 @@ import {
   invoiceStatusConfig,
   paymentMethodConfig,
   paymentStatusConfig,
-  formatCurrency,
-  formatDate,
-  formatDateTime,
   getDueDays,
   numberToWords,
-  gstConfig,
 } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { PaymentCheckout } from '@/components/billing/payment-checkout'
 
 interface Invoice {
@@ -83,6 +81,8 @@ interface Invoice {
   cgstAmount: string | number
   sgstRate: string | number
   sgstAmount: string | number
+  taxComponents?: Array<{ code: string; label: string; rate: number; amount: number }> | null
+  taxAmount?: string | number
   totalAmount: string | number
   paidAmount: string | number
   balanceAmount: string | number
@@ -151,6 +151,15 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   const searchParams = useSearchParams()
   const showPaymentDialog = searchParams.get('action') === 'payment'
 
+  const t = useTranslations('billing.invoiceDetail')
+  const tInv = useTranslations('billing.invoice')
+  const tStatus = useTranslations('billing.status')
+  const tMethods = useTranslations('billing.paymentMethods')
+  const tCommon = useTranslations('common')
+  const { formatDate, formatCurrency: fc, currency, locale } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
+
   const [loading, setLoading] = useState(true)
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [error, setError] = useState('')
@@ -180,7 +189,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       setPaymentAmount(String(Number(data.balanceAmount)))
     } catch (error) {
       console.error('Error fetching invoice:', error)
-      setError('Failed to load invoice')
+      setError(t('errLoad'))
     } finally {
       setLoading(false)
     }
@@ -192,11 +201,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
   const handleRecordPayment = async () => {
     if (!paymentAmount || Number(paymentAmount) <= 0) {
-      setError('Please enter a valid payment amount')
+      setError(t('errAmount'))
       return
     }
     if (!paymentMethod) {
-      setError('Please select a payment method')
+      setError(t('errMethod'))
       return
     }
 
@@ -266,7 +275,8 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tStatus.has(status) ? tStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   const getPaymentStatusBadge = (status: string) => {
@@ -312,10 +322,10 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     return (
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-lg text-muted-foreground">Invoice not found</p>
+        <p className="text-lg text-muted-foreground">{t('notFound')}</p>
         <Link href="/billing/invoices">
           <Button variant="outline" className="mt-4">
-            Back to Invoices
+            {t('backToInvoices')}
           </Button>
         </Link>
       </div>
@@ -339,13 +349,15 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               <h1 className="text-3xl font-bold tracking-tight">{invoice.invoiceNo}</h1>
               {getStatusBadge(invoice.status)}
             </div>
-            <p className="text-muted-foreground">Created on {formatDate(invoice.invoiceDate)}</p>
+            <p className="text-muted-foreground">
+              {t('createdOn', { date: formatDate(invoice.invoiceDate) })}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-2" />
-            Print
+            {t('print')}
           </Button>
           {['PENDING', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) && (
             <>
@@ -358,7 +370,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               />
               <Button onClick={() => setPaymentDialogOpen(true)}>
                 <CreditCard className="h-4 w-4 mr-2" />
-                Record Payment
+                {t('recordPayment')}
               </Button>
             </>
           )}
@@ -378,7 +390,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           {/* Patient Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Bill To</CardTitle>
+              <CardTitle>{t('billTo')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-4">
@@ -390,7 +402,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                     {invoice.patient.firstName} {invoice.patient.lastName}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Patient ID: {invoice.patient.patientId}
+                    {t('patientId', { id: invoice.patient.patientId })}
                   </div>
                   <div className="mt-2 space-y-1 text-sm">
                     <div className="flex items-center gap-2">
@@ -421,16 +433,16 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           {/* Invoice Items */}
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Items</CardTitle>
+              <CardTitle>{t('items')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50%]">Description</TableHead>
-                    <TableHead className="text-center">Qty</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-[50%]">{t('cols.description')}</TableHead>
+                    <TableHead className="text-center">{t('cols.qty')}</TableHead>
+                    <TableHead className="text-right">{t('cols.unitPrice')}</TableHead>
+                    <TableHead className="text-right">{t('cols.amount')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -466,34 +478,53 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 <div className="flex justify-end">
                   <div className="w-64 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-muted-foreground">{tInv('subtotal')}</span>
                       <span>{formatCurrency(invoice.subtotal)}</span>
                     </div>
                     {Number(invoice.discountAmount) > 0 && (
                       <div className="flex justify-between text-green-600">
-                        <span>Discount</span>
+                        <span>{tInv('discount')}</span>
                         <span>-{formatCurrency(invoice.discountAmount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">CGST ({invoice.cgstRate}%)</span>
-                      <span>{formatCurrency(invoice.cgstAmount)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">SGST ({invoice.sgstRate}%)</span>
-                      <span>{formatCurrency(invoice.sgstAmount)}</span>
-                    </div>
+                    {(invoice.taxComponents && invoice.taxComponents.length > 0
+                      ? invoice.taxComponents
+                      : [
+                          {
+                            code: 'CGST',
+                            label: 'CGST',
+                            rate: Number(invoice.cgstRate),
+                            amount: Number(invoice.cgstAmount),
+                          },
+                          {
+                            code: 'SGST',
+                            label: 'SGST',
+                            rate: Number(invoice.sgstRate),
+                            amount: Number(invoice.sgstAmount),
+                          },
+                        ]
+                    ).map((component) => {
+                      const key = component.code.toLowerCase()
+                      return (
+                        <div key={component.code} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {tInv.has(key) ? tInv(key) : component.label} ({component.rate}%)
+                          </span>
+                          <span>{formatCurrency(component.amount)}</span>
+                        </div>
+                      )
+                    })}
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
+                      <span>{tInv('total')}</span>
                       <span>{formatCurrency(invoice.totalAmount)}</span>
                     </div>
                     <div className="flex justify-between text-green-600">
-                      <span>Paid</span>
+                      <span>{t('paid')}</span>
                       <span>{formatCurrency(invoice.paidAmount)}</span>
                     </div>
                     <div className="flex justify-between font-bold">
-                      <span>Balance Due</span>
+                      <span>{t('balanceDue')}</span>
                       <span className={Number(invoice.balanceAmount) > 0 ? 'text-red-600' : ''}>
                         {formatCurrency(invoice.balanceAmount)}
                       </span>
@@ -508,8 +539,10 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           <Card>
             <CardContent className="py-4">
               <div className="text-sm">
-                <span className="text-muted-foreground">Amount in words: </span>
-                <span className="font-medium">{numberToWords(Number(invoice.totalAmount))}</span>
+                <span className="text-muted-foreground">{tInv('amountInWords')}: </span>
+                <span className="font-medium">
+                  {numberToWords(Number(invoice.totalAmount), { currency, locale })}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -518,17 +551,17 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           {invoice.payments.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Payment History</CardTitle>
+                <CardTitle>{t('paymentHistory')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0 overflow-x-auto">
                 <Table className="min-w-[700px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Payment</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('payCols.payment')}</TableHead>
+                      <TableHead>{t('payCols.date')}</TableHead>
+                      <TableHead>{t('payCols.method')}</TableHead>
+                      <TableHead className="text-right">{t('payCols.amount')}</TableHead>
+                      <TableHead>{t('payCols.status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -538,7 +571,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                           <div className="font-medium">{payment.paymentNo}</div>
                           {payment.transactionId && (
                             <div className="text-sm text-muted-foreground">
-                              TXN: {payment.transactionId}
+                              {t('txn', { id: payment.transactionId })}
                             </div>
                           )}
                         </TableCell>
@@ -546,9 +579,11 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getPaymentMethodIcon(payment.paymentMethod)}
-                            {paymentMethodConfig[
-                              payment.paymentMethod as keyof typeof paymentMethodConfig
-                            ]?.label || payment.paymentMethod}
+                            {tMethods.has(payment.paymentMethod)
+                              ? tMethods(payment.paymentMethod)
+                              : paymentMethodConfig[
+                                  payment.paymentMethod as keyof typeof paymentMethodConfig
+                                ]?.label || payment.paymentMethod}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-medium">
@@ -569,14 +604,16 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               <CardContent className="py-4 space-y-4">
                 {invoice.notes && (
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Notes</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                      {t('notes')}
+                    </div>
                     <p className="text-sm">{invoice.notes}</p>
                   </div>
                 )}
                 {invoice.termsAndConditions && (
                   <div>
                     <div className="text-sm font-medium text-muted-foreground mb-1">
-                      Terms & Conditions
+                      {t('terms')}
                     </div>
                     <p className="text-sm whitespace-pre-line">{invoice.termsAndConditions}</p>
                   </div>
@@ -591,20 +628,20 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           {/* Status Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Status</CardTitle>
+              <CardTitle>{t('invoiceStatus')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Status</span>
+                <span className="text-muted-foreground">{t('status')}</span>
                 {getStatusBadge(invoice.status)}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Invoice Date</span>
+                <span className="text-muted-foreground">{t('invoiceDate')}</span>
                 <span>{formatDate(invoice.invoiceDate)}</span>
               </div>
               {invoice.dueDate && (
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Due Date</span>
+                  <span className="text-muted-foreground">{t('dueDate')}</span>
                   <div className="text-right">
                     <div>{formatDate(invoice.dueDate)}</div>
                     {dueDays.isOverdue && invoice.status !== 'PAID' && (
@@ -618,17 +655,17 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               )}
               <Separator />
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Total Amount</span>
+                <span className="text-muted-foreground">{t('totalAmount')}</span>
                 <span className="font-semibold">{formatCurrency(invoice.totalAmount)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Amount Paid</span>
+                <span className="text-muted-foreground">{t('amountPaid')}</span>
                 <span className="text-green-600 font-semibold">
                   {formatCurrency(invoice.paidAmount)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Balance Due</span>
+                <span className="text-muted-foreground">{t('balanceDue')}</span>
                 <span
                   className={`font-semibold ${Number(invoice.balanceAmount) > 0 ? 'text-red-600' : ''}`}
                 >
@@ -644,21 +681,21 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Insurance Claim
+                  {t('insuranceClaim')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Claim Number</span>
+                  <span className="text-muted-foreground">{t('claimNumber')}</span>
                   <span className="font-medium">{invoice.insuranceClaim.claimNumber}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
+                  <span className="text-muted-foreground">{t('status')}</span>
                   <Badge>{invoice.insuranceClaim.status}</Badge>
                 </div>
                 {invoice.insuranceClaim.approvedAmount && (
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Approved</span>
+                    <span className="text-muted-foreground">{t('approved')}</span>
                     <span className="font-medium text-green-600">
                       {formatCurrency(invoice.insuranceClaim.approvedAmount)}
                     </span>
@@ -671,7 +708,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
+              <CardTitle>{t('actionsTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {['PENDING', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) && (
@@ -688,7 +725,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                   ) : (
                     <Share2 className="h-4 w-4 mr-2" />
                   )}
-                  {linkCopied ? 'Link Copied!' : 'Share Payment Link'}
+                  {linkCopied ? t('linkCopied') : t('sharePaymentLink')}
                 </Button>
               )}
               <Button
@@ -697,18 +734,18 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 onClick={() => window.print()}
               >
                 <Printer className="h-4 w-4 mr-2" />
-                Print Invoice
+                {t('printInvoice')}
               </Button>
               {invoice.patient.email && (
                 <Button variant="outline" className="w-full justify-start">
                   <Mail className="h-4 w-4 mr-2" />
-                  Send via Email
+                  {t('sendEmail')}
                 </Button>
               )}
               <Link href={`/patients/${invoice.patient.id}`} className="block">
                 <Button variant="outline" className="w-full justify-start">
                   <User className="h-4 w-4 mr-2" />
-                  View Patient
+                  {t('viewPatient')}
                 </Button>
               </Link>
             </CardContent>
@@ -720,12 +757,14 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>Record a payment for invoice {invoice.invoiceNo}</DialogDescription>
+            <DialogTitle>{t('recordPayment')}</DialogTitle>
+            <DialogDescription>
+              {t('recordPaymentDesc', { invoiceNo: invoice.invoiceNo })}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Amount</Label>
+              <Label>{t('amount')}</Label>
               <div className="relative">
                 <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -737,26 +776,26 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Balance due: {formatCurrency(invoice.balanceAmount)}
+                {t('balanceDueAmount', { amount: formatCurrency(invoice.balanceAmount) })}
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Payment Method</Label>
+              <Label>{t('paymentMethod')}</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select method" />
+                  <SelectValue placeholder={t('selectMethod')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CASH">Cash</SelectItem>
-                  <SelectItem value="CARD">Card</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
-                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                  <SelectItem value="CHEQUE">Cheque</SelectItem>
+                  <SelectItem value="CASH">{tMethods('CASH')}</SelectItem>
+                  <SelectItem value="CARD">{tMethods('CARD')}</SelectItem>
+                  <SelectItem value="UPI">{tMethods('UPI')}</SelectItem>
+                  <SelectItem value="BANK_TRANSFER">{tMethods('BANK_TRANSFER')}</SelectItem>
+                  <SelectItem value="CHEQUE">{tMethods('CHEQUE')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Payment Date</Label>
+              <Label>{t('paymentDate')}</Label>
               <Input
                 type="date"
                 value={paymentDate}
@@ -764,29 +803,29 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               />
             </div>
             <div className="space-y-2">
-              <Label>Transaction ID (Optional)</Label>
+              <Label>{t('transactionId')}</Label>
               <Input
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="Transaction reference number"
+                placeholder={t('transactionPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>Notes (Optional)</Label>
+              <Label>{t('notesOptional')}</Label>
               <Textarea
                 value={paymentNotes}
                 onChange={(e) => setPaymentNotes(e.target.value)}
-                placeholder="Any additional notes..."
+                placeholder={t('notesPlaceholder')}
                 rows={2}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
             <Button onClick={handleRecordPayment} disabled={paymentSubmitting}>
-              {paymentSubmitting ? 'Recording...' : 'Record Payment'}
+              {paymentSubmitting ? t('recording') : t('recordPayment')}
             </Button>
           </DialogFooter>
         </DialogContent>

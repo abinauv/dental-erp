@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get single treatment with all details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(treatment)
   } catch (error) {
-    console.error('Error fetching treatment:', error)
+    logger.error({ err: error }, 'Error fetching treatment:')
     return NextResponse.json({ error: 'Failed to fetch treatment' }, { status: 500 })
   }
 }
@@ -186,7 +187,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(treatment)
   } catch (error) {
-    console.error('Error updating treatment:', error)
+    logger.error({ err: error }, 'Error updating treatment:')
     return NextResponse.json({ error: 'Failed to update treatment' }, { status: 500 })
   }
 }
@@ -241,7 +242,7 @@ export async function DELETE(
       message: 'Treatment deleted successfully',
     })
   } catch (error) {
-    console.error('Error deleting treatment:', error)
+    logger.error({ err: error }, 'Error deleting treatment:')
     return NextResponse.json({ error: 'Failed to delete treatment' }, { status: 500 })
   }
 }

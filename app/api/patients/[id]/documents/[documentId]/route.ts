@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { getStorage, StorageNotFoundError, toStorageKey } from '@/lib/storage'
+import { logger } from '@/lib/logger'
 
 // GET /api/patients/[id]/documents/[documentId] - Get/download a specific document
 export async function GET(
@@ -67,7 +68,7 @@ export async function GET(
       },
     })
   } catch (error: any) {
-    console.error('Error fetching document:', error)
+    logger.error({ err: error }, 'Error fetching document:')
     return NextResponse.json(
       { error: error.message || 'Failed to fetch document' },
       { status: 500 }
@@ -128,7 +129,7 @@ export async function PATCH(
       document: updatedDocument,
     })
   } catch (error: any) {
-    console.error('Error updating document:', error)
+    logger.error({ err: error }, 'Error updating document:')
     return NextResponse.json(
       { error: error.message || 'Failed to update document' },
       { status: 500 }
@@ -195,7 +196,7 @@ export async function DELETE(
       })
     }
   } catch (error: any) {
-    console.error('Error deleting document:', error)
+    logger.error({ err: error }, 'Error deleting document:')
     return NextResponse.json(
       { error: error.message || 'Failed to delete document' },
       { status: 500 }

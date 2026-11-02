@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateOTP } from '@/lib/patient-auth'
+import { smsService } from '@/lib/services/sms.service'
+import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Send OTP to patient's phone for portal login.
@@ -50,17 +53,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Rate limit: max 5 OTPs in 10 minutes
-    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000)
-    const recentOTPs = await prisma.patientOTP.count({
-      where: {
-        hospitalId: hospital.id,
-        phone,
-        createdAt: { gte: tenMinAgo },
-      },
-    })
+    // Rate limit: max 5 OTP requests per phone (and per IP) in 10 minutes,
+    // via the shared limiter.
+    const WINDOW = 10 * 60 * 1000
+    const [byPhone, byIp] = await Promise.all([
+      checkRateLimit(`otp-send:${hospital.id}:${phone}`, 5, WINDOW),
+      checkRateLimit(`otp-send-ip:${getClientIp(req)}`, 20, WINDOW),
+    ])
 
-    if (recentOTPs >= 5) {
+    if (!byPhone.allowed || !byIp.allowed) {
       return NextResponse.json(
         { error: 'Too many OTP requests. Please try again in 10 minutes.' },
         { status: 429 }
@@ -79,20 +80,43 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // TODO: Send OTP via SMS using existing SMS service
-    // For now, log OTP in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Patient Portal OTP] ${phone}: ${otp}`)
+    // Deliver the code over SMS. OTPs are transactional, so they bypass the
+    // marketing DND/consent checks (no patientId passed) and the 9 AM–9 PM
+    // window. If no gateway is configured or the send fails, we fall back to
+    // logging in non-production so local testing still works.
+    const message = `Your ${hospital.name} verification code is ${otp}. It is valid for 5 minutes. Do not share it with anyone.`
+    let delivered = false
+    try {
+      await smsService.sendSMS({
+        hospitalId: hospital.id,
+        phone,
+        message,
+        transactional: true,
+      })
+      delivered = true
+    } catch (smsErr) {
+      logger.error({ err: smsErr }, '[Patient Portal OTP] SMS delivery failed:')
+      if (process.env.NODE_ENV !== 'production') {
+        logger.info(`[Patient Portal OTP] ${phone}: ${otp}`)
+      }
+    }
+
+    // In production we must not claim success if nothing was sent.
+    if (!delivered && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Could not send the verification code right now. Please try again shortly.' },
+        { status: 502 }
+      )
     }
 
     return NextResponse.json({
       success: true,
       message: 'OTP sent to your phone number',
-      // Include OTP in dev mode for testing
-      ...(process.env.NODE_ENV === 'development' && { otp }),
+      // Expose the OTP only outside production, to support local/dev testing.
+      ...(process.env.NODE_ENV !== 'production' && { otp }),
     })
   } catch (err: unknown) {
-    console.error('Send OTP error:', err)
+    logger.error({ err }, 'Send OTP error:')
     return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 })
   }
 }

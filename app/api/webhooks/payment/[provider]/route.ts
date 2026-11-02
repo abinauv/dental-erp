@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
+import { settlePayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 /**
  * Webhook handler for payment gateway callbacks.
@@ -59,51 +61,58 @@ export async function POST(
     }
 
     if (!gatewayOrderId) {
-      console.error('Webhook: could not extract order ID from payload')
+      logger.error('Webhook: could not extract order ID from payload')
       return NextResponse.json({ status: 'ok' }) // Acknowledge but skip
     }
 
-    // Find the payment record by gatewayOrderId to determine the hospital
+    // Find the payment reserved for this order at order-creation time. It carries
+    // the hospital and invoice the order maps to — without it there is no reliable
+    // way to resolve either from the gateway's order id alone.
     const existingPayment = await prisma.payment.findFirst({
       where: { gatewayOrderId },
-      select: { hospitalId: true, id: true, status: true },
+      select: { hospitalId: true, id: true, status: true, invoiceId: true, amount: true },
     })
 
-    if (existingPayment) {
-      // Payment already recorded (likely from client-side verify) — update status if needed
-      if (existingPayment.status === 'COMPLETED') {
-        return NextResponse.json({ status: 'already_processed' })
-      }
+    if (!existingPayment) {
+      // No reserved payment (e.g. an order created before reservation existed).
+      // We cannot settle it safely, so acknowledge without processing.
+      logger.error({ err: gatewayOrderId }, 'Webhook: no payment record for order')
+      return NextResponse.json({ status: 'ok' })
     }
 
-    // If no existing payment, try to find the hospital via the order ID pattern
-    // For webhooks that arrive before client verification, we need to look up the config
-    // and verify + create the payment record
-    // This is the async fallback path — most payments are verified client-side first
-
-    // Find which hospital this belongs to by searching payment configs
-    // For now, we just acknowledge the webhook
-    // The client-side verification flow handles the payment record creation
-
-    // If we have an existing payment that's pending, update it
-    if (existingPayment && existingPayment.status !== 'COMPLETED') {
-      const gatewayResult = await getGateway(existingPayment.hospitalId)
-      if (gatewayResult) {
-        const { gateway, credentials } = gatewayResult
-        const verified = gateway.verifyWebhook(rawBody, signature, credentials.webhookSecret || '')
-
-        if (verified) {
-          await prisma.payment.update({
-            where: { id: existingPayment.id },
-            data: { gatewayStatus: 'captured', status: 'COMPLETED' },
-          })
-        }
-      }
+    if (existingPayment.status === 'COMPLETED') {
+      return NextResponse.json({ status: 'already_processed' })
     }
+
+    // Verify the signature before trusting the webhook.
+    const gatewayResult = await getGateway(existingPayment.hospitalId)
+    if (!gatewayResult) {
+      return NextResponse.json({ status: 'ok' })
+    }
+
+    const { gateway, credentials } = gatewayResult
+    const verified = gateway.verifyWebhook(rawBody, signature, credentials.webhookSecret || '')
+    if (!verified) {
+      logger.error({ err: gatewayOrderId }, 'Webhook: signature verification failed for order')
+      // Return 200 so the gateway does not retry a payload we have rejected.
+      return NextResponse.json({ status: 'invalid_signature' })
+    }
+
+    // Settle the reserved payment and apply it to the invoice. Idempotent with the
+    // client-side verify flow — whichever runs first wins; the other is a no-op.
+    await settlePayment({
+      hospitalId: existingPayment.hospitalId,
+      invoiceId: existingPayment.invoiceId,
+      gatewayOrderId,
+      provider,
+      amount: Number(existingPayment.amount),
+      gatewayStatus: 'captured',
+      notes: `Online payment via ${provider} (webhook)`,
+    })
 
     return NextResponse.json({ status: 'ok' })
   } catch (err) {
-    console.error('Webhook processing error:', err)
+    logger.error({ err }, 'Webhook processing error:')
     // Always return 200 to avoid gateway retries
     return NextResponse.json({ status: 'error_logged' })
   }

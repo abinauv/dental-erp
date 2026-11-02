@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,7 +27,7 @@ import {
   Eye,
   CalendarClock,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Consultation {
   id: string
@@ -62,6 +63,8 @@ interface Summary {
 }
 
 export default function VideoConsultationsPage() {
+  const t = useTranslations('video.list')
+  const { formatDate, formatTime } = useClinicFormatters()
   const { toast } = useToast()
   const [consultations, setConsultations] = useState<Consultation[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,30 +95,31 @@ export default function VideoConsultationsPage() {
       setTotalPages(data.totalPages)
       setSummary(data.summary)
     } catch {
-      toast({ variant: 'destructive', title: 'Failed to load video consultations' })
+      toast({ variant: 'destructive', title: t('loadFailed') })
     } finally {
       setLoading(false)
     }
   }
 
   const statusBadge = (status: string) => {
+    const label = t.has(`badge.${status}`) ? t(`badge.${status}`) : status
     switch (status) {
       case 'SCHEDULED':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Scheduled</Badge>
+        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">{label}</Badge>
       case 'IN_PROGRESS':
         return (
           <Badge className="bg-green-100 text-green-700 hover:bg-green-100 animate-pulse">
-            Live
+            {label}
           </Badge>
         )
       case 'COMPLETED':
-        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">Completed</Badge>
+        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">{label}</Badge>
       case 'CANCELLED':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Cancelled</Badge>
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{label}</Badge>
       case 'NO_SHOW':
-        return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">No Show</Badge>
+        return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">{label}</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{label}</Badge>
     }
   }
 
@@ -124,8 +128,8 @@ export default function VideoConsultationsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Video Consultations</h1>
-          <p className="text-muted-foreground">Manage tele-dentistry video consultations</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -133,7 +137,7 @@ export default function VideoConsultationsPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summaryScheduled')}</CardTitle>
             <CalendarClock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -146,7 +150,7 @@ export default function VideoConsultationsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summaryInProgress')}</CardTitle>
             <Play className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -159,7 +163,7 @@ export default function VideoConsultationsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summaryCompleted')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -172,7 +176,7 @@ export default function VideoConsultationsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cancelled</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summaryCancelled')}</CardTitle>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -188,12 +192,12 @@ export default function VideoConsultationsPage() {
       {/* Status Filters */}
       <div className="flex gap-2">
         {[
-          { value: '', label: 'All' },
-          { value: 'SCHEDULED', label: 'Scheduled' },
-          { value: 'IN_PROGRESS', label: 'Live' },
-          { value: 'COMPLETED', label: 'Completed' },
-          { value: 'CANCELLED', label: 'Cancelled' },
-          { value: 'NO_SHOW', label: 'No Show' },
+          { value: '', label: t('filterAll') },
+          { value: 'SCHEDULED', label: t('badge.SCHEDULED') },
+          { value: 'IN_PROGRESS', label: t('badge.IN_PROGRESS') },
+          { value: 'COMPLETED', label: t('badge.COMPLETED') },
+          { value: 'CANCELLED', label: t('badge.CANCELLED') },
+          { value: 'NO_SHOW', label: t('badge.NO_SHOW') },
         ].map((f) => (
           <Button
             key={f.value}
@@ -215,13 +219,13 @@ export default function VideoConsultationsPage() {
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Patient</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Appointment</TableHead>
-                <TableHead>Scheduled</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead>{t('colPatient')}</TableHead>
+                <TableHead>{t('colDoctor')}</TableHead>
+                <TableHead>{t('colAppointment')}</TableHead>
+                <TableHead>{t('colScheduled')}</TableHead>
+                <TableHead>{t('colDuration')}</TableHead>
+                <TableHead>{t('colStatus')}</TableHead>
+                <TableHead className="w-[100px]">{t('colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -238,7 +242,7 @@ export default function VideoConsultationsPage() {
               ) : consultations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No video consultations found
+                    {t('noConsultations')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -255,7 +259,9 @@ export default function VideoConsultationsPage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          Dr. {c.doctor.firstName} {c.doctor.lastName}
+                          {t('doctorPrefix', {
+                            name: `${c.doctor.firstName} ${c.doctor.lastName}`,
+                          })}
                         </div>
                         {c.doctor.specialization && (
                           <div className="text-xs text-muted-foreground">
@@ -277,13 +283,13 @@ export default function VideoConsultationsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {format(new Date(c.scheduledAt), 'dd MMM yyyy')}
+                      {formatDate(c.scheduledAt)}
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(c.scheduledAt), 'hh:mm a')}
+                        {formatTime(c.scheduledAt)}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {c.duration != null ? `${c.duration} min` : '—'}
+                      {c.duration != null ? t('durationMin', { min: c.duration }) : '—'}
                     </TableCell>
                     <TableCell>{statusBadge(c.status)}</TableCell>
                     <TableCell>
@@ -321,9 +327,7 @@ export default function VideoConsultationsPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
+          <span className="text-sm text-muted-foreground">{t('pageOf', { page, totalPages })}</span>
           <Button
             variant="outline"
             size="sm"

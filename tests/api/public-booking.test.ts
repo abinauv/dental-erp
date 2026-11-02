@@ -6,6 +6,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 vi.mock('@/lib/prisma', () => import('../__mocks__/prisma'))
 
+// Not testing rate limiting here; keep the shared limiter deterministic.
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 1, retryAfterMs: 0 }),
+  getClientIp: vi.fn(() => 'test-ip'),
+}))
+
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { GET as publicDoctorsGET } from '@/app/api/public/[slug]/doctors/route'

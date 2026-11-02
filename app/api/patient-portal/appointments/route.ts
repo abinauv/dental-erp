@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: List patient's appointments (past + upcoming).
@@ -58,7 +59,7 @@ export async function GET(req: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err: unknown) {
-    console.error('Patient appointments error:', err)
+    logger.error({ err }, 'Patient appointments error:')
     return NextResponse.json({ error: 'Failed to load appointments' }, { status: 500 })
   }
 }
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, appointment }, { status: 201 })
   } catch (err: unknown) {
-    console.error('Patient book appointment error:', err)
+    logger.error({ err }, 'Patient book appointment error:')
     return NextResponse.json({ error: 'Failed to book appointment' }, { status: 500 })
   }
 }

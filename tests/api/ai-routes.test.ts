@@ -73,6 +73,12 @@ vi.mock('@/lib/api-helpers', () => ({
   requireAuthAndRole: vi.fn(),
 }))
 
+// Shared rate limiter — default allowed; the rate-limit test blocks it.
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 1, retryAfterMs: 0 }),
+  getClientIp: vi.fn(() => 'test-ip'),
+}))
+
 vi.mock('@/lib/ai/openrouter', () => ({
   complete: vi.fn(),
   streamResponse: vi.fn(),
@@ -118,6 +124,7 @@ import { POST as clinicalPOST } from '@/app/api/ai/clinical/route'
 import { POST as webhooksPOST } from '@/app/api/webhooks/route'
 
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 import { complete, streamResponse } from '@/lib/ai/openrouter'
 import { dispatchEvent } from '@/lib/ai/event-dispatcher'
@@ -222,7 +229,11 @@ describe('POST /api/ai/chat', () => {
   })
 
   it('returns 429 when rate limited (100+ recent requests)', async () => {
-    vi.mocked(prisma.auditLog.count).mockResolvedValue(100)
+    vi.mocked(checkRateLimit).mockResolvedValueOnce({
+      allowed: false,
+      remaining: 0,
+      retryAfterMs: 30000,
+    })
 
     const req = new Request('http://localhost/api/ai/chat', {
       method: 'POST',

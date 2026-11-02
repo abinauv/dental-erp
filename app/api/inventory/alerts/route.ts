@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, StockAlertType } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const ALERT_TYPES = Object.values(StockAlertType) as string[]
 
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error fetching stock alerts:', error)
+    logger.error({ err: error }, 'Error fetching stock alerts:')
     return NextResponse.json(
       { error: 'Failed to fetch stock alerts', details: error.message },
       { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Alert acknowledged successfully' })
   } catch (error: any) {
-    console.error('Error acknowledging alert:', error)
+    logger.error({ err: error }, 'Error acknowledging alert:')
     return NextResponse.json(
       { error: 'Failed to acknowledge alert', details: error.message },
       { status: 500 }

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps) {
+  const t = useTranslations('layout')
+  const tNav = useTranslations('nav')
+  const tPlan = useTranslations('settings.subscription.planBadge')
   const pathname = usePathname()
   const navigation = getNavigationForRole(role)
   const { isCollapsed, toggleSidebar } = useSidebar()
@@ -59,7 +63,7 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
             {!isCollapsed && (
               <div className="flex flex-col">
                 <span className="text-sm font-semibold leading-tight truncate max-w-[140px]">
-                  {hospitalName || 'Dental Clinic'}
+                  {hospitalName || t('defaultClinic')}
                 </span>
                 {plan && (
                   <span
@@ -68,13 +72,7 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
                       plan === 'FREE' ? 'text-muted-foreground' : 'text-primary'
                     )}
                   >
-                    {plan === 'FREE'
-                      ? 'Free Plan'
-                      : plan === 'PROFESSIONAL'
-                        ? 'Professional'
-                        : plan === 'ENTERPRISE'
-                          ? 'Enterprise'
-                          : 'Self-Hosted'}
+                    {tPlan.has(plan) ? tPlan(plan) : plan}
                   </span>
                 )}
               </div>
@@ -90,7 +88,7 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
               onClick={toggleSidebar}
             >
               <PanelLeftClose className="h-4 w-4" />
-              <span className="sr-only">Collapse sidebar</span>
+              <span className="sr-only">{t('collapseSidebar')}</span>
             </Button>
           )}
         </div>
@@ -102,10 +100,10 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10" onClick={toggleSidebar}>
                   <PanelLeft className="h-5 w-5" />
-                  <span className="sr-only">Expand sidebar</span>
+                  <span className="sr-only">{t('expandSidebar')}</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Expand sidebar</TooltipContent>
+              <TooltipContent side="right">{t('expandSidebar')}</TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -118,7 +116,7 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
                 {/* Section Title - hidden when collapsed */}
                 {!isCollapsed && (
                   <h4 className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {section.title}
+                    {tNav(section.title)}
                   </h4>
                 )}
                 <div className="flex flex-col gap-1">
@@ -145,7 +143,7 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
                             </Link>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="flex items-center gap-2">
-                            {item.title}
+                            {tNav(item.title)}
                             {item.badge && (
                               <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
                                 {item.badge}
@@ -168,7 +166,7 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{item.title}</span>
+                        <span className="truncate">{tNav(item.title)}</span>
                         {item.badge && (
                           <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
                             {item.badge}

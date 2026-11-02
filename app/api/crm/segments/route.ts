@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get patient segments based on criteria
 export async function GET(request: NextRequest) {
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
       totalPatients: patients.length,
     })
   } catch (err) {
-    console.error('Error fetching segments:', err)
+    logger.error({ err }, 'Error fetching segments:')
     return NextResponse.json({ error: 'Failed to fetch segments' }, { status: 500 })
   }
 }

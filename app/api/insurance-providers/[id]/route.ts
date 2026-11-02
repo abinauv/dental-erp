@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
@@ -83,7 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         { status: 409 }
       )
     }
-    console.error('Update insurance provider error:', err)
+    logger.error({ err }, 'Update insurance provider error:')
     return NextResponse.json({ error: 'Failed to update provider' }, { status: 500 })
   }
 }

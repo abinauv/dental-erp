@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { FormRenderer, type FormField } from '@/components/forms/form-renderer'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Template {
   id: string
@@ -27,6 +29,9 @@ interface Submission {
 
 export default function PatientFormPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const t = useTranslations('portal.formFill')
+  const tStatus = useTranslations('portal.forms.status')
+  const { formatDate } = useClinicFormatters()
   const router = useRouter()
   const [template, setTemplate] = useState<Template | null>(null)
   const [existingSubmission, setExistingSubmission] = useState<Submission | null>(null)
@@ -48,11 +53,11 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
           setExistingSubmission(data.existingSubmission)
         }
       } else {
-        toast.error('Form not found')
+        toast.error(t('notFound'))
         router.push('/portal/forms')
       }
     } catch {
-      toast.error('Failed to load form')
+      toast.error(t('loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -72,13 +77,13 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
       })
       if (res.ok) {
         setSubmitted(true)
-        toast.success('Form submitted successfully')
+        toast.success(t('submitSuccess'))
       } else {
         const err = await res.json()
-        toast.error(err.error || 'Failed to submit form')
+        toast.error(err.error || t('submitFailed'))
       }
     } catch {
-      toast.error('Failed to submit form')
+      toast.error(t('submitFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -98,12 +103,9 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="max-w-lg mx-auto text-center py-12 space-y-4">
         <CheckCircle2 className="h-16 w-16 mx-auto text-green-500" />
-        <h2 className="text-2xl font-bold">Form Submitted</h2>
-        <p className="text-muted-foreground">
-          Your {template.name} has been submitted successfully. The clinic team will review it
-          shortly.
-        </p>
-        <Button onClick={() => router.push('/portal/forms')}>Back to Forms</Button>
+        <h2 className="text-2xl font-bold">{t('submittedTitle')}</h2>
+        <p className="text-muted-foreground">{t('submittedBody', { name: template.name })}</p>
+        <Button onClick={() => router.push('/portal/forms')}>{t('backToForms')}</Button>
       </div>
     )
   }
@@ -119,15 +121,16 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{template.name}</h1>
             <p className="text-sm text-muted-foreground">
-              Submitted on{' '}
-              {new Date(existingSubmission.createdAt).toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
+              {t('submittedOn', {
+                date: formatDate(existingSubmission.createdAt, { month: 'long' }),
               })}
             </p>
           </div>
-          <Badge>{existingSubmission.status}</Badge>
+          <Badge>
+            {tStatus.has(existingSubmission.status)
+              ? tStatus(existingSubmission.status)
+              : existingSubmission.status}
+          </Badge>
         </div>
 
         <Card>
@@ -165,7 +168,7 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
             fields={template.fields}
             onSubmit={handleSubmit}
             loading={submitting}
-            submitLabel="Submit Form"
+            submitLabel={t('submitFormLabel')}
           />
         </CardContent>
       </Card>

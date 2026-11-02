@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get single treatment plan with all details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(treatmentPlan)
   } catch (error) {
-    console.error('Error fetching treatment plan:', error)
+    logger.error({ err: error }, 'Error fetching treatment plan:')
     return NextResponse.json({ error: 'Failed to fetch treatment plan' }, { status: 500 })
   }
 }
@@ -200,7 +201,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(treatmentPlan)
   } catch (error) {
-    console.error('Error updating treatment plan:', error)
+    logger.error({ err: error }, 'Error updating treatment plan:')
     return NextResponse.json({ error: 'Failed to update treatment plan' }, { status: 500 })
   }
 }
@@ -265,7 +266,7 @@ export async function DELETE(
       message: 'Treatment plan deleted successfully',
     })
   } catch (error) {
-    console.error('Error deleting treatment plan:', error)
+    logger.error({ err: error }, 'Error deleting treatment plan:')
     return NextResponse.json({ error: 'Failed to delete treatment plan' }, { status: 500 })
   }
 }

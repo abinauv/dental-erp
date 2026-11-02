@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -13,26 +14,38 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 
-const signupSchema = z
-  .object({
-    hospitalName: z.string().min(2, 'Hospital name must be at least 2 characters'),
-    adminName: z.string().min(2, 'Your name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
-
-type SignupFormData = z.infer<typeof signupSchema>
+type SignupFormData = {
+  hospitalName: string
+  adminName: string
+  email: string
+  phone: string
+  password: string
+  confirmPassword: string
+}
 
 export default function SignupPage() {
+  const t = useTranslations('auth.signup')
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+
+  const signupSchema = useMemo(
+    () =>
+      z
+        .object({
+          hospitalName: z.string().min(2, t('vHospitalName')),
+          adminName: z.string().min(2, t('vAdminName')),
+          email: z.string().email(t('vEmail')),
+          phone: z.string().min(10, t('vPhone')),
+          password: z.string().min(8, t('vPassword')),
+          confirmPassword: z.string(),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t('vPasswordMatch'),
+          path: ['confirmPassword'],
+        }),
+    [t]
+  )
 
   const {
     register,
@@ -63,15 +76,15 @@ export default function SignupPage() {
       if (!response.ok) {
         toast({
           variant: 'destructive',
-          title: 'Signup failed',
-          description: result.error || 'Something went wrong. Please try again.',
+          title: t('signupFailed'),
+          description: result.error || t('somethingWrong'),
         })
         return
       }
 
       toast({
-        title: 'Account created!',
-        description: 'Please check your email to verify your account.',
+        title: t('accountCreated'),
+        description: t('checkEmail'),
       })
 
       // Redirect to verification pending page
@@ -79,8 +92,8 @@ export default function SignupPage() {
     } catch {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
+        title: t('errorTitle'),
+        description: t('somethingWrong'),
       })
     } finally {
       setIsLoading(false)
@@ -95,16 +108,16 @@ export default function SignupPage() {
             <Building2 className="h-6 w-6" />
           </div>
         </div>
-        <CardTitle className="text-2xl font-bold">Create your clinic</CardTitle>
-        <CardDescription>Start your free trial with up to 100 patients</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('title')}</CardTitle>
+        <CardDescription>{t('subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="hospitalName">Hospital/Clinic Name</Label>
+            <Label htmlFor="hospitalName">{t('hospitalNameLabel')}</Label>
             <Input
               id="hospitalName"
-              placeholder="Dr. Smith's Dental Clinic"
+              placeholder={t('hospitalNamePlaceholder')}
               {...register('hospitalName')}
               disabled={isLoading}
             />
@@ -114,10 +127,10 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="adminName">Your Name</Label>
+            <Label htmlFor="adminName">{t('yourNameLabel')}</Label>
             <Input
               id="adminName"
-              placeholder="Dr. John Smith"
+              placeholder={t('yourNamePlaceholder')}
               {...register('adminName')}
               disabled={isLoading}
             />
@@ -127,11 +140,11 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="doctor@clinic.com"
+              placeholder={t('emailPlaceholder')}
               {...register('email')}
               disabled={isLoading}
             />
@@ -139,7 +152,7 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">{t('phoneLabel')}</Label>
             <Input
               id="phone"
               type="tel"
@@ -151,11 +164,11 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('passwordLabel')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="At least 8 characters"
+              placeholder={t('passwordPlaceholder')}
               {...register('password')}
               disabled={isLoading}
             />
@@ -165,11 +178,11 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t('confirmPasswordLabel')}</Label>
             <Input
               id="confirmPassword"
               type="password"
-              placeholder="Confirm your password"
+              placeholder={t('confirmPasswordPlaceholder')}
               {...register('confirmPassword')}
               disabled={isLoading}
             />
@@ -180,7 +193,7 @@ export default function SignupPage() {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Account
+            {t('createAccount')}
           </Button>
         </form>
 
@@ -190,13 +203,11 @@ export default function SignupPage() {
             className="text-primary hover:underline inline-flex items-center gap-1"
           >
             <ArrowLeft className="h-3 w-3" />
-            Already have an account? Sign in
+            {t('haveAccount')}
           </Link>
         </div>
 
-        <div className="mt-4 text-center text-xs text-muted-foreground">
-          By signing up, you agree to our Terms of Service and Privacy Policy.
-        </div>
+        <div className="mt-4 text-center text-xs text-muted-foreground">{t('terms')}</div>
       </CardContent>
     </Card>
   )

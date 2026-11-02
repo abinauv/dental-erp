@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Calendar, CalendarPlus, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Appointment {
   id: string
@@ -44,6 +46,10 @@ const statusColors: Record<string, string> = {
 }
 
 export default function PatientAppointments() {
+  const t = useTranslations('portal.appointments')
+  const tAptType = useTranslations('appointments.type')
+  const tStatus = useTranslations('appointments.status')
+  const { formatDate } = useClinicFormatters()
   const [filter, setFilter] = useState('upcoming')
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -74,31 +80,23 @@ export default function PatientAppointments() {
     fetchAppointments(1)
   }, [filter])
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Appointments</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <Link href="/portal/book">
           <Button>
             <CalendarPlus className="h-4 w-4 mr-2" />
-            Book New
+            {t('bookNew')}
           </Button>
         </Link>
       </div>
 
       <Tabs value={filter} onValueChange={setFilter}>
         <TabsList>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="past">Past</TabsTrigger>
-          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="upcoming">{t('tabUpcoming')}</TabsTrigger>
+          <TabsTrigger value="past">{t('tabPast')}</TabsTrigger>
+          <TabsTrigger value="all">{t('tabAll')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value={filter} className="mt-4">
@@ -112,7 +110,7 @@ export default function PatientAppointments() {
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 <Calendar className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p>No {filter} appointments found</p>
+                <p>{t('noAppointments')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -125,28 +123,44 @@ export default function PatientAppointments() {
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">
-                            {formatDate(apt.scheduledDate)} at {apt.scheduledTime}
+                            {t('aptWhen', {
+                              date: formatDate(apt.scheduledDate, { weekday: 'short' }),
+                              time: apt.scheduledTime,
+                            })}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
-                            Dr. {apt.doctor.firstName} {apt.doctor.lastName}
-                            {apt.doctor.specialization && ` (${apt.doctor.specialization})`}
+                            {apt.doctor.specialization
+                              ? t('doctorWithSpec', {
+                                  name: `${apt.doctor.firstName} ${apt.doctor.lastName}`,
+                                  spec: apt.doctor.specialization,
+                                })
+                              : t('doctor', {
+                                  name: `${apt.doctor.firstName} ${apt.doctor.lastName}`,
+                                })}
                           </span>
                         </div>
                         {apt.chiefComplaint && (
                           <p className="text-sm text-muted-foreground">
-                            Reason: {apt.chiefComplaint}
+                            {t('reason', { complaint: apt.chiefComplaint })}
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground">
-                          {apt.appointmentNo} &middot; {apt.duration} min &middot;{' '}
-                          {apt.appointmentType.replace('_', ' ')}
+                          {t('meta', {
+                            no: apt.appointmentNo,
+                            duration: apt.duration,
+                            type: tAptType.has(apt.appointmentType)
+                              ? tAptType(apt.appointmentType)
+                              : apt.appointmentType.replace('_', ' '),
+                          })}
                         </p>
                       </div>
                       <Badge className={statusColors[apt.status] || 'bg-muted text-foreground'}>
-                        {apt.status.replace('_', ' ')}
+                        {tStatus.has(apt.status)
+                          ? tStatus(apt.status)
+                          : apt.status.replace('_', ' ')}
                       </Badge>
                     </div>
                   </CardContent>
@@ -165,7 +179,7 @@ export default function PatientAppointments() {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                    Page {pagination.page} of {pagination.totalPages}
+                    {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                   </span>
                   <Button
                     variant="outline"

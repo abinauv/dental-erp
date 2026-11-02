@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,6 +45,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface LeaveRequest {
   id: string
@@ -95,6 +97,10 @@ const statusColors: Record<string, string> = {
 }
 
 export default function LeavesPage() {
+  const t = useTranslations('staff.leaves')
+  const tType = useTranslations('staff.leaveType')
+  const tStatus = useTranslations('staff.leaveStatus')
+  const fmt = useClinicFormatters()
   const { toast } = useToast()
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [staffList, setStaffList] = useState<StaffMember[]>([])
@@ -145,8 +151,8 @@ export default function LeavesPage() {
       console.error('Error fetching leaves:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to fetch leave requests',
+        title: t('error'),
+        description: t('fetchFailed'),
       })
     } finally {
       setLoading(false)
@@ -179,8 +185,8 @@ export default function LeavesPage() {
     ) {
       toast({
         variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
+        title: t('validationError'),
+        description: t('requiredFields'),
       })
       return
     }
@@ -198,12 +204,12 @@ export default function LeavesPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to create leave request')
+        throw new Error(error.error || t('createFailed'))
       }
 
       toast({
-        title: 'Success',
-        description: 'Leave request created successfully',
+        title: t('success'),
+        description: t('createSuccess'),
       })
 
       setNewDialogOpen(false)
@@ -219,8 +225,8 @@ export default function LeavesPage() {
       console.error('Error creating leave:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to create leave request',
+        title: t('error'),
+        description: error.message || t('createFailed'),
       })
     } finally {
       setCreating(false)
@@ -242,8 +248,12 @@ export default function LeavesPage() {
       if (!response.ok) throw new Error('Failed to update leave status')
 
       toast({
-        title: 'Success',
-        description: `Leave request ${newStatus.toLowerCase()}`,
+        title: t('success'),
+        description: t('statusUpdated', {
+          status: tStatus.has(newStatus)
+            ? tStatus(newStatus).toLowerCase()
+            : newStatus.toLowerCase(),
+        }),
       })
 
       fetchLeaves()
@@ -251,21 +261,16 @@ export default function LeavesPage() {
       console.error('Error updating leave:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update leave status',
+        title: t('error'),
+        description: t('updateFailed'),
       })
     } finally {
       setActionLoading(null)
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
+  const formatDate = (dateString: string) =>
+    fmt.formatDate(dateString, { day: 'numeric', month: 'short', year: 'numeric' })
 
   const calculateDays = (startDate: string, endDate: string) => {
     const start = new Date(startDate)
@@ -286,13 +291,13 @@ export default function LeavesPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
-            <p className="text-muted-foreground">Manage staff leave requests</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
         </div>
         <Button onClick={() => setNewDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          New Leave Request
+          {t('newLeaveRequest')}
         </Button>
       </div>
 
@@ -303,28 +308,28 @@ export default function LeavesPage() {
             <div className="flex gap-2 flex-1">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('statusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="APPROVED">Approved</SelectItem>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  <SelectItem value="all">{t('allStatus')}</SelectItem>
+                  <SelectItem value="PENDING">{tStatus('PENDING')}</SelectItem>
+                  <SelectItem value="APPROVED">{tStatus('APPROVED')}</SelectItem>
+                  <SelectItem value="REJECTED">{tStatus('REJECTED')}</SelectItem>
+                  <SelectItem value="CANCELLED">{tStatus('CANCELLED')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={leaveTypeFilter} onValueChange={setLeaveTypeFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Leave Type" />
+                  <SelectValue placeholder={t('leaveTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="CASUAL">Casual Leave</SelectItem>
-                  <SelectItem value="SICK">Sick Leave</SelectItem>
-                  <SelectItem value="EARNED">Earned Leave</SelectItem>
-                  <SelectItem value="UNPAID">Unpaid Leave</SelectItem>
-                  <SelectItem value="MATERNITY">Maternity Leave</SelectItem>
-                  <SelectItem value="PATERNITY">Paternity Leave</SelectItem>
+                  <SelectItem value="all">{t('allTypes')}</SelectItem>
+                  <SelectItem value="CASUAL">{tType('CASUAL')}</SelectItem>
+                  <SelectItem value="SICK">{tType('SICK')}</SelectItem>
+                  <SelectItem value="EARNED">{tType('EARNED')}</SelectItem>
+                  <SelectItem value="UNPAID">{tType('UNPAID')}</SelectItem>
+                  <SelectItem value="MATERNITY">{tType('MATERNITY')}</SelectItem>
+                  <SelectItem value="PATERNITY">{tType('PATERNITY')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -338,13 +343,13 @@ export default function LeavesPage() {
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Leave Type</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Days</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('colEmployee')}</TableHead>
+                <TableHead>{t('colLeaveType')}</TableHead>
+                <TableHead>{t('colDuration')}</TableHead>
+                <TableHead>{t('colDays')}</TableHead>
+                <TableHead>{t('colReason')}</TableHead>
+                <TableHead>{t('colStatus')}</TableHead>
+                <TableHead className="text-right">{t('colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -379,7 +384,7 @@ export default function LeavesPage() {
                   <TableCell colSpan={7} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Calendar className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">No leave requests found</p>
+                      <p className="text-muted-foreground">{t('noLeaves')}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -398,17 +403,22 @@ export default function LeavesPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {leaveTypeLabels[leave.leaveType] || leave.leaveType}
+                        {tType.has(leave.leaveType)
+                          ? tType(leave.leaveType)
+                          : leaveTypeLabels[leave.leaveType] || leave.leaveType}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
+                        {t('durationRange', {
+                          start: formatDate(leave.startDate),
+                          end: formatDate(leave.endDate),
+                        })}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {calculateDays(leave.startDate, leave.endDate)} days
+                        {t('daysCount', { days: calculateDays(leave.startDate, leave.endDate) })}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -418,7 +428,7 @@ export default function LeavesPage() {
                     </TableCell>
                     <TableCell>
                       <Badge className={`${statusColors[leave.status]} border-0`}>
-                        {leave.status}
+                        {tStatus.has(leave.status) ? tStatus(leave.status) : leave.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -463,9 +473,11 @@ export default function LeavesPage() {
           {!loading && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between border-t px-4 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} requests
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -475,10 +487,10 @@ export default function LeavesPage() {
                   disabled={pagination.page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t('previous')}
                 </Button>
                 <div className="text-sm">
-                  Page {pagination.page} of {pagination.totalPages}
+                  {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -486,7 +498,7 @@ export default function LeavesPage() {
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  {t('next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -499,24 +511,27 @@ export default function LeavesPage() {
       <Dialog open={newDialogOpen} onOpenChange={setNewDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Leave Request</DialogTitle>
-            <DialogDescription>Create a leave request for a staff member</DialogDescription>
+            <DialogTitle>{t('newLeaveRequest')}</DialogTitle>
+            <DialogDescription>{t('newDialogDesc')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Staff Member *</Label>
+              <Label>{t('staffMember')}</Label>
               <Select
                 value={newLeaveForm.staffId}
                 onValueChange={(value) => setNewLeaveForm((prev) => ({ ...prev, staffId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select staff member" />
+                  <SelectValue placeholder={t('selectStaff')} />
                 </SelectTrigger>
                 <SelectContent>
                   {staffList.map((staff) => (
                     <SelectItem key={staff.id} value={staff.id}>
-                      {staff.firstName} {staff.lastName} ({staff.employeeId})
+                      {t('staffOption', {
+                        name: `${staff.firstName} ${staff.lastName}`,
+                        employeeId: staff.employeeId,
+                      })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -524,7 +539,7 @@ export default function LeavesPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Leave Type *</Label>
+              <Label>{t('leaveTypeLabel')}</Label>
               <Select
                 value={newLeaveForm.leaveType}
                 onValueChange={(value) =>
@@ -532,22 +547,22 @@ export default function LeavesPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select leave type" />
+                  <SelectValue placeholder={t('selectLeaveType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CASUAL">Casual Leave</SelectItem>
-                  <SelectItem value="SICK">Sick Leave</SelectItem>
-                  <SelectItem value="EARNED">Earned Leave</SelectItem>
-                  <SelectItem value="UNPAID">Unpaid Leave</SelectItem>
-                  <SelectItem value="MATERNITY">Maternity Leave</SelectItem>
-                  <SelectItem value="PATERNITY">Paternity Leave</SelectItem>
+                  <SelectItem value="CASUAL">{tType('CASUAL')}</SelectItem>
+                  <SelectItem value="SICK">{tType('SICK')}</SelectItem>
+                  <SelectItem value="EARNED">{tType('EARNED')}</SelectItem>
+                  <SelectItem value="UNPAID">{tType('UNPAID')}</SelectItem>
+                  <SelectItem value="MATERNITY">{tType('MATERNITY')}</SelectItem>
+                  <SelectItem value="PATERNITY">{tType('PATERNITY')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Start Date *</Label>
+                <Label>{t('startDate')}</Label>
                 <Input
                   type="date"
                   value={newLeaveForm.startDate}
@@ -557,7 +572,7 @@ export default function LeavesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>End Date *</Label>
+                <Label>{t('endDate')}</Label>
                 <Input
                   type="date"
                   value={newLeaveForm.endDate}
@@ -569,11 +584,11 @@ export default function LeavesPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Reason</Label>
+              <Label>{t('reason')}</Label>
               <Textarea
                 value={newLeaveForm.reason}
                 onChange={(e) => setNewLeaveForm((prev) => ({ ...prev, reason: e.target.value }))}
-                placeholder="Optional reason for leave"
+                placeholder={t('reasonPlaceholder')}
                 rows={3}
               />
             </div>
@@ -581,11 +596,11 @@ export default function LeavesPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewDialogOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button onClick={handleCreateLeave} disabled={creating}>
               {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Request
+              {t('createRequest')}
             </Button>
           </DialogFooter>
         </DialogContent>

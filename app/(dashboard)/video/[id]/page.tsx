@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,7 @@ import {
   XCircle,
   Loader2,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Consultation {
   id: string
@@ -68,6 +69,8 @@ interface Consultation {
 
 export default function DoctorVideoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const t = useTranslations('video.room')
+  const { formatDateTime, formatTime } = useClinicFormatters()
   const router = useRouter()
   const { toast } = useToast()
   const [consultation, setConsultation] = useState<Consultation | null>(null)
@@ -93,7 +96,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
       const data = await res.json()
       setConsultation(data)
     } catch {
-      toast({ variant: 'destructive', title: 'Failed to load consultation' })
+      toast({ variant: 'destructive', title: t('loadFailed') })
     } finally {
       setLoading(false)
     }
@@ -109,11 +112,12 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Action failed')
+        throw new Error(data.error || t('actionFailed'))
       }
       await fetchConsultation()
       toast({
-        title: `Consultation ${action === 'start' ? 'started' : action === 'cancel' ? 'cancelled' : 'updated'}`,
+        title:
+          action === 'start' ? t('started') : action === 'cancel' ? t('cancelled') : t('updated'),
       })
     } catch (err: any) {
       toast({ variant: 'destructive', title: err.message })
@@ -127,7 +131,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
       setActionLoading(true)
       // Get token
       const tokenRes = await fetch(`/api/video/token?consultationId=${id}`)
-      if (!tokenRes.ok) throw new Error('Failed to get join token')
+      if (!tokenRes.ok) throw new Error(t('tokenFailed'))
       const data = await tokenRes.json()
       setTokenData(data)
 
@@ -154,30 +158,31 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
       if (!res.ok) throw new Error('Failed to end consultation')
       setInCall(false)
       await fetchConsultation()
-      toast({ title: 'Consultation ended and notes saved' })
+      toast({ title: t('endedSaved') })
     } catch (err: any) {
       toast({ variant: 'destructive', title: err.message })
     }
   }
 
   const statusBadge = (status: string) => {
+    const label = t.has(`status.${status}`) ? t(`status.${status}`) : status
     switch (status) {
       case 'SCHEDULED':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Scheduled</Badge>
+        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">{label}</Badge>
       case 'IN_PROGRESS':
         return (
           <Badge className="bg-green-100 text-green-700 hover:bg-green-100 animate-pulse">
-            In Progress
+            {label}
           </Badge>
         )
       case 'COMPLETED':
-        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">Completed</Badge>
+        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">{label}</Badge>
       case 'CANCELLED':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Cancelled</Badge>
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{label}</Badge>
       case 'NO_SHOW':
-        return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">No Show</Badge>
+        return <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">{label}</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{label}</Badge>
     }
   }
 
@@ -193,10 +198,10 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
   if (!consultation) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Consultation not found</p>
+        <p className="text-muted-foreground">{t('notFound')}</p>
         <Link href="/appointments">
           <Button variant="outline" className="mt-4">
-            Back to Appointments
+            {t('backToAppointments')}
           </Button>
         </Link>
       </div>
@@ -212,7 +217,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
           roomName={consultation.roomName}
           token={tokenData.token}
           provider={tokenData.provider}
-          participantName={tokenData.participantName || 'Doctor'}
+          participantName={tokenData.participantName || t('defaultDoctor')}
           isDoctor={tokenData.isDoctor}
           consultationId={consultation.id}
           patient={consultation.patient}
@@ -237,15 +242,15 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          {t('back')}
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">Video Consultation</h1>
+            <h1 className="text-2xl font-bold">{t('title')}</h1>
             {statusBadge(consultation.status)}
           </div>
           <p className="text-sm text-muted-foreground">
-            {format(new Date(consultation.scheduledAt), 'dd MMM yyyy, hh:mm a')}
+            {formatDateTime(consultation.scheduledAt)}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -256,7 +261,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
               ) : (
                 <Video className="h-4 w-4 mr-2" />
               )}
-              {consultation.status === 'IN_PROGRESS' ? 'Rejoin Call' : 'Start Call'}
+              {consultation.status === 'IN_PROGRESS' ? t('rejoinCall') : t('startCall')}
             </Button>
           )}
           {consultation.status === 'SCHEDULED' && (
@@ -266,7 +271,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
                 onClick={() => handleAction('no_show')}
                 disabled={actionLoading}
               >
-                No Show
+                {t('noShow')}
               </Button>
               <Button
                 variant="destructive"
@@ -274,7 +279,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
                 disabled={actionLoading}
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Cancel
+                {t('cancel')}
               </Button>
             </>
           )}
@@ -287,7 +292,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <User className="h-4 w-4" />
-              Patient Information
+              {t('patientInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -311,27 +316,29 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
             {consultation.patient.medicalHistory && (
               <div className="pt-2 border-t space-y-1">
                 <p className="text-xs font-medium text-muted-foreground uppercase">
-                  Medical Alerts
+                  {t('medicalAlerts')}
                 </p>
                 {consultation.patient.medicalHistory.hasAllergies && (
                   <p className="text-xs text-red-600">
-                    Allergies: {consultation.patient.medicalHistory.drugAllergies || 'Yes'}
+                    {t('allergies', {
+                      value: consultation.patient.medicalHistory.drugAllergies || t('allergiesYes'),
+                    })}
                   </p>
                 )}
                 {consultation.patient.medicalHistory.hasDiabetes && (
-                  <p className="text-xs text-orange-600">Diabetes</p>
+                  <p className="text-xs text-orange-600">{t('diabetes')}</p>
                 )}
                 {consultation.patient.medicalHistory.hasHypertension && (
-                  <p className="text-xs text-orange-600">Hypertension</p>
+                  <p className="text-xs text-orange-600">{t('hypertension')}</p>
                 )}
                 {consultation.patient.medicalHistory.hasHeartDisease && (
-                  <p className="text-xs text-red-600">Heart Disease</p>
+                  <p className="text-xs text-red-600">{t('heartDisease')}</p>
                 )}
               </div>
             )}
             <Link href={`/patients/${consultation.patient.id}`}>
               <Button variant="link" className="px-0 h-auto text-sm">
-                View Full Profile
+                {t('viewFullProfile')}
               </Button>
             </Link>
           </CardContent>
@@ -342,47 +349,45 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Video className="h-4 w-4" />
-              Consultation Details
+              {t('consultationDetails')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-muted-foreground">Scheduled</p>
-                <p className="font-medium">
-                  {format(new Date(consultation.scheduledAt), 'dd MMM yyyy, hh:mm a')}
-                </p>
+                <p className="text-muted-foreground">{t('scheduled')}</p>
+                <p className="font-medium">{formatDateTime(consultation.scheduledAt)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Doctor</p>
+                <p className="text-muted-foreground">{t('doctor')}</p>
                 <p className="font-medium">
-                  Dr. {consultation.doctor.firstName} {consultation.doctor.lastName}
+                  {t('doctorPrefix', {
+                    name: `${consultation.doctor.firstName} ${consultation.doctor.lastName}`,
+                  })}
                 </p>
               </div>
               {consultation.startedAt && (
                 <div>
-                  <p className="text-muted-foreground">Started At</p>
-                  <p className="font-medium">
-                    {format(new Date(consultation.startedAt), 'hh:mm a')}
-                  </p>
+                  <p className="text-muted-foreground">{t('startedAt')}</p>
+                  <p className="font-medium">{formatTime(consultation.startedAt)}</p>
                 </div>
               )}
               {consultation.endedAt && (
                 <div>
-                  <p className="text-muted-foreground">Ended At</p>
-                  <p className="font-medium">{format(new Date(consultation.endedAt), 'hh:mm a')}</p>
+                  <p className="text-muted-foreground">{t('endedAt')}</p>
+                  <p className="font-medium">{formatTime(consultation.endedAt)}</p>
                 </div>
               )}
               {consultation.duration != null && (
                 <div>
-                  <p className="text-muted-foreground">Duration</p>
-                  <p className="font-medium">{consultation.duration} min</p>
+                  <p className="text-muted-foreground">{t('duration')}</p>
+                  <p className="font-medium">{t('durationMin', { min: consultation.duration })}</p>
                 </div>
               )}
             </div>
             {consultation.appointment && (
               <div className="pt-2 border-t">
-                <p className="text-muted-foreground">Linked Appointment</p>
+                <p className="text-muted-foreground">{t('linkedAppointment')}</p>
                 <Link
                   href={`/appointments/${consultation.appointment.id}`}
                   className="text-blue-600 hover:underline"
@@ -390,7 +395,9 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
                   {consultation.appointment.appointmentNo}
                 </Link>
                 {consultation.appointment.chiefComplaint && (
-                  <p className="mt-1">Complaint: {consultation.appointment.chiefComplaint}</p>
+                  <p className="mt-1">
+                    {t('complaint', { complaint: consultation.appointment.chiefComplaint })}
+                  </p>
                 )}
               </div>
             )}
@@ -402,7 +409,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
       {consultation.notes && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Consultation Notes</CardTitle>
+            <CardTitle className="text-base">{t('consultationNotes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm whitespace-pre-wrap">{consultation.notes}</p>

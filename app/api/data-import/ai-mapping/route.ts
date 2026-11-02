@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { AI_MODELS } from '@/lib/ai/models'
 import { ENTITY_SCHEMAS } from '@/lib/import/schema-definitions'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
@@ -86,7 +87,7 @@ Map each source column to the most appropriate target field.`
         { ...AI_MODELS.fast, maxTokens: 4096, temperature: 0.1 }
       )
     } catch (aiErr: any) {
-      console.error('AI mapping error:', aiErr)
+      logger.error({ err: aiErr }, 'AI mapping error:')
       // Fallback: return empty mapping so user can map manually
       const emptyMapping: Record<string, string | null> = {}
       const emptyConfidence: Record<string, number> = {}
@@ -164,7 +165,7 @@ Map each source column to the most appropriate target field.`
       splitFields: parsed.splitFields || [],
     })
   } catch (err: any) {
-    console.error('AI mapping route error:', err)
+    logger.error({ err }, 'AI mapping route error:')
     return NextResponse.json({ error: err.message || 'Mapping failed' }, { status: 500 })
   }
 }

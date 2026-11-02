@@ -39,6 +39,9 @@ const prismaMock = vi.hoisted(() => {
       update: vi.fn(),
       count: vi.fn(),
     },
+    hospital: {
+      findUnique: vi.fn(),
+    },
     invoiceItem: {
       createMany: vi.fn(),
       findMany: vi.fn(),

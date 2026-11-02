@@ -216,6 +216,17 @@ const mockPrismaClient = {
     count: vi.fn(),
   },
 
+  // StaffDocument
+  staffDocument: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  },
+
   // AuditLog
   auditLog: {
     findUnique: vi.fn(),

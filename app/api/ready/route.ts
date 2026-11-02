@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // Readiness probe. Answers a different question from /api/health: can this
 // instance actually serve useful traffic right now?
@@ -24,7 +25,7 @@ export async function GET() {
     // Return 503 rather than throwing. An unhandled throw here becomes a 500,
     // which is indistinguishable from the app being broken in some other way —
     // 503 is the specific, correct signal for "not ready yet".
-    console.error('[ready] database check failed:', error)
+    logger.error({ err: error }, '[ready] database check failed:')
 
     // The detail stays in the logs. This endpoint is unauthenticated, and a
     // driver error can carry the host, port and user of the database.

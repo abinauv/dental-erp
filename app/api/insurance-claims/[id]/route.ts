@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { InsuranceClaimStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - Get single insurance claim details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(claim)
   } catch (error) {
-    console.error('Error fetching insurance claim:', error)
+    logger.error({ err: error }, 'Error fetching insurance claim:')
     return NextResponse.json({ error: 'Failed to fetch insurance claim' }, { status: 500 })
   }
 }
@@ -222,7 +223,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(claim)
   } catch (error) {
-    console.error('Error updating insurance claim:', error)
+    logger.error({ err: error }, 'Error updating insurance claim:')
     return NextResponse.json({ error: 'Failed to update insurance claim' }, { status: 500 })
   }
 }
@@ -275,7 +276,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Insurance claim deleted successfully' })
   } catch (error) {
-    console.error('Error deleting insurance claim:', error)
+    logger.error({ err: error }, 'Error deleting insurance claim:')
     return NextResponse.json({ error: 'Failed to delete insurance claim' }, { status: 500 })
   }
 }

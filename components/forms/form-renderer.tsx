@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -67,8 +68,9 @@ export function FormRenderer({
   loading = false,
   showSignature = true,
   signatureLabel,
-  submitLabel = 'Submit Form',
+  submitLabel,
 }: FormRendererProps) {
+  const t = useTranslations('forms.renderer')
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
   const [signature, setSignature] = useState<string | null>(initialSignature)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -93,7 +95,7 @@ export function FormRenderer({
 
       if (field.required) {
         if (val === undefined || val === null || val === '') {
-          newErrors[field.id] = `${field.label} is required`
+          newErrors[field.id] = t('required', { label: field.label })
           continue
         }
       }
@@ -101,18 +103,18 @@ export function FormRenderer({
       if (val && field.validation) {
         const str = String(val)
         if (field.validation.minLength && str.length < field.validation.minLength) {
-          newErrors[field.id] = `Minimum ${field.validation.minLength} characters`
+          newErrors[field.id] = t('minLength', { count: field.validation.minLength })
         }
         if (field.validation.maxLength && str.length > field.validation.maxLength) {
-          newErrors[field.id] = `Maximum ${field.validation.maxLength} characters`
+          newErrors[field.id] = t('maxLength', { count: field.validation.maxLength })
         }
         if (field.type === 'number') {
           const num = Number(val)
           if (field.validation.min !== undefined && num < field.validation.min) {
-            newErrors[field.id] = `Minimum value is ${field.validation.min}`
+            newErrors[field.id] = t('minValue', { value: field.validation.min })
           }
           if (field.validation.max !== undefined && num > field.validation.max) {
-            newErrors[field.id] = `Maximum value is ${field.validation.max}`
+            newErrors[field.id] = t('maxValue', { value: field.validation.max })
           }
         }
       }
@@ -121,7 +123,7 @@ export function FormRenderer({
     // Check signature if form has a signature field
     const hasSignatureField = fields.some((f) => f.type === 'signature')
     if (hasSignatureField && showSignature && !signature) {
-      newErrors['_signature'] = 'Signature is required'
+      newErrors['_signature'] = t('signatureRequired')
     }
 
     setErrors(newErrors)
@@ -253,7 +255,7 @@ export function FormRenderer({
               disabled={readOnly}
             >
               <SelectTrigger>
-                <SelectValue placeholder={field.placeholder || 'Select...'} />
+                <SelectValue placeholder={field.placeholder || t('selectPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {field.options?.map((opt) => (
@@ -363,14 +365,14 @@ export function FormRenderer({
               <SignaturePad
                 onSignatureChange={setSignature}
                 initialSignature={signature}
-                label={signatureLabel || field.description || 'I agree to the terms above'}
+                label={signatureLabel || field.description || t('agreeDefault')}
               />
             ) : signature ? (
               <div className="border rounded-lg p-2 bg-background">
-                <img src={signature} alt="Signature" className="max-h-[150px]" />
+                <img src={signature} alt={t('signatureAlt')} className="max-h-[150px]" />
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic">No signature</p>
+              <p className="text-sm text-muted-foreground italic">{t('noSignature')}</p>
             )}
             {errors['_signature'] && (
               <p className="text-xs text-destructive">{errors['_signature']}</p>
@@ -391,7 +393,7 @@ export function FormRenderer({
         <div className="pt-4">
           <Button type="submit" disabled={loading} className="w-full sm:w-auto">
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {submitLabel}
+            {submitLabel || t('submit')}
           </Button>
         </div>
       )}

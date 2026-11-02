@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,10 +19,15 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
+import { RegionField } from '@/components/geo/region-field'
+import { getLocaleDefaults } from '@/lib/i18n/config'
 import { useToast } from '@/hooks/use-toast'
 
 export default function NewStaffPage() {
   const router = useRouter()
+  const t = useTranslations('staff.new')
+  const { currencySymbol } = useClinicFormatters()
+  const clinicCountry = getLocaleDefaults(useLocale()).country
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -40,7 +47,7 @@ export default function NewStaffPage() {
     gender: '',
     address: '',
     city: '',
-    state: 'Tamil Nadu',
+    state: '',
     pincode: '',
 
     // Documents
@@ -81,8 +88,8 @@ export default function NewStaffPage() {
     ) {
       toast({
         variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
+        title: t('validationError'),
+        description: t('requiredFields'),
       })
       return
     }
@@ -90,8 +97,8 @@ export default function NewStaffPage() {
     if (formData.password.length < 6) {
       toast({
         variant: 'destructive',
-        title: 'Validation Error',
-        description: 'Password must be at least 6 characters',
+        title: t('validationError'),
+        description: t('passwordLength'),
       })
       return
     }
@@ -109,14 +116,14 @@ export default function NewStaffPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to create staff member')
+        throw new Error(error.error || t('createFailed'))
       }
 
       const staff = await response.json()
 
       toast({
-        title: 'Success',
-        description: `Staff member ${staff.firstName} ${staff.lastName} created successfully`,
+        title: t('success'),
+        description: t('createdDesc', { name: `${staff.firstName} ${staff.lastName}` }),
       })
 
       router.push('/staff')
@@ -124,8 +131,8 @@ export default function NewStaffPage() {
       console.error('Error creating staff:', error)
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to create staff member',
+        title: t('error'),
+        description: error.message || t('createFailed'),
       })
     } finally {
       setLoading(false)
@@ -142,8 +149,8 @@ export default function NewStaffPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Add New Staff</h1>
-          <p className="text-muted-foreground">Create a new staff member account</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -152,54 +159,54 @@ export default function NewStaffPage() {
           {/* Account Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Login credentials and role assignment</CardDescription>
+              <CardTitle>{t('accountInfo')}</CardTitle>
+              <CardDescription>{t('accountInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
+                  <Label htmlFor="firstName">{t('firstName')}</Label>
                   <Input
                     id="firstName"
                     value={formData.firstName}
                     onChange={(e) => handleChange('firstName', e.target.value)}
-                    placeholder="Enter first name"
+                    placeholder={t('firstNamePlaceholder')}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Label htmlFor="lastName">{t('lastName')}</Label>
                   <Input
                     id="lastName"
                     value={formData.lastName}
                     onChange={(e) => handleChange('lastName', e.target.value)}
-                    placeholder="Enter last name"
+                    placeholder={t('lastNamePlaceholder')}
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="staff@yourclinic.com"
+                  placeholder={t('emailPlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">{t('password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleChange('password', e.target.value)}
-                    placeholder="Enter password"
+                    placeholder={t('passwordPlaceholder')}
                     required
                   />
                   <Button
@@ -215,20 +222,20 @@ export default function NewStaffPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
+                <Label htmlFor="role">{t('role')}</Label>
                 <Select
                   value={formData.role}
                   onValueChange={(value) => handleChange('role', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={t('selectRole')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="DOCTOR">Doctor</SelectItem>
-                    <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
-                    <SelectItem value="LAB_TECH">Lab Technician</SelectItem>
-                    <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
+                    <SelectItem value="ADMIN">{t('roleAdmin')}</SelectItem>
+                    <SelectItem value="DOCTOR">{t('roleDoctor')}</SelectItem>
+                    <SelectItem value="RECEPTIONIST">{t('roleReceptionist')}</SelectItem>
+                    <SelectItem value="LAB_TECH">{t('roleLabTech')}</SelectItem>
+                    <SelectItem value="ACCOUNTANT">{t('roleAccountant')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -238,69 +245,70 @@ export default function NewStaffPage() {
           {/* Contact Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-              <CardDescription>Phone and address details</CardDescription>
+              <CardTitle>{t('contactInfo')}</CardTitle>
+              <CardDescription>{t('contactInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">{t('phone')}</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange('phone', e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder={t('phonePlaceholder')}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="alternatePhone">Alternate Phone</Label>
+                  <Label htmlFor="alternatePhone">{t('alternatePhone')}</Label>
                   <Input
                     id="alternatePhone"
                     value={formData.alternatePhone}
                     onChange={(e) => handleChange('alternatePhone', e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder={t('phonePlaceholder')}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="address">{t('address')}</Label>
                 <Textarea
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="Enter full address"
+                  placeholder={t('addressPlaceholder')}
                   rows={2}
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
+                  <Label htmlFor="city">{t('city')}</Label>
                   <Input
                     id="city"
                     value={formData.city}
                     onChange={(e) => handleChange('city', e.target.value)}
-                    placeholder="Chennai"
+                    placeholder={t('cityPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
+                  <Label htmlFor="state">{t('state')}</Label>
+                  <RegionField
                     id="state"
+                    country={clinicCountry}
                     value={formData.state}
-                    onChange={(e) => handleChange('state', e.target.value)}
-                    placeholder="Tamil Nadu"
+                    onChange={(v) => handleChange('state', v)}
+                    placeholder={t('statePlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="pincode">Pincode</Label>
+                  <Label htmlFor="pincode">{t('pincode')}</Label>
                   <Input
                     id="pincode"
                     value={formData.pincode}
                     onChange={(e) => handleChange('pincode', e.target.value)}
-                    placeholder="600001"
+                    placeholder={t('pincodePlaceholder')}
                   />
                 </div>
               </div>
@@ -310,13 +318,13 @@ export default function NewStaffPage() {
           {/* Personal Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Personal Details</CardTitle>
-              <CardDescription>Personal and identification information</CardDescription>
+              <CardTitle>{t('personalDetails')}</CardTitle>
+              <CardDescription>{t('personalDetailsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Label htmlFor="dateOfBirth">{t('dateOfBirth')}</Label>
                   <Input
                     id="dateOfBirth"
                     type="date"
@@ -325,18 +333,18 @@ export default function NewStaffPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
+                  <Label htmlFor="gender">{t('gender')}</Label>
                   <Select
                     value={formData.gender}
                     onValueChange={(value) => handleChange('gender', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder={t('selectGender')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="MALE">Male</SelectItem>
-                      <SelectItem value="FEMALE">Female</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
+                      <SelectItem value="MALE">{t('genderMale')}</SelectItem>
+                      <SelectItem value="FEMALE">{t('genderFemale')}</SelectItem>
+                      <SelectItem value="OTHER">{t('genderOther')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -346,21 +354,21 @@ export default function NewStaffPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="aadharNumber">Aadhar Number</Label>
+                  <Label htmlFor="aadharNumber">{t('aadharNumber')}</Label>
                   <Input
                     id="aadharNumber"
                     value={formData.aadharNumber}
                     onChange={(e) => handleChange('aadharNumber', e.target.value)}
-                    placeholder="1234 5678 9012"
+                    placeholder={t('aadharPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="panNumber">PAN Number</Label>
+                  <Label htmlFor="panNumber">{t('panNumber')}</Label>
                   <Input
                     id="panNumber"
                     value={formData.panNumber}
                     onChange={(e) => handleChange('panNumber', e.target.value)}
-                    placeholder="ABCDE1234F"
+                    placeholder={t('panPlaceholder')}
                   />
                 </div>
               </div>
@@ -370,43 +378,43 @@ export default function NewStaffPage() {
           {/* Professional Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Professional Details</CardTitle>
-              <CardDescription>Qualifications and employment information</CardDescription>
+              <CardTitle>{t('professionalDetails')}</CardTitle>
+              <CardDescription>{t('professionalDetailsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="qualification">Qualification</Label>
+                  <Label htmlFor="qualification">{t('qualification')}</Label>
                   <Input
                     id="qualification"
                     value={formData.qualification}
                     onChange={(e) => handleChange('qualification', e.target.value)}
-                    placeholder="BDS, MDS"
+                    placeholder={t('qualificationPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization</Label>
+                  <Label htmlFor="specialization">{t('specialization')}</Label>
                   <Input
                     id="specialization"
                     value={formData.specialization}
                     onChange={(e) => handleChange('specialization', e.target.value)}
-                    placeholder="Orthodontics, Endodontics"
+                    placeholder={t('specializationPlaceholder')}
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="licenseNumber">License Number</Label>
+                  <Label htmlFor="licenseNumber">{t('licenseNumber')}</Label>
                   <Input
                     id="licenseNumber"
                     value={formData.licenseNumber}
                     onChange={(e) => handleChange('licenseNumber', e.target.value)}
-                    placeholder="TN/12345"
+                    placeholder={t('licensePlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="joiningDate">Joining Date</Label>
+                  <Label htmlFor="joiningDate">{t('joiningDate')}</Label>
                   <Input
                     id="joiningDate"
                     type="date"
@@ -421,38 +429,38 @@ export default function NewStaffPage() {
           {/* Financial Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Financial Details</CardTitle>
-              <CardDescription>Salary and bank account information</CardDescription>
+              <CardTitle>{t('financialDetails')}</CardTitle>
+              <CardDescription>{t('financialDetailsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="salary">Monthly Salary (₹)</Label>
+                <Label htmlFor="salary">{t('monthlySalary', { currency: currencySymbol })}</Label>
                 <Input
                   id="salary"
                   type="number"
                   value={formData.salary}
                   onChange={(e) => handleChange('salary', e.target.value)}
-                  placeholder="50000"
+                  placeholder={t('salaryPlaceholder')}
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="bankAccountNo">Bank Account No.</Label>
+                  <Label htmlFor="bankAccountNo">{t('bankAccountNo')}</Label>
                   <Input
                     id="bankAccountNo"
                     value={formData.bankAccountNo}
                     onChange={(e) => handleChange('bankAccountNo', e.target.value)}
-                    placeholder="1234567890"
+                    placeholder={t('bankAccountPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bankIfsc">IFSC Code</Label>
+                  <Label htmlFor="bankIfsc">{t('ifscCode')}</Label>
                   <Input
                     id="bankIfsc"
                     value={formData.bankIfsc}
                     onChange={(e) => handleChange('bankIfsc', e.target.value)}
-                    placeholder="HDFC0001234"
+                    placeholder={t('ifscPlaceholder')}
                   />
                 </div>
               </div>
@@ -462,26 +470,26 @@ export default function NewStaffPage() {
           {/* Emergency Contact */}
           <Card>
             <CardHeader>
-              <CardTitle>Emergency Contact</CardTitle>
-              <CardDescription>Contact person in case of emergency</CardDescription>
+              <CardTitle>{t('emergencyContact')}</CardTitle>
+              <CardDescription>{t('emergencyContactDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="emergencyContact">Contact Name</Label>
+                <Label htmlFor="emergencyContact">{t('contactName')}</Label>
                 <Input
                   id="emergencyContact"
                   value={formData.emergencyContact}
                   onChange={(e) => handleChange('emergencyContact', e.target.value)}
-                  placeholder="Full name"
+                  placeholder={t('contactNamePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="emergencyPhone">Contact Phone</Label>
+                <Label htmlFor="emergencyPhone">{t('contactPhone')}</Label>
                 <Input
                   id="emergencyPhone"
                   value={formData.emergencyPhone}
                   onChange={(e) => handleChange('emergencyPhone', e.target.value)}
-                  placeholder="+91 98765 43210"
+                  placeholder={t('phonePlaceholder')}
                 />
               </div>
             </CardContent>
@@ -492,12 +500,12 @@ export default function NewStaffPage() {
         <div className="flex justify-end gap-4 mt-6">
           <Link href="/staff">
             <Button variant="outline" type="button">
-              Cancel
+              {t('cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Staff Member
+            {t('createStaff')}
           </Button>
         </div>
       </form>

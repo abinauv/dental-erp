@@ -25,6 +25,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { dispatchEvent, type EventType } from '@/lib/ai/event-dispatcher'
+import { logger } from '@/lib/logger'
 
 const VALID_EVENTS: EventType[] = [
   'treatment.completed',
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     type: body.type as EventType,
     hospitalId: hospitalId!,
     payload: body.payload || {},
-  }).catch(console.error)
+  }).catch((err) => logger.error({ err }, 'Webhook event dispatch failed'))
 
   return NextResponse.json({ received: true, eventType: body.type })
 }

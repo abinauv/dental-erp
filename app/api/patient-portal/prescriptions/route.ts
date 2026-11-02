@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: Patient's prescriptions list.
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ prescriptions })
   } catch (err: unknown) {
-    console.error('Patient prescriptions error:', err)
+    logger.error({ err }, 'Patient prescriptions error:')
     return NextResponse.json({ error: 'Failed to load prescriptions' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 interface TimelineEvent {
   id: string
@@ -260,7 +261,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       hasMore: offset + limit < events.length,
     })
   } catch (error: any) {
-    console.error('Error fetching patient timeline:', error)
+    logger.error({ err: error }, 'Error fetching patient timeline:')
     return NextResponse.json(
       { error: error.message || 'Failed to fetch timeline' },
       { status: 500 }

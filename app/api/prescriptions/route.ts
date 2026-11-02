@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET — list prescriptions
 export async function GET(request: NextRequest) {
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     })
   } catch (err: any) {
-    console.error('Error fetching prescriptions:', err)
+    logger.error({ err }, 'Error fetching prescriptions:')
     return NextResponse.json(
       { error: err.message || 'Failed to fetch prescriptions' },
       { status: 500 }
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: prescription }, { status: 201 })
   } catch (err: any) {
-    console.error('Error creating prescription:', err)
+    logger.error({ err }, 'Error creating prescription:')
     return NextResponse.json(
       { error: err.message || 'Failed to create prescription' },
       { status: 500 }

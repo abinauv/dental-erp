@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET: List form submissions for the hospital (staff view)
 export async function GET(req: NextRequest) {
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ submissions, total, page, totalPages: Math.ceil(total / limit) })
   } catch (err) {
-    console.error('List submissions error:', err)
+    logger.error({ err }, 'List submissions error:')
     return NextResponse.json({ error: 'Failed to list submissions' }, { status: 500 })
   }
 }
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ submission }, { status: 201 })
   } catch (err) {
-    console.error('Create submission error:', err)
+    logger.error({ err }, 'Create submission error:')
     return NextResponse.json({ error: 'Failed to create submission' }, { status: 500 })
   }
 }

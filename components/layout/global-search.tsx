@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -40,6 +41,8 @@ const CATEGORIES = [
 ]
 
 export function GlobalSearch() {
+  const t = useTranslations('layout.search')
+  const tNav = useTranslations('nav')
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -150,7 +153,7 @@ export function GlobalSearch() {
           className="hidden md:flex items-center w-full max-w-sm gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="flex-1 text-left">Search patients, appointments...</span>
+          <span className="flex-1 text-left">{t('trigger')}</span>
           <kbd className="pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
             /
           </kbd>
@@ -169,7 +172,7 @@ export function GlobalSearch() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden top-[5%] sm:top-[20%] translate-y-0 mx-2 sm:mx-auto">
           <VisuallyHidden.Root>
-            <DialogTitle>Global Search</DialogTitle>
+            <DialogTitle>{t('dialogTitle')}</DialogTitle>
           </VisuallyHidden.Root>
 
           {/* Search Input */}
@@ -181,7 +184,7 @@ export function GlobalSearch() {
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search patients, appointments, invoices, staff, treatments..."
+              placeholder={t('placeholder')}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               autoComplete="off"
               spellCheck={false}
@@ -194,20 +197,19 @@ export function GlobalSearch() {
             {/* Empty state */}
             {query.length < 2 && (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                Type at least 2 characters to search across patients, appointments, invoices, staff,
-                and treatments.
+                {t('typeToSearch')}
               </div>
             )}
 
             {/* Loading */}
             {query.length >= 2 && loading && !results && (
-              <div className="p-6 text-center text-sm text-muted-foreground">Searching...</div>
+              <div className="p-6 text-center text-sm text-muted-foreground">{t('searching')}</div>
             )}
 
             {/* No results */}
             {hasSearched && totalResults === 0 && (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                No results found for &ldquo;{query}&rdquo;
+                {t('noResults', { query })}
               </div>
             )}
 
@@ -223,7 +225,7 @@ export function GlobalSearch() {
                     <div key={cat.key}>
                       <div className="px-4 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                         <Icon className="h-3.5 w-3.5" />
-                        {cat.label}
+                        {tNav(cat.label)}
                       </div>
                       {items.map((item) => {
                         const globalIdx = flatResults.findIndex(
@@ -264,15 +266,19 @@ export function GlobalSearch() {
           {results && totalResults > 0 && (
             <div className="border-t px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                {totalResults} result{totalResults !== 1 ? 's' : ''}
+                {totalResults !== 1
+                  ? t('resultPlural', { count: totalResults })
+                  : t('resultSingular', { count: totalResults })}
               </span>
               <span>
-                <kbd className="rounded border px-1 py-0.5 font-mono text-[10px]">↑↓</kbd> navigate
-                <kbd className="ml-2 rounded border px-1 py-0.5 font-mono text-[10px]">↵</kbd> open
+                <kbd className="rounded border px-1 py-0.5 font-mono text-[10px]">↑↓</kbd>{' '}
+                {t('navigate')}
+                <kbd className="ml-2 rounded border px-1 py-0.5 font-mono text-[10px]">↵</kbd>{' '}
+                {t('open')}
                 <kbd className="ml-2 rounded border px-1 py-0.5 font-mono text-[10px]">
                   esc
                 </kbd>{' '}
-                close
+                {t('close')}
               </span>
             </div>
           )}

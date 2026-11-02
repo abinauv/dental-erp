@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
@@ -18,6 +19,8 @@ interface MobileSidebarProps {
 }
 
 export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSidebarProps) {
+  const t = useTranslations('layout')
+  const tNav = useTranslations('nav')
   const pathname = usePathname()
   const navigation = getNavigationForRole(role)
   const { mobileOpen, setMobileOpen } = useSidebar()
@@ -67,7 +70,7 @@ export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSideba
               </div>
             )}
             <span className="text-sm font-semibold truncate">
-              {hospitalName || 'Dental Clinic'}
+              {hospitalName || t('defaultClinic')}
             </span>
           </Link>
           <Button
@@ -86,7 +89,7 @@ export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSideba
             {navigation.map((section, sectionIndex) => (
               <div key={section.title} className={sectionIndex > 0 ? 'mt-4' : ''}>
                 <h4 className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {section.title}
+                  {tNav(section.title)}
                 </h4>
                 <div className="flex flex-col gap-0.5">
                   {section.items.map((item) => {
@@ -106,7 +109,7 @@ export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSideba
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{item.title}</span>
+                        <span className="truncate">{tNav(item.title)}</span>
                         {item.badge && (
                           <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
                             {item.badge}

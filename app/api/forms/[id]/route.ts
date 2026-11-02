@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET: Single submission detail
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ submission })
   } catch (err) {
-    console.error('Get submission error:', err)
+    logger.error({ err }, 'Get submission error:')
     return NextResponse.json({ error: 'Failed to get submission' }, { status: 500 })
   }
 }
@@ -64,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ submission })
   } catch (err) {
-    console.error('Review submission error:', err)
+    logger.error({ err }, 'Review submission error:')
     return NextResponse.json({ error: 'Failed to update submission' }, { status: 500 })
   }
 }

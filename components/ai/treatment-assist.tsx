@@ -1,18 +1,20 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 // ---------------------------------------------------------------------------
 // Types & constants
 // ---------------------------------------------------------------------------
 type Tab = 'drug_check' | 'cost_estimate' | 'consent_form' | 'clinical_notes'
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'drug_check', label: 'Drug Check', icon: '💊' },
-  { id: 'cost_estimate', label: 'Cost Estimate', icon: '💰' },
-  { id: 'consent_form', label: 'Consent Form', icon: '📄' },
-  { id: 'clinical_notes', label: 'Notes', icon: '📝' },
+const TABS: { id: Tab; labelKey: string; icon: string }[] = [
+  { id: 'drug_check', labelKey: 'tabDrugCheck', icon: '💊' },
+  { id: 'cost_estimate', labelKey: 'tabCostEstimate', icon: '💰' },
+  { id: 'consent_form', labelKey: 'tabConsentForm', icon: '📄' },
+  { id: 'clinical_notes', labelKey: 'tabNotes', icon: '📝' },
 ]
 
 export interface TreatmentAssistProps {
@@ -44,6 +46,7 @@ export function TreatmentAssist({
   procedureNotes,
   medications,
 }: TreatmentAssistProps) {
+  const t = useTranslations('treatments.assist')
   const [activeTab, setActiveTab] = useState<Tab>('drug_check')
   const [loading, setLoading] = useState<Tab | null>(null)
   const [results, setResults] = useState<Record<string, Record<string, any>>>({})
@@ -66,15 +69,15 @@ export function TreatmentAssist({
         const data = await res.json()
         setResults((prev) => ({
           ...prev,
-          [type]: data.success ? data.data : { error: data.error || 'Request failed' },
+          [type]: data.success ? data.data : { error: data.error || t('requestFailed') },
         }))
       } catch {
-        setResults((prev) => ({ ...prev, [type]: { error: 'Network error' } }))
+        setResults((prev) => ({ ...prev, [type]: { error: t('networkError') } }))
       } finally {
         setLoading(null)
       }
     },
-    [patientId]
+    [patientId, t]
   )
 
   // Auto-fetch on tab switch (except drug_check which needs user input)
@@ -105,7 +108,7 @@ export function TreatmentAssist({
       {/* header */}
       <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b">
         <span>🤖</span>
-        <span className="text-xs font-semibold">AI Treatment Assistant</span>
+        <span className="text-xs font-semibold">{t('title')}</span>
       </div>
 
       {/* tab bar */}
@@ -122,7 +125,7 @@ export function TreatmentAssist({
             )}
           >
             <span>{tab.icon}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="hidden sm:inline">{t(tab.labelKey)}</span>
           </button>
         ))}
       </div>
@@ -184,10 +187,11 @@ export function TreatmentAssist({
 // Shared micro-components
 // ---------------------------------------------------------------------------
 function Spinner() {
+  const t = useTranslations('treatments.assist')
   return (
     <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
       <div className="h-3 w-3 animate-spin rounded-full border border-muted border-t-primary" />
-      <span>Analyzing…</span>
+      <span>{t('analyzing')}</span>
     </div>
   )
 }
@@ -208,11 +212,10 @@ function DrugCheck({
   setDrugInput: (v: string) => void
   onCheck: () => void
 }) {
+  const t = useTranslations('treatments.assist')
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Enter a medication to check against the patient&apos;s history.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('drugPrompt')}</p>
       <div className="flex gap-2">
         <input
           type="text"
@@ -221,7 +224,7 @@ function DrugCheck({
           onKeyDown={(e) => {
             if (e.key === 'Enter') onCheck()
           }}
-          placeholder="e.g. Amoxicillin 500 mg"
+          placeholder={t('drugPlaceholder')}
           className="flex-1 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary"
         />
         <button
@@ -229,7 +232,7 @@ function DrugCheck({
           disabled={loading || !drugInput.trim()}
           className="rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium disabled:opacity-40"
         >
-          Check
+          {t('check')}
         </button>
       </div>
 
@@ -244,7 +247,7 @@ function DrugCheck({
               result.safe ? 'text-emerald-700' : 'text-red-700'
             )}
           >
-            {result.safe ? '✓ No interactions detected' : '⚠ Interactions detected'}
+            {result.safe ? t('noInteractions') : t('interactionsDetected')}
           </p>
 
           {(result.interactions as any[])?.map((interaction, i) => (
@@ -266,19 +269,17 @@ function DrugCheck({
 
           {(result.allergies as any[])?.map((a, i) => (
             <p key={i} className="text-xs text-red-700 bg-red-50 rounded px-2 py-1">
-              🚫 Allergy: {a.allergen} — {a.reaction}
+              {t('allergyLine', { allergen: a.allergen, reaction: a.reaction })}
             </p>
           ))}
 
           {(result.recommendations as string[])?.length > 0 && (
             <p className="text-xs text-muted-foreground">
-              Recommendations: {(result.recommendations as string[]).join('; ')}
+              {t('recommendations', { list: (result.recommendations as string[]).join('; ') })}
             </p>
           )}
 
-          <p className="text-xs text-muted-foreground italic mt-1">
-            ⚠ AI-generated — for doctor review only.
-          </p>
+          <p className="text-xs text-muted-foreground italic mt-1">{t('drugDisclaimer')}</p>
         </div>
       )}
     </div>
@@ -297,11 +298,13 @@ function CostEstimate({
   result: Record<string, any>
   onRetry: () => void
 }) {
+  const t = useTranslations('treatments.assist')
+  const fmt = useClinicFormatters()
   return (
     <div className="space-y-3">
       {!result.lineItems && !loading && (
         <button onClick={onRetry} className="text-xs text-primary hover:underline">
-          Generate cost estimate
+          {t('generateEstimate')}
         </button>
       )}
       {loading && <Spinner />}
@@ -314,30 +317,30 @@ function CostEstimate({
               <span>
                 {item.description}
                 {item.quantity > 1 && (
-                  <span className="text-muted-foreground ml-1">×{item.quantity}</span>
+                  <span className="text-muted-foreground ml-1">
+                    {t('quantity', { quantity: item.quantity })}
+                  </span>
                 )}
               </span>
-              <span className="font-medium">₹{Number(item.total).toLocaleString()}</span>
+              <span className="font-medium">{fmt.formatCurrency(Number(item.total))}</span>
             </div>
           ))}
           <div className="flex justify-between text-xs text-muted-foreground pt-1">
-            <span>Subtotal</span>
-            <span>₹{Number(result.subtotal || 0).toLocaleString()}</span>
+            <span>{t('subtotal')}</span>
+            <span>{fmt.formatCurrency(Number(result.subtotal || 0))}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>GST (12%)</span>
-            <span>₹{Number(result.gst || 0).toLocaleString()}</span>
+            <span>{t('gst')}</span>
+            <span>{fmt.formatCurrency(Number(result.gst || 0))}</span>
           </div>
           <div className="flex justify-between text-sm font-semibold border-t pt-1.5 mt-1">
-            <span>Total</span>
-            <span>₹{Number(result.grandTotal || 0).toLocaleString()}</span>
+            <span>{t('total')}</span>
+            <span>{fmt.formatCurrency(Number(result.grandTotal || 0))}</span>
           </div>
           {result.notes && (
             <p className="text-xs text-muted-foreground italic mt-1">{String(result.notes)}</p>
           )}
-          <p className="text-xs text-muted-foreground italic">
-            ⚠ AI estimate — subject to change at billing.
-          </p>
+          <p className="text-xs text-muted-foreground italic">{t('costDisclaimer')}</p>
         </div>
       )}
     </div>
@@ -360,9 +363,10 @@ function ConsentForm({
   setLanguage: (l: string) => void
   onGenerate: () => void
 }) {
+  const t = useTranslations('treatments.assist')
   const downloadText = () => {
     const lines = [
-      String(result.title || 'Consent Form'),
+      String(result.title || t('consentFormDefault')),
       '',
       `Patient: ${result.patientName}`,
       `Hospital: ${result.hospitalName}`,
@@ -393,22 +397,22 @@ function ConsentForm({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <label className="text-xs text-muted-foreground">Language:</label>
+        <label className="text-xs text-muted-foreground">{t('language')}</label>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
           className="text-xs border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary"
         >
-          <option value="English">English</option>
-          <option value="Tamil">Tamil</option>
-          <option value="Hindi">Hindi</option>
+          <option value="English">{t('langEnglish')}</option>
+          <option value="Tamil">{t('langTamil')}</option>
+          <option value="Hindi">{t('langHindi')}</option>
         </select>
         <button
           onClick={onGenerate}
           disabled={loading}
           className="ml-auto text-xs text-primary hover:underline disabled:opacity-40"
         >
-          {result.title ? 'Regenerate' : 'Generate'}
+          {result.title ? t('regenerate') : t('generate')}
         </button>
       </div>
 
@@ -420,19 +424,19 @@ function ConsentForm({
           <div className="rounded border bg-muted/30 p-3 max-h-48 overflow-auto text-xs space-y-2">
             <p className="font-bold text-center text-sm">{result.title}</p>
             <p>
-              <strong>Patient:</strong> {String(result.patientName)}
+              <strong>{t('patient')}</strong> {String(result.patientName)}
             </p>
             <p>
-              <strong>Hospital:</strong> {String(result.hospitalName)}
+              <strong>{t('hospital')}</strong> {String(result.hospitalName)}
             </p>
             <p>
-              <strong>Procedure:</strong> {String(result.procedureName)}
+              <strong>{t('procedure')}</strong> {String(result.procedureName)}
             </p>
             <p>{String(result.description)}</p>
 
             {(result.risks as string[])?.length > 0 && (
               <>
-                <p className="font-semibold mt-2">Risks:</p>
+                <p className="font-semibold mt-2">{t('risks')}</p>
                 {(result.risks as string[]).map((r, i) => (
                   <p key={i}>• {r}</p>
                 ))}
@@ -440,7 +444,7 @@ function ConsentForm({
             )}
             {(result.benefits as string[])?.length > 0 && (
               <>
-                <p className="font-semibold mt-2">Benefits:</p>
+                <p className="font-semibold mt-2">{t('benefits')}</p>
                 {(result.benefits as string[]).map((b, i) => (
                   <p key={i}>• {b}</p>
                 ))}
@@ -448,7 +452,7 @@ function ConsentForm({
             )}
             {(result.alternatives as string[])?.length > 0 && (
               <>
-                <p className="font-semibold mt-2">Alternatives:</p>
+                <p className="font-semibold mt-2">{t('alternatives')}</p>
                 {(result.alternatives as string[]).map((a, i) => (
                   <p key={i}>• {a}</p>
                 ))}
@@ -462,7 +466,7 @@ function ConsentForm({
             onClick={downloadText}
             className="text-xs text-muted-foreground hover:text-primary transition-colors"
           >
-            ⬇ Download
+            {t('download')}
           </button>
         </>
       )}
@@ -482,18 +486,17 @@ function ClinicalNotes({
   result: Record<string, any>
   onExpand: () => void
 }) {
+  const t = useTranslations('treatments.assist')
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Expand brief notes into structured clinical documentation.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('notesPrompt')}</p>
         <button
           onClick={onExpand}
           disabled={loading}
           className="text-xs text-primary hover:underline disabled:opacity-40"
         >
-          {result.expandedNotes ? 'Re-expand' : 'Expand notes'}
+          {result.expandedNotes ? t('reExpand') : t('expandNotes')}
         </button>
       </div>
 
@@ -504,31 +507,29 @@ function ClinicalNotes({
         <div className="space-y-2 text-xs">
           {result.diagnosis && (
             <div>
-              <p className="font-semibold text-muted-foreground">Diagnosis</p>
+              <p className="font-semibold text-muted-foreground">{t('diagnosis')}</p>
               <p className="bg-muted rounded p-2">{String(result.diagnosis)}</p>
             </div>
           )}
           {result.findings && (
             <div>
-              <p className="font-semibold text-muted-foreground">Findings</p>
+              <p className="font-semibold text-muted-foreground">{t('findings')}</p>
               <p className="bg-muted rounded p-2">{String(result.findings)}</p>
             </div>
           )}
           {result.procedureNotes && (
             <div>
-              <p className="font-semibold text-muted-foreground">Procedure Notes</p>
+              <p className="font-semibold text-muted-foreground">{t('procedureNotes')}</p>
               <p className="bg-muted rounded p-2">{String(result.procedureNotes)}</p>
             </div>
           )}
           {result.recommendations && (
             <div>
-              <p className="font-semibold text-muted-foreground">Recommendations</p>
+              <p className="font-semibold text-muted-foreground">{t('recommendationsTitle')}</p>
               <p className="bg-muted rounded p-2">{String(result.recommendations)}</p>
             </div>
           )}
-          <p className="text-muted-foreground italic">
-            ⚠ AI-assisted — review and edit before saving.
-          </p>
+          <p className="text-muted-foreground italic">{t('notesDisclaimer')}</p>
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { isSupportedLocale, locales, resolveLocaleCascade, type Locale } from '@/lib/i18n/config'
+import { logger } from '@/lib/logger'
 
 /**
  * The signed-in patient's own portal preferences.
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       supportedLocales: locales,
     })
   } catch (err: unknown) {
-    console.error('Portal profile error:', err)
+    logger.error({ err }, 'Portal profile error:')
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 })
   }
 }
@@ -85,7 +86,7 @@ export async function PATCH(req: NextRequest) {
       message: locale ? 'Language updated' : 'Language reset to the clinic default',
     })
   } catch (err: unknown) {
-    console.error('Portal profile update error:', err)
+    logger.error({ err }, 'Portal profile update error:')
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
 }

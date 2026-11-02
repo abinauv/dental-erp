@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { generateUniqueSlug, generateToken, PLAN_LIMITS } from '@/lib/api-helpers'
 import { Plan, Role } from '@prisma/client'
 import { sendVerificationEmail } from '@/lib/email-helpers'
+import { logger } from '@/lib/logger'
 
 const signupSchema = z.object({
   hospitalName: z.string().min(2, 'Hospital name must be at least 2 characters'),
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
       ...(process.env.NODE_ENV === 'development' && { verificationToken }),
     })
   } catch (error) {
-    console.error('Signup error:', error)
+    logger.error({ err: error }, 'Signup error:')
     return NextResponse.json(
       { error: 'An error occurred during signup. Please try again.' },
       { status: 500 }

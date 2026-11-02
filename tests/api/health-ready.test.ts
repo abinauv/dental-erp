@@ -1,7 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import prisma from '@/tests/__mocks__/prisma'
 
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
+vi.mock('@/lib/logger', () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
+  childLogger: () => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() }),
+}))
+
+import { logger } from '@/lib/logger'
 
 const health = await import('@/app/api/health/route')
 const ready = await import('@/app/api/ready/route')
@@ -37,16 +43,6 @@ describe('Liveness and readiness probes', () => {
   })
 
   describe('GET /api/ready', () => {
-    let errorSpy: ReturnType<typeof vi.spyOn>
-
-    beforeEach(() => {
-      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    })
-
-    afterEach(() => {
-      errorSpy.mockRestore()
-    })
-
     it('returns 200 when the database responds', async () => {
       ;(prisma.$queryRaw as any).mockResolvedValue([{ 1: 1 }])
 
@@ -92,7 +88,7 @@ describe('Liveness and readiness probes', () => {
       await ready.GET()
 
       // Detail belongs in the logs, not the response body.
-      expect(errorSpy).toHaveBeenCalledWith('[ready] database check failed:', cause)
+      expect(logger.error).toHaveBeenCalledWith({ err: cause }, '[ready] database check failed:')
     })
 
     it('is not cached', async () => {

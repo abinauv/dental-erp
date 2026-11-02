@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - CRM dashboard stats
 export async function GET(request: NextRequest) {
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('Error fetching CRM dashboard:', err)
+    logger.error({ err }, 'Error fetching CRM dashboard:')
     return NextResponse.json({ error: 'Failed to fetch dashboard' }, { status: 500 })
   }
 }

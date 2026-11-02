@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface Duplicate {
   id: string
@@ -31,6 +32,7 @@ export function DuplicateDetector({
   dateOfBirth?: string
   onSelect: (existingId: string) => void
 }) {
+  const t = useTranslations('ai.duplicateDetector')
   const [duplicates, setDuplicates] = useState<Duplicate[]>([])
   const [checking, setChecking] = useState(false)
 
@@ -70,7 +72,7 @@ export function DuplicateDetector({
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
         <div className="h-3 w-3 animate-spin rounded-full border border-muted border-t-primary" />
-        <span>Checking for duplicates…</span>
+        <span>{t('checking')}</span>
       </div>
     )
   }
@@ -80,7 +82,7 @@ export function DuplicateDetector({
   return (
     <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
       <p className="text-xs font-semibold text-amber-800 mb-2">
-        ⚠ Possible duplicate patient{duplicates.length > 1 ? 's' : ''} detected
+        {duplicates.length > 1 ? t('titlePlural') : t('title')}
       </p>
       <div className="space-y-2">
         {duplicates.map((d) => (
@@ -91,14 +93,17 @@ export function DuplicateDetector({
             <div>
               <p className="text-sm font-medium">{d.name}</p>
               <p className="text-xs text-muted-foreground">
-                {Math.round(d.confidence * 100)}% match · matched on {d.matchFields.join(', ')}
+                {t('matchInfo', {
+                  pct: Math.round(d.confidence * 100),
+                  fields: d.matchFields.join(', '),
+                })}
               </p>
             </div>
             <button
               onClick={() => onSelect(d.id)}
               className="text-xs rounded-md border border-primary text-primary px-2.5 py-1 hover:bg-primary/10 transition-colors"
             >
-              Use existing
+              {t('useExisting')}
             </button>
           </div>
         ))}

@@ -6,14 +6,19 @@
  * makes TypeScript ignore tsconfig.json entirely — so `paths` (the `@/*`
  * alias) is lost and every import resolves to "Cannot find module '@/lib/...'".
  * Returning the command from a function tells lint-staged not to append the
- * filenames, so `tsc -p tsconfig.json` reads the real project config.
+ * filenames, so the `npm run typecheck` script reads the real project config.
+ * The checks are kept as npm scripts (`npm run typecheck`, `npm run lint`) so
+ * they can also be run by hand.
  */
 const config = {
   // Ignore the file list on purpose — see note above.
-  '*.{ts,tsx}': () => 'tsc --noEmit -p tsconfig.json',
+  '*.{ts,tsx}': () => 'npm run typecheck',
 
-  // Call ESLint directly — the Next.js CLI's lint subcommand was removed in v16.
-  '*.{js,jsx,ts,tsx,mjs,cjs}': 'eslint --fix --no-warn-ignored',
+  // Lint the staged files only (fast); do NOT auto-fix. Auto-fixing on commit
+  // rewrites code without the author seeing it and, after any rule change,
+  // churns every subsequent diff. `npm run lint` / CI cover the whole repo, and
+  // `npm run lint:fix` is the one-off to run after changing the ESLint config.
+  '*.{js,jsx,ts,tsx,mjs,cjs}': 'eslint --no-warn-ignored',
 
   '*.{ts,tsx,js,jsx,mjs,cjs,json,css,md}': 'prettier --write --ignore-unknown',
 }

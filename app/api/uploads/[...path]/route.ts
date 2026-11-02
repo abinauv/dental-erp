@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthAndRole } from '@/lib/api-helpers';
 import { getStorage, keyBelongsToHospital, StorageNotFoundError, toStorageKey } from '@/lib/storage';
+import { logger } from '@/lib/logger'
 
 // GET /api/uploads/[...path] - Serve uploaded files
 export async function GET(
@@ -51,7 +52,7 @@ export async function GET(
         { status: 404 }
       );
     }
-    console.error('Error serving file:', error);
+    logger.error({ err: error }, 'Error serving file:');
     return NextResponse.json(
       { error: error.message || 'Failed to serve file' },
       { status: 500 }

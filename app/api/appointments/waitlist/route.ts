@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET /api/appointments/waitlist — List waitlist entries
 export async function GET(req: NextRequest) {
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
       summary: { active: activeCount, notified: notifiedCount, booked: bookedCount },
     })
   } catch (err) {
-    console.error('Error fetching waitlist:', err)
+    logger.error({ err }, 'Error fetching waitlist:')
     return NextResponse.json({ error: 'Failed to fetch waitlist' }, { status: 500 })
   }
 }
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(entry, { status: 201 })
   } catch (err) {
-    console.error('Error adding to waitlist:', err)
+    logger.error({ err }, 'Error adding to waitlist:')
     return NextResponse.json({ error: 'Failed to add to waitlist' }, { status: 500 })
   }
 }
@@ -176,7 +177,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: 'Removed from waitlist' })
   } catch (err) {
-    console.error('Error removing from waitlist:', err)
+    logger.error({ err }, 'Error removing from waitlist:')
     return NextResponse.json({ error: 'Failed to remove from waitlist' }, { status: 500 })
   }
 }

@@ -60,7 +60,6 @@ const ROUTE_LABELS: Record<string, string> = {
   pricing: 'Pricing Advisor',
   security: 'Security',
   system: 'System',
-  subscription: 'Subscription',
   procedures: 'Procedures',
 }
 

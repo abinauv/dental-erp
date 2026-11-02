@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,9 +26,8 @@ import {
   AlertTriangle,
   Edit,
   BadgeCheck,
-  IndianRupee,
 } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface InsurancePolicy {
   id: string
@@ -78,6 +78,8 @@ const emptyForm = {
 
 export function PatientInsurance({ patientId }: { patientId: string }) {
   const { toast } = useToast()
+  const t = useTranslations('insurance')
+  const { formatCurrency, formatDate, currencySymbol } = useClinicFormatters()
   const [policies, setPolicies] = useState<InsurancePolicy[]>([])
   const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(true)
@@ -91,7 +93,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
       const res = await fetch(`/api/patients/${patientId}/insurance`)
       if (res.ok) setPolicies(await res.json())
     } catch {
-      toast({ title: 'Failed to load insurance policies', variant: 'destructive' })
+      toast({ title: t('toast.loadError'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -142,7 +144,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
       !form.subscriberName ||
       !form.effectiveDate
     ) {
-      toast({ title: 'Please fill all required fields', variant: 'destructive' })
+      toast({ title: t('toast.fillRequired'), variant: 'destructive' })
       return
     }
     setSaving(true)
@@ -157,9 +159,9 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to save')
+        throw new Error(data.error || t('toast.saveError'))
       }
-      toast({ title: editingId ? 'Policy updated' : 'Policy added' })
+      toast({ title: editingId ? t('toast.updated') : t('toast.added') })
       setDialogOpen(false)
       fetchPolicies()
     } catch (err: any) {
@@ -177,11 +179,11 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
         body: JSON.stringify({ policyId }),
       })
       if (res.ok) {
-        toast({ title: 'Insurance verified successfully' })
+        toast({ title: t('toast.verified') })
         fetchPolicies()
       }
     } catch {
-      toast({ title: 'Verification failed', variant: 'destructive' })
+      toast({ title: t('toast.verifyError'), variant: 'destructive' })
     }
   }
 
@@ -192,10 +194,10 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ policyId, isActive: !isActive }),
       })
-      toast({ title: isActive ? 'Policy deactivated' : 'Policy activated' })
+      toast({ title: isActive ? t('toast.deactivated') : t('toast.activated') })
       fetchPolicies()
     } catch {
-      toast({ title: 'Failed to update policy', variant: 'destructive' })
+      toast({ title: t('toast.updateError'), variant: 'destructive' })
     }
   }
 
@@ -203,21 +205,21 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
     if (!p.verificationStatus) {
       return (
         <Badge variant="outline" className="text-xs">
-          <Clock className="h-3 w-3 mr-1" /> Unverified
+          <Clock className="h-3 w-3 mr-1" /> {t('verification.unverified')}
         </Badge>
       )
     }
     if (p.verificationStatus === 'VERIFIED') {
       return (
         <Badge variant="default" className="text-xs bg-green-600">
-          <CheckCircle className="h-3 w-3 mr-1" /> Verified
+          <CheckCircle className="h-3 w-3 mr-1" /> {t('verification.verified')}
         </Badge>
       )
     }
     if (p.verificationStatus === 'EXPIRED') {
       return (
         <Badge variant="destructive" className="text-xs">
-          <AlertTriangle className="h-3 w-3 mr-1" /> Expired
+          <AlertTriangle className="h-3 w-3 mr-1" /> {t('verification.expired')}
         </Badge>
       )
     }
@@ -241,10 +243,10 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Insurance Policies</h3>
+        <h3 className="text-lg font-semibold">{t('title')}</h3>
         <Button size="sm" onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Policy
+          {t('addPolicy')}
         </Button>
       </div>
 
@@ -252,10 +254,8 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">No insurance policies on file</p>
-            <p className="text-sm">
-              Add the patient&apos;s insurance information to enable claims and pre-authorizations
-            </p>
+            <p className="font-medium">{t('emptyTitle')}</p>
+            <p className="text-sm">{t('emptyDescription')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -268,10 +268,11 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                     <CardTitle className="text-base flex items-center gap-2">
                       <Shield className="h-4 w-4 text-blue-500" />
                       {p.provider.name}
-                      {!p.isActive && <Badge variant="secondary">Inactive</Badge>}
+                      {!p.isActive && <Badge variant="secondary">{t('inactive')}</Badge>}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Policy: {p.policyNumber} {p.groupNumber && `· Group: ${p.groupNumber}`}
+                      {t('policyLine', { policy: p.policyNumber })}{' '}
+                      {p.groupNumber && t('groupLine', { group: p.groupNumber })}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -285,35 +286,42 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground">Member ID</p>
+                    <p className="text-muted-foreground">{t('memberId')}</p>
                     <p className="font-medium">{p.memberId}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Subscriber</p>
+                    <p className="text-muted-foreground">{t('subscriber')}</p>
                     <p className="font-medium">
-                      {p.subscriberName} ({p.subscriberRelation})
+                      {t('subscriberValue', {
+                        name: p.subscriberName,
+                        relation: t.has(`relation.${p.subscriberRelation}`)
+                          ? t(`relation.${p.subscriberRelation}`)
+                          : p.subscriberRelation,
+                      })}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Effective</p>
+                    <p className="text-muted-foreground">{t('effective')}</p>
                     <p className="font-medium">{formatDate(p.effectiveDate)}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Expires</p>
-                    <p className="font-medium">{p.expiryDate ? formatDate(p.expiryDate) : 'N/A'}</p>
+                    <p className="text-muted-foreground">{t('expires')}</p>
+                    <p className="font-medium">
+                      {p.expiryDate ? formatDate(p.expiryDate) : t('na')}
+                    </p>
                   </div>
                 </div>
                 {(p.annualMaximum || p.deductible || p.copayPercentage) && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-4 pt-4 border-t">
                     {p.annualMaximum && (
                       <div>
-                        <p className="text-muted-foreground">Annual Maximum</p>
+                        <p className="text-muted-foreground">{t('annualMaximum')}</p>
                         <p className="font-medium">{formatCurrency(Number(p.annualMaximum))}</p>
                       </div>
                     )}
                     {p.remainingAmount != null && (
                       <div>
-                        <p className="text-muted-foreground">Remaining</p>
+                        <p className="text-muted-foreground">{t('remaining')}</p>
                         <p className="font-medium text-green-600">
                           {formatCurrency(Number(p.remainingAmount))}
                         </p>
@@ -321,17 +329,21 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                     )}
                     {p.deductible != null && (
                       <div>
-                        <p className="text-muted-foreground">Deductible</p>
+                        <p className="text-muted-foreground">{t('deductible')}</p>
                         <p className="font-medium">
                           {formatCurrency(Number(p.deductible))}
-                          {p.deductibleMet && <span className="text-green-600 ml-1">(Met)</span>}
+                          {p.deductibleMet && (
+                            <span className="text-green-600 ml-1">{t('met')}</span>
+                          )}
                         </p>
                       </div>
                     )}
                     {p.copayPercentage != null && (
                       <div>
-                        <p className="text-muted-foreground">Co-pay</p>
-                        <p className="font-medium">{Number(p.copayPercentage)}%</p>
+                        <p className="text-muted-foreground">{t('copay')}</p>
+                        <p className="font-medium">
+                          {t('copayValue', { value: Number(p.copayPercentage) })}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -339,7 +351,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                 <div className="flex items-center gap-2 mt-4 pt-3 border-t">
                   <Button variant="outline" size="sm" onClick={() => handleVerify(p.id)}>
                     <BadgeCheck className="h-4 w-4 mr-1" />
-                    Verify
+                    {t('verify')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -348,11 +360,11 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                   >
                     {p.isActive ? (
                       <>
-                        <XCircle className="h-4 w-4 mr-1" /> Deactivate
+                        <XCircle className="h-4 w-4 mr-1" /> {t('deactivate')}
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="h-4 w-4 mr-1" /> Activate
+                        <CheckCircle className="h-4 w-4 mr-1" /> {t('activate')}
                       </>
                     )}
                   </Button>
@@ -367,19 +379,17 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingId ? 'Edit Insurance Policy' : 'Add Insurance Policy'}
-            </DialogTitle>
+            <DialogTitle>{editingId ? t('dialog.editTitle') : t('dialog.addTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Insurance Provider *</Label>
+              <Label>{t('dialog.providerLabel')}</Label>
               <Select
                 value={form.providerId}
                 onValueChange={(v) => setForm({ ...form, providerId: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
+                  <SelectValue placeholder={t('dialog.providerPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {providers.map((p) => (
@@ -392,31 +402,31 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Policy Number *</Label>
+                <Label>{t('dialog.policyNumberLabel')}</Label>
                 <Input
                   value={form.policyNumber}
                   onChange={(e) => setForm({ ...form, policyNumber: e.target.value })}
-                  placeholder="e.g., POL-12345"
+                  placeholder={t('dialog.policyNumberPlaceholder')}
                 />
               </div>
               <div>
-                <Label>Group Number</Label>
+                <Label>{t('dialog.groupNumberLabel')}</Label>
                 <Input
                   value={form.groupNumber}
                   onChange={(e) => setForm({ ...form, groupNumber: e.target.value })}
-                  placeholder="Optional"
+                  placeholder={t('dialog.groupNumberPlaceholder')}
                 />
               </div>
               <div>
-                <Label>Member ID *</Label>
+                <Label>{t('dialog.memberIdLabel')}</Label>
                 <Input
                   value={form.memberId}
                   onChange={(e) => setForm({ ...form, memberId: e.target.value })}
-                  placeholder="e.g., MEM-001"
+                  placeholder={t('dialog.memberIdPlaceholder')}
                 />
               </div>
               <div>
-                <Label>Subscriber Relation</Label>
+                <Label>{t('dialog.relationLabel')}</Label>
                 <Select
                   value={form.subscriberRelation}
                   onValueChange={(v) => setForm({ ...form, subscriberRelation: v })}
@@ -427,22 +437,22 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                   <SelectContent>
                     {['Self', 'Spouse', 'Child', 'Parent', 'Other'].map((r) => (
                       <SelectItem key={r} value={r}>
-                        {r}
+                        {t(`relation.${r}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>Subscriber Name *</Label>
+                <Label>{t('dialog.subscriberNameLabel')}</Label>
                 <Input
                   value={form.subscriberName}
                   onChange={(e) => setForm({ ...form, subscriberName: e.target.value })}
-                  placeholder="Name of the policy holder"
+                  placeholder={t('dialog.subscriberNamePlaceholder')}
                 />
               </div>
               <div>
-                <Label>Effective Date *</Label>
+                <Label>{t('dialog.effectiveDateLabel')}</Label>
                 <Input
                   type="date"
                   value={form.effectiveDate}
@@ -450,7 +460,7 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                 />
               </div>
               <div>
-                <Label>Expiry Date</Label>
+                <Label>{t('dialog.expiryDateLabel')}</Label>
                 <Input
                   type="date"
                   value={form.expiryDate}
@@ -458,55 +468,59 @@ export function PatientInsurance({ patientId }: { patientId: string }) {
                 />
               </div>
               <div>
-                <Label>Coverage Type</Label>
+                <Label>{t('dialog.coverageTypeLabel')}</Label>
                 <Select
                   value={form.coverageType}
                   onValueChange={(v) => setForm({ ...form, coverageType: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={t('dialog.coverageTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Individual">Individual</SelectItem>
-                    <SelectItem value="Family">Family</SelectItem>
-                    <SelectItem value="Group">Group</SelectItem>
+                    <SelectItem value="Individual">{t('coverageType.Individual')}</SelectItem>
+                    <SelectItem value="Family">{t('coverageType.Family')}</SelectItem>
+                    <SelectItem value="Group">{t('coverageType.Group')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Annual Maximum</Label>
+                <Label>{t('dialog.annualMaximumLabel')}</Label>
                 <Input
                   type="number"
                   value={form.annualMaximum}
                   onChange={(e) => setForm({ ...form, annualMaximum: e.target.value })}
-                  placeholder="₹"
+                  placeholder={currencySymbol}
                 />
               </div>
               <div>
-                <Label>Deductible</Label>
+                <Label>{t('dialog.deductibleLabel')}</Label>
                 <Input
                   type="number"
                   value={form.deductible}
                   onChange={(e) => setForm({ ...form, deductible: e.target.value })}
-                  placeholder="₹"
+                  placeholder={currencySymbol}
                 />
               </div>
               <div>
-                <Label>Co-pay %</Label>
+                <Label>{t('dialog.copayLabel')}</Label>
                 <Input
                   type="number"
                   value={form.copayPercentage}
                   onChange={(e) => setForm({ ...form, copayPercentage: e.target.value })}
-                  placeholder="%"
+                  placeholder={t('dialog.copayPlaceholder')}
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t('dialog.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update' : 'Add Policy'}
+                {saving
+                  ? t('dialog.saving')
+                  : editingId
+                    ? t('dialog.update')
+                    : t('dialog.addPolicy')}
               </Button>
             </div>
           </div>

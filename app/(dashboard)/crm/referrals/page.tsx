@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +43,7 @@ import {
   Copy,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -92,23 +94,24 @@ interface PatientSearchResult {
 // ---------------------------------------------------------------------------
 
 function StatusBadge({ status }: { status: Referral['status'] }) {
+  const t = useTranslations('crm.referrals.status')
   switch (status) {
     case 'PENDING':
-      return <Badge variant="outline">Pending</Badge>
+      return <Badge variant="outline">{t('PENDING')}</Badge>
     case 'CONVERTED':
       return (
         <Badge variant="default" className="bg-blue-100 text-blue-700 hover:bg-blue-100/80">
-          Converted
+          {t('CONVERTED')}
         </Badge>
       )
     case 'REWARDED':
       return (
         <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100/80">
-          Rewarded
+          {t('REWARDED')}
         </Badge>
       )
     case 'EXPIRED':
-      return <Badge variant="destructive">Expired</Badge>
+      return <Badge variant="destructive">{t('EXPIRED')}</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
   }
@@ -120,6 +123,8 @@ function StatusBadge({ status }: { status: Referral['status'] }) {
 
 export default function ReferralsPage() {
   const { toast } = useToast()
+  const t = useTranslations('crm.referrals')
+  const { formatDate } = useClinicFormatters()
 
   // Data state
   const [referrals, setReferrals] = useState<Referral[]>([])
@@ -181,11 +186,11 @@ export default function ReferralsPage() {
       setSummary(data.summary || { total: 0, converted: 0, rewarded: 0, conversionRate: '0' })
       setPagination(data.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 })
     } catch {
-      toast({ title: 'Failed to load referrals', variant: 'destructive' })
+      toast({ title: t('toast.loadError'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
-  }, [search, statusFilter, page, toast])
+  }, [search, statusFilter, page, toast, t])
 
   useEffect(() => {
     fetchReferrals()
@@ -250,19 +255,19 @@ export default function ReferralsPage() {
 
   async function handleCreateReferral() {
     if (!referrerPatientId) {
-      toast({ title: 'Please select a referrer patient', variant: 'destructive' })
+      toast({ title: t('toast.selectReferrer'), variant: 'destructive' })
       return
     }
     if (!referredName.trim()) {
-      toast({ title: 'Referred person name is required', variant: 'destructive' })
+      toast({ title: t('toast.nameRequired'), variant: 'destructive' })
       return
     }
     if (!referredPhone.trim()) {
-      toast({ title: 'Referred person phone is required', variant: 'destructive' })
+      toast({ title: t('toast.phoneRequired'), variant: 'destructive' })
       return
     }
     if (!rewardValue || Number(rewardValue) <= 0) {
-      toast({ title: 'Reward value must be greater than 0', variant: 'destructive' })
+      toast({ title: t('toast.rewardValueInvalid'), variant: 'destructive' })
       return
     }
 
@@ -281,15 +286,15 @@ export default function ReferralsPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || 'Failed to create referral')
+        throw new Error(err.error || t('toast.createError'))
       }
-      toast({ title: 'Referral created successfully' })
+      toast({ title: t('toast.created') })
       setDialogOpen(false)
       resetForm()
       setPage(1)
       fetchReferrals()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to create referral'
+      const message = err instanceof Error ? err.message : t('toast.createError')
       toast({ title: message, variant: 'destructive' })
     } finally {
       setSubmitting(false)
@@ -307,15 +312,14 @@ export default function ReferralsPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || 'Failed to update referral')
+        throw new Error(err.error || t('toast.updateError'))
       }
       toast({
-        title:
-          newStatus === 'CONVERTED' ? 'Referral marked as converted' : 'Reward given successfully',
+        title: newStatus === 'CONVERTED' ? t('toast.markedConverted') : t('toast.rewardGiven'),
       })
       fetchReferrals()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update referral'
+      const message = err instanceof Error ? err.message : t('toast.updateError')
       toast({ title: message, variant: 'destructive' })
     }
   }
@@ -324,7 +328,7 @@ export default function ReferralsPage() {
 
   function copyCode(code: string) {
     navigator.clipboard.writeText(code).then(() => {
-      toast({ title: 'Referral code copied' })
+      toast({ title: t('toast.codeCopied') })
     })
   }
 
@@ -335,7 +339,7 @@ export default function ReferralsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Referral Program</h1>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -359,9 +363,9 @@ export default function ReferralsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Referral Program</h1>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
         <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Create Referral
+          <Plus className="mr-2 h-4 w-4" /> {t('create')}
         </Button>
       </div>
 
@@ -369,45 +373,45 @@ export default function ReferralsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Referrals</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.total')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.total}</div>
-            <p className="text-xs text-muted-foreground">All-time referrals</p>
+            <p className="text-xs text-muted-foreground">{t('summary.totalHint')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Converted</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.converted')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.converted}</div>
-            <p className="text-xs text-muted-foreground">Referrals converted to patients</p>
+            <p className="text-xs text-muted-foreground">{t('summary.convertedHint')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rewarded</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.rewarded')}</CardTitle>
             <Gift className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.rewarded}</div>
-            <p className="text-xs text-muted-foreground">Rewards distributed</p>
+            <p className="text-xs text-muted-foreground">{t('summary.rewardedHint')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('summary.conversionRate')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.conversionRate}%</div>
-            <p className="text-xs text-muted-foreground">Of total referrals</p>
+            <p className="text-xs text-muted-foreground">{t('summary.conversionRateHint')}</p>
           </CardContent>
         </Card>
       </div>
@@ -417,7 +421,7 @@ export default function ReferralsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5 text-blue-500" />
-            Referrals
+            {t('listTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -425,7 +429,7 @@ export default function ReferralsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, phone or referral code..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value)
@@ -442,14 +446,14 @@ export default function ReferralsPage() {
               }}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t('filterPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All Statuses</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="CONVERTED">Converted</SelectItem>
-                <SelectItem value="REWARDED">Rewarded</SelectItem>
-                <SelectItem value="EXPIRED">Expired</SelectItem>
+                <SelectItem value="ALL">{t('allStatuses')}</SelectItem>
+                <SelectItem value="PENDING">{t('status.PENDING')}</SelectItem>
+                <SelectItem value="CONVERTED">{t('status.CONVERTED')}</SelectItem>
+                <SelectItem value="REWARDED">{t('status.REWARDED')}</SelectItem>
+                <SelectItem value="EXPIRED">{t('status.EXPIRED')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -459,20 +463,20 @@ export default function ReferralsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Referral Code</TableHead>
-                  <TableHead>Referrer</TableHead>
-                  <TableHead>Referred Name</TableHead>
-                  <TableHead>Referred Phone</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-[60px]">Actions</TableHead>
+                  <TableHead>{t('col.code')}</TableHead>
+                  <TableHead>{t('col.referrer')}</TableHead>
+                  <TableHead>{t('col.referredName')}</TableHead>
+                  <TableHead>{t('col.referredPhone')}</TableHead>
+                  <TableHead>{t('col.status')}</TableHead>
+                  <TableHead>{t('col.created')}</TableHead>
+                  <TableHead className="w-[60px]">{t('col.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {referrals.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No referrals found.
+                      {t('empty')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -482,7 +486,7 @@ export default function ReferralsPage() {
                         <button
                           onClick={() => copyCode(referral.referralCode)}
                           className="flex items-center gap-1.5 group"
-                          title="Click to copy"
+                          title={t('clickToCopy')}
                         >
                           <code className="font-mono text-sm bg-muted px-2 py-0.5 rounded">
                             {referral.referralCode}
@@ -503,21 +507,19 @@ export default function ReferralsPage() {
                       <TableCell>
                         <StatusBadge status={referral.status} />
                       </TableCell>
-                      <TableCell>
-                        {new Date(referral.createdAt).toLocaleDateString('en-IN')}
-                      </TableCell>
+                      <TableCell>{formatDate(referral.createdAt)}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
+                              <span className="sr-only">{t('col.actions')}</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => copyCode(referral.referralCode)}>
                               <Copy className="mr-2 h-4 w-4" />
-                              Copy Code
+                              {t('copyCode')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -529,7 +531,7 @@ export default function ReferralsPage() {
                               }
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
-                              Mark Converted
+                              {t('markConverted')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleUpdateStatus(referral.id, 'REWARDED')}
@@ -540,7 +542,7 @@ export default function ReferralsPage() {
                               }
                             >
                               <Gift className="mr-2 h-4 w-4" />
-                              Give Reward
+                              {t('giveReward')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -556,9 +558,11 @@ export default function ReferralsPage() {
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-muted-foreground">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                {pagination.total} referrals
+                {t('showing', {
+                  from: (pagination.page - 1) * pagination.limit + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total,
+                })}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -567,7 +571,7 @@ export default function ReferralsPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                 >
-                  Previous
+                  {t('previous')}
                 </Button>
                 <Button
                   variant="outline"
@@ -575,7 +579,7 @@ export default function ReferralsPage() {
                   disabled={page >= pagination.totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  Next
+                  {t('next')}
                 </Button>
               </div>
             </div>
@@ -593,16 +597,16 @@ export default function ReferralsPage() {
       >
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
-            <DialogTitle>Create Referral</DialogTitle>
+            <DialogTitle>{t('dialog.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             {/* Referrer Patient Search */}
             <div className="space-y-2">
-              <Label htmlFor="referrer">Referrer Patient</Label>
+              <Label htmlFor="referrer">{t('dialog.referrerLabel')}</Label>
               <div className="relative" ref={dropdownRef}>
                 <Input
                   id="referrer"
-                  placeholder="Search patient by name or ID..."
+                  placeholder={t('dialog.referrerPlaceholder')}
                   value={referrerPatientId ? referrerDisplay : patientSearch}
                   onChange={(e) => {
                     setPatientSearch(e.target.value)
@@ -643,16 +647,18 @@ export default function ReferralsPage() {
                 )}
               </div>
               {referrerPatientId && (
-                <p className="text-xs text-muted-foreground">Selected: {referrerDisplay}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('dialog.selected', { display: referrerDisplay })}
+                </p>
               )}
             </div>
 
             {/* Referred Person Name */}
             <div className="space-y-2">
-              <Label htmlFor="referredName">Referred Person Name</Label>
+              <Label htmlFor="referredName">{t('dialog.referredNameLabel')}</Label>
               <Input
                 id="referredName"
-                placeholder="Full name of referred person"
+                placeholder={t('dialog.referredNamePlaceholder')}
                 value={referredName}
                 onChange={(e) => setReferredName(e.target.value)}
               />
@@ -660,10 +666,10 @@ export default function ReferralsPage() {
 
             {/* Referred Person Phone */}
             <div className="space-y-2">
-              <Label htmlFor="referredPhone">Referred Person Phone</Label>
+              <Label htmlFor="referredPhone">{t('dialog.referredPhoneLabel')}</Label>
               <Input
                 id="referredPhone"
-                placeholder="Phone number"
+                placeholder={t('dialog.referredPhonePlaceholder')}
                 value={referredPhone}
                 onChange={(e) => setReferredPhone(e.target.value)}
               />
@@ -671,30 +677,30 @@ export default function ReferralsPage() {
 
             {/* Reward Type */}
             <div className="space-y-2">
-              <Label>Reward Type</Label>
+              <Label>{t('dialog.rewardTypeLabel')}</Label>
               <Select
                 value={rewardType}
                 onValueChange={(val) => setRewardType(val as 'POINTS' | 'DISCOUNT' | 'CREDIT')}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select reward type" />
+                  <SelectValue placeholder={t('dialog.rewardTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="POINTS">Points</SelectItem>
-                  <SelectItem value="DISCOUNT">Discount</SelectItem>
-                  <SelectItem value="CREDIT">Credit</SelectItem>
+                  <SelectItem value="POINTS">{t('rewardType.POINTS')}</SelectItem>
+                  <SelectItem value="DISCOUNT">{t('rewardType.DISCOUNT')}</SelectItem>
+                  <SelectItem value="CREDIT">{t('rewardType.CREDIT')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Reward Value */}
             <div className="space-y-2">
-              <Label htmlFor="rewardValue">Reward Value</Label>
+              <Label htmlFor="rewardValue">{t('dialog.rewardValueLabel')}</Label>
               <Input
                 id="rewardValue"
                 type="number"
                 min="1"
-                placeholder="e.g. 100"
+                placeholder={t('dialog.rewardValuePlaceholder')}
                 value={rewardValue}
                 onChange={(e) => setRewardValue(e.target.value)}
               />
@@ -705,12 +711,12 @@ export default function ReferralsPage() {
               {submitting ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Creating...
+                  {t('dialog.creating')}
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Referral
+                  {t('dialog.submit')}
                 </>
               )}
             </Button>

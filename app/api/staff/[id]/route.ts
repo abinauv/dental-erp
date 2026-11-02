@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
+import { logger } from '@/lib/logger'
 
 // GET - Get single staff member details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(staff)
   } catch (error) {
-    console.error('Error fetching staff:', error)
+    logger.error({ err: error }, 'Error fetching staff:')
     return NextResponse.json({ error: 'Failed to fetch staff details' }, { status: 500 })
   }
 }
@@ -164,7 +165,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Error updating staff:', error)
+    logger.error({ err: error }, 'Error updating staff:')
     return NextResponse.json({ error: 'Failed to update staff member' }, { status: 500 })
   }
 }
@@ -210,7 +211,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Staff member deactivated successfully' })
   } catch (error) {
-    console.error('Error deactivating staff:', error)
+    logger.error({ err: error }, 'Error deactivating staff:')
     return NextResponse.json({ error: 'Failed to deactivate staff member' }, { status: 500 })
   }
 }

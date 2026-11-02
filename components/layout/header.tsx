@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useTranslations } from 'next-intl'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GlobalSearch } from './global-search'
@@ -29,6 +30,7 @@ interface HeaderProps {
 }
 
 export function Header({ user }: HeaderProps) {
+  const t = useTranslations('layout')
   const { setMobileOpen } = useSidebar()
 
   return (
@@ -36,7 +38,7 @@ export function Header({ user }: HeaderProps) {
       {/* Mobile menu button */}
       <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileOpen(true)}>
         <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle menu</span>
+        <span className="sr-only">{t('toggleMenu')}</span>
       </Button>
 
       {/* Global Search */}

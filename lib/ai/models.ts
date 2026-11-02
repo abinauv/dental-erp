@@ -88,3 +88,17 @@ export function getModelForSkill(skillName: string): ModelConfig {
 export function getModelByTier(tier: string): ModelConfig {
   return AI_MODELS[tier] || AI_MODELS.default
 }
+
+/**
+ * Map a logical (OpenRouter/Gemini) model string to a Claude model, for the
+ * Claude-only providers (Anthropic, Bedrock). The tiers above are expressed in
+ * OpenRouter identifiers, so the Claude providers translate them to the nearest
+ * Claude capability tier. Returns a bare model id (e.g. `claude-sonnet-5-5`);
+ * the Bedrock provider adds its `anthropic.` prefix.
+ */
+export function resolveClaudeModel(model?: string): string {
+  const m = (model || '').toLowerCase()
+  if (m.includes('opus')) return 'claude-opus-5-5' // safety-critical / premium tier
+  if (m.includes('haiku') || m.includes('flash') || m.includes('lite')) return 'claude-haiku-5-5' // lightweight tier
+  return 'claude-sonnet-5-5' // standard tier (default, incl. the Pro tier)
+}

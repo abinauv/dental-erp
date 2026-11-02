@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import ExcelJS from 'exceljs'
 import { format } from 'date-fns'
+import { logger } from '@/lib/logger'
 
 async function generateExcelReport(
   type: string,
@@ -427,7 +428,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid format' }, { status: 400 })
   } catch (error) {
-    console.error('Export API error:', error)
+    logger.error({ err: error }, 'Export API error:')
     return NextResponse.json({ error: 'Failed to export report' }, { status: 500 })
   }
 }

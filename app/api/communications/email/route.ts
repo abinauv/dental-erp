@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { emailService } from '@/lib/services/email.service'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
       })
     }
   } catch (error: any) {
-    console.error('Email send error:', error)
+    logger.error({ err: error }, 'Email send error:')
     return NextResponse.json({ error: error.message || 'Failed to send email' }, { status: 500 })
   }
 }
@@ -120,7 +121,7 @@ export async function GET(req: NextRequest) {
       count: history.length,
     })
   } catch (error: any) {
-    console.error('Get email history error:', error)
+    logger.error({ err: error }, 'Get email history error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get email history' },
       { status: 500 }

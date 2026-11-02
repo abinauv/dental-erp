@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const procedureSchema = z.object({
   code: z.string().min(1).toUpperCase(),
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Get procedures error:', error)
+    logger.error({ err: error }, 'Get procedures error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get procedures' },
       { status: 500 }
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
       message: 'Procedure created successfully',
     })
   } catch (error: any) {
-    console.error('Create procedure error:', error)
+    logger.error({ err: error }, 'Create procedure error:')
     return NextResponse.json(
       { error: error.message || 'Failed to create procedure' },
       { status: 500 }

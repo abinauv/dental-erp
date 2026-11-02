@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: Patient's invoices with payment history.
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (err: unknown) {
-    console.error('Patient bills error:', err)
+    logger.error({ err }, 'Patient bills error:')
     return NextResponse.json({ error: 'Failed to load bills' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get single dental chart entry
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(entry)
   } catch (error) {
-    console.error('Error fetching dental chart entry:', error)
+    logger.error({ err: error }, 'Error fetching dental chart entry:')
     return NextResponse.json({ error: 'Failed to fetch dental chart entry' }, { status: 500 })
   }
 }
@@ -97,7 +98,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(entry)
   } catch (error) {
-    console.error('Error updating dental chart entry:', error)
+    logger.error({ err: error }, 'Error updating dental chart entry:')
     return NextResponse.json({ error: 'Failed to update dental chart entry' }, { status: 500 })
   }
 }
@@ -142,7 +143,7 @@ export async function DELETE(
       message: 'Dental chart entry deleted successfully',
     })
   } catch (error) {
-    console.error('Error deleting dental chart entry:', error)
+    logger.error({ err: error }, 'Error deleting dental chart entry:')
     return NextResponse.json({ error: 'Failed to delete dental chart entry' }, { status: 500 })
   }
 }

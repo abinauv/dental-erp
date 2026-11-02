@@ -88,12 +88,12 @@ better. `docker-compose.dev.yml` is a convenience for contributors and is
 
 ### What Compose gives you
 
-| Service | Port       | What it is for                                                    |
-| ------- | ---------- | ----------------------------------------------------------------- |
-| MySQL   | 3306       | The application database                                          |
-| Redis   | 6379       | Reserved for caching and queues; nothing uses it yet              |
-| MinIO   | 9000, 9001 | S3-compatible storage; reserved for Phase 3. Console on 9001      |
-| Mailpit | 1025, 8025 | Captures every outbound email. Read them at http://localhost:8025 |
+| Service | Port       | What it is for                                                     |
+| ------- | ---------- | ------------------------------------------------------------------ |
+| MySQL   | 3306       | The application database                                           |
+| Redis   | 6379       | Optional: set `REDIS_URL` to back the job queue and rate limiter   |
+| MinIO   | 9000, 9001 | S3-compatible storage for the `s3` storage driver. Console on 9001 |
+| Mailpit | 1025, 8025 | Captures every outbound email. Read them at http://localhost:8025  |
 
 Mailpit is the useful one right away. Point the `SMTP_*` variables at it (the
 values are commented into `.env.example`) and you can exercise password resets,
@@ -232,14 +232,14 @@ dental-erp/
 ├── prisma/
 │   ├── schema.prisma       # Database schema
 │   └── seed.ts             # Database seeder
-├── __tests__/              # Test files
+├── tests/                  # Test files (Vitest + Playwright)
 │   ├── unit/               # Unit tests
-│   ├── integration/        # Integration tests (API routes)
+│   ├── api/                # API route handler tests (mocked Prisma)
 │   ├── components/         # Component tests
 │   ├── e2e/                # Playwright E2E tests
-│   └── accessibility/      # Accessibility tests
+│   └── accessibility/      # Accessibility tests (plus security/, smoke/, …)
 ├── .github/
-│   └── workflows/ci.yml    # CI pipeline
+│   └── workflows/          # CI, E2E, CodeQL and release pipelines
 └── public/                 # Static assets
 ```
 

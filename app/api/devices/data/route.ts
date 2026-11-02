@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/devices/data — Receive sensor data from a device
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ id: log.id, recorded: true }, { status: 201 })
   } catch (err) {
-    console.error('Device data ingestion error:', err)
+    logger.error({ err }, 'Device data ingestion error:')
     return NextResponse.json({ error: 'Failed to record device data' }, { status: 500 })
   }
 }
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ logs, total: logs.length })
   } catch (err) {
-    console.error('Device data fetch error:', err)
+    logger.error({ err }, 'Device data fetch error:')
     return NextResponse.json({ error: 'Failed to fetch device data' }, { status: 500 })
   }
 }

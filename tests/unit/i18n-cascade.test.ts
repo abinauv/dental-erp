@@ -38,12 +38,12 @@ describe('resolveLocaleCascade', () => {
   // would see a non-null user value, fail to support it, and return the
   // default — skipping a clinic locale that is perfectly valid.
   it('falls through an unsupported stored value to the next candidate', () => {
-    expect(resolveLocaleCascade('de-DE', 'en-US')).toBe('en-US')
+    expect(resolveLocaleCascade('fr-FR', 'en-US')).toBe('en-US')
     expect(resolveLocaleCascade('not-a-locale', 'en-US')).toBe('en-US')
   })
 
   it('falls back to the default when nothing is supported', () => {
-    expect(resolveLocaleCascade('de-DE', 'fr-FR')).toBe(defaultLocale)
+    expect(resolveLocaleCascade('ja-JP', 'fr-FR')).toBe(defaultLocale)
     expect(resolveLocaleCascade(null, null)).toBe(defaultLocale)
     expect(resolveLocaleCascade()).toBe(defaultLocale)
   })
@@ -63,7 +63,7 @@ describe('resolvePublicLocale', () => {
   it('falls back to the clinic when ?lang= is absent or unsupported', () => {
     expect(resolvePublicLocale('en-US')).toBe('en-US')
     expect(resolvePublicLocale('en-US', undefined)).toBe('en-US')
-    expect(resolvePublicLocale('en-US', 'de-DE')).toBe('en-US')
+    expect(resolvePublicLocale('en-US', 'fr-FR')).toBe('en-US')
   })
 
   // Next surfaces `?lang=a&lang=b` as an array.

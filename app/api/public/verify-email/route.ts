@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 const verifySchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
       hospitalSlug: hospital.slug,
     })
   } catch (error) {
-    console.error('Email verification error:', error)
+    logger.error({ err: error }, 'Email verification error:')
     return NextResponse.json(
       { error: 'An error occurred during verification. Please try again.' },
       { status: 500 }
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
       email: hospital.email,
     })
   } catch (error) {
-    console.error('Token validation error:', error)
+    logger.error({ err: error }, 'Token validation error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

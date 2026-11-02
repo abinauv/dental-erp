@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { handleCancellationWaitlist } from '@/lib/services/smart-scheduler'
+import { logger } from '@/lib/logger'
 
 // GET - Get single appointment
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(appointment)
   } catch (error) {
-    console.error('Error fetching appointment:', error)
+    logger.error({ err: error }, 'Error fetching appointment:')
     return NextResponse.json({ error: 'Failed to fetch appointment' }, { status: 500 })
   }
 }
@@ -189,13 +190,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         }
       } catch (err) {
         // Don't fail the cancellation if waitlist notification fails
-        console.error('Smart scheduler error:', err)
+        logger.error({ err }, 'Smart scheduler error:')
       }
     }
 
     return NextResponse.json(appointment)
   } catch (error) {
-    console.error('Error updating appointment:', error)
+    logger.error({ err: error }, 'Error updating appointment:')
     return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 })
   }
 }
@@ -239,7 +240,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Appointment deleted successfully' })
   } catch (error) {
-    console.error('Error deleting appointment:', error)
+    logger.error({ err: error }, 'Error deleting appointment:')
     return NextResponse.json({ error: 'Failed to delete appointment' }, { status: 500 })
   }
 }

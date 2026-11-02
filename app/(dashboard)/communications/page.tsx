@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,8 @@ import { MessageSquare, Mail, FileText, MessageCircle, Send } from 'lucide-react
 
 export default function CommunicationsPage() {
   const { toast } = useToast()
+  const t = useTranslations('communications.center')
+  const tc = useTranslations('communications.common')
   const [loading, setLoading] = useState(false)
 
   // SMS State
@@ -33,8 +36,8 @@ export default function CommunicationsPage() {
   const handleSendSMS = async () => {
     if (!smsPhone || !smsMessage) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
+        title: tc('error'),
+        description: t('toast.fillAll'),
         variant: 'destructive',
       })
       return
@@ -55,17 +58,17 @@ export default function CommunicationsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'SMS sent successfully',
+          title: tc('success'),
+          description: t('toast.smsSuccess'),
         })
         setSmsPhone('')
         setSmsMessage('')
       } else {
-        throw new Error(data.error || 'Failed to send SMS')
+        throw new Error(data.error || t('toast.smsError'))
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: tc('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -77,8 +80,8 @@ export default function CommunicationsPage() {
   const handleSendEmail = async () => {
     if (!emailTo || !emailSubject || !emailBody) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
+        title: tc('error'),
+        description: t('toast.fillAll'),
         variant: 'destructive',
       })
       return
@@ -100,18 +103,18 @@ export default function CommunicationsPage() {
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Email sent successfully',
+          title: tc('success'),
+          description: t('toast.emailSuccess'),
         })
         setEmailTo('')
         setEmailSubject('')
         setEmailBody('')
       } else {
-        throw new Error(data.error || 'Failed to send email')
+        throw new Error(data.error || t('toast.emailError'))
       }
     } catch (error: any) {
       toast({
-        title: 'Error',
+        title: tc('error'),
         description: error.message,
         variant: 'destructive',
       })
@@ -123,27 +126,27 @@ export default function CommunicationsPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Communication Center</h1>
-        <p className="text-muted-foreground">Manage SMS, Email, Templates, and Patient Feedback</p>
+        <h1 className="text-3xl font-bold">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <Tabs defaultValue="sms" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="sms">
             <MessageSquare className="w-4 h-4 mr-2" />
-            SMS
+            {t('tabs.sms')}
           </TabsTrigger>
           <TabsTrigger value="email">
             <Mail className="w-4 h-4 mr-2" />
-            Email
+            {t('tabs.email')}
           </TabsTrigger>
           <TabsTrigger value="templates">
             <FileText className="w-4 h-4 mr-2" />
-            Templates
+            {t('tabs.templates')}
           </TabsTrigger>
           <TabsTrigger value="surveys">
             <MessageCircle className="w-4 h-4 mr-2" />
-            Surveys
+            {t('tabs.surveys')}
           </TabsTrigger>
         </TabsList>
 
@@ -152,49 +155,49 @@ export default function CommunicationsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Send SMS</CardTitle>
-                <CardDescription>Send individual or bulk SMS messages</CardDescription>
+                <CardTitle>{t('sms.sendTitle')}</CardTitle>
+                <CardDescription>{t('sms.sendDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="sms-phone">Phone Number</Label>
+                  <Label htmlFor="sms-phone">{t('sms.phoneLabel')}</Label>
                   <Input
                     id="sms-phone"
-                    placeholder="10-digit mobile number"
+                    placeholder={t('sms.phonePlaceholder')}
                     value={smsPhone}
                     onChange={(e) => setSmsPhone(e.target.value)}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="sms-message">Message</Label>
+                  <Label htmlFor="sms-message">{t('sms.messageLabel')}</Label>
                   <Textarea
                     id="sms-message"
-                    placeholder="Type your message here (max 500 characters)"
+                    placeholder={t('sms.messagePlaceholder')}
                     rows={5}
                     maxLength={500}
                     value={smsMessage}
                     onChange={(e) => setSmsMessage(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    {smsMessage.length}/500 characters
+                    {t('sms.charCount', { count: smsMessage.length })}
                   </p>
                 </div>
 
                 <Button onClick={handleSendSMS} disabled={loading} className="w-full">
                   <Send className="w-4 h-4 mr-2" />
-                  Send SMS
+                  {t('sms.send')}
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>SMS History</CardTitle>
-                <CardDescription>Recent SMS communications</CardDescription>
+                <CardTitle>{t('sms.historyTitle')}</CardTitle>
+                <CardDescription>{t('sms.historyDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">SMS history will be displayed here</p>
+                <p className="text-sm text-muted-foreground">{t('sms.historyPlaceholder')}</p>
                 {/* SMS history table/list will go here */}
               </CardContent>
             </Card>
@@ -206,36 +209,36 @@ export default function CommunicationsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Send Email</CardTitle>
-                <CardDescription>Compose and send emails to patients</CardDescription>
+                <CardTitle>{t('email.sendTitle')}</CardTitle>
+                <CardDescription>{t('email.sendDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="email-to">To (Email Address)</Label>
+                  <Label htmlFor="email-to">{t('email.toLabel')}</Label>
                   <Input
                     id="email-to"
                     type="email"
-                    placeholder="patient@example.com"
+                    placeholder={t('email.toPlaceholder')}
                     value={emailTo}
                     onChange={(e) => setEmailTo(e.target.value)}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="email-subject">Subject</Label>
+                  <Label htmlFor="email-subject">{t('email.subjectLabel')}</Label>
                   <Input
                     id="email-subject"
-                    placeholder="Email subject"
+                    placeholder={t('email.subjectPlaceholder')}
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="email-body">Message</Label>
+                  <Label htmlFor="email-body">{t('email.messageLabel')}</Label>
                   <Textarea
                     id="email-body"
-                    placeholder="Type your email message here"
+                    placeholder={t('email.messagePlaceholder')}
                     rows={8}
                     value={emailBody}
                     onChange={(e) => setEmailBody(e.target.value)}
@@ -244,20 +247,18 @@ export default function CommunicationsPage() {
 
                 <Button onClick={handleSendEmail} disabled={loading} className="w-full">
                   <Send className="w-4 h-4 mr-2" />
-                  Send Email
+                  {t('email.send')}
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Email History</CardTitle>
-                <CardDescription>Recent email communications</CardDescription>
+                <CardTitle>{t('email.historyTitle')}</CardTitle>
+                <CardDescription>{t('email.historyDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Email history will be displayed here
-                </p>
+                <p className="text-sm text-muted-foreground">{t('email.historyPlaceholder')}</p>
                 {/* Email history table/list will go here */}
               </CardContent>
             </Card>
@@ -268,27 +269,23 @@ export default function CommunicationsPage() {
         <TabsContent value="templates">
           <Card>
             <CardHeader>
-              <CardTitle>Communication Templates</CardTitle>
-              <CardDescription>
-                Manage SMS and Email templates for automated communications
-              </CardDescription>
+              <CardTitle>{t('templates.title')}</CardTitle>
+              <CardDescription>{t('templates.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-semibold">Available Templates</h3>
+                    <h3 className="font-semibold">{t('templates.availableTitle')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Create and manage reusable message templates
+                      {t('templates.availableDescription')}
                     </p>
                   </div>
-                  <Button>Create Template</Button>
+                  <Button>{t('templates.create')}</Button>
                 </div>
 
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Template list will be displayed here
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('templates.listPlaceholder')}</p>
                 </div>
               </div>
             </CardContent>
@@ -299,23 +296,23 @@ export default function CommunicationsPage() {
         <TabsContent value="surveys">
           <Card>
             <CardHeader>
-              <CardTitle>Patient Surveys & Feedback</CardTitle>
-              <CardDescription>Create and manage patient satisfaction surveys</CardDescription>
+              <CardTitle>{t('surveys.title')}</CardTitle>
+              <CardDescription>{t('surveys.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-semibold">Active Surveys</h3>
-                    <p className="text-sm text-muted-foreground">Collect feedback from patients</p>
+                    <h3 className="font-semibold">{t('surveys.activeTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('surveys.activeDescription')}
+                    </p>
                   </div>
-                  <Button>Create Survey</Button>
+                  <Button>{t('surveys.create')}</Button>
                 </div>
 
                 <div className="border rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Survey list will be displayed here
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('surveys.listPlaceholder')}</p>
                 </div>
               </div>
             </CardContent>

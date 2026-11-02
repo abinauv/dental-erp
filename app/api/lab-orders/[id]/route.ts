@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { LabOrderStatus, QualityCheckStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // Only orders that have not been sent anywhere yet may be removed.
 const DELETABLE_STATUSES: LabOrderStatus[] = [LabOrderStatus.CREATED, LabOrderStatus.CANCELLED]
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
   } catch (error: any) {
-    console.error('Error fetching lab order:', error)
+    logger.error({ err: error }, 'Error fetching lab order:')
     return NextResponse.json(
       { error: 'Failed to fetch lab order', details: error.message },
       { status: 500 }
@@ -189,7 +190,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, message: 'Lab order updated successfully' })
   } catch (error: any) {
-    console.error('Error updating lab order:', error)
+    logger.error({ err: error }, 'Error updating lab order:')
     return NextResponse.json(
       { error: 'Failed to update lab order', details: error.message },
       { status: 500 }
@@ -234,7 +235,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Lab order deleted successfully' })
   } catch (error: any) {
-    console.error('Error deleting lab order:', error)
+    logger.error({ err: error }, 'Error deleting lab order:')
     return NextResponse.json(
       { error: 'Failed to delete lab order', details: error.message },
       { status: 500 }

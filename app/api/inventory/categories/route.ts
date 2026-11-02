@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET - Fetch all categories
 export async function GET(request: NextRequest) {
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
       data: categoriesWithCount,
     })
   } catch (error: any) {
-    console.error('Error fetching categories:', error)
+    logger.error({ err: error }, 'Error fetching categories:')
     return NextResponse.json(
       { error: 'Failed to fetch categories', details: error.message },
       { status: 500 }

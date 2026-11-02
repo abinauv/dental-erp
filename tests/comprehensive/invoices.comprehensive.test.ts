@@ -38,6 +38,9 @@ vi.mock('@/lib/prisma', () => ({
     patient: {
       findUnique: vi.fn(),
     },
+    hospital: {
+      findUnique: vi.fn(),
+    },
     payment: {
       findMany: vi.fn(),
       create: vi.fn(),
@@ -81,6 +84,8 @@ describe('Invoices API - Comprehensive Tests', () => {
       user: { id: mockUserId, role: 'ACCOUNTANT' },
       session: { user: { id: mockUserId, role: 'ACCOUNTANT', hospitalId: mockHospitalId } },
     })
+    // Clinic region/country drives the tax provider + place-of-supply split.
+    mockPrisma.hospital.findUnique.mockResolvedValue({ country: 'IN', state: 'Tamil Nadu' })
   })
 
   describe('GET /api/invoices', () => {
@@ -493,7 +498,9 @@ describe('Invoices API - Comprehensive Tests', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        expect.anything()
+        expect.anything(),
+        // Tax context (country + place-of-supply) added in Batch 6.
+        expect.objectContaining({ country: 'IN', clinicRegion: 'Tamil Nadu' })
       )
     })
 

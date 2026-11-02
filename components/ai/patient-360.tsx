@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface Summary {
   summary: string
@@ -16,6 +17,7 @@ interface Summary {
  * no cache exists or user clicks Regenerate.
  */
 export function Patient360({ patientId }: { patientId: string }) {
+  const t = useTranslations('ai.patient360')
   const [data, setData] = useState<Summary | null>(null)
   const [cached, setCached] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -57,7 +59,7 @@ export function Patient360({ patientId }: { patientId: string }) {
       <div className="rounded-lg border p-4 bg-gradient-to-r from-primary/5 to-transparent">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">🤖</span>
-          <span className="text-sm font-semibold">AI Patient Summary</span>
+          <span className="text-sm font-semibold">{t('title')}</span>
         </div>
         <div className="space-y-2">
           <div className="h-3 w-full bg-muted rounded animate-pulse" />
@@ -76,10 +78,10 @@ export function Patient360({ patientId }: { patientId: string }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">🤖</span>
-          <h3 className="text-sm font-semibold">AI Patient Summary</h3>
+          <h3 className="text-sm font-semibold">{t('title')}</h3>
           {cached && (
             <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-              cached
+              {t('cached')}
             </span>
           )}
         </div>
@@ -87,7 +89,7 @@ export function Patient360({ patientId }: { patientId: string }) {
           onClick={() => load(true)}
           className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          ↻ Regenerate
+          {t('regenerate')}
         </button>
       </div>
 
@@ -122,7 +124,7 @@ export function Patient360({ patientId }: { patientId: string }) {
 
       {/* footer row */}
       <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs text-muted-foreground">
-        {data.lastVisit && <span>Last visit: {data.lastVisit}</span>}
+        {data.lastVisit && <span>{t('lastVisit', { value: data.lastVisit })}</span>}
         {data.nextAction && <span className="text-primary font-medium">→ {data.nextAction}</span>}
       </div>
     </div>

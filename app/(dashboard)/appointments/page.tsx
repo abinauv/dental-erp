@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,6 +105,10 @@ interface PaginationInfo {
 
 export default function AppointmentsPage() {
   const router = useRouter()
+  const t = useTranslations('appointments.list')
+  const tStatus = useTranslations('appointments.status')
+  const tType = useTranslations('appointments.type')
+  const fmt = useClinicFormatters()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -175,7 +181,7 @@ export default function AppointmentsPage() {
           </Badge>
         </TooltipTrigger>
         <TooltipContent side="left" className="max-w-[250px]">
-          <p className="font-medium mb-1">No-Show Risk: {risk.riskLevel}</p>
+          <p className="font-medium mb-1">{t('noShowRisk', { level: risk.riskLevel })}</p>
           {risk.factors.map((f, i) => (
             <p key={i} className="text-xs">
               • {f}
@@ -262,7 +268,8 @@ export default function AppointmentsPage() {
       color: 'text-muted-foreground',
       bgColor: 'bg-muted',
     }
-    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{config.label}</Badge>
+    const label = tStatus.has(status) ? tStatus(status) : config.label
+    return <Badge className={`${config.bgColor} ${config.color} border-0`}>{label}</Badge>
   }
 
   const getTypeBadge = (type: string) => {
@@ -271,9 +278,10 @@ export default function AppointmentsPage() {
       color: 'text-muted-foreground',
       bgColor: 'bg-muted/50',
     }
+    const label = tType.has(type) ? tType(type) : config.label
     return (
       <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0`}>
-        {config.label}
+        {label}
       </Badge>
     )
   }
@@ -284,8 +292,8 @@ export default function AppointmentsPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
-            <p className="text-muted-foreground">Manage and schedule patient appointments</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -294,7 +302,7 @@ export default function AppointmentsPage() {
               onClick={() => setViewMode('list')}
             >
               <List className="h-4 w-4 mr-2" />
-              List
+              {t('viewList')}
             </Button>
             <Button
               variant={viewMode === 'calendar' ? 'default' : 'outline'}
@@ -302,7 +310,7 @@ export default function AppointmentsPage() {
               onClick={() => setViewMode('calendar')}
             >
               <CalendarDays className="h-4 w-4 mr-2" />
-              Calendar
+              {t('viewCalendar')}
             </Button>
             <ExportMenu
               filename="appointments"
@@ -330,12 +338,12 @@ export default function AppointmentsPage() {
               ) : (
                 <Brain className="h-4 w-4 mr-2" />
               )}
-              {showRisk ? 'Refresh Risk' : 'AI Risk'}
+              {showRisk ? t('refreshRisk') : t('aiRisk')}
             </Button>
             <Link href="/appointments/new">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                New Appointment
+                {t('newAppointment')}
               </Button>
             </Link>
           </div>
@@ -348,7 +356,7 @@ export default function AppointmentsPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by patient name, phone, or appointment number..."
+                  placeholder={t('searchPlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -357,30 +365,30 @@ export default function AppointmentsPage() {
               <div className="flex flex-wrap gap-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Status" />
+                    <SelectValue placeholder={t('statusPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-                    <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                    <SelectItem value="CHECKED_IN">Checked In</SelectItem>
-                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                    <SelectItem value="NO_SHOW">No Show</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="SCHEDULED">{tStatus('SCHEDULED')}</SelectItem>
+                    <SelectItem value="CONFIRMED">{tStatus('CONFIRMED')}</SelectItem>
+                    <SelectItem value="CHECKED_IN">{tStatus('CHECKED_IN')}</SelectItem>
+                    <SelectItem value="IN_PROGRESS">{tStatus('IN_PROGRESS')}</SelectItem>
+                    <SelectItem value="COMPLETED">{tStatus('COMPLETED')}</SelectItem>
+                    <SelectItem value="CANCELLED">{tStatus('CANCELLED')}</SelectItem>
+                    <SelectItem value="NO_SHOW">{tStatus('NO_SHOW')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Type" />
+                    <SelectValue placeholder={t('typePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="CONSULTATION">Consultation</SelectItem>
-                    <SelectItem value="PROCEDURE">Procedure</SelectItem>
-                    <SelectItem value="FOLLOW_UP">Follow Up</SelectItem>
-                    <SelectItem value="EMERGENCY">Emergency</SelectItem>
-                    <SelectItem value="CHECK_UP">Check Up</SelectItem>
+                    <SelectItem value="all">{t('allTypes')}</SelectItem>
+                    <SelectItem value="CONSULTATION">{tType('CONSULTATION')}</SelectItem>
+                    <SelectItem value="PROCEDURE">{tType('PROCEDURE')}</SelectItem>
+                    <SelectItem value="FOLLOW_UP">{tType('FOLLOW_UP')}</SelectItem>
+                    <SelectItem value="EMERGENCY">{tType('EMERGENCY')}</SelectItem>
+                    <SelectItem value="CHECK_UP">{tType('CHECK_UP')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Input
@@ -400,14 +408,14 @@ export default function AppointmentsPage() {
             <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Appointment</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Doctor</TableHead>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  {showRisk && <TableHead>Risk</TableHead>}
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('colAppointment')}</TableHead>
+                  <TableHead>{t('colPatient')}</TableHead>
+                  <TableHead>{t('colDoctor')}</TableHead>
+                  <TableHead>{t('colDateTime')}</TableHead>
+                  <TableHead>{t('colType')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  {showRisk && <TableHead>{t('colRisk')}</TableHead>}
+                  <TableHead className="text-right">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -442,11 +450,11 @@ export default function AppointmentsPage() {
                     <TableCell colSpan={7} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <Calendar className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">No appointments found</p>
+                        <p className="text-muted-foreground">{t('noAppointments')}</p>
                         <Link href="/appointments/new">
                           <Button variant="outline" size="sm">
                             <Plus className="h-4 w-4 mr-2" />
-                            Book New Appointment
+                            {t('bookNew')}
                           </Button>
                         </Link>
                       </div>
@@ -459,7 +467,7 @@ export default function AppointmentsPage() {
                         <div className="font-medium">{appointment.appointmentNo}</div>
                         {appointment.chairNumber && (
                           <div className="text-sm text-muted-foreground">
-                            Chair {appointment.chairNumber}
+                            {t('chair', { number: appointment.chairNumber })}
                           </div>
                         )}
                       </TableCell>
@@ -490,12 +498,14 @@ export default function AppointmentsPage() {
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <div className="font-medium">
-                              {formatDate(appointment.scheduledDate)}
+                              {fmt.formatDate(appointment.scheduledDate)}
                             </div>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <Clock className="h-3 w-3" />
                               {formatTime(appointment.scheduledTime)}
-                              <span className="text-xs">({appointment.duration} min)</span>
+                              <span className="text-xs">
+                                {t('duration', { minutes: appointment.duration })}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -507,7 +517,7 @@ export default function AppointmentsPage() {
                           {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) ? (
                             getRiskBadge(appointment.id)
                           ) : (
-                            <span className="text-xs text-muted-foreground">N/A</span>
+                            <span className="text-xs text-muted-foreground">{t('na')}</span>
                           )}
                         </TableCell>
                       )}
@@ -523,25 +533,25 @@ export default function AppointmentsPage() {
                               onClick={() => router.push(`/appointments/${appointment.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-2" />
-                              View Details
+                              {t('viewDetails')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => router.push(`/appointments/${appointment.id}/edit`)}
                             >
                               <Edit className="h-4 w-4 mr-2" />
-                              Edit
+                              {t('edit')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
                               <DropdownMenuItem onClick={() => handleCheckIn(appointment.id)}>
                                 <LogIn className="h-4 w-4 mr-2" />
-                                Check In
+                                {t('checkIn')}
                               </DropdownMenuItem>
                             )}
                             {['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
                               <DropdownMenuItem onClick={() => handleCheckOut(appointment.id)}>
                                 <LogOut className="h-4 w-4 mr-2" />
-                                Check Out
+                                {t('checkOut')}
                               </DropdownMenuItem>
                             )}
                             {appointment.status === 'SCHEDULED' && (
@@ -549,7 +559,7 @@ export default function AppointmentsPage() {
                                 onClick={() => handleStatusChange(appointment.id, 'CONFIRMED')}
                               >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                Confirm
+                                {t('confirm')}
                               </DropdownMenuItem>
                             )}
                             {!['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(
@@ -562,14 +572,14 @@ export default function AppointmentsPage() {
                                   className="text-amber-600"
                                 >
                                   <XCircle className="h-4 w-4 mr-2" />
-                                  Mark No Show
+                                  {t('markNoShow')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleStatusChange(appointment.id, 'CANCELLED')}
                                   className="text-red-600"
                                 >
                                   <XCircle className="h-4 w-4 mr-2" />
-                                  Cancel
+                                  {t('cancel')}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -586,9 +596,11 @@ export default function AppointmentsPage() {
             {!loading && pagination.totalPages > 1 && (
               <div className="flex items-center justify-between border-t px-4 py-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                  {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                  {pagination.total} appointments
+                  {t('showing', {
+                    from: (pagination.page - 1) * pagination.limit + 1,
+                    to: Math.min(pagination.page * pagination.limit, pagination.total),
+                    total: pagination.total,
+                  })}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -598,10 +610,10 @@ export default function AppointmentsPage() {
                     disabled={pagination.page <= 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t('previous')}
                   </Button>
                   <div className="text-sm">
-                    Page {pagination.page} of {pagination.totalPages}
+                    {t('pageOf', { page: pagination.page, total: pagination.totalPages })}
                   </div>
                   <Button
                     variant="outline"
@@ -609,7 +621,7 @@ export default function AppointmentsPage() {
                     onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                     disabled={pagination.page >= pagination.totalPages}
                   >
-                    Next
+                    {t('next')}
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

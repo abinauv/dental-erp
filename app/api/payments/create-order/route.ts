@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { getGateway } from '@/lib/payment-gateways'
+import { reservePendingPayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -67,6 +69,24 @@ export async function POST(req: NextRequest) {
       customerPhone: invoice.patient.phone,
     })
 
+    // Reserve a PENDING payment keyed by the gateway order id, so a webhook that
+    // arrives before (or instead of) client-side verification can settle it.
+    // Best-effort: never block the customer from paying if this write fails.
+    try {
+      await reservePendingPayment({
+        hospitalId,
+        invoiceId: invoice.id,
+        gatewayOrderId: order.orderId,
+        amount: payAmount,
+        provider: order.provider,
+      })
+    } catch (reserveErr) {
+      logger.error(
+        { err: order.orderId, reserveErr },
+        'Failed to reserve pending payment for order'
+      )
+    }
+
     // Get checkout config for the frontend
     const checkoutConfig = gateway.getCheckoutConfig(order, credentials)
 
@@ -93,7 +113,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error('Payment order creation error:', err)
+    logger.error({ err }, 'Payment order creation error:')
     const message = err instanceof Error ? err.message : 'Failed to create payment order'
     return NextResponse.json({ error: message }, { status: 500 })
   }

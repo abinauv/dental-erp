@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // PUT - Update referral (mark converted, give reward, etc.)
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -46,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(referral)
   } catch (err) {
-    console.error('Error updating referral:', err)
+    logger.error({ err }, 'Error updating referral:')
     return NextResponse.json({ error: 'Failed to update referral' }, { status: 500 })
   }
 }

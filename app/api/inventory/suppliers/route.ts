@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, SupplierStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
 
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error fetching suppliers:', error)
+    logger.error({ err: error }, 'Error fetching suppliers:')
     return NextResponse.json(
       { error: 'Failed to fetch suppliers', details: error.message },
       { status: 500 }
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Error creating supplier:', error)
+    logger.error({ err: error }, 'Error creating supplier:')
     return NextResponse.json(
       { error: 'Failed to create supplier', details: error.message },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const fieldSchema = z.object({
   id: z.string(),
@@ -77,7 +78,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ template })
   } catch (err) {
-    console.error('Get form template error:', err)
+    logger.error({ err }, 'Get form template error:')
     return NextResponse.json({ error: 'Failed to get template' }, { status: 500 })
   }
 }
@@ -117,7 +118,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (err.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid form data', details: err.errors }, { status: 400 })
     }
-    console.error('Update form template error:', err)
+    logger.error({ err }, 'Update form template error:')
     return NextResponse.json({ error: 'Failed to update template' }, { status: 500 })
   }
 }
@@ -151,7 +152,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await prisma.formTemplate.delete({ where: { id } })
     return NextResponse.json({ message: 'Template deleted' })
   } catch (err) {
-    console.error('Delete form template error:', err)
+    logger.error({ err }, 'Delete form template error:')
     return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 })
   }
 }

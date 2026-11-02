@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const fieldSchema = z.object({
   id: z.string(),
@@ -61,7 +62,7 @@ export async function GET() {
 
     return NextResponse.json({ templates })
   } catch (err) {
-    console.error('List form templates error:', err)
+    logger.error({ err }, 'List form templates error:')
     return NextResponse.json({ error: 'Failed to list templates' }, { status: 500 })
   }
 }
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
     if (err.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid form data', details: err.errors }, { status: 400 })
     }
-    console.error('Create form template error:', err)
+    logger.error({ err }, 'Create form template error:')
     return NextResponse.json({ error: 'Failed to create template' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 // GET: List pending/completed forms for the patient
 export async function GET(req: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ submissions, availableTemplates })
   } catch (err) {
-    console.error('Patient forms error:', err)
+    logger.error({ err }, 'Patient forms error:')
     return NextResponse.json({ error: 'Failed to load forms' }, { status: 500 })
   }
 }
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ submission }, { status: 201 })
   } catch (err) {
-    console.error('Patient form submit error:', err)
+    logger.error({ err }, 'Patient form submit error:')
     return NextResponse.json({ error: 'Failed to submit form' }, { status: 500 })
   }
 }

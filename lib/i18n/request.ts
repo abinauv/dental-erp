@@ -1,6 +1,6 @@
 import { getRequestConfig } from 'next-intl/server'
 
-import { auth } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth'
 import { getAuthenticatedPatient } from '@/lib/patient-auth'
 import { prisma } from '@/lib/prisma'
 import { defaultLocale, getLocaleDefaults, resolveLocaleCascade, type Locale } from './config'
@@ -32,7 +32,7 @@ import { defaultLocale, getLocaleDefaults, resolveLocaleCascade, type Locale } f
  * clinic's locale is joined rather than fetched separately.
  */
 async function resolveStaffLocale(): Promise<Locale | null> {
-  const session = await auth()
+  const session = await getServerSession()
   const userId = session?.user?.id
   if (!userId) return null
 

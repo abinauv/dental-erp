@@ -339,6 +339,38 @@ describe('Billing Utils - numberToWords', () => {
     expect(result).toContain('One Hundred Rupees')
     expect(result).toContain('Fifty Paise')
   })
+
+  it('uses short scale and Dollars/Cents for USD', () => {
+    expect(numberToWords(1180, { currency: 'USD' })).toBe(
+      'One Thousand One Hundred Eighty Dollars Only'
+    )
+    expect(numberToWords(1000000, { currency: 'USD' })).toBe('One Million Dollars Only')
+    expect(numberToWords(2500000000, { currency: 'USD' })).toBe(
+      'Two Billion Five Hundred Million Dollars Only'
+    )
+    expect(numberToWords(100.5, { currency: 'USD' })).toBe(
+      'One Hundred Dollars and Fifty Cents Only'
+    )
+  })
+
+  it('uses Euros/Pounds unit names', () => {
+    expect(numberToWords(5, { currency: 'EUR' })).toBe('Five Euros Only')
+    expect(numberToWords(100.25, { currency: 'GBP' })).toBe(
+      'One Hundred Pounds and Twenty Five Pence Only'
+    )
+  })
+
+  it('short scale is selected for a US locale (defaults currency to USD)', () => {
+    expect(numberToWords(1000000, { locale: 'en-US' })).toBe('One Million Dollars Only')
+  })
+
+  it('falls back to the ISO code for an unmapped currency', () => {
+    expect(numberToWords(5, { currency: 'ZAR' })).toBe('Five ZAR Only')
+  })
+
+  it('INR amounts are unchanged when passed explicitly', () => {
+    expect(numberToWords(10000000, { currency: 'INR' })).toBe('One Crore Rupees Only')
+  })
 })
 
 describe('Billing Utils - getDateRangeFromPreset', () => {

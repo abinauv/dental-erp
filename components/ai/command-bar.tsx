@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAI } from './ai-provider'
 import { cn } from '@/lib/utils'
 
 export function CommandBar() {
+  const t = useTranslations('ai.commandBar')
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [result, setResult] = useState<any>(null)
@@ -79,7 +81,7 @@ export function CommandBar() {
               if (e.key === 'Enter') handleSubmit()
               if (e.key === 'Escape') setOpen(false)
             }}
-            placeholder="Type a command… e.g. 'Book appointment for Raj Kumar tomorrow at 10am'"
+            placeholder={t('placeholder')}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">ESC</span>
@@ -89,16 +91,10 @@ export function CommandBar() {
         {!query && !result && (
           <div className="p-3">
             <p className="mb-2 text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              Quick commands
+              {t('quickCommands')}
             </p>
             <div className="flex flex-wrap gap-2">
-              {[
-                "Show today's appointments",
-                'Check stock for composite resin',
-                "Show this month's revenue",
-                'Check overdue invoices',
-                'Low stock alerts',
-              ].map((example) => (
+              {(t.raw('examples') as string[]).map((example) => (
                 <button
                   key={example}
                   onClick={() => setQuery(example)}
@@ -113,7 +109,7 @@ export function CommandBar() {
             {history.length > 0 && (
               <>
                 <p className="mt-3 mb-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                  Recent
+                  {t('recent')}
                 </p>
                 <div className="flex flex-col gap-1">
                   {history.slice(0, 5).map((item, i) => (
@@ -135,7 +131,7 @@ export function CommandBar() {
         {commandLoading && (
           <div className="flex items-center gap-2 px-4 py-3 border-t">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-primary" />
-            <span className="text-sm text-muted-foreground">Processing…</span>
+            <span className="text-sm text-muted-foreground">{t('processing')}</span>
           </div>
         )}
 
@@ -149,7 +145,7 @@ export function CommandBar() {
               </span>
               {result.requiresApproval && (
                 <span className="rounded-full bg-amber-100 text-amber-800 text-xs px-2 py-0.5">
-                  Needs approval
+                  {t('needsApproval')}
                 </span>
               )}
             </div>
@@ -223,15 +219,15 @@ export function CommandBar() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-red-600">{result.result?.message || 'No result'}</p>
+              <p className="text-sm text-red-600">{result.result?.message || t('noResult')}</p>
             )}
           </div>
         )}
 
         {/* Footer hint */}
         <div className="flex items-center justify-between border-t px-4 py-2 text-xs text-muted-foreground">
-          <span>Enter to execute • ESC to close</span>
-          <span>Powered by AI</span>
+          <span>{t('footerExecute')}</span>
+          <span>{t('poweredBy')}</span>
         </div>
       </div>
     </div>

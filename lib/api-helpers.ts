@@ -37,14 +37,29 @@ async function verifyMobileToken(): Promise<any | null> {
  * Supports both NextAuth session cookies (web) and Bearer tokens (mobile).
  */
 export async function getAuthenticatedHospital() {
-  // Try NextAuth session first (web)
-  const session = await auth()
+  // Try the Better Auth web session first (cookie).
+  const session = await auth.api.getSession({ headers: await headers() })
 
   if (session?.user) {
+    const u = session.user as typeof session.user & {
+      role: string
+      staffId?: string
+      hospitalId: string
+      isHospitalAdmin: boolean
+    }
     return {
       error: null,
-      user: session.user,
-      hospitalId: session.user.hospitalId,
+      // Keep the exact shape the rest of the app and the mobile path produce.
+      user: {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        staffId: u.staffId,
+        hospitalId: u.hospitalId,
+        isHospitalAdmin: u.isHospitalAdmin,
+      },
+      hospitalId: u.hospitalId,
     }
   }
 

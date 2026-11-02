@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * GET: Patient's treatment records, dental chart entries, and documents.
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid tab' }, { status: 400 })
   } catch (err: unknown) {
-    console.error('Patient records error:', err)
+    logger.error({ err }, 'Patient records error:')
     return NextResponse.json({ error: 'Failed to load records' }, { status: 500 })
   }
 }

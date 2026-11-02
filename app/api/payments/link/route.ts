@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { randomBytes } from 'crypto'
+import { logger } from '@/lib/logger'
 
 /**
  * POST: Generate a short-lived payment link for an invoice.
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error('Payment link creation error:', err)
+    logger.error({ err }, 'Payment link creation error:')
     return NextResponse.json({ error: 'Failed to create payment link' }, { status: 500 })
   }
 }

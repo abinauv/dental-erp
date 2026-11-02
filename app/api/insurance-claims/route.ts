@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generateClaimNo } from '@/lib/billing-utils'
 import { InsuranceClaimStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - List insurance claims with filters
 export async function GET(request: NextRequest) {
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching insurance claims:', error)
+    logger.error({ err: error }, 'Error fetching insurance claims:')
     return NextResponse.json({ error: 'Failed to fetch insurance claims' }, { status: 500 })
   }
 }
@@ -243,7 +244,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(fullClaim, { status: 201 })
   } catch (error) {
-    console.error('Error creating insurance claim:', error)
+    logger.error({ err: error }, 'Error creating insurance claim:')
     return NextResponse.json({ error: 'Failed to create insurance claim' }, { status: 500 })
   }
 }

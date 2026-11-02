@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
@@ -48,6 +49,7 @@ export function ImageViewer({
   onAnnotate,
   onCompare,
 }: ImageViewerProps) {
+  const t = useTranslations('imaging.viewer')
   const containerRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
 
@@ -227,7 +229,7 @@ export function ImageViewer({
                     className="text-white hover:bg-white/20 text-xs"
                     onClick={onAnnotate}
                   >
-                    Annotate
+                    {t('annotate')}
                   </Button>
                 )}
                 {onCompare && (
@@ -237,7 +239,7 @@ export function ImageViewer({
                     className="text-white hover:bg-white/20 text-xs"
                     onClick={onCompare}
                   >
-                    Compare
+                    {t('compare')}
                   </Button>
                 )}
                 {onDownload && (
@@ -303,7 +305,7 @@ export function ImageViewer({
             <img
               ref={imgRef}
               src={displaySrc}
-              alt={displayTitle || 'Image'}
+              alt={displayTitle || t('imageAlt')}
               style={imageStyle}
               draggable={false}
               onClick={(e) => e.stopPropagation()}
@@ -319,7 +321,7 @@ export function ImageViewer({
                 size="icon"
                 className="text-white hover:bg-white/20 h-8 w-8"
                 onClick={handleZoomOut}
-                title="Zoom out (-)"
+                title={t('zoomOut')}
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
@@ -329,7 +331,7 @@ export function ImageViewer({
                 size="icon"
                 className="text-white hover:bg-white/20 h-8 w-8"
                 onClick={handleZoomIn}
-                title="Zoom in (+)"
+                title={t('zoomIn')}
               >
                 <ZoomIn className="h-4 w-4" />
               </Button>
@@ -342,7 +344,7 @@ export function ImageViewer({
                 size="icon"
                 className="text-white hover:bg-white/20 h-8 w-8"
                 onClick={handleRotateCCW}
-                title="Rotate left"
+                title={t('rotateLeft')}
               >
                 <RotateCcw className="h-4 w-4" />
               </Button>
@@ -351,7 +353,7 @@ export function ImageViewer({
                 size="icon"
                 className="text-white hover:bg-white/20 h-8 w-8"
                 onClick={handleRotateCW}
-                title="Rotate right (R)"
+                title={t('rotateRight')}
               >
                 <RotateCw className="h-4 w-4" />
               </Button>
@@ -364,7 +366,7 @@ export function ImageViewer({
                 size="icon"
                 className={`hover:bg-white/20 h-8 w-8 ${flipH ? 'text-blue-400' : 'text-white'}`}
                 onClick={() => setFlipH((f) => !f)}
-                title="Flip horizontal"
+                title={t('flipH')}
               >
                 <FlipHorizontal className="h-4 w-4" />
               </Button>
@@ -373,7 +375,7 @@ export function ImageViewer({
                 size="icon"
                 className={`hover:bg-white/20 h-8 w-8 ${flipV ? 'text-blue-400' : 'text-white'}`}
                 onClick={() => setFlipV((f) => !f)}
-                title="Flip vertical"
+                title={t('flipV')}
               >
                 <FlipVertical className="h-4 w-4" />
               </Button>
@@ -389,7 +391,7 @@ export function ImageViewer({
                 value={brightness}
                 onChange={(e) => setBrightness(Number(e.target.value))}
                 className="w-20 h-1 accent-white"
-                title={`Brightness: ${brightness}%`}
+                title={t('brightness', { value: brightness })}
                 onClick={(e) => e.stopPropagation()}
               />
 
@@ -402,7 +404,7 @@ export function ImageViewer({
                 value={contrast}
                 onChange={(e) => setContrast(Number(e.target.value))}
                 className="w-20 h-1 accent-white"
-                title={`Contrast: ${contrast}%`}
+                title={t('contrast', { value: contrast })}
                 onClick={(e) => e.stopPropagation()}
               />
 
@@ -414,7 +416,7 @@ export function ImageViewer({
                 size="icon"
                 className="text-white hover:bg-white/20 h-8 w-8"
                 onClick={handleFullscreen}
-                title="Fullscreen (F)"
+                title={t('fullscreen')}
               >
                 {isFullscreen ? (
                   <Minimize2 className="h-4 w-4" />
@@ -429,9 +431,9 @@ export function ImageViewer({
                 size="sm"
                 className="text-white hover:bg-white/20 text-xs"
                 onClick={resetTransforms}
-                title="Reset (0)"
+                title={t('resetTitle')}
               >
-                Reset
+                {t('reset')}
               </Button>
 
               {/* Image counter */}
@@ -439,7 +441,7 @@ export function ImageViewer({
                 <>
                   <div className="w-px h-5 bg-white/30 mx-1" />
                   <span className="text-xs text-zinc-400">
-                    {currentIndex + 1} / {images.length}
+                    {t('counter', { current: currentIndex + 1, total: images.length })}
                   </span>
                 </>
               )}

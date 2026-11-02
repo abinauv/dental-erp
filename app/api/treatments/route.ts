@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // Generate unique treatment number
 async function generateTreatmentNo(hospitalId: string): Promise<string> {
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching treatments:', error)
+    logger.error({ err: error }, 'Error fetching treatments:')
     return NextResponse.json({ error: 'Failed to fetch treatments' }, { status: 500 })
   }
 }
@@ -285,7 +286,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(treatment, { status: 201 })
   } catch (error) {
-    console.error('Error creating treatment:', error)
+    logger.error({ err: error }, 'Error creating treatment:')
     return NextResponse.json({ error: 'Failed to create treatment' }, { status: 500 })
   }
 }

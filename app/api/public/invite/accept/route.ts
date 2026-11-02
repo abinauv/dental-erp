@@ -3,6 +3,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { StaffInviteStatus, Role } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 const acceptInviteSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -126,7 +127,7 @@ export async function POST(request: Request) {
       hospitalName: invite.hospital.name,
     })
   } catch (error) {
-    console.error('Accept invite error:', error)
+    logger.error({ err: error }, 'Accept invite error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }
@@ -183,7 +184,7 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
-    console.error('Validate invite error:', error)
+    logger.error({ err: error }, 'Validate invite error:')
     return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import {
   Zap,
   Plus,
@@ -45,49 +47,22 @@ import {
   RefreshCw,
 } from 'lucide-react'
 
+// Values only — labels and param labels live in the
+// `communications.automations.trigger` / `.triggerParam` / `.action`
+// catalogues, resolved at render. `hasParam` drives the days-param input.
 const TRIGGER_TYPES = [
-  {
-    value: 'NO_VISIT',
-    label: 'No visit in X days',
-    paramLabel: 'Days since last visit',
-    defaultParam: 180,
-  },
-  {
-    value: 'BIRTHDAY_UPCOMING',
-    label: 'Birthday in X days',
-    paramLabel: 'Days before birthday',
-    defaultParam: 3,
-  },
-  {
-    value: 'TREATMENT_PLAN_PENDING',
-    label: 'Treatment plan pending X days',
-    paramLabel: 'Days pending',
-    defaultParam: 14,
-  },
-  {
-    value: 'MEMBERSHIP_EXPIRING',
-    label: 'Membership expiring in X days',
-    paramLabel: 'Days before expiry',
-    defaultParam: 7,
-  },
-  {
-    value: 'POST_APPOINTMENT',
-    label: 'After appointment completion',
-    paramLabel: null,
-    defaultParam: 0,
-  },
-  {
-    value: 'PAYMENT_OVERDUE',
-    label: 'Payment overdue by X days',
-    paramLabel: 'Days overdue',
-    defaultParam: 30,
-  },
+  { value: 'NO_VISIT', hasParam: true, defaultParam: 180 },
+  { value: 'BIRTHDAY_UPCOMING', hasParam: true, defaultParam: 3 },
+  { value: 'TREATMENT_PLAN_PENDING', hasParam: true, defaultParam: 14 },
+  { value: 'MEMBERSHIP_EXPIRING', hasParam: true, defaultParam: 7 },
+  { value: 'POST_APPOINTMENT', hasParam: false, defaultParam: 0 },
+  { value: 'PAYMENT_OVERDUE', hasParam: true, defaultParam: 30 },
 ]
 
 const ACTION_TYPES = [
-  { value: 'SEND_SMS', label: 'Send SMS', needsTemplate: true },
-  { value: 'SEND_EMAIL', label: 'Send Email', needsTemplate: true },
-  { value: 'CREATE_NOTIFICATION', label: 'Create Notification', needsTemplate: false },
+  { value: 'SEND_SMS', needsTemplate: true },
+  { value: 'SEND_EMAIL', needsTemplate: true },
+  { value: 'CREATE_NOTIFICATION', needsTemplate: false },
 ]
 
 interface Automation {
@@ -111,6 +86,9 @@ interface Template {
 export default function AutomationsPage() {
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
+  const t = useTranslations('communications.automations')
+  const tc = useTranslations('communications.common')
+  const { formatDate } = useClinicFormatters()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [automations, setAutomations] = useState<Automation[]>([])
@@ -135,7 +113,7 @@ export default function AutomationsPage() {
       const json = await res.json()
       setAutomations(json.automations)
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: tc('error'), description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -188,31 +166,35 @@ export default function AutomationsPage() {
   const handleSave = async () => {
     if (!formName || !formTriggerType || !formActionType) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
+        title: tc('error'),
+        description: t('toast.fillRequired'),
         variant: 'destructive',
       })
       return
     }
 
-    const triggerConfig = TRIGGER_TYPES.find((t) => t.value === formTriggerType)
+    const triggerConfig = TRIGGER_TYPES.find((tt) => tt.value === formTriggerType)
     const actionConfig = ACTION_TYPES.find((a) => a.value === formActionType)
 
     const triggerParams: Record<string, number | string> = {}
-    if (triggerConfig?.paramLabel) {
+    if (triggerConfig?.hasParam) {
       triggerParams.days = Number(formTriggerDays)
     }
 
     const actionParams: Record<string, string> = {}
     if (actionConfig?.needsTemplate) {
       if (!formTemplateId) {
-        toast({ title: 'Error', description: 'Please select a template', variant: 'destructive' })
+        toast({
+          title: tc('error'),
+          description: t('toast.selectTemplate'),
+          variant: 'destructive',
+        })
         return
       }
       actionParams.templateId = formTemplateId
     } else if (formActionType === 'CREATE_NOTIFICATION') {
       actionParams.title = formNotifTitle || formName
-      actionParams.message = formNotifMessage || `Automation "${formName}" triggered`
+      actionParams.message = formNotifMessage || t('form.defaultNotifMessage', { name: formName })
     }
 
     setSaving(true)
@@ -232,18 +214,18 @@ export default function AutomationsPage() {
 
       if (!res.ok) {
         const errData = await res.json()
-        throw new Error(errData.error || 'Failed to save')
+        throw new Error(errData.error || t('toast.saveError'))
       }
 
       toast({
-        title: 'Success',
-        description: editingId ? 'Automation updated' : 'Automation created',
+        title: tc('success'),
+        description: editingId ? t('toast.updated') : t('toast.created'),
       })
       setShowDialog(false)
       resetForm()
       fetchAutomations()
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: tc('error'), description: err.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -261,15 +243,15 @@ export default function AutomationsPage() {
         prev.map((a) => (a.id === auto.id ? { ...a, isActive: !a.isActive } : a))
       )
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: tc('error'), description: err.message, variant: 'destructive' })
     }
   }
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
-      title: 'Delete automation?',
-      description: 'Are you sure you want to delete this automation?',
-      confirmLabel: 'Delete',
+      title: t('toast.deleteConfirmTitle'),
+      description: t('toast.deleteConfirmDescription'),
+      confirmLabel: t('toast.deleteConfirmLabel'),
     })
     if (!ok) return
 
@@ -281,34 +263,31 @@ export default function AutomationsPage() {
       })
       if (!res.ok) throw new Error('Failed to delete')
       setAutomations((prev) => prev.filter((a) => a.id !== id))
-      toast({ title: 'Success', description: 'Automation deleted' })
+      toast({ title: tc('success'), description: t('toast.deleted') })
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: tc('error'), description: err.message, variant: 'destructive' })
     }
   }
 
   const getTriggerLabel = (trigger: Automation['trigger']) => {
-    const config = TRIGGER_TYPES.find((t) => t.value === trigger.type)
+    const config = TRIGGER_TYPES.find((tt) => tt.value === trigger.type)
     if (!config) return trigger.type
-    if (trigger.params.days) {
-      return config.label.replace('X', String(trigger.params.days))
-    }
-    return config.label
+    return t(`trigger.${trigger.type}`, { days: trigger.params.days ?? 'X' })
   }
 
   const getActionLabel = (action: Automation['action']) => {
     const config = ACTION_TYPES.find((a) => a.value === action.type)
-    return config?.label || action.type
+    return config ? t(`action.${action.type}`) : action.type
   }
 
   // Filter templates based on selected action type
-  const filteredTemplates = templates.filter((t) => {
-    if (formActionType === 'SEND_SMS') return t.channel === 'SMS'
-    if (formActionType === 'SEND_EMAIL') return t.channel === 'EMAIL'
+  const filteredTemplates = templates.filter((tpl) => {
+    if (formActionType === 'SEND_SMS') return tpl.channel === 'SMS'
+    if (formActionType === 'SEND_EMAIL') return tpl.channel === 'EMAIL'
     return true
   })
 
-  const selectedTrigger = TRIGGER_TYPES.find((t) => t.value === formTriggerType)
+  const selectedTrigger = TRIGGER_TYPES.find((tt) => tt.value === formTriggerType)
   const selectedAction = ACTION_TYPES.find((a) => a.value === formActionType)
 
   return (
@@ -316,10 +295,8 @@ export default function AutomationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Marketing Automations</h2>
-          <p className="text-muted-foreground">
-            Create rules to automatically send messages based on patient events
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={fetchAutomations}>
@@ -327,7 +304,7 @@ export default function AutomationsPage() {
           </Button>
           <Button onClick={openCreateDialog}>
             <Plus className="h-4 w-4 mr-2" />
-            New Automation
+            {t('newAutomation')}
           </Button>
         </div>
       </div>
@@ -341,13 +318,11 @@ export default function AutomationsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Zap className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No automations yet</h3>
-            <p className="text-muted-foreground text-sm mt-1 mb-4">
-              Create your first automation rule to start engaging patients automatically
-            </p>
+            <h3 className="text-lg font-semibold">{t('emptyTitle')}</h3>
+            <p className="text-muted-foreground text-sm mt-1 mb-4">{t('emptyDescription')}</p>
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Automation
+              {t('createAutomation')}
             </Button>
           </CardContent>
         </Card>
@@ -355,23 +330,24 @@ export default function AutomationsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Active Rules ({automations.filter((a) => a.isActive).length}/{automations.length})
+              {t('activeRules', {
+                active: automations.filter((a) => a.isActive).length,
+                total: automations.length,
+              })}
             </CardTitle>
-            <CardDescription>
-              Automation rules are evaluated daily by the cron scheduler
-            </CardDescription>
+            <CardDescription>{t('activeRulesDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Trigger</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead className="text-center">Active</TableHead>
-                  <TableHead className="text-right">Runs</TableHead>
-                  <TableHead>Last Run</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('col.name')}</TableHead>
+                  <TableHead>{t('col.trigger')}</TableHead>
+                  <TableHead>{t('col.action')}</TableHead>
+                  <TableHead className="text-center">{t('col.active')}</TableHead>
+                  <TableHead className="text-right">{t('col.runs')}</TableHead>
+                  <TableHead>{t('col.lastRun')}</TableHead>
+                  <TableHead className="text-right">{t('col.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -393,7 +369,7 @@ export default function AutomationsPage() {
                     </TableCell>
                     <TableCell className="text-right">{auto.runCount}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {auto.lastRunAt ? new Date(auto.lastRunAt).toLocaleDateString() : 'Never'}
+                      {auto.lastRunAt ? formatDate(auto.lastRunAt) : t('never')}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -427,18 +403,16 @@ export default function AutomationsPage() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Automation' : 'New Automation'}</DialogTitle>
-            <DialogDescription>
-              Define the trigger condition and action for this automation rule
-            </DialogDescription>
+            <DialogTitle>{editingId ? t('dialog.editTitle') : t('dialog.createTitle')}</DialogTitle>
+            <DialogDescription>{t('dialog.description')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label>Automation Name</Label>
+              <Label>{t('dialog.nameLabel')}</Label>
               <Input
-                placeholder="e.g., Re-engage inactive patients"
+                placeholder={t('dialog.namePlaceholder')}
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
               />
@@ -446,22 +420,22 @@ export default function AutomationsPage() {
 
             {/* Trigger */}
             <div className="space-y-2">
-              <Label>Trigger (IF)</Label>
+              <Label>{t('dialog.triggerLabel')}</Label>
               <Select
                 value={formTriggerType}
                 onValueChange={(v) => {
                   setFormTriggerType(v)
-                  const config = TRIGGER_TYPES.find((t) => t.value === v)
+                  const config = TRIGGER_TYPES.find((tt) => tt.value === v)
                   if (config) setFormTriggerDays(String(config.defaultParam))
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select trigger..." />
+                  <SelectValue placeholder={t('dialog.triggerPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TRIGGER_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+                  {TRIGGER_TYPES.map((tt) => (
+                    <SelectItem key={tt.value} value={tt.value}>
+                      {t(`trigger.${tt.value}`, { days: 'X' })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -469,9 +443,9 @@ export default function AutomationsPage() {
             </div>
 
             {/* Trigger days param */}
-            {selectedTrigger?.paramLabel && (
+            {selectedTrigger?.hasParam && (
               <div className="space-y-2">
-                <Label>{selectedTrigger.paramLabel}</Label>
+                <Label>{t(`triggerParam.${selectedTrigger.value}`)}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -483,7 +457,7 @@ export default function AutomationsPage() {
 
             {/* Action */}
             <div className="space-y-2">
-              <Label>Action (THEN)</Label>
+              <Label>{t('dialog.actionLabel')}</Label>
               <Select
                 value={formActionType}
                 onValueChange={(v) => {
@@ -492,12 +466,12 @@ export default function AutomationsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select action..." />
+                  <SelectValue placeholder={t('dialog.actionPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {ACTION_TYPES.map((a) => (
                     <SelectItem key={a.value} value={a.value}>
-                      {a.label}
+                      {t(`action.${a.value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -507,20 +481,20 @@ export default function AutomationsPage() {
             {/* Template selection */}
             {selectedAction?.needsTemplate && (
               <div className="space-y-2">
-                <Label>Message Template</Label>
+                <Label>{t('dialog.templateLabel')}</Label>
                 <Select value={formTemplateId} onValueChange={setFormTemplateId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select template..." />
+                    <SelectValue placeholder={t('dialog.templatePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredTemplates.length === 0 ? (
                       <SelectItem value="none" disabled>
-                        No templates found — create one first
+                        {t('dialog.noTemplates')}
                       </SelectItem>
                     ) : (
-                      filteredTemplates.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name} ({t.category})
+                      filteredTemplates.map((tpl) => (
+                        <SelectItem key={tpl.id} value={tpl.id}>
+                          {t('dialog.templateOption', { name: tpl.name, category: tpl.category })}
                         </SelectItem>
                       ))
                     )}
@@ -533,17 +507,17 @@ export default function AutomationsPage() {
             {formActionType === 'CREATE_NOTIFICATION' && (
               <>
                 <div className="space-y-2">
-                  <Label>Notification Title</Label>
+                  <Label>{t('dialog.notifTitleLabel')}</Label>
                   <Input
-                    placeholder="e.g., Patient Follow-up Required"
+                    placeholder={t('dialog.notifTitlePlaceholder')}
                     value={formNotifTitle}
                     onChange={(e) => setFormNotifTitle(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Notification Message</Label>
+                  <Label>{t('dialog.notifMessageLabel')}</Label>
                   <Input
-                    placeholder="e.g., Patient has not visited in 6 months"
+                    placeholder={t('dialog.notifMessagePlaceholder')}
                     value={formNotifMessage}
                     onChange={(e) => setFormNotifMessage(e.target.value)}
                   />
@@ -554,11 +528,11 @@ export default function AutomationsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancel
+              {t('dialog.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingId ? 'Update' : 'Create'}
+              {editingId ? t('dialog.update') : t('dialog.create')}
             </Button>
           </DialogFooter>
         </DialogContent>

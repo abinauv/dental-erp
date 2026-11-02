@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
+import { reservePendingPayment } from '@/lib/payment-gateways/settle'
+import { logger } from '@/lib/logger'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 /**
  * POST: Create a payment order using a payment link token (no auth required).
@@ -13,6 +16,19 @@ export async function POST(req: NextRequest) {
 
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+    }
+
+    // Unauthenticated endpoint: throttle per IP and per link token.
+    const WINDOW = 10 * 60 * 1000
+    const [byIp, byToken] = await Promise.all([
+      checkRateLimit(`pay-order-ip:${getClientIp(req)}`, 30, WINDOW),
+      checkRateLimit(`pay-order:${token}`, 15, WINDOW),
+    ])
+    if (!byIp.allowed || !byToken.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     // Look up payment link
@@ -70,6 +86,23 @@ export async function POST(req: NextRequest) {
       customerPhone: link.invoice.patient.phone,
     })
 
+    // Reserve a PENDING payment so a webhook can settle this order even if the
+    // payer never returns to the page. Best-effort — don't block checkout.
+    try {
+      await reservePendingPayment({
+        hospitalId: link.hospitalId,
+        invoiceId: link.invoice.id,
+        gatewayOrderId: order.orderId,
+        amount: payAmount,
+        provider: order.provider,
+      })
+    } catch (reserveErr) {
+      logger.error(
+        { err: order.orderId, reserveErr },
+        'Failed to reserve pending payment for order'
+      )
+    }
+
     const checkoutConfig = gateway.getCheckoutConfig(order, credentials)
 
     return NextResponse.json({
@@ -82,7 +115,7 @@ export async function POST(req: NextRequest) {
       checkout: checkoutConfig,
     })
   } catch (err: unknown) {
-    console.error('Public order error:', err)
+    logger.error({ err }, 'Public order error:')
     const message = err instanceof Error ? err.message : 'Failed to create order'
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,7 +37,10 @@ import {
   CreditCard,
   Banknote,
 } from 'lucide-react'
-import { dateRangePresets, formatCurrency, formatDate } from '@/lib/billing-utils'
+import { dateRangePresets } from '@/lib/billing-utils'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
+import { downloadExcel } from '@/lib/export-utils'
+import { useToast } from '@/hooks/use-toast'
 
 interface OutstandingInvoice {
   id: string
@@ -84,6 +88,12 @@ interface DoctorRevenue {
 }
 
 export default function FinancialReportsPage() {
+  const t = useTranslations('billing.reports')
+  const tMethods = useTranslations('billing.paymentMethods')
+  const { toast } = useToast()
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 2 })
   const [loading, setLoading] = useState(true)
   const [datePreset, setDatePreset] = useState('this_month')
   const [dateFrom, setDateFrom] = useState('')
@@ -161,9 +171,64 @@ export default function FinancialReportsPage() {
     fetchReport(activeTab)
   }, [activeTab, datePreset, dateFrom, dateTo])
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    alert('Export functionality coming soon!')
+  const handleExport = async () => {
+    // Export the currently-active tab's loaded data as .xlsx. Amounts are kept
+    // as raw numbers so the spreadsheet can total/sort them.
+    let rows: Record<string, unknown>[] = []
+    let filename = 'report'
+
+    if (activeTab === 'outstanding') {
+      rows = (outstandingData?.invoices ?? []).map((i) => ({
+        Invoice: i.invoiceNo,
+        Patient: `${i.patient.firstName} ${i.patient.lastName}`,
+        'Patient ID': i.patient.patientId,
+        Phone: i.patient.phone,
+        'Invoice Date': i.invoiceDate ? formatDate(i.invoiceDate) : '',
+        'Due Date': i.dueDate ? formatDate(i.dueDate) : '',
+        Total: Number(i.totalAmount),
+        Balance: Number(i.balanceAmount),
+        Status: i.status,
+      }))
+      filename = 'outstanding-invoices'
+    } else if (activeTab === 'procedure_revenue') {
+      rows = (procedureData?.byProcedure ?? []).map((p) => ({
+        Code: p.code,
+        Procedure: p.name,
+        Category: p.category,
+        'Total Revenue': p.totalRevenue,
+        Count: p.count,
+        'Avg Revenue': p.avgRevenue,
+      }))
+      filename = 'procedure-revenue'
+    } else if (activeTab === 'doctor_revenue') {
+      rows = (doctorData?.byDoctor ?? []).map((d) => ({
+        Doctor: d.name,
+        Specialization: d.specialization ?? '',
+        'Total Revenue': d.totalRevenue,
+        Treatments: d.treatmentCount,
+        'Avg per Treatment': d.avgPerTreatment,
+      }))
+      filename = 'doctor-revenue'
+    } else if (activeTab === 'daily_collection') {
+      rows = (dailyData?.dailyData ?? []).map((d) => ({
+        Date: d.date,
+        Cash: d.cash,
+        Card: d.card,
+        UPI: d.upi,
+        'Bank Transfer': d.bankTransfer,
+        Total: d.total,
+        Payments: d.count,
+      }))
+      filename = 'daily-collection'
+    }
+
+    if (rows.length === 0) {
+      toast({ title: t('exportEmpty'), variant: 'destructive' })
+      return
+    }
+
+    await downloadExcel(rows, `${filename}-${new Date().toISOString().slice(0, 10)}`, filename)
+    toast({ title: t('exportSuccess') })
   }
 
   return (
@@ -171,8 +236,8 @@ export default function FinancialReportsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Financial Reports</h1>
-          <p className="text-muted-foreground">View detailed financial analytics and reports</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Select
@@ -184,7 +249,7 @@ export default function FinancialReportsPage() {
             }}
           >
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select period" />
+              <SelectValue placeholder={t('selectPeriod')} />
             </SelectTrigger>
             <SelectContent>
               {dateRangePresets.map((preset) => (
@@ -212,7 +277,7 @@ export default function FinancialReportsPage() {
           )}
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('export')}
           </Button>
         </div>
       </div>
@@ -222,19 +287,19 @@ export default function FinancialReportsPage() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="outstanding" className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
-            Outstanding
+            {t('tabOutstanding')}
           </TabsTrigger>
           <TabsTrigger value="procedure_revenue" className="flex items-center gap-2">
             <Stethoscope className="h-4 w-4" />
-            By Procedure
+            {t('tabByProcedure')}
           </TabsTrigger>
           <TabsTrigger value="doctor_revenue" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            By Doctor
+            {t('tabByDoctor')}
           </TabsTrigger>
           <TabsTrigger value="daily_collection" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Daily Collection
+            {t('tabDaily')}
           </TabsTrigger>
         </TabsList>
 
@@ -254,73 +319,81 @@ export default function FinancialReportsPage() {
               <>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-green-600">Current</CardTitle>
-                    <CardDescription>Not yet due</CardDescription>
+                    <CardTitle className="text-sm font-medium text-green-600">
+                      {t('current')}
+                    </CardTitle>
+                    <CardDescription>{t('notYetDue')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(outstandingData.aging.current.amount)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {outstandingData.aging.current.count} invoices
+                      {t('invoices', { count: outstandingData.aging.current.count })}
                     </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-yellow-600">1-30 Days</CardTitle>
-                    <CardDescription>Overdue</CardDescription>
+                    <CardTitle className="text-sm font-medium text-yellow-600">
+                      {t('days1_30')}
+                    </CardTitle>
+                    <CardDescription>{t('overdue')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(outstandingData.aging.days1_30.amount)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {outstandingData.aging.days1_30.count} invoices
+                      {t('invoices', { count: outstandingData.aging.days1_30.count })}
                     </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-orange-600">
-                      31-60 Days
+                      {t('days31_60')}
                     </CardTitle>
-                    <CardDescription>Overdue</CardDescription>
+                    <CardDescription>{t('overdue')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(outstandingData.aging.days31_60.amount)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {outstandingData.aging.days31_60.count} invoices
+                      {t('invoices', { count: outstandingData.aging.days31_60.count })}
                     </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-red-500">61-90 Days</CardTitle>
-                    <CardDescription>Overdue</CardDescription>
+                    <CardTitle className="text-sm font-medium text-red-500">
+                      {t('days61_90')}
+                    </CardTitle>
+                    <CardDescription>{t('overdue')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(outstandingData.aging.days61_90.amount)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {outstandingData.aging.days61_90.count} invoices
+                      {t('invoices', { count: outstandingData.aging.days61_90.count })}
                     </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-red-700">90+ Days</CardTitle>
-                    <CardDescription>Critical</CardDescription>
+                    <CardTitle className="text-sm font-medium text-red-700">
+                      {t('days90')}
+                    </CardTitle>
+                    <CardDescription>{t('critical')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(outstandingData.aging.over90.amount)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {outstandingData.aging.over90.count} invoices
+                      {t('invoices', { count: outstandingData.aging.over90.count })}
                     </p>
                   </CardContent>
                 </Card>
@@ -331,22 +404,24 @@ export default function FinancialReportsPage() {
           {/* Outstanding Invoices Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Outstanding Invoices</CardTitle>
+              <CardTitle>{t('outstandingInvoices')}</CardTitle>
               <CardDescription>
-                Total: {formatCurrency(outstandingData?.totals.totalOutstanding || 0)} from{' '}
-                {outstandingData?.totals.invoiceCount || 0} invoices
+                {t('outstandingTotal', {
+                  amount: formatCurrency(outstandingData?.totals.totalOutstanding || 0),
+                  count: outstandingData?.totals.invoiceCount || 0,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Invoice Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>{t('cols.invoice')}</TableHead>
+                    <TableHead>{t('cols.patient')}</TableHead>
+                    <TableHead>{t('cols.invoiceDate')}</TableHead>
+                    <TableHead>{t('cols.dueDate')}</TableHead>
+                    <TableHead className="text-right">{t('cols.total')}</TableHead>
+                    <TableHead className="text-right">{t('cols.balance')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -376,7 +451,7 @@ export default function FinancialReportsPage() {
                   ) : outstandingData?.invoices.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                        No outstanding invoices
+                        {t('noOutstanding')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -408,7 +483,7 @@ export default function FinancialReportsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalRevenue')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -422,7 +497,7 @@ export default function FinancialReportsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Treatments</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalTreatments')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -438,17 +513,17 @@ export default function FinancialReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Revenue by Procedure</CardTitle>
+              <CardTitle>{t('revenueByProcedure')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Procedure</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-center">Count</TableHead>
-                    <TableHead className="text-right">Avg. Revenue</TableHead>
-                    <TableHead className="text-right">Total Revenue</TableHead>
+                    <TableHead>{t('procCols.procedure')}</TableHead>
+                    <TableHead>{t('procCols.category')}</TableHead>
+                    <TableHead className="text-center">{t('procCols.count')}</TableHead>
+                    <TableHead className="text-right">{t('procCols.avgRevenue')}</TableHead>
+                    <TableHead className="text-right">{t('procCols.totalRevenue')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -475,7 +550,7 @@ export default function FinancialReportsPage() {
                   ) : procedureData?.byProcedure.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                        No procedure data available
+                        {t('noProcedure')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -507,7 +582,7 @@ export default function FinancialReportsPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalRevenue')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -521,7 +596,7 @@ export default function FinancialReportsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Treatments</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalTreatments')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -535,7 +610,7 @@ export default function FinancialReportsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Active Doctors</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('activeDoctors')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -549,16 +624,16 @@ export default function FinancialReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Revenue by Doctor</CardTitle>
+              <CardTitle>{t('revenueByDoctor')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Doctor</TableHead>
-                    <TableHead className="text-center">Treatments</TableHead>
-                    <TableHead className="text-right">Avg. per Treatment</TableHead>
-                    <TableHead className="text-right">Total Revenue</TableHead>
+                    <TableHead>{t('docCols.doctor')}</TableHead>
+                    <TableHead className="text-center">{t('docCols.treatments')}</TableHead>
+                    <TableHead className="text-right">{t('docCols.avgPerTreatment')}</TableHead>
+                    <TableHead className="text-right">{t('docCols.totalRevenue')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -582,7 +657,7 @@ export default function FinancialReportsPage() {
                   ) : doctorData?.byDoctor.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                        No doctor data available
+                        {t('noDoctor')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -617,7 +692,7 @@ export default function FinancialReportsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Collection</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalCollection')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -631,7 +706,7 @@ export default function FinancialReportsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('totalPayments')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -645,29 +720,29 @@ export default function FinancialReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Daily Collection Breakdown</CardTitle>
+              <CardTitle>{t('dailyBreakdown')}</CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
+                    <TableHead>{t('date')}</TableHead>
                     <TableHead className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Banknote className="h-4 w-4" />
-                        Cash
+                        {tMethods('CASH')}
                       </div>
                     </TableHead>
                     <TableHead className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <CreditCard className="h-4 w-4" />
-                        Card
+                        {tMethods('CARD')}
                       </div>
                     </TableHead>
-                    <TableHead className="text-right">UPI</TableHead>
-                    <TableHead className="text-right">Bank Transfer</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Count</TableHead>
+                    <TableHead className="text-right">{tMethods('UPI')}</TableHead>
+                    <TableHead className="text-right">{tMethods('BANK_TRANSFER')}</TableHead>
+                    <TableHead className="text-right">{t('total')}</TableHead>
+                    <TableHead className="text-center">{t('count')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -700,7 +775,7 @@ export default function FinancialReportsPage() {
                   ) : dailyData?.dailyData.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                        No collection data available
+                        {t('noCollection')}
                       </TableCell>
                     </TableRow>
                   ) : (

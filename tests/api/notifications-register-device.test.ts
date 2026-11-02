@@ -3,7 +3,8 @@ import prisma from '@/tests/__mocks__/prisma'
 
 const mockAuthFn = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/auth', () => ({ auth: mockAuthFn }))
+// Route reads the web session via getServerSession (Better Auth).
+vi.mock('@/lib/auth', () => ({ getServerSession: mockAuthFn }))
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
 
 const mod = await import('@/app/api/notifications/register-device/route')

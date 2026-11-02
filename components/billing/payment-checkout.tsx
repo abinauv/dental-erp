@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { CreditCard, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface PaymentCheckoutProps {
   invoiceId: string
@@ -34,6 +36,9 @@ export function PaymentCheckout({
   open: controlledOpen,
   trigger,
 }: PaymentCheckoutProps) {
+  const t = useTranslations('billing.checkout')
+  const { formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (val: number) => fc(val, { minimumFractionDigits: 0 })
   const [internalOpen, setInternalOpen] = useState(false)
   const open = controlledOpen ?? internalOpen
   const setOpen = (val: boolean) => {
@@ -91,7 +96,7 @@ export function PaymentCheckout({
       }
     } catch (err: unknown) {
       setState('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Payment failed')
+      setErrorMsg(err instanceof Error ? err.message : t('errGeneric'))
     }
   }, [invoiceId, amount])
 
@@ -147,7 +152,7 @@ export function PaymentCheckout({
       const rzp = new RazorpayConstructor(options)
       rzp.on('payment.failed', () => {
         setState('error')
-        setErrorMsg('Payment failed. Please try again.')
+        setErrorMsg(t('errFailed'))
         reject(new Error('Payment failed'))
       })
       rzp.open()
@@ -215,16 +220,9 @@ export function PaymentCheckout({
       }, 2000)
     } catch (err: unknown) {
       setState('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Payment verification failed')
+      setErrorMsg(err instanceof Error ? err.message : t('errVerify'))
     }
   }
-
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-    }).format(val)
 
   return (
     <>
@@ -233,18 +231,20 @@ export function PaymentCheckout({
       ) : (
         <Button onClick={() => setOpen(true)}>
           <CreditCard className="h-4 w-4 mr-2" />
-          Pay Online
+          {t('payOnline')}
         </Button>
       )}
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>{state === 'success' ? 'Payment Successful' : 'Pay Online'}</DialogTitle>
+            <DialogTitle>
+              {state === 'success' ? t('paymentSuccessful') : t('payOnline')}
+            </DialogTitle>
             <DialogDescription>
               {state === 'success'
-                ? 'Your payment has been processed successfully.'
-                : `Invoice ${invoiceNo} for ${patientName}`}
+                ? t('successDesc')
+                : t('invoiceFor', { no: invoiceNo, name: patientName })}
             </DialogDescription>
           </DialogHeader>
 
@@ -253,17 +253,15 @@ export function PaymentCheckout({
               <div className="space-y-4">
                 <div className="rounded-lg border p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Amount</span>
+                    <span className="text-muted-foreground">{t('amount')}</span>
                     <span className="font-semibold text-lg">{formatCurrency(amount)}</span>
                   </div>
                 </div>
                 <Button className="w-full" size="lg" onClick={initiatePayment}>
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Pay {formatCurrency(amount)}
+                  {t('pay', { amount: formatCurrency(amount) })}
                 </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Secured payment via your clinic&apos;s payment gateway
-                </p>
+                <p className="text-xs text-center text-muted-foreground">{t('secured')}</p>
               </div>
             )}
 
@@ -271,7 +269,7 @@ export function PaymentCheckout({
               <div className="flex flex-col items-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  {state === 'loading' ? 'Preparing payment...' : 'Waiting for payment...'}
+                  {state === 'loading' ? t('preparing') : t('waiting')}
                 </p>
               </div>
             )}
@@ -279,25 +277,27 @@ export function PaymentCheckout({
             {state === 'verifying' && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Verifying payment...</p>
+                <p className="text-sm text-muted-foreground">{t('verifying')}</p>
               </div>
             )}
 
             {state === 'success' && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <CheckCircle className="h-12 w-12 text-green-500" />
-                <p className="font-medium">Payment of {formatCurrency(amount)} received</p>
-                <p className="text-sm text-muted-foreground">Invoice {invoiceNo} updated</p>
+                <p className="font-medium">{t('received', { amount: formatCurrency(amount) })}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('invoiceUpdated', { no: invoiceNo })}
+                </p>
               </div>
             )}
 
             {state === 'error' && (
               <div className="flex flex-col items-center py-8 gap-3">
                 <AlertCircle className="h-12 w-12 text-red-500" />
-                <p className="font-medium text-red-600">Payment Failed</p>
+                <p className="font-medium text-red-600">{t('paymentFailed')}</p>
                 <p className="text-sm text-muted-foreground text-center">{errorMsg}</p>
                 <Button onClick={initiatePayment} variant="outline">
-                  Try Again
+                  {t('tryAgain')}
                 </Button>
               </div>
             )}

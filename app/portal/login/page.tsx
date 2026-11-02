@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ export default function PatientLoginPage() {
 }
 
 function PatientLoginForm() {
+  const t = useTranslations('portal.login')
   const router = useRouter()
   const searchParams = useSearchParams()
   const clinic = searchParams.get('clinic') || ''
@@ -35,11 +37,11 @@ function PatientLoginForm() {
 
   const sendOTP = async () => {
     if (!phone || phone.length < 10) {
-      setError('Please enter a valid 10-digit phone number')
+      setError(t('invalidPhone'))
       return
     }
     if (!clinicSlug) {
-      setError('Please enter your clinic identifier')
+      setError(t('enterClinic'))
       return
     }
 
@@ -56,13 +58,13 @@ function PatientLoginForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Failed to send OTP')
+        setError(data.error || t('sendFailed'))
         return
       }
 
       setStep('otp')
     } catch {
-      setError('Network error. Please try again.')
+      setError(t('networkError'))
     } finally {
       setLoading(false)
     }
@@ -70,7 +72,7 @@ function PatientLoginForm() {
 
   const verifyOTP = async () => {
     if (!otp || otp.length !== 6) {
-      setError('Please enter the 6-digit OTP')
+      setError(t('enterOtp'))
       return
     }
 
@@ -87,13 +89,13 @@ function PatientLoginForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Verification failed')
+        setError(data.error || t('verifyFailed'))
         return
       }
 
       router.push('/portal')
     } catch {
-      setError('Network error. Please try again.')
+      setError(t('networkError'))
     } finally {
       setLoading(false)
     }
@@ -106,11 +108,9 @@ function PatientLoginForm() {
           <div className="h-14 w-14 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3">
             <Building2 className="h-7 w-7 text-primary" />
           </div>
-          <CardTitle className="text-xl">Patient Portal</CardTitle>
+          <CardTitle className="text-xl">{t('title')}</CardTitle>
           <CardDescription>
-            {step === 'phone'
-              ? 'Enter your phone number to receive a login code'
-              : 'Enter the 6-digit code sent to your phone'}
+            {step === 'phone' ? t('subtitlePhone') : t('subtitleOtp')}
           </CardDescription>
         </CardHeader>
 
@@ -121,26 +121,24 @@ function PatientLoginForm() {
             <>
               {!clinic && (
                 <div className="space-y-2">
-                  <Label htmlFor="clinic">Clinic ID</Label>
+                  <Label htmlFor="clinic">{t('clinicId')}</Label>
                   <Input
                     id="clinic"
-                    placeholder="e.g. smile-dental"
+                    placeholder={t('clinicPlaceholder')}
                     value={clinicSlug}
                     onChange={(e) => setClinicSlug(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Your clinic will provide this identifier
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('clinicHint')}</p>
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t('phoneLabel')}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Enter your 10-digit number"
+                    placeholder={t('phonePlaceholder')}
                     className="pl-10"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -150,20 +148,20 @@ function PatientLoginForm() {
               </div>
               <Button className="w-full" onClick={sendOTP} disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Send OTP
+                {t('sendOtp')}
               </Button>
             </>
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="otp">Verification Code</Label>
+                <Label htmlFor="otp">{t('verificationCode')}</Label>
                 <div className="relative">
                   <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="otp"
                     type="text"
                     inputMode="numeric"
-                    placeholder="Enter 6-digit OTP"
+                    placeholder={t('otpPlaceholder')}
                     className="pl-10 text-center text-lg tracking-widest"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -171,11 +169,11 @@ function PatientLoginForm() {
                     autoFocus
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Sent to {phone}</p>
+                <p className="text-xs text-muted-foreground">{t('sentTo', { phone })}</p>
               </div>
               <Button className="w-full" onClick={verifyOTP} disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Verify & Login
+                {t('verifyLogin')}
               </Button>
               <Button
                 variant="ghost"
@@ -187,14 +185,12 @@ function PatientLoginForm() {
                 }}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Change Phone Number
+                {t('changePhone')}
               </Button>
             </>
           )}
 
-          <p className="text-xs text-center text-muted-foreground pt-2">
-            Secure login powered by your clinic&apos;s patient portal
-          </p>
+          <p className="text-xs text-center text-muted-foreground pt-2">{t('securedBy')}</p>
         </CardContent>
       </Card>
     </div>

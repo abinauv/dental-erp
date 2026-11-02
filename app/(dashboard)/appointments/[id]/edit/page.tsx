@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, Calendar, Clock, User, Check, Loader2, Save } from 'lucide-react'
-import { formatTime, formatDate } from '@/lib/appointment-utils'
+import { formatTime } from '@/lib/appointment-utils'
 
 interface Doctor {
   id: string
@@ -62,6 +63,10 @@ interface Appointment {
 export default function EditAppointmentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const t = useTranslations('appointments.new')
+  const tEdit = useTranslations('appointments.edit')
+  const tType = useTranslations('appointments.type')
+  const tPriority = useTranslations('appointments.priority')
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -170,17 +175,17 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
     setError('')
 
     if (!selectedDoctor) {
-      setError('Please select a doctor')
+      setError(t('selectDoctorError'))
       return
     }
 
     if (!selectedDate) {
-      setError('Please select a date')
+      setError(t('selectDateError'))
       return
     }
 
     if (!selectedTime) {
-      setError('Please select a time slot')
+      setError(t('selectTimeError'))
       return
     }
 
@@ -205,7 +210,7 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to update appointment')
+        throw new Error(data.error || tEdit('updateFailed'))
       }
 
       router.push(`/appointments/${id}`)
@@ -239,10 +244,10 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
   if (!appointment) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Appointment not found</p>
+        <p className="text-muted-foreground">{tEdit('notFound')}</p>
         <Link href="/appointments">
           <Button variant="outline" className="mt-4">
-            Back to Appointments
+            {tEdit('backToAppointments')}
           </Button>
         </Link>
       </div>
@@ -259,7 +264,7 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Appointment</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{tEdit('title')}</h1>
           <p className="text-muted-foreground">{appointment.appointmentNo}</p>
         </div>
       </div>
@@ -271,11 +276,9 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Patient
+                {tEdit('patient')}
               </CardTitle>
-              <CardDescription>
-                Patient cannot be changed for an existing appointment
-              </CardDescription>
+              <CardDescription>{tEdit('patientReadonly')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border p-4 bg-muted/50">
@@ -293,22 +296,28 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Schedule
+                {tEdit('schedule')}
               </CardTitle>
-              <CardDescription>Update the doctor, date, or time</CardDescription>
+              <CardDescription>{tEdit('scheduleDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Doctor *</Label>
+                <Label>{t('doctor')}</Label>
                 <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a doctor" />
+                    <SelectValue placeholder={t('selectDoctor')} />
                   </SelectTrigger>
                   <SelectContent>
                     {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id}>
-                        Dr. {doctor.firstName} {doctor.lastName}
-                        {doctor.specialization && ` (${doctor.specialization})`}
+                        {doctor.specialization
+                          ? t('doctorNameSpec', {
+                              name: `${doctor.firstName} ${doctor.lastName}`,
+                              spec: doctor.specialization,
+                            })
+                          : t('doctorName', {
+                              name: `${doctor.firstName} ${doctor.lastName}`,
+                            })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -317,7 +326,7 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Date *</Label>
+                  <Label>{t('date')}</Label>
                   <Input
                     type="date"
                     value={selectedDate}
@@ -328,18 +337,18 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Duration</Label>
+                  <Label>{t('duration')}</Label>
                   <Select value={duration} onValueChange={setDuration}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="45">45 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="90">1.5 hours</SelectItem>
-                      <SelectItem value="120">2 hours</SelectItem>
+                      <SelectItem value="15">{t('durations.15')}</SelectItem>
+                      <SelectItem value="30">{t('durations.30')}</SelectItem>
+                      <SelectItem value="45">{t('durations.45')}</SelectItem>
+                      <SelectItem value="60">{t('durations.60')}</SelectItem>
+                      <SelectItem value="90">{t('durations.90')}</SelectItem>
+                      <SelectItem value="120">{t('durations.120')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -347,16 +356,14 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
 
               {/* Time Slots */}
               <div className="space-y-2">
-                <Label>Time Slot *</Label>
+                <Label>{t('timeSlot')}</Label>
                 {loadingSlots ? (
                   <div className="flex items-center gap-2 p-4 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading available slots...
+                    {t('loadingSlots')}
                   </div>
                 ) : timeSlots.length === 0 ? (
-                  <p className="p-4 text-sm text-muted-foreground">
-                    No available slots for this date
-                  </p>
+                  <p className="p-4 text-sm text-muted-foreground">{t('noSlots')}</p>
                 ) : (
                   <div className="grid grid-cols-4 gap-2">
                     {timeSlots.map((slot) => (
@@ -390,72 +397,72 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Appointment Details
+                {tEdit('appointmentDetails')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>Appointment Type</Label>
+                  <Label>{t('appointmentType')}</Label>
                   <Select value={appointmentType} onValueChange={setAppointmentType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CONSULTATION">Consultation</SelectItem>
-                      <SelectItem value="PROCEDURE">Procedure</SelectItem>
-                      <SelectItem value="FOLLOW_UP">Follow Up</SelectItem>
-                      <SelectItem value="EMERGENCY">Emergency</SelectItem>
-                      <SelectItem value="CHECK_UP">Check Up</SelectItem>
+                      <SelectItem value="CONSULTATION">{tType('CONSULTATION')}</SelectItem>
+                      <SelectItem value="PROCEDURE">{tType('PROCEDURE')}</SelectItem>
+                      <SelectItem value="FOLLOW_UP">{tType('FOLLOW_UP')}</SelectItem>
+                      <SelectItem value="EMERGENCY">{tType('EMERGENCY')}</SelectItem>
+                      <SelectItem value="CHECK_UP">{tType('CHECK_UP')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Priority</Label>
+                  <Label>{t('priority')}</Label>
                   <Select value={priority} onValueChange={setPriority}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="LOW">Low</SelectItem>
-                      <SelectItem value="NORMAL">Normal</SelectItem>
-                      <SelectItem value="HIGH">High</SelectItem>
-                      <SelectItem value="URGENT">Urgent</SelectItem>
+                      <SelectItem value="LOW">{tPriority('LOW')}</SelectItem>
+                      <SelectItem value="NORMAL">{tPriority('NORMAL')}</SelectItem>
+                      <SelectItem value="HIGH">{tPriority('HIGH')}</SelectItem>
+                      <SelectItem value="URGENT">{tPriority('URGENT')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Chair Number</Label>
+                  <Label>{t('chairNumber')}</Label>
                   <Select value={chairNumber} onValueChange={setChairNumber}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select chair" />
+                      <SelectValue placeholder={t('selectChair')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Not assigned</SelectItem>
-                      <SelectItem value="1">Chair 1</SelectItem>
-                      <SelectItem value="2">Chair 2</SelectItem>
-                      <SelectItem value="3">Chair 3</SelectItem>
-                      <SelectItem value="4">Chair 4</SelectItem>
-                      <SelectItem value="5">Chair 5</SelectItem>
+                      <SelectItem value="none">{tEdit('notAssigned')}</SelectItem>
+                      <SelectItem value="1">{t('chair', { number: 1 })}</SelectItem>
+                      <SelectItem value="2">{t('chair', { number: 2 })}</SelectItem>
+                      <SelectItem value="3">{t('chair', { number: 3 })}</SelectItem>
+                      <SelectItem value="4">{t('chair', { number: 4 })}</SelectItem>
+                      <SelectItem value="5">{t('chair', { number: 5 })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2 md:col-span-3">
-                  <Label>Chief Complaint</Label>
+                  <Label>{t('chiefComplaint')}</Label>
                   <Input
-                    placeholder="Patient's main concern or reason for visit"
+                    placeholder={t('chiefComplaintPlaceholder')}
                     value={chiefComplaint}
                     onChange={(e) => setChiefComplaint(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2 md:col-span-3">
-                  <Label>Notes</Label>
+                  <Label>{t('notes')}</Label>
                   <Input
-                    placeholder="Additional notes about the appointment"
+                    placeholder={t('notesPlaceholder')}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                   />
@@ -474,19 +481,19 @@ export default function EditAppointmentPage({ params }: { params: Promise<{ id: 
         <div className="mt-6 flex justify-end gap-4">
           <Link href={`/appointments/${id}`}>
             <Button type="button" variant="outline">
-              Cancel
+              {tEdit('cancel')}
             </Button>
           </Link>
           <Button type="submit" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                {tEdit('saving')}
               </>
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Save Changes
+                {tEdit('saveChanges')}
               </>
             )}
           </Button>

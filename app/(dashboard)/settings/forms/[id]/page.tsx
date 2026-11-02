@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,26 +31,22 @@ import {
 import { toast } from 'sonner'
 import { FormRenderer, type FormField } from '@/components/forms/form-renderer'
 
-const FIELD_TYPES = [
-  { value: 'text', label: 'Text Input' },
-  { value: 'textarea', label: 'Text Area' },
-  { value: 'number', label: 'Number' },
-  { value: 'date', label: 'Date' },
-  { value: 'select', label: 'Dropdown' },
-  { value: 'checkbox', label: 'Checkbox' },
-  { value: 'radio', label: 'Radio Buttons' },
-  { value: 'signature', label: 'Signature' },
-  { value: 'heading', label: 'Section Heading' },
-  { value: 'paragraph', label: 'Paragraph Text' },
+// Field/form type option values; display labels come from the catalogue
+// (settings.formBuilder.fieldType.* / .formType.*).
+const FIELD_TYPE_VALUES = [
+  'text',
+  'textarea',
+  'number',
+  'date',
+  'select',
+  'checkbox',
+  'radio',
+  'signature',
+  'heading',
+  'paragraph',
 ] as const
 
-const FORM_TYPES = [
-  { value: 'MEDICAL_HISTORY', label: 'Medical History' },
-  { value: 'CONSENT', label: 'Consent Form' },
-  { value: 'INTAKE', label: 'Intake Form' },
-  { value: 'FEEDBACK', label: 'Feedback' },
-  { value: 'CUSTOM', label: 'Custom' },
-]
+const FORM_TYPE_VALUES = ['MEDICAL_HISTORY', 'CONSENT', 'INTAKE', 'FEEDBACK', 'CUSTOM'] as const
 
 function generateId() {
   return `field_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
@@ -57,6 +54,7 @@ function generateId() {
 
 export default function EditFormTemplatePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const t = useTranslations('settings.formBuilder')
   const router = useRouter()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -85,15 +83,19 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
         setFields(data.template.fields as FormField[])
         setSubmissionCount(data.template._count?.submissions || 0)
       } else {
-        toast.error('Template not found')
+        toast.error(t('notFound'))
         router.push('/settings/forms')
       }
     } catch {
-      toast.error('Failed to load template')
+      toast.error(t('loadFailed'))
     } finally {
       setLoading(false)
     }
   }
+
+  // Field type labels prefer the catalogue, falling back to the raw value.
+  const fieldTypeLabel = (value: string) =>
+    t.has(`fieldType.${value}`) ? t(`fieldType.${value}`) : value
 
   const addField = (fieldType: string) => {
     const newField: FormField = {
@@ -101,13 +103,13 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
       type: fieldType as FormField['type'],
       label:
         fieldType === 'heading'
-          ? 'Section Title'
+          ? t('defaultSectionTitle')
           : fieldType === 'paragraph'
-            ? 'Enter informational text here'
+            ? t('defaultParagraph')
             : '',
       required: false,
       options: ['select', 'radio', 'checkbox'].includes(fieldType)
-        ? ['Option 1', 'Option 2']
+        ? [t('defaultOption', { n: 1 }), t('defaultOption', { n: 2 })]
         : undefined,
     }
     setFields((prev) => [...prev, newField])
@@ -134,7 +136,10 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
   const addOption = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)
     if (!field) return
-    const opts = [...(field.options || []), `Option ${(field.options?.length || 0) + 1}`]
+    const opts = [
+      ...(field.options || []),
+      t('defaultOption', { n: (field.options?.length || 0) + 1 }),
+    ]
     updateField(fieldId, { options: opts })
   }
 
@@ -155,11 +160,11 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error('Template name is required')
+      toast.error(t('nameRequired'))
       return
     }
     if (fields.length === 0) {
-      toast.error('Add at least one field')
+      toast.error(t('fieldRequired'))
       return
     }
 
@@ -172,12 +177,12 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
       })
       const data = await res.json()
       if (res.ok) {
-        toast.success('Template updated')
+        toast.success(t('updatedSuccess'))
       } else {
-        toast.error(data.error || 'Failed to save')
+        toast.error(data.error || t('saveFailed'))
       }
     } catch {
-      toast.error('Failed to save template')
+      toast.error(t('saveFailedCatch'))
     } finally {
       setSaving(false)
     }
@@ -200,12 +205,12 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Preview: {name}</h1>
-              <p className="text-muted-foreground">This is how the form will appear to patients</p>
+              <h1 className="text-2xl font-bold">{t('previewTitle', { name })}</h1>
+              <p className="text-muted-foreground">{t('previewSubtitle')}</p>
             </div>
           </div>
           <Button variant="outline" onClick={() => setShowPreview(false)}>
-            Back to Editor
+            {t('backToEditor')}
           </Button>
         </div>
         <Card>
@@ -216,8 +221,8 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
           <CardContent>
             <FormRenderer
               fields={fields}
-              onSubmit={() => toast.info('Preview mode — form not submitted')}
-              submitLabel="Submit (Preview)"
+              onSubmit={() => toast.info(t('previewNotSubmitted'))}
+              submitLabel={t('previewSubmitLabel')}
             />
           </CardContent>
         </Card>
@@ -233,16 +238,18 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Edit: {name}</h1>
+            <h1 className="text-2xl font-bold">{t('editTitle', { name })}</h1>
             <p className="text-muted-foreground">
-              {submissionCount} submission{submissionCount !== 1 ? 's' : ''}
+              {submissionCount !== 1
+                ? t('submissionPlural', { count: submissionCount })
+                : t('submissionSingular', { count: submissionCount })}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 mr-4">
             <Switch checked={isActive} onCheckedChange={setIsActive} />
-            <Label className="text-sm">{isActive ? 'Active' : 'Inactive'}</Label>
+            <Label className="text-sm">{isActive ? t('active') : t('inactive')}</Label>
           </div>
           <Button
             variant="outline"
@@ -250,7 +257,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
             disabled={fields.length === 0}
           >
             <Eye className="h-4 w-4 mr-2" />
-            Preview
+            {t('preview')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
@@ -258,7 +265,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            Save Changes
+            {t('saveChanges')}
           </Button>
         </div>
       </div>
@@ -267,24 +274,24 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Form Details</CardTitle>
+              <CardTitle>{t('formDetails')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Template Name *</Label>
+                  <Label htmlFor="name">{t('templateName')}</Label>
                   <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Form Type</Label>
+                  <Label>{t('formTypeLabel')}</Label>
                   <Select value={type} onValueChange={setType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {FORM_TYPES.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                      {FORM_TYPE_VALUES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {t(`formType.${value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -292,7 +299,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="desc">Description</Label>
+                <Label htmlFor="desc">{t('descriptionLabel')}</Label>
                 <Textarea
                   id="desc"
                   value={description}
@@ -305,13 +312,11 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
 
           <Card>
             <CardHeader>
-              <CardTitle>Form Fields ({fields.length})</CardTitle>
+              <CardTitle>{t('formFields', { count: fields.length })}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {fields.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No fields yet. Add fields from the panel on the right.
-                </div>
+                <div className="text-center py-8 text-muted-foreground">{t('noFields')}</div>
               )}
 
               {fields.map((field, index) => (
@@ -322,14 +327,14 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
                   <div className="flex items-center gap-2 mb-2">
                     <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
                     <Badge variant="outline" className="text-xs shrink-0">
-                      {FIELD_TYPES.find((t) => t.value === field.type)?.label || field.type}
+                      {fieldTypeLabel(field.type)}
                     </Badge>
                     <span className="font-medium text-sm truncate flex-1">
-                      {field.label || '(no label)'}
+                      {field.label || t('noLabel')}
                     </span>
                     {field.required && (
                       <Badge variant="destructive" className="text-xs">
-                        Required
+                        {t('required')}
                       </Badge>
                     )}
                     <div className="flex items-center gap-1 shrink-0">
@@ -374,7 +379,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
                     <div className="mt-3 pt-3 border-t space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <Label className="text-xs">Label</Label>
+                          <Label className="text-xs">{t('labelLabel')}</Label>
                           <Input
                             value={field.label}
                             onChange={(e) => updateField(field.id, { label: e.target.value })}
@@ -384,7 +389,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
                           field.type
                         ) && (
                           <div className="space-y-1">
-                            <Label className="text-xs">Placeholder</Label>
+                            <Label className="text-xs">{t('placeholderLabel')}</Label>
                             <Input
                               value={field.placeholder || ''}
                               onChange={(e) =>
@@ -397,7 +402,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
 
                       {field.options && (
                         <div className="space-y-2">
-                          <Label className="text-xs">Options</Label>
+                          <Label className="text-xs">{t('optionsLabel')}</Label>
                           {field.options.map((opt, oi) => (
                             <div key={oi} className="flex items-center gap-2">
                               <Input
@@ -417,7 +422,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
                             </div>
                           ))}
                           <Button variant="outline" size="sm" onClick={() => addOption(field.id)}>
-                            <Plus className="h-3 w-3 mr-1" /> Add Option
+                            <Plus className="h-3 w-3 mr-1" /> {t('addOption')}
                           </Button>
                         </div>
                       )}
@@ -430,7 +435,7 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
                               updateField(field.id, { required: checked })
                             }
                           />
-                          <Label className="text-xs">Required</Label>
+                          <Label className="text-xs">{t('required')}</Label>
                         </div>
                       )}
                     </div>
@@ -444,18 +449,18 @@ export default function EditFormTemplatePage({ params }: { params: Promise<{ id:
         <div>
           <Card className="sticky top-6">
             <CardHeader>
-              <CardTitle className="text-base">Add Field</CardTitle>
+              <CardTitle className="text-base">{t('addField')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {FIELD_TYPES.map((ft) => (
+              {FIELD_TYPE_VALUES.map((value) => (
                 <Button
-                  key={ft.value}
+                  key={value}
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => addField(ft.value)}
+                  onClick={() => addField(value)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  {ft.label}
+                  {t(`fieldType.${value}`)}
                 </Button>
               ))}
             </CardContent>

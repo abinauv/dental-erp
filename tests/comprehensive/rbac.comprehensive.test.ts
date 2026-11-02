@@ -6,9 +6,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 
-// Mock auth module
+// Mock auth module (Better Auth: web session via auth.api.getSession)
 vi.mock('@/lib/auth', () => ({
-  auth: vi.fn(),
+  auth: { api: { getSession: vi.fn() } },
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -30,7 +30,7 @@ import {
   generateToken,
 } from '@/lib/api-helpers'
 
-const mockAuth = vi.mocked(auth)
+const mockGetSession = vi.mocked(auth.api.getSession)
 const mockPrisma = vi.mocked(prisma)
 
 describe('RBAC - Role-Based Access Control', () => {
@@ -161,7 +161,7 @@ describe('RBAC - Role-Based Access Control', () => {
 
   describe('requireAuthAndRole Function', () => {
     it('should return error for unauthenticated requests', async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetSession.mockResolvedValue(null)
 
       const result = await requireAuthAndRole()
 
@@ -170,7 +170,7 @@ describe('RBAC - Role-Based Access Control', () => {
     })
 
     it('should return user data for authenticated requests', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: {
           id: 'user-123',
           role: 'ADMIN',
@@ -186,7 +186,7 @@ describe('RBAC - Role-Based Access Control', () => {
     })
 
     it('should enforce role restrictions when specified', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: {
           id: 'user-123',
           role: 'RECEPTIONIST',
@@ -200,7 +200,7 @@ describe('RBAC - Role-Based Access Control', () => {
     })
 
     it('should allow access when role is in allowed list', async () => {
-      mockAuth.mockResolvedValue({
+      mockGetSession.mockResolvedValue({
         user: {
           id: 'user-123',
           role: 'DOCTOR',

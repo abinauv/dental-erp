@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get today's attendance summary
 export async function GET(request: NextRequest) {
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
       staff: staffWithAttendance,
     })
   } catch (error) {
-    console.error("Error fetching today's attendance:", error)
+    logger.error({ err: error }, "Error fetching today's attendance:")
     return NextResponse.json({ error: "Failed to fetch today's attendance" }, { status: 500 })
   }
 }

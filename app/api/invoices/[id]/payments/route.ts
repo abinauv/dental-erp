@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generatePaymentNo } from '@/lib/billing-utils'
 import { PaymentMethod, PaymentStatus } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET - Get payments for an invoice
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       payments,
     })
   } catch (error) {
-    console.error('Error fetching payments:', error)
+    logger.error({ err: error }, 'Error fetching payments:')
     return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
   }
 }
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error recording payment:', error)
+    logger.error({ err: error }, 'Error recording payment:')
     return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
   }
 }

@@ -8,7 +8,7 @@
  * See docs/LOCALIZATION.md for the wider plan.
  */
 
-export const locales = ['en-IN', 'en-US'] as const
+export const locales = ['en-IN', 'en-US', 'de-DE'] as const
 
 export type Locale = (typeof locales)[number]
 
@@ -27,6 +27,7 @@ export interface LocaleDefaults {
 export const localeDefaults: Record<Locale, LocaleDefaults> = {
   'en-IN': { currency: 'INR', country: 'IN', timezone: 'Asia/Kolkata' },
   'en-US': { currency: 'USD', country: 'US', timezone: 'America/New_York' },
+  'de-DE': { currency: 'EUR', country: 'DE', timezone: 'Europe/Berlin' },
 }
 
 export function isSupportedLocale(value: string | null | undefined): value is Locale {

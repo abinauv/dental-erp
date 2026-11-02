@@ -1,9 +1,11 @@
 'use client'
 
 import { useRef, useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eraser, Undo2 } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface SignaturePadProps {
   onSignatureChange: (signature: string | null) => void
@@ -18,8 +20,10 @@ export function SignaturePad({
   initialSignature,
   width = 500,
   height = 200,
-  label = 'I agree to the terms and conditions above',
+  label,
 }: SignaturePadProps) {
+  const t = useTranslations('forms.signature')
+  const { formatDate } = useClinicFormatters()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [hasSignature, setHasSignature] = useState(false)
@@ -66,9 +70,9 @@ export function SignaturePad({
 
       ctx.fillStyle = '#9ca3af'
       ctx.font = '14px sans-serif'
-      ctx.fillText('Sign here', 20, height - 20)
+      ctx.fillText(t('signHere'), 20, height - 20)
     }
-  }, [width, height, initialSignature])
+  }, [width, height, initialSignature, t])
 
   const getPosition = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current
@@ -156,7 +160,7 @@ export function SignaturePad({
     ctx.stroke()
     ctx.fillStyle = '#9ca3af'
     ctx.font = '14px sans-serif'
-    ctx.fillText('Sign here', 20, height - 20)
+    ctx.fillText(t('signHere'), 20, height - 20)
 
     setHasSignature(false)
     setHistory([])
@@ -211,7 +215,7 @@ export function SignaturePad({
           disabled={history.length === 0}
         >
           <Undo2 className="h-4 w-4 mr-1" />
-          Undo
+          {t('undo')}
         </Button>
         <Button
           type="button"
@@ -221,7 +225,7 @@ export function SignaturePad({
           disabled={!hasSignature}
         >
           <Eraser className="h-4 w-4 mr-1" />
-          Clear
+          {t('clear')}
         </Button>
       </div>
       <div className="flex items-start gap-2">
@@ -234,12 +238,13 @@ export function SignaturePad({
           htmlFor="agree"
           className="text-sm text-muted-foreground leading-tight cursor-pointer"
         >
-          {label}
+          {label ?? t('agreeDefault')}
         </label>
       </div>
       <p className="text-xs text-muted-foreground">
-        Signed on:{' '}
-        {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+        {t('signedOn', {
+          date: formatDate(new Date(), { day: 'numeric', month: 'long', year: 'numeric' }),
+        })}
       </p>
     </div>
   )

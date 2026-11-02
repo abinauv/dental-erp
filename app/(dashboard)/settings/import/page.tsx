@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Upload,
   Columns3,
@@ -65,72 +66,44 @@ interface ImportResult {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
+// Step order + icons; the step titles live in the catalogue
+// (settings.import.step.*), keyed by the id below.
 const STEPS = [
-  { id: 1, title: 'Upload File', icon: Upload },
-  { id: 2, title: 'Map Columns', icon: Columns3 },
-  { id: 3, title: 'Preview & Edit', icon: Eye },
-  { id: 4, title: 'Validate', icon: CheckCircle2 },
-  { id: 5, title: 'Confirm Import', icon: DatabaseZap },
+  { id: 1, key: 'upload', icon: Upload },
+  { id: 2, key: 'map', icon: Columns3 },
+  { id: 3, key: 'preview', icon: Eye },
+  { id: 4, key: 'validate', icon: CheckCircle2 },
+  { id: 5, key: 'confirm', icon: DatabaseZap },
 ]
 
+// Entity choices + presentation; label/desc come from the catalogue
+// (settings.import.entity.<key>).
 const ENTITY_OPTIONS = [
-  {
-    key: 'patients',
-    label: 'Patients',
-    desc: 'Demographics, contact info',
-    icon: Users,
-    color: 'text-blue-600 bg-blue-50',
-  },
-  {
-    key: 'staff',
-    label: 'Staff',
-    desc: 'Doctors, nurses, admin',
-    icon: UserCog,
-    color: 'text-purple-600 bg-purple-50',
-  },
-  {
-    key: 'appointments',
-    label: 'Appointments',
-    desc: 'Scheduled visits',
-    icon: CalendarDays,
-    color: 'text-green-600 bg-green-50',
-  },
-  {
-    key: 'treatments',
-    label: 'Treatments',
-    desc: 'Procedures & records',
-    icon: Stethoscope,
-    color: 'text-red-600 bg-red-50',
-  },
-  {
-    key: 'invoices',
-    label: 'Invoices',
-    desc: 'Bills & amounts',
-    icon: Receipt,
-    color: 'text-orange-600 bg-orange-50',
-  },
-  {
-    key: 'payments',
-    label: 'Payments',
-    desc: 'Payment transactions',
-    icon: CreditCard,
-    color: 'text-indigo-600 bg-indigo-50',
-  },
-  {
-    key: 'inventory',
-    label: 'Inventory',
-    desc: 'Stock items & levels',
-    icon: Package,
-    color: 'text-teal-600 bg-teal-50',
-  },
+  { key: 'patients', icon: Users, color: 'text-blue-600 bg-blue-50' },
+  { key: 'staff', icon: UserCog, color: 'text-purple-600 bg-purple-50' },
+  { key: 'appointments', icon: CalendarDays, color: 'text-green-600 bg-green-50' },
+  { key: 'treatments', icon: Stethoscope, color: 'text-red-600 bg-red-50' },
+  { key: 'invoices', icon: Receipt, color: 'text-orange-600 bg-orange-50' },
+  { key: 'payments', icon: CreditCard, color: 'text-indigo-600 bg-indigo-50' },
+  { key: 'inventory', icon: Package, color: 'text-teal-600 bg-teal-50' },
 ]
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 export default function DataImportPage() {
+  const t = useTranslations('settings.import')
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // User-facing entity label: prefer the catalogue, fall back to the schema's
+  // own label or the raw key.
+  const entityLabel = (key: string) =>
+    key && t.has(`entity.${key}.label`)
+      ? t(`entity.${key}.label`)
+      : key
+        ? ENTITY_SCHEMAS[key]?.label || key
+        : ''
 
   // Wizard state
   const [step, setStep] = useState(1)
@@ -173,22 +146,22 @@ export default function DataImportPage() {
       if (!['csv', 'xlsx', 'xls', 'pdf'].includes(ext || '')) {
         toast({
           variant: 'destructive',
-          title: 'Unsupported file',
-          description: 'Please use CSV, Excel, or PDF files.',
+          title: t('unsupportedTitle'),
+          description: t('unsupportedDesc'),
         })
         return
       }
       if (file.size > 20 * 1024 * 1024) {
         toast({
           variant: 'destructive',
-          title: 'File too large',
-          description: 'Maximum file size is 20MB.',
+          title: t('tooLargeTitle'),
+          description: t('tooLargeDesc'),
         })
         return
       }
       setSelectedFile(file)
     },
-    [toast]
+    [toast, t]
   )
 
   const handleUpload = async () => {
@@ -201,7 +174,7 @@ export default function DataImportPage() {
 
       const res = await fetch('/api/data-import/upload', { method: 'POST', body: fd })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      if (!res.ok) throw new Error(data.error || t('uploadFailed'))
 
       setJobId(data.jobId)
       setSourceColumns(data.columns)
@@ -212,7 +185,7 @@ export default function DataImportPage() {
       // Auto-trigger AI mapping
       await runAiMapping(data.jobId)
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Upload Failed', description: err.message })
+      toast({ variant: 'destructive', title: t('uploadFailedTitle'), description: err.message })
     } finally {
       setLoading(false)
     }
@@ -231,7 +204,7 @@ export default function DataImportPage() {
         body: JSON.stringify({ jobId: jId }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Mapping failed')
+      if (!res.ok) throw new Error(data.error || t('mappingFailed'))
 
       setMapping(data.mapping || {})
       setConfidence(data.confidence || {})
@@ -314,10 +287,10 @@ export default function DataImportPage() {
         body: JSON.stringify({ jobId, mapping, editedRows }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Validation failed')
+      if (!res.ok) throw new Error(data.error || t('validationFailed'))
       setValidation(data)
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Validation Failed', description: err.message })
+      toast({ variant: 'destructive', title: t('validationFailedTitle'), description: err.message })
     } finally {
       setLoading(false)
     }
@@ -336,10 +309,10 @@ export default function DataImportPage() {
         body: JSON.stringify({ jobId, mapping, editedRows, skipErrorRows }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Import failed')
+      if (!res.ok) throw new Error(data.error || t('importFailedError'))
       setImportResult(data)
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Import Failed', description: err.message })
+      toast({ variant: 'destructive', title: t('importFailedTitle'), description: err.message })
     } finally {
       setLoading(false)
     }
@@ -376,11 +349,9 @@ export default function DataImportPage() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Upload className="h-6 w-6 text-emerald-600" />
-          Data Import
+          {t('title')}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Import data from your previous ERP system using CSV, Excel, or PDF files
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">{t('subtitle')}</p>
       </div>
 
       {/* Step indicator */}
@@ -405,7 +376,7 @@ export default function DataImportPage() {
                 )}
               >
                 {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                <span className="hidden sm:inline">{s.title}</span>
+                <span className="hidden sm:inline">{t(`step.${s.key}`)}</span>
               </div>
             </div>
           )
@@ -420,15 +391,13 @@ export default function DataImportPage() {
         {step === 1 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold mb-1">Select data type and upload file</h2>
-              <p className="text-sm text-muted-foreground">
-                Choose what type of data you're importing, then upload your file.
-              </p>
+              <h2 className="text-lg font-semibold mb-1">{t('step1Heading')}</h2>
+              <p className="text-sm text-muted-foreground">{t('step1Sub')}</p>
             </div>
 
             {/* Entity selection */}
             <div>
-              <label className="text-sm font-medium mb-3 block">What are you importing?</label>
+              <label className="text-sm font-medium mb-3 block">{t('whatImporting')}</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {ENTITY_OPTIONS.map((opt) => {
                   const Icon = opt.icon
@@ -452,8 +421,8 @@ export default function DataImportPage() {
                       >
                         <Icon className="h-4 w-4" />
                       </div>
-                      <p className="text-sm font-medium">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                      <p className="text-sm font-medium">{t(`entity.${opt.key}.label`)}</p>
+                      <p className="text-xs text-muted-foreground">{t(`entity.${opt.key}.desc`)}</p>
                     </button>
                   )
                 })}
@@ -463,7 +432,7 @@ export default function DataImportPage() {
             {/* File upload */}
             {entityType && (
               <div>
-                <label className="text-sm font-medium mb-3 block">Upload file</label>
+                <label className="text-sm font-medium mb-3 block">{t('uploadFileLabel')}</label>
                 <div
                   className={cn(
                     'border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
@@ -502,7 +471,7 @@ export default function DataImportPage() {
                       <div className="text-left">
                         <p className="text-sm font-medium">{selectedFile.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {(selectedFile.size / 1024).toFixed(1)} KB — Click to change
+                          {t('kbChange', { kb: (selectedFile.size / 1024).toFixed(1) })}
                         </p>
                       </div>
                       <button
@@ -518,10 +487,8 @@ export default function DataImportPage() {
                   ) : (
                     <>
                       <Upload className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                      <p className="text-sm font-medium">Drop your file here or click to browse</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Supports CSV, Excel (.xlsx/.xls), and PDF — Max 20MB
-                      </p>
+                      <p className="text-sm font-medium">{t('dropHere')}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('supports')}</p>
                     </>
                   )}
                 </div>
@@ -530,10 +497,7 @@ export default function DataImportPage() {
                 {selectedFile?.name.toLowerCase().endsWith('.pdf') && (
                   <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-amber-800 dark:text-amber-300">
-                      PDF table extraction is best-effort. For most reliable results, export your
-                      data as CSV or Excel from your old system.
-                    </p>
+                    <p className="text-xs text-amber-800 dark:text-amber-300">{t('pdfWarning')}</p>
                   </div>
                 )}
               </div>
@@ -551,7 +515,7 @@ export default function DataImportPage() {
                 ) : (
                   <ChevronRight className="h-4 w-4" />
                 )}
-                Upload & Continue
+                {t('uploadContinue')}
               </button>
             </div>
           </div>
@@ -563,10 +527,10 @@ export default function DataImportPage() {
         {step === 2 && schema && (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-1">Map columns to {schema.label} fields</h2>
-              <p className="text-sm text-muted-foreground">
-                AI has suggested mappings below. Review and adjust as needed.
-              </p>
+              <h2 className="text-lg font-semibold mb-1">
+                {t('step2Heading', { label: entityLabel(entityType) })}
+              </h2>
+              <p className="text-sm text-muted-foreground">{t('step2Sub')}</p>
             </div>
 
             {aiError && (
@@ -581,7 +545,7 @@ export default function DataImportPage() {
                 <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs font-medium text-red-800 dark:text-red-300">
-                    Required fields not yet mapped:
+                    {t('requiredNotMapped')}
                   </p>
                   <p className="text-xs text-red-700 dark:text-red-400">
                     {unmappedRequired.join(', ')}
@@ -594,11 +558,11 @@ export default function DataImportPage() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200">
                 <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-blue-800 dark:text-blue-300">
-                  AI detected columns that may need splitting:{' '}
-                  {splitFields
-                    .map((s: any) => `"${s.sourceColumn}" → ${s.targetFields.join(' + ')}`)
-                    .join('; ')}
-                  . Name splitting will be handled automatically during import.
+                  {t('splitDetected', {
+                    list: splitFields
+                      .map((s: any) => `"${s.sourceColumn}" → ${s.targetFields.join(' + ')}`)
+                      .join('; '),
+                  })}
                 </p>
               </div>
             )}
@@ -606,19 +570,19 @@ export default function DataImportPage() {
             {loading ? (
               <div className="flex items-center justify-center py-12 gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  AI is analyzing your columns...
-                </span>
+                <span className="text-sm text-muted-foreground">{t('analyzing')}</span>
               </div>
             ) : (
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/50 border-b">
-                      <th className="text-left px-4 py-2.5 font-medium">Source Column</th>
-                      <th className="text-left px-4 py-2.5 font-medium">Sample Value</th>
-                      <th className="text-left px-4 py-2.5 font-medium">Maps To</th>
-                      <th className="px-4 py-2.5 font-medium w-16 text-center">Confidence</th>
+                      <th className="text-left px-4 py-2.5 font-medium">{t('colSource')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium">{t('colSample')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium">{t('colMapsTo')}</th>
+                      <th className="px-4 py-2.5 font-medium w-16 text-center">
+                        {t('colConfidence')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -638,7 +602,7 @@ export default function DataImportPage() {
                               onChange={(e) => updateMapping(col, e.target.value || null)}
                               className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary"
                             >
-                              <option value="">— Skip this column —</option>
+                              <option value="">{t('skipColumn')}</option>
                               {schema.fields.map((f) => (
                                 <option
                                   key={f.name}
@@ -661,7 +625,7 @@ export default function DataImportPage() {
                                       ? 'bg-yellow-500'
                                       : 'bg-red-500'
                                 )}
-                                title={`${Math.round(conf * 100)}% confidence`}
+                                title={t('confidenceTitle', { pct: Math.round(conf * 100) })}
                               />
                             ) : (
                               <span className="text-muted-foreground">—</span>
@@ -680,7 +644,7 @@ export default function DataImportPage() {
                 onClick={() => setStep(1)}
                 className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
               >
-                <ChevronLeft className="h-4 w-4" /> Back
+                <ChevronLeft className="h-4 w-4" /> {t('back')}
               </button>
               <button
                 onClick={() => {
@@ -690,7 +654,7 @@ export default function DataImportPage() {
                 disabled={loading || unmappedRequired.length > 0}
                 className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:opacity-90 flex items-center gap-2"
               >
-                Preview Data <ChevronRight className="h-4 w-4" />
+                {t('previewDataBtn')} <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -702,10 +666,9 @@ export default function DataImportPage() {
         {step === 3 && schema && (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-1">Preview mapped data</h2>
+              <h2 className="text-lg font-semibold mb-1">{t('step3Heading')}</h2>
               <p className="text-sm text-muted-foreground">
-                Showing first {Math.min(previewData.length, 5)} of {totalRows} rows. Click any cell
-                to edit.
+                {t('step3Sub', { shown: Math.min(previewData.length, 5), total: totalRows })}
               </p>
             </div>
 
@@ -758,7 +721,7 @@ export default function DataImportPage() {
                 onClick={() => setStep(2)}
                 className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
               >
-                <ChevronLeft className="h-4 w-4" /> Back to Mapping
+                <ChevronLeft className="h-4 w-4" /> {t('backToMapping')}
               </button>
               <button
                 onClick={() => {
@@ -767,7 +730,7 @@ export default function DataImportPage() {
                 }}
                 className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 flex items-center gap-2"
               >
-                Validate All <ChevronRight className="h-4 w-4" />
+                {t('validateAll')} <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -779,17 +742,15 @@ export default function DataImportPage() {
         {step === 4 && (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-1">Validation Results</h2>
-              <p className="text-sm text-muted-foreground">
-                Review validation results before importing.
-              </p>
+              <h2 className="text-lg font-semibold mb-1">{t('step4Heading')}</h2>
+              <p className="text-sm text-muted-foreground">{t('step4Sub')}</p>
             </div>
 
             {loading ? (
               <div className="flex items-center justify-center py-12 gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <span className="text-sm text-muted-foreground">
-                  Validating {totalRows} rows...
+                  {t('validatingRows', { total: totalRows })}
                 </span>
               </div>
             ) : validation ? (
@@ -798,19 +759,19 @@ export default function DataImportPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="border rounded-lg p-3">
                     <p className="text-2xl font-bold">{validation.totalRows}</p>
-                    <p className="text-xs text-muted-foreground">Total Rows</p>
+                    <p className="text-xs text-muted-foreground">{t('totalRows')}</p>
                   </div>
                   <div className="border rounded-lg p-3 border-green-200 bg-green-50/50 dark:bg-green-950/20">
                     <p className="text-2xl font-bold text-green-600">{validation.validRows}</p>
-                    <p className="text-xs text-muted-foreground">Valid Rows</p>
+                    <p className="text-xs text-muted-foreground">{t('validRows')}</p>
                   </div>
                   <div className="border rounded-lg p-3 border-red-200 bg-red-50/50 dark:bg-red-950/20">
                     <p className="text-2xl font-bold text-red-600">{validation.errorCount}</p>
-                    <p className="text-xs text-muted-foreground">Errors</p>
+                    <p className="text-xs text-muted-foreground">{t('errors')}</p>
                   </div>
                   <div className="border rounded-lg p-3 border-yellow-200 bg-yellow-50/50 dark:bg-yellow-950/20">
                     <p className="text-2xl font-bold text-yellow-600">{validation.warningCount}</p>
-                    <p className="text-xs text-muted-foreground">Warnings</p>
+                    <p className="text-xs text-muted-foreground">{t('warnings')}</p>
                   </div>
                 </div>
 
@@ -819,17 +780,19 @@ export default function DataImportPage() {
                   (validation.foreignKeyResolution.resolved > 0 ||
                     validation.foreignKeyResolution.unresolved.length > 0) && (
                     <div className="border rounded-lg p-4">
-                      <h3 className="text-sm font-medium mb-2">Reference Resolution</h3>
+                      <h3 className="text-sm font-medium mb-2">{t('referenceResolution')}</h3>
                       <p className="text-xs text-muted-foreground">
-                        {validation.foreignKeyResolution.resolved} references resolved successfully.
+                        {t('resolvedMsg', { resolved: validation.foreignKeyResolution.resolved })}
                         {validation.foreignKeyResolution.unresolved.length > 0 &&
-                          ` ${validation.foreignKeyResolution.unresolved.length} could not be resolved.`}
+                          t('unresolvedMsg', {
+                            count: validation.foreignKeyResolution.unresolved.length,
+                          })}
                       </p>
                       {validation.foreignKeyResolution.unresolved.length > 0 && (
                         <div className="mt-2 max-h-32 overflow-auto">
                           {validation.foreignKeyResolution.unresolved.slice(0, 10).map((u, i) => (
                             <p key={i} className="text-xs text-red-600">
-                              Row {u.row}: {u.field} = "{u.value}" not found
+                              {t('notFoundRow', { row: u.row, field: u.field, value: u.value })}
                             </p>
                           ))}
                         </div>
@@ -841,8 +804,9 @@ export default function DataImportPage() {
                 {validation.errors.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-sm font-medium mb-2">
-                      Issues ({validation.errors.length}
-                      {validation.errors.length >= 200 ? '+' : ''})
+                      {t('issues', {
+                        count: `${validation.errors.length}${validation.errors.length >= 200 ? '+' : ''}`,
+                      })}
                     </h3>
                     <div className="max-h-48 overflow-auto space-y-1">
                       {validation.errors.slice(0, 50).map((e, i) => (
@@ -855,7 +819,9 @@ export default function DataImportPage() {
                               : 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400'
                           )}
                         >
-                          <span className="font-mono shrink-0">Row {e.row}</span>
+                          <span className="font-mono shrink-0">
+                            {t('rowLabel', { row: e.row })}
+                          </span>
                           <span className="font-medium shrink-0">{e.field}:</span>
                           <span>{e.message}</span>
                         </div>
@@ -873,7 +839,7 @@ export default function DataImportPage() {
                       onChange={(e) => setSkipErrorRows(e.target.checked)}
                       className="rounded border-muted-foreground/30"
                     />
-                    Skip {validation.errorCount} rows with errors and import the rest
+                    {t('skipErrorRows', { count: validation.errorCount })}
                   </label>
                 )}
               </>
@@ -884,14 +850,14 @@ export default function DataImportPage() {
                 onClick={() => setStep(3)}
                 className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
               >
-                <ChevronLeft className="h-4 w-4" /> Edit Data
+                <ChevronLeft className="h-4 w-4" /> {t('editData')}
               </button>
               <button
                 onClick={() => setStep(5)}
                 disabled={loading || !validation || (validation.errorCount > 0 && !skipErrorRows)}
                 className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40 hover:opacity-90 flex items-center gap-2"
               >
-                Proceed to Import <ChevronRight className="h-4 w-4" />
+                {t('proceedImport')} <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -905,30 +871,30 @@ export default function DataImportPage() {
             {!importResult ? (
               <>
                 <div>
-                  <h2 className="text-lg font-semibold mb-1">Confirm Import</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Review the summary below and confirm to start the import.
-                  </p>
+                  <h2 className="text-lg font-semibold mb-1">{t('confirmHeading')}</h2>
+                  <p className="text-sm text-muted-foreground">{t('confirmSub')}</p>
                 </div>
 
                 <div className="border rounded-lg p-6 max-w-lg mx-auto space-y-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-muted-foreground">Data Type</p>
-                      <p className="font-medium">{schema?.label}</p>
+                      <p className="text-muted-foreground">{t('dataType')}</p>
+                      <p className="font-medium">{entityLabel(entityType)}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">File</p>
+                      <p className="text-muted-foreground">{t('fileLabel')}</p>
                       <p className="font-medium truncate">{selectedFile?.name}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Total Rows</p>
+                      <p className="text-muted-foreground">{t('totalRows')}</p>
                       <p className="font-medium">{totalRows}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Will Import</p>
+                      <p className="text-muted-foreground">{t('willImport')}</p>
                       <p className="font-medium text-green-600">
-                        {skipErrorRows ? (validation?.validRows ?? totalRows) : totalRows} records
+                        {t('willImportCount', {
+                          count: skipErrorRows ? (validation?.validRows ?? totalRows) : totalRows,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -937,9 +903,8 @@ export default function DataImportPage() {
                     <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200">
                       <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                       <p className="text-xs text-amber-800 dark:text-amber-300">
-                        This will create new {schema?.label.toLowerCase()} records in your database.
-                        {schema?.entityType === 'staff' &&
-                          ' Imported staff will receive temporary passwords and must change them on first login.'}
+                        {t('createWarning', { label: entityLabel(entityType).toLowerCase() })}
+                        {schema?.entityType === 'staff' && t('staffWarning')}
                       </p>
                     </div>
                   </div>
@@ -952,12 +917,12 @@ export default function DataImportPage() {
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Importing... Please wait
+                        {t('importing')}
                       </>
                     ) : (
                       <>
                         <DatabaseZap className="h-4 w-4" />
-                        Confirm & Import Data
+                        {t('confirmImportBtn')}
                       </>
                     )}
                   </button>
@@ -968,7 +933,7 @@ export default function DataImportPage() {
                     onClick={() => setStep(4)}
                     className="rounded-lg border px-4 py-2 text-sm flex items-center gap-1 hover:bg-muted"
                   >
-                    <ChevronLeft className="h-4 w-4" /> Back
+                    <ChevronLeft className="h-4 w-4" /> {t('back')}
                   </button>
                 </div>
               </>
@@ -981,10 +946,14 @@ export default function DataImportPage() {
                       <CheckCircle2 className="h-8 w-8 text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">Import Complete!</h2>
+                      <h2 className="text-xl font-semibold">{t('importComplete')}</h2>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {importResult.imported} {schema?.label.toLowerCase()} imported successfully.
-                        {importResult.skipped > 0 && ` ${importResult.skipped} rows skipped.`}
+                        {t('importedMsg', {
+                          count: importResult.imported,
+                          label: entityLabel(entityType).toLowerCase(),
+                        })}
+                        {importResult.skipped > 0 &&
+                          t('skippedMsg', { count: importResult.skipped })}
                       </p>
                     </div>
                   </>
@@ -994,9 +963,12 @@ export default function DataImportPage() {
                       <X className="h-8 w-8 text-red-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">Import Failed</h2>
+                      <h2 className="text-xl font-semibold">{t('importFailedHeading')}</h2>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {importResult.imported} imported, {importResult.skipped} failed.
+                        {t('importFailedMsg', {
+                          imported: importResult.imported,
+                          skipped: importResult.skipped,
+                        })}
                       </p>
                     </div>
                   </>
@@ -1006,25 +978,25 @@ export default function DataImportPage() {
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="border rounded-lg p-3">
                     <p className="text-lg font-bold">{importResult.totalRows}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-xs text-muted-foreground">{t('total')}</p>
                   </div>
                   <div className="border rounded-lg p-3 border-green-200">
                     <p className="text-lg font-bold text-green-600">{importResult.imported}</p>
-                    <p className="text-xs text-muted-foreground">Imported</p>
+                    <p className="text-xs text-muted-foreground">{t('imported')}</p>
                   </div>
                   <div className="border rounded-lg p-3 border-red-200">
                     <p className="text-lg font-bold text-red-600">{importResult.skipped}</p>
-                    <p className="text-xs text-muted-foreground">Skipped</p>
+                    <p className="text-xs text-muted-foreground">{t('skipped')}</p>
                   </div>
                 </div>
 
                 {importResult.errors.length > 0 && (
                   <div className="border rounded-lg p-4 text-left">
-                    <h3 className="text-sm font-medium mb-2">Error Log</h3>
+                    <h3 className="text-sm font-medium mb-2">{t('errorLog')}</h3>
                     <div className="max-h-40 overflow-auto space-y-1">
                       {importResult.errors.map((e, i) => (
                         <p key={i} className="text-xs text-red-600">
-                          Row {e.row}: {e.message}
+                          {t('errorRow', { row: e.row, message: e.message })}
                         </p>
                       ))}
                     </div>
@@ -1036,13 +1008,14 @@ export default function DataImportPage() {
                     onClick={resetWizard}
                     className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
                   >
-                    Import Another File
+                    {t('importAnother')}
                   </button>
                   <a
                     href={`/${entityType === 'inventory' ? 'inventory' : entityType}`}
                     className="rounded-lg border px-6 py-2.5 text-sm font-medium hover:bg-muted inline-flex items-center gap-1"
                   >
-                    View {schema?.label} <ChevronRight className="h-4 w-4" />
+                    {t('viewEntity', { label: entityLabel(entityType) })}{' '}
+                    <ChevronRight className="h-4 w-4" />
                   </a>
                 </div>
               </div>

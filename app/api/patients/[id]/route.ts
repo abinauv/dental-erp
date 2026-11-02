@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import { logger } from '@/lib/logger'
 
 // GET /api/patients/[id] - Get a specific patient with all details
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       patient,
     })
   } catch (error: any) {
-    console.error('Error fetching patient:', error)
+    logger.error({ err: error }, 'Error fetching patient:')
     return NextResponse.json({ error: error.message || 'Failed to fetch patient' }, { status: 500 })
   }
 }
@@ -156,7 +157,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       patient,
     })
   } catch (error: any) {
-    console.error('Error updating patient:', error)
+    logger.error({ err: error }, 'Error updating patient:')
     return NextResponse.json(
       { error: error.message || 'Failed to update patient' },
       { status: 500 }
@@ -207,7 +208,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       message: 'Patient deactivated successfully',
     })
   } catch (error: any) {
-    console.error('Error deleting patient:', error)
+    logger.error({ err: error }, 'Error deleting patient:')
     return NextResponse.json(
       { error: error.message || 'Failed to delete patient' },
       { status: 500 }

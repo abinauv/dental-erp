@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { smsService } from '@/lib/services/sms.service'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const bulkSMSSchema = z.object({
   recipients: z
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
       results,
     })
   } catch (error: any) {
-    console.error('Bulk SMS send error:', error)
+    logger.error({ err: error }, 'Bulk SMS send error:')
     return NextResponse.json({ error: error.message || 'Failed to send bulk SMS' }, { status: 500 })
   }
 }

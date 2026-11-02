@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import { Gift, Plus, Minus, Search, TrendingUp, Star, ArrowLeft, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,22 +58,19 @@ interface Pagination {
 
 type PointType = 'VISIT' | 'REFERRAL' | 'TREATMENT' | 'BIRTHDAY' | 'SIGNUP' | 'REDEMPTION'
 
-const AWARD_TYPES: { value: PointType; label: string }[] = [
-  { value: 'VISIT', label: 'Visit' },
-  { value: 'REFERRAL', label: 'Referral' },
-  { value: 'TREATMENT', label: 'Treatment' },
-  { value: 'BIRTHDAY', label: 'Birthday' },
-  { value: 'SIGNUP', label: 'Sign-up' },
-]
+// Values only — the display labels live in the `crm.loyalty.type` catalogue,
+// resolved at render. REDEMPTION is awarded only via the redeem action, so it
+// is absent from the award list but present in the log filter.
+const AWARD_TYPE_VALUES: PointType[] = ['VISIT', 'REFERRAL', 'TREATMENT', 'BIRTHDAY', 'SIGNUP']
 
-const ALL_TYPES: { value: PointType | 'ALL'; label: string }[] = [
-  { value: 'ALL', label: 'All Types' },
-  { value: 'VISIT', label: 'Visit' },
-  { value: 'REFERRAL', label: 'Referral' },
-  { value: 'TREATMENT', label: 'Treatment' },
-  { value: 'BIRTHDAY', label: 'Birthday' },
-  { value: 'SIGNUP', label: 'Sign-up' },
-  { value: 'REDEMPTION', label: 'Redemption' },
+const FILTER_TYPE_VALUES: (PointType | 'ALL')[] = [
+  'ALL',
+  'VISIT',
+  'REFERRAL',
+  'TREATMENT',
+  'BIRTHDAY',
+  'SIGNUP',
+  'REDEMPTION',
 ]
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
@@ -138,6 +137,8 @@ function usePatientSearch() {
 
 export default function LoyaltyPage() {
   const { toast } = useToast()
+  const t = useTranslations('crm.loyalty')
+  const { formatNumber, formatDate } = useClinicFormatters()
 
   // ---- Award state ----
   const awardSearch = usePatientSearch()
@@ -224,12 +225,12 @@ export default function LoyaltyPage() {
         setTransactions(data.transactions ?? [])
         setPagination(data.pagination ?? { page, limit: 20, total: 0, totalPages: 0 })
       } catch {
-        toast({ title: 'Failed to load transactions', variant: 'destructive' })
+        toast({ title: t('toast.loadError'), variant: 'destructive' })
       } finally {
         setLogLoading(false)
       }
     },
-    [filterType, toast]
+    [filterType, toast, t]
   )
 
   useEffect(() => {
@@ -242,12 +243,12 @@ export default function LoyaltyPage() {
   async function handleAward(e: React.FormEvent) {
     e.preventDefault()
     if (!awardPatient) {
-      toast({ title: 'Please select a patient', variant: 'destructive' })
+      toast({ title: t('toast.selectPatient'), variant: 'destructive' })
       return
     }
     const pts = parseInt(awardPoints)
     if (!pts || pts <= 0) {
-      toast({ title: 'Points must be a positive number', variant: 'destructive' })
+      toast({ title: t('toast.pointsPositive'), variant: 'destructive' })
       return
     }
 
@@ -260,16 +261,19 @@ export default function LoyaltyPage() {
           patientId: awardPatient.id,
           points: pts,
           type: awardType,
-          description: awardDesc || `${awardType} points awarded`,
+          description: awardDesc || t('award.defaultDescription', { type: t(`type.${awardType}`) }),
         }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(err.error || 'Failed to award points')
+        throw new Error(err.error || t('toast.awardError'))
       }
 
       toast({
-        title: `+${pts} points awarded to ${awardPatient.firstName} ${awardPatient.lastName}`,
+        title: t('toast.awarded', {
+          pts,
+          name: `${awardPatient.firstName} ${awardPatient.lastName}`,
+        }),
       })
 
       // Reset form
@@ -283,7 +287,7 @@ export default function LoyaltyPage() {
       // Refresh log
       fetchTransactions(1)
     } catch (error: any) {
-      toast({ title: error.message || 'Failed to award points', variant: 'destructive' })
+      toast({ title: error.message || t('toast.awardError'), variant: 'destructive' })
     } finally {
       setAwardSubmitting(false)
     }
@@ -295,16 +299,16 @@ export default function LoyaltyPage() {
   async function handleRedeem(e: React.FormEvent) {
     e.preventDefault()
     if (!redeemPatient) {
-      toast({ title: 'Please select a patient', variant: 'destructive' })
+      toast({ title: t('toast.selectPatient'), variant: 'destructive' })
       return
     }
     const pts = parseInt(redeemPoints)
     if (!pts || pts <= 0) {
-      toast({ title: 'Points must be a positive number', variant: 'destructive' })
+      toast({ title: t('toast.pointsPositive'), variant: 'destructive' })
       return
     }
     if (redeemBalance !== null && pts > redeemBalance) {
-      toast({ title: 'Insufficient points balance', variant: 'destructive' })
+      toast({ title: t('toast.insufficient'), variant: 'destructive' })
       return
     }
 
@@ -317,16 +321,19 @@ export default function LoyaltyPage() {
           patientId: redeemPatient.id,
           points: -pts,
           type: 'REDEMPTION',
-          description: redeemDesc || 'Points redeemed',
+          description: redeemDesc || t('redeem.defaultDescription'),
         }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(err.error || 'Failed to redeem points')
+        throw new Error(err.error || t('toast.redeemError'))
       }
 
       toast({
-        title: `-${pts} points redeemed for ${redeemPatient.firstName} ${redeemPatient.lastName}`,
+        title: t('toast.redeemed', {
+          pts,
+          name: `${redeemPatient.firstName} ${redeemPatient.lastName}`,
+        }),
       })
 
       // Reset form
@@ -339,7 +346,7 @@ export default function LoyaltyPage() {
       // Refresh log
       fetchTransactions(1)
     } catch (error: any) {
-      toast({ title: error.message || 'Failed to redeem points', variant: 'destructive' })
+      toast({ title: error.message || t('toast.redeemError'), variant: 'destructive' })
     } finally {
       setRedeemSubmitting(false)
     }
@@ -360,9 +367,9 @@ export default function LoyaltyPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Gift className="h-7 w-7 text-purple-500" />
-            Loyalty Points
+            {t('title')}
           </h1>
-          <p className="text-muted-foreground">Award, redeem, and track loyalty points</p>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -373,15 +380,15 @@ export default function LoyaltyPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5 text-green-600" />
-              Award Points
+              {t('award.title')}
             </CardTitle>
-            <CardDescription>Add loyalty points to a patient account</CardDescription>
+            <CardDescription>{t('award.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAward} className="space-y-4">
               {/* Patient search */}
               <div className="space-y-2">
-                <Label>Patient *</Label>
+                <Label>{t('award.patientLabel')}</Label>
                 {awardPatient ? (
                   <div className="flex items-center justify-between rounded-md border p-3">
                     <div>
@@ -393,10 +400,10 @@ export default function LoyaltyPage() {
                     <div className="flex items-center gap-3">
                       {awardBalance !== null && (
                         <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Balance</p>
+                          <p className="text-xs text-muted-foreground">{t('award.balance')}</p>
                           <p className="font-bold text-lg flex items-center gap-1">
                             <Star className="h-4 w-4 text-amber-500" />
-                            {awardBalance.toLocaleString()}
+                            {formatNumber(awardBalance)}
                           </p>
                         </div>
                       )}
@@ -410,7 +417,7 @@ export default function LoyaltyPage() {
                           awardSearch.clear()
                         }}
                       >
-                        Change
+                        {t('award.change')}
                       </Button>
                     </div>
                   </div>
@@ -418,7 +425,7 @@ export default function LoyaltyPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search patient by name or phone..."
+                      placeholder={t('award.searchPlaceholder')}
                       value={awardSearch.query}
                       onChange={(e) => awardSearch.search(e.target.value)}
                       onFocus={() => {
@@ -430,7 +437,9 @@ export default function LoyaltyPage() {
                       (awardSearch.results.length > 0 || awardSearch.searching) && (
                         <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
                           {awardSearch.searching ? (
-                            <div className="p-3 text-sm text-muted-foreground">Searching...</div>
+                            <div className="p-3 text-sm text-muted-foreground">
+                              {t('award.searching')}
+                            </div>
                           ) : (
                             awardSearch.results.map((p) => (
                               <button
@@ -454,12 +463,12 @@ export default function LoyaltyPage() {
 
               {/* Points */}
               <div className="space-y-2">
-                <Label htmlFor="awardPoints">Points *</Label>
+                <Label htmlFor="awardPoints">{t('award.pointsLabel')}</Label>
                 <Input
                   id="awardPoints"
                   type="number"
                   min="1"
-                  placeholder="Enter points to award"
+                  placeholder={t('award.pointsPlaceholder')}
                   value={awardPoints}
                   onChange={(e) => setAwardPoints(e.target.value)}
                   required
@@ -468,15 +477,15 @@ export default function LoyaltyPage() {
 
               {/* Type */}
               <div className="space-y-2">
-                <Label>Type *</Label>
+                <Label>{t('award.typeLabel')}</Label>
                 <Select value={awardType} onValueChange={(v) => setAwardType(v as PointType)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={t('award.typePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {AWARD_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
+                    {AWARD_TYPE_VALUES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {t(`type.${value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -485,10 +494,10 @@ export default function LoyaltyPage() {
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="awardDesc">Description</Label>
+                <Label htmlFor="awardDesc">{t('award.descriptionLabel')}</Label>
                 <Input
                   id="awardDesc"
-                  placeholder="Optional description"
+                  placeholder={t('award.descriptionPlaceholder')}
                   value={awardDesc}
                   onChange={(e) => setAwardDesc(e.target.value)}
                 />
@@ -498,12 +507,12 @@ export default function LoyaltyPage() {
                 {awardSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Awarding...
+                    {t('award.submitting')}
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2 h-4 w-4" />
-                    Award Points
+                    {t('award.submit')}
                   </>
                 )}
               </Button>
@@ -516,15 +525,15 @@ export default function LoyaltyPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Minus className="h-5 w-5 text-red-600" />
-              Redeem Points
+              {t('redeem.title')}
             </CardTitle>
-            <CardDescription>Redeem loyalty points from a patient account</CardDescription>
+            <CardDescription>{t('redeem.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRedeem} className="space-y-4">
               {/* Patient search */}
               <div className="space-y-2">
-                <Label>Patient *</Label>
+                <Label>{t('award.patientLabel')}</Label>
                 {redeemPatient ? (
                   <div className="flex items-center justify-between rounded-md border p-3">
                     <div>
@@ -536,10 +545,10 @@ export default function LoyaltyPage() {
                     <div className="flex items-center gap-3">
                       {redeemBalance !== null && (
                         <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Balance</p>
+                          <p className="text-xs text-muted-foreground">{t('award.balance')}</p>
                           <p className="font-bold text-lg flex items-center gap-1">
                             <Star className="h-4 w-4 text-amber-500" />
-                            {redeemBalance.toLocaleString()}
+                            {formatNumber(redeemBalance)}
                           </p>
                         </div>
                       )}
@@ -553,7 +562,7 @@ export default function LoyaltyPage() {
                           redeemSearch.clear()
                         }}
                       >
-                        Change
+                        {t('award.change')}
                       </Button>
                     </div>
                   </div>
@@ -561,7 +570,7 @@ export default function LoyaltyPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search patient by name or phone..."
+                      placeholder={t('award.searchPlaceholder')}
                       value={redeemSearch.query}
                       onChange={(e) => redeemSearch.search(e.target.value)}
                       onFocus={() => {
@@ -573,7 +582,9 @@ export default function LoyaltyPage() {
                       (redeemSearch.results.length > 0 || redeemSearch.searching) && (
                         <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
                           {redeemSearch.searching ? (
-                            <div className="p-3 text-sm text-muted-foreground">Searching...</div>
+                            <div className="p-3 text-sm text-muted-foreground">
+                              {t('award.searching')}
+                            </div>
                           ) : (
                             redeemSearch.results.map((p) => (
                               <button
@@ -598,23 +609,23 @@ export default function LoyaltyPage() {
               {/* Current balance highlight */}
               {redeemPatient && redeemBalance !== null && (
                 <div className="rounded-md bg-muted p-3 flex items-center justify-between">
-                  <span className="text-sm font-medium">Available Balance</span>
+                  <span className="text-sm font-medium">{t('redeem.availableBalance')}</span>
                   <span className="text-xl font-bold flex items-center gap-1">
                     <TrendingUp className="h-4 w-4 text-green-600" />
-                    {redeemBalance.toLocaleString()} pts
+                    {t('redeem.balancePts', { balance: formatNumber(redeemBalance) })}
                   </span>
                 </div>
               )}
 
               {/* Points */}
               <div className="space-y-2">
-                <Label htmlFor="redeemPoints">Points to Redeem *</Label>
+                <Label htmlFor="redeemPoints">{t('redeem.pointsLabel')}</Label>
                 <Input
                   id="redeemPoints"
                   type="number"
                   min="1"
                   max={redeemBalance ?? undefined}
-                  placeholder="Enter points to redeem"
+                  placeholder={t('redeem.pointsPlaceholder')}
                   value={redeemPoints}
                   onChange={(e) => setRedeemPoints(e.target.value)}
                   required
@@ -623,16 +634,16 @@ export default function LoyaltyPage() {
 
               {/* Type (fixed) */}
               <div className="space-y-2">
-                <Label>Type</Label>
-                <Input value="REDEMPTION" disabled />
+                <Label>{t('redeem.typeLabel')}</Label>
+                <Input value={t('type.REDEMPTION')} disabled />
               </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="redeemDesc">Description</Label>
+                <Label htmlFor="redeemDesc">{t('award.descriptionLabel')}</Label>
                 <Input
                   id="redeemDesc"
-                  placeholder="Optional description"
+                  placeholder={t('award.descriptionPlaceholder')}
                   value={redeemDesc}
                   onChange={(e) => setRedeemDesc(e.target.value)}
                 />
@@ -647,12 +658,12 @@ export default function LoyaltyPage() {
                 {redeemSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Redeeming...
+                    {t('redeem.submitting')}
                   </>
                 ) : (
                   <>
                     <Minus className="mr-2 h-4 w-4" />
-                    Redeem Points
+                    {t('redeem.submit')}
                   </>
                 )}
               </Button>
@@ -668,9 +679,9 @@ export default function LoyaltyPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-500" />
-                Transaction Log
+                {t('log.title')}
               </CardTitle>
-              <CardDescription>Recent loyalty point transactions</CardDescription>
+              <CardDescription>{t('log.description')}</CardDescription>
             </div>
             <div className="w-48">
               <Select
@@ -678,12 +689,12 @@ export default function LoyaltyPage() {
                 onValueChange={(v) => setFilterType(v as PointType | 'ALL')}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by type" />
+                  <SelectValue placeholder={t('log.filterPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {ALL_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+                  {FILTER_TYPE_VALUES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value === 'ALL' ? t('allTypes') : t(`type.${value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -701,7 +712,7 @@ export default function LoyaltyPage() {
           ) : transactions.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Gift className="mx-auto h-10 w-10 mb-3 opacity-40" />
-              <p>No transactions found</p>
+              <p>{t('log.empty')}</p>
             </div>
           ) : (
             <>
@@ -709,22 +720,18 @@ export default function LoyaltyPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Points</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead>{t('log.colDate')}</TableHead>
+                      <TableHead>{t('log.colPatient')}</TableHead>
+                      <TableHead>{t('log.colType')}</TableHead>
+                      <TableHead className="text-right">{t('log.colPoints')}</TableHead>
+                      <TableHead>{t('log.colDescription')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {transactions.map((tx) => (
                       <TableRow key={tx.id}>
                         <TableCell className="whitespace-nowrap text-sm">
-                          {new Date(tx.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
+                          {formatDate(tx.createdAt)}
                         </TableCell>
                         <TableCell className="font-medium">
                           {tx.patient
@@ -733,7 +740,7 @@ export default function LoyaltyPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={TYPE_BADGE_COLORS[tx.type] || ''}>
-                            {tx.type}
+                            {t.has(`type.${tx.type}`) ? t(`type.${tx.type}`) : tx.type}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-semibold">
@@ -756,7 +763,11 @@ export default function LoyaltyPage() {
               {pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
+                    {t('log.pageInfo', {
+                      page: pagination.page,
+                      totalPages: pagination.totalPages,
+                      total: pagination.total,
+                    })}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -765,7 +776,7 @@ export default function LoyaltyPage() {
                       disabled={pagination.page <= 1}
                       onClick={() => fetchTransactions(pagination.page - 1)}
                     >
-                      Previous
+                      {t('previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -773,7 +784,7 @@ export default function LoyaltyPage() {
                       disabled={pagination.page >= pagination.totalPages}
                       onClick={() => fetchTransactions(pagination.page + 1)}
                     >
-                      Next
+                      {t('next')}
                     </Button>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 // GET /api/payment-plans — List payment plans
 export async function GET(req: NextRequest) {
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (err) {
-    console.error('Error fetching payment plans:', err)
+    logger.error({ err }, 'Error fetching payment plans:')
     return NextResponse.json({ error: 'Failed to fetch payment plans' }, { status: 500 })
   }
 }
@@ -231,7 +232,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(plan, { status: 201 })
   } catch (err) {
-    console.error('Error creating payment plan:', err)
+    logger.error({ err }, 'Error creating payment plan:')
     return NextResponse.json({ error: 'Failed to create payment plan' }, { status: 500 })
   }
 }

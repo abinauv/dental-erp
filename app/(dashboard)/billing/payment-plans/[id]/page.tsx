@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -46,7 +47,7 @@ import {
   Ban,
   CreditCard,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Schedule {
   id: string
@@ -109,6 +110,15 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
   const router = useRouter()
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
+  const t = useTranslations('billing.planDetail')
+  const tPlanStatus = useTranslations('billing.planStatus')
+  const tInstStatus = useTranslations('billing.installmentStatus')
+  const tFreq = useTranslations('billing.frequency')
+  const tMethods = useTranslations('billing.paymentMethods')
+  const tCommon = useTranslations('common')
+  const { formatDate, formatCurrency: fc } = useClinicFormatters()
+  const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
+    fc(amount, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
   const [plan, setPlan] = useState<PlanDetail | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -136,7 +146,7 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       const data = await res.json()
       setPlan(data)
     } catch {
-      toast({ variant: 'destructive', title: 'Failed to load payment plan' })
+      toast({ variant: 'destructive', title: t('loadError') })
     } finally {
       setLoading(false)
     }
@@ -161,7 +171,7 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       setPayDialog(false)
       fetchPlan()
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Payment Failed', description: err.message })
+      toast({ variant: 'destructive', title: t('paymentFailed'), description: err.message })
     } finally {
       setPaying(false)
     }
@@ -177,11 +187,11 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: 'Payment plan cancelled' })
+      toast({ title: t('cancelled') })
       setCancelDialog(false)
       fetchPlan()
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message })
+      toast({ variant: 'destructive', title: t('errorTitle'), description: err.message })
     } finally {
       setCancelling(false)
     }
@@ -189,9 +199,9 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
 
   const handleWaive = async (scheduleId: string) => {
     const ok = await confirm({
-      title: 'Waive installment?',
-      description: "Waive this installment? The patient won't need to pay it.",
-      confirmLabel: 'Yes, proceed',
+      title: t('waiveTitle'),
+      description: t('waiveDesc'),
+      confirmLabel: t('waiveConfirm'),
     })
     if (!ok) return
     try {
@@ -202,10 +212,10 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: 'Installment waived' })
+      toast({ title: t('waived') })
       fetchPlan()
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message })
+      toast({ variant: 'destructive', title: t('errorTitle'), description: err.message })
     }
   }
 
@@ -218,17 +228,18 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
   }
 
   const statusBadge = (status: string) => {
+    const label = tPlanStatus.has(status) ? tPlanStatus(status) : status
     switch (status) {
       case 'ACTIVE':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Active</Badge>
+        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">{label}</Badge>
       case 'COMPLETED':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Completed</Badge>
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{label}</Badge>
       case 'DEFAULTED':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Defaulted</Badge>
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{label}</Badge>
       case 'CANCELLED':
-        return <Badge variant="secondary">Cancelled</Badge>
+        return <Badge variant="secondary">{label}</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{label}</Badge>
     }
   }
 
@@ -248,35 +259,22 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
   }
 
   const installmentBadge = (status: string) => {
+    const label = tInstStatus.has(status) ? tInstStatus(status) : status
     switch (status) {
       case 'PAID':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Paid</Badge>
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">{label}</Badge>
       case 'PENDING':
-        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">Pending</Badge>
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">{label}</Badge>
       case 'OVERDUE':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Overdue</Badge>
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{label}</Badge>
       case 'WAIVED':
-        return <Badge variant="secondary">Waived</Badge>
+        return <Badge variant="secondary">{label}</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{label}</Badge>
     }
   }
 
-  const frequencyLabel = (freq: string) => {
-    switch (freq) {
-      case 'WEEKLY':
-        return 'Weekly'
-      case 'BIWEEKLY':
-        return 'Bi-weekly'
-      case 'MONTHLY':
-        return 'Monthly'
-      default:
-        return freq
-    }
-  }
-
-  const formatCurrency = (amount: number) =>
-    `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  const frequencyLabel = (freq: string) => (tFreq.has(freq) ? tFreq(freq) : freq)
 
   if (loading) {
     return (
@@ -295,10 +293,10 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
   if (!plan) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Payment plan not found</p>
+        <p className="text-muted-foreground">{t('notFound')}</p>
         <Link href="/billing/payment-plans">
           <Button variant="outline" className="mt-4">
-            Back to Payment Plans
+            {t('backToPlans')}
           </Button>
         </Link>
       </div>
@@ -319,11 +317,11 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">Payment Plan</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
               {statusBadge(plan.status)}
             </div>
             <p className="text-muted-foreground">
-              {plan.patient.firstName} {plan.patient.lastName} — Invoice{' '}
+              {plan.patient.firstName} {plan.patient.lastName} — {t('invoiceLabel')}{' '}
               <Link
                 href={`/billing/invoices/${plan.invoice.id}`}
                 className="text-blue-600 hover:underline"
@@ -340,7 +338,7 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
             onClick={() => setCancelDialog(true)}
           >
             <Ban className="h-4 w-4 mr-2" />
-            Cancel Plan
+            {t('cancelPlan')}
           </Button>
         )}
       </div>
@@ -349,21 +347,21 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalAmount')}</CardTitle>
             <IndianRupee className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(plan.totalAmount)}</div>
             {plan.interestRate > 0 && (
               <p className="text-xs text-muted-foreground">
-                Includes {Number(plan.interestRate)}% interest
+                {t('includesInterest', { rate: Number(plan.interestRate) })}
               </p>
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('totalPaid')}</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -371,13 +369,13 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
               {formatCurrency(plan.totalPaid)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {plan.paidInstallments} of {plan.installments} installments
+              {t('installmentsOf', { paid: plan.paidInstallments, total: plan.installments })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Remaining</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('remaining')}</CardTitle>
             <CalendarClock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
@@ -385,24 +383,28 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
               {formatCurrency(plan.totalRemaining)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {plan.installments -
-                plan.paidInstallments -
-                plan.schedules.filter((s) => s.status === 'WAIVED').length}{' '}
-              remaining
+              {t('remainingCount', {
+                count:
+                  plan.installments -
+                  plan.paidInstallments -
+                  plan.schedules.filter((s) => s.status === 'WAIVED').length,
+              })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Next Due</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('nextDue')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {plan.nextDueDate ? format(new Date(plan.nextDueDate), 'dd MMM') : '—'}
+              {plan.nextDueDate ? formatDate(plan.nextDueDate, { year: undefined }) : '—'}
             </div>
             {plan.overdueInstallments > 0 && (
-              <p className="text-xs text-red-600">{plan.overdueInstallments} overdue</p>
+              <p className="text-xs text-red-600">
+                {t('overdue', { count: plan.overdueInstallments })}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -412,7 +414,7 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Payment Progress</span>
+            <span className="text-sm font-medium">{t('paymentProgress')}</span>
             <span className="text-sm text-muted-foreground">{Math.round(progressPercent)}%</span>
           </div>
           <div className="h-3 rounded-full bg-muted overflow-hidden">
@@ -425,11 +427,14 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
           </div>
           <div className="flex justify-between mt-2 text-xs text-muted-foreground">
             <span>
-              {plan.downPayment > 0 && `Down payment: ${formatCurrency(plan.downPayment)}`}
+              {plan.downPayment > 0 &&
+                t('downPaymentLabel', { amount: formatCurrency(plan.downPayment) })}
             </span>
             <span>
-              {frequencyLabel(plan.frequency)} — Started{' '}
-              {format(new Date(plan.startDate), 'dd MMM yyyy')}
+              {t('startedOn', {
+                frequency: frequencyLabel(plan.frequency),
+                date: formatDate(plan.startDate),
+              })}
             </span>
           </div>
         </CardContent>
@@ -440,26 +445,26 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
         {/* Patient Info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Patient Details</CardTitle>
+            <CardTitle className="text-base">{t('patientDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Name</span>
+              <span className="text-muted-foreground">{t('name')}</span>
               <span className="font-medium">
                 {plan.patient.firstName} {plan.patient.lastName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Patient ID</span>
+              <span className="text-muted-foreground">{t('patientId')}</span>
               <span>{plan.patient.patientId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Phone</span>
+              <span className="text-muted-foreground">{t('phone')}</span>
               <span>{plan.patient.phone}</span>
             </div>
             {plan.patient.email && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Email</span>
+                <span className="text-muted-foreground">{t('email')}</span>
                 <span>{plan.patient.email}</span>
               </div>
             )}
@@ -469,11 +474,11 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
         {/* Invoice Info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Invoice Details</CardTitle>
+            <CardTitle className="text-base">{t('invoiceDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Invoice No</span>
+              <span className="text-muted-foreground">{t('invoiceNo')}</span>
               <Link
                 href={`/billing/invoices/${plan.invoice.id}`}
                 className="text-blue-600 hover:underline font-medium"
@@ -482,15 +487,15 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
               </Link>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Invoice Total</span>
+              <span className="text-muted-foreground">{t('invoiceTotal')}</span>
               <span className="font-medium">{formatCurrency(plan.invoice.totalAmount)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Paid</span>
+              <span className="text-muted-foreground">{t('totalPaid')}</span>
               <span className="text-green-600">{formatCurrency(plan.invoice.paidAmount)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Balance</span>
+              <span className="text-muted-foreground">{t('balance')}</span>
               <span className="text-red-600">{formatCurrency(plan.invoice.balanceAmount)}</span>
             </div>
           </CardContent>
@@ -499,28 +504,28 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
         {/* Plan Terms */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Plan Terms</CardTitle>
+            <CardTitle className="text-base">{t('planTerms')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Frequency</span>
+              <span className="text-muted-foreground">{t('frequency')}</span>
               <span>{frequencyLabel(plan.frequency)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Installments</span>
+              <span className="text-muted-foreground">{t('installments')}</span>
               <span>{plan.installments}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Interest Rate</span>
+              <span className="text-muted-foreground">{t('interestRate')}</span>
               <span>{Number(plan.interestRate)}%</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Down Payment</span>
+              <span className="text-muted-foreground">{t('downPayment')}</span>
               <span>{formatCurrency(plan.downPayment)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Created</span>
-              <span>{format(new Date(plan.createdAt), 'dd MMM yyyy')}</span>
+              <span className="text-muted-foreground">{t('created')}</span>
+              <span>{formatDate(plan.createdAt)}</span>
             </div>
           </CardContent>
         </Card>
@@ -530,7 +535,7 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       {plan.notes && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Notes</CardTitle>
+            <CardTitle className="text-base">{t('notes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{plan.notes}</p>
@@ -541,21 +546,21 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       {/* Installment Schedule */}
       <Card>
         <CardHeader>
-          <CardTitle>Installment Schedule</CardTitle>
-          <CardDescription>Track and manage each installment payment</CardDescription>
+          <CardTitle>{t('schedule')}</CardTitle>
+          <CardDescription>{t('scheduleDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60px]">#</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Paid Date</TableHead>
-                <TableHead>Paid Amount</TableHead>
-                <TableHead>Payment Method</TableHead>
-                <TableHead className="w-[140px]">Actions</TableHead>
+                <TableHead>{t('cols.dueDate')}</TableHead>
+                <TableHead>{t('cols.amount')}</TableHead>
+                <TableHead>{t('cols.status')}</TableHead>
+                <TableHead>{t('cols.paidDate')}</TableHead>
+                <TableHead>{t('cols.paidAmount')}</TableHead>
+                <TableHead>{t('cols.paymentMethod')}</TableHead>
+                <TableHead className="w-[140px]">{t('cols.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -576,30 +581,34 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
                       <span className="font-medium">{schedule.installmentNo}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{format(new Date(schedule.dueDate), 'dd MMM yyyy')}</TableCell>
+                  <TableCell>{formatDate(schedule.dueDate)}</TableCell>
                   <TableCell className="font-medium">{formatCurrency(schedule.amount)}</TableCell>
                   <TableCell>{installmentBadge(schedule.status)}</TableCell>
-                  <TableCell>
-                    {schedule.paidDate ? format(new Date(schedule.paidDate), 'dd MMM yyyy') : '—'}
-                  </TableCell>
+                  <TableCell>{schedule.paidDate ? formatDate(schedule.paidDate) : '—'}</TableCell>
                   <TableCell>
                     {schedule.paidAmount ? formatCurrency(schedule.paidAmount) : '—'}
                   </TableCell>
-                  <TableCell>{schedule.payment?.paymentMethod || '—'}</TableCell>
+                  <TableCell>
+                    {schedule.payment?.paymentMethod
+                      ? tMethods.has(schedule.payment.paymentMethod)
+                        ? tMethods(schedule.payment.paymentMethod)
+                        : schedule.payment.paymentMethod
+                      : '—'}
+                  </TableCell>
                   <TableCell>
                     {(schedule.status === 'PENDING' || schedule.status === 'OVERDUE') &&
                       plan.status === 'ACTIVE' && (
                         <div className="flex gap-1">
                           <Button size="sm" onClick={() => openPayDialog(schedule)}>
                             <CreditCard className="h-3 w-3 mr-1" />
-                            Pay
+                            {t('pay')}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleWaive(schedule.id)}
                           >
-                            Waive
+                            {t('waive')}
                           </Button>
                         </div>
                       )}
@@ -615,12 +624,12 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       <Dialog open={payDialog} onOpenChange={setPayDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Record Installment Payment</DialogTitle>
-            <DialogDescription>Record a payment for this installment</DialogDescription>
+            <DialogTitle>{t('recordPaymentTitle')}</DialogTitle>
+            <DialogDescription>{t('recordPaymentDesc')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Amount (₹)</Label>
+              <Label>{t('amount')}</Label>
               <Input
                 type="number"
                 value={payAmount}
@@ -629,25 +638,25 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment Method</Label>
+              <Label>{t('paymentMethod')}</Label>
               <Select value={payMethod} onValueChange={setPayMethod}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CASH">Cash</SelectItem>
-                  <SelectItem value="CARD">Card</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
-                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                  <SelectItem value="CHEQUE">Cheque</SelectItem>
-                  <SelectItem value="ONLINE">Online</SelectItem>
+                  <SelectItem value="CASH">{tMethods('CASH')}</SelectItem>
+                  <SelectItem value="CARD">{tMethods('CARD')}</SelectItem>
+                  <SelectItem value="UPI">{tMethods('UPI')}</SelectItem>
+                  <SelectItem value="BANK_TRANSFER">{tMethods('BANK_TRANSFER')}</SelectItem>
+                  <SelectItem value="CHEQUE">{tMethods('CHEQUE')}</SelectItem>
+                  <SelectItem value="ONLINE">{tMethods('ONLINE')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Transaction ID (Optional)</Label>
+              <Label>{t('transactionId')}</Label>
               <Input
-                placeholder="Reference number..."
+                placeholder={t('transactionPlaceholder')}
                 value={payTransactionId}
                 onChange={(e) => setPayTransactionId(e.target.value)}
               />
@@ -655,16 +664,16 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayDialog(false)}>
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
             <Button onClick={handlePay} disabled={paying || payAmount <= 0}>
               {paying ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                  {t('processing')}
                 </>
               ) : (
-                `Record Payment — ${formatCurrency(payAmount)}`
+                t('recordPaymentBtn', { amount: formatCurrency(payAmount) })
               )}
             </Button>
           </DialogFooter>
@@ -675,24 +684,21 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
       <Dialog open={cancelDialog} onOpenChange={setCancelDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel Payment Plan</DialogTitle>
-            <DialogDescription>
-              This will cancel the payment plan and waive all remaining installments. Payments
-              already made will not be refunded.
-            </DialogDescription>
+            <DialogTitle>{t('cancelPlanTitle')}</DialogTitle>
+            <DialogDescription>{t('cancelPlanDesc')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialog(false)}>
-              Keep Plan
+              {t('keepPlan')}
             </Button>
             <Button variant="destructive" onClick={handleCancel} disabled={cancelling}>
               {cancelling ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Cancelling...
+                  {t('cancelling')}
                 </>
               ) : (
-                'Cancel Plan'
+                t('cancelPlan')
               )}
             </Button>
           </DialogFooter>

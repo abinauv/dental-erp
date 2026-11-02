@@ -4,7 +4,9 @@
  * the /api/ai/chat route (conversational action execution).
  */
 
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { getTaxProvider } from '@/lib/tax'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -569,9 +571,21 @@ export async function execCreateInvoice(params: Record<string, string>, hospital
   const cgstRate = 9
   const sgstRate = 9
   const taxableAmount = subtotal
-  const cgstAmount = (taxableAmount * cgstRate) / 100
-  const sgstAmount = (taxableAmount * sgstRate) / 100
-  const totalAmount = subtotal + cgstAmount + sgstAmount
+
+  // Tax via the clinic's provider; place-of-supply (patient vs clinic region)
+  // drives India's intra/inter-state split.
+  const hospital = await prisma.hospital.findUnique({
+    where: { id: hospitalId },
+    select: { country: true, state: true },
+  })
+  const taxResult = getTaxProvider(hospital?.country).calculate(taxableAmount, {
+    placeOfSupply: patient.state ?? undefined,
+    clinicRegion: hospital?.state ?? undefined,
+    rates: { cgstRate, sgstRate },
+  })
+  const cgstAmount = taxResult.components.find((c) => c.code === 'CGST')?.amount ?? 0
+  const sgstAmount = taxResult.components.find((c) => c.code === 'SGST')?.amount ?? 0
+  const totalAmount = subtotal + taxResult.totalTax
 
   const invoiceNo = await nextNumber(hospitalId, 'invoice', 'INV')
 
@@ -586,6 +600,8 @@ export async function execCreateInvoice(params: Record<string, string>, hospital
       sgstRate,
       cgstAmount,
       sgstAmount,
+      taxComponents: taxResult.components as unknown as Prisma.InputJsonValue,
+      taxAmount: taxResult.totalTax,
       totalAmount,
       balanceAmount: totalAmount,
       status: 'PENDING',
@@ -602,7 +618,7 @@ export async function execCreateInvoice(params: Record<string, string>, hospital
 
   return {
     success: true,
-    message: `Invoice ${invoice.invoiceNo} created for ${patient.firstName} ${patient.lastName}. Subtotal: ₹${subtotal.toLocaleString('en-IN')}, GST: ₹${(cgstAmount + sgstAmount).toFixed(2)}, Total: ₹${totalAmount.toFixed(2)}. Includes ${unbilled.length} treatment(s).`,
+    message: `Invoice ${invoice.invoiceNo} created for ${patient.firstName} ${patient.lastName}. Subtotal: ₹${subtotal.toLocaleString('en-IN')}, GST: ₹${taxResult.totalTax.toFixed(2)}, Total: ₹${totalAmount.toFixed(2)}. Includes ${unbilled.length} treatment(s).`,
     invoiceNo: invoice.invoiceNo,
   }
 }

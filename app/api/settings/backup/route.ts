@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { format } from 'date-fns'
+import { logger } from '@/lib/logger'
 
 // GET /api/settings/backup - Export database data
 export async function GET(req: NextRequest) {
@@ -116,7 +117,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Backup export error:', error)
+    logger.error({ err: error }, 'Backup export error:')
     return NextResponse.json({ error: error.message || 'Failed to export backup' }, { status: 500 })
   }
 }
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error: any) {
-    console.error('Backup stats error:', error)
+    logger.error({ err: error }, 'Backup stats error:')
     return NextResponse.json(
       { error: error.message || 'Failed to get backup statistics' },
       { status: 500 }

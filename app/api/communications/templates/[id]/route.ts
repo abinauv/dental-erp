@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { templateService } from '@/lib/services/template.service'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const updateTemplateSchema = z.object({
   name: z.string().optional(),
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       data: template,
     })
   } catch (error: any) {
-    console.error('Get template error:', error)
+    logger.error({ err: error }, 'Get template error:')
     return NextResponse.json({ error: error.message || 'Failed to get template' }, { status: 500 })
   }
 }
@@ -80,7 +81,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data: template,
     })
   } catch (error: any) {
-    console.error('Update template error:', error)
+    logger.error({ err: error }, 'Update template error:')
     return NextResponse.json(
       { error: error.message || 'Failed to update template' },
       { status: 500 }
@@ -110,7 +111,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       message: 'Template deleted successfully',
     })
   } catch (error: any) {
-    console.error('Delete template error:', error)
+    logger.error({ err: error }, 'Delete template error:')
     return NextResponse.json(
       { error: error.message || 'Failed to delete template' },
       { status: 500 }

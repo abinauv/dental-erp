@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import {
   BarChart3,
   Mail,
@@ -79,6 +81,10 @@ interface AnalyticsData {
 
 export default function CampaignAnalyticsPage() {
   const { toast } = useToast()
+  const t = useTranslations('communications.analytics')
+  const tp = useTranslations('communications.period')
+  const tc = useTranslations('communications.common')
+  const { formatNumber, formatCurrency, formatDate } = useClinicFormatters()
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState('30d')
   const [data, setData] = useState<AnalyticsData | null>(null)
@@ -91,7 +97,7 @@ export default function CampaignAnalyticsPage() {
       const json = await res.json()
       setData(json)
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      toast({ title: tc('error'), description: err.message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -99,6 +105,7 @@ export default function CampaignAnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics(period)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period])
 
   const maxDailyVolume = data?.dailyTrend
@@ -110,10 +117,8 @@ export default function CampaignAnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Campaign Analytics</h2>
-          <p className="text-muted-foreground">
-            SMS delivery rates, email engagement, and campaign performance
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
@@ -121,10 +126,10 @@ export default function CampaignAnalyticsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="7d">{tp('7d')}</SelectItem>
+              <SelectItem value="30d">{tp('30d')}</SelectItem>
+              <SelectItem value="90d">{tp('90d')}</SelectItem>
+              <SelectItem value="all">{tp('all')}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={() => fetchAnalytics(period)}>
@@ -143,60 +148,72 @@ export default function CampaignAnalyticsPage() {
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              SMS Overview
+              {t('sms.heading')}
             </h3>
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('sms.totalSent')}</CardTitle>
                   <Send className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.sms.total.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{formatNumber(data.sms.total)}</div>
                   <p className="text-xs text-muted-foreground">
                     {data.sms.pending + data.sms.queued > 0
-                      ? `${data.sms.pending + data.sms.queued} pending`
-                      : 'All processed'}
+                      ? t('sms.pending', { count: data.sms.pending + data.sms.queued })
+                      : t('sms.allProcessed')}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Delivery Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('sms.deliveryRate')}</CardTitle>
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{data.sms.deliveryRate}%</div>
                   <p className="text-xs text-muted-foreground">
-                    {data.sms.delivered + data.sms.sent} delivered
+                    {t('sms.deliveredCount', { count: data.sms.delivered + data.sms.sent })}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Failed</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('sms.failed')}</CardTitle>
                   <XCircle className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">{data.sms.failed}</div>
                   <p className="text-xs text-muted-foreground">
                     {data.sms.total > 0
-                      ? `${((data.sms.failed / data.sms.total) * 100).toFixed(1)}% failure rate`
-                      : 'No messages'}
+                      ? t('failureRate', {
+                          rate: ((data.sms.failed / data.sms.total) * 100).toFixed(1),
+                        })
+                      : t('noMessages')}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('sms.totalCost')}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.sms.totalCost.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(data.sms.totalCost, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {data.sms.total > 0
-                      ? `₹${(data.sms.totalCost / data.sms.total).toFixed(4)}/msg`
-                      : 'No cost data'}
+                      ? t('sms.costPerMsg', {
+                          cost: formatCurrency(data.sms.totalCost / data.sms.total, {
+                            minimumFractionDigits: 4,
+                            maximumFractionDigits: 4,
+                          }),
+                        })
+                      : t('sms.noCostData')}
                   </p>
                 </CardContent>
               </Card>
@@ -207,56 +224,58 @@ export default function CampaignAnalyticsPage() {
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              Email Overview
+              {t('email.heading')}
             </h3>
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('email.totalSent')}</CardTitle>
                   <Send className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.email.total.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{formatNumber(data.email.total)}</div>
                   <p className="text-xs text-muted-foreground">
-                    {data.email.sent} successfully delivered
+                    {t('email.deliveredCount', { count: data.email.sent })}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Open Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('email.openRate')}</CardTitle>
                   <Eye className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{data.email.openRate}%</div>
                   <p className="text-xs text-muted-foreground">
-                    {data.email.opened} opened of {data.email.sent}
+                    {t('email.openedOf', { opened: data.email.opened, sent: data.email.sent })}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Click Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('email.clickRate')}</CardTitle>
                   <MousePointerClick className="h-4 w-4 text-purple-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{data.email.clickRate}%</div>
                   <p className="text-xs text-muted-foreground">
-                    {data.email.clicked} clicked of {data.email.sent}
+                    {t('email.clickedOf', { clicked: data.email.clicked, sent: data.email.sent })}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Failed</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('email.failed')}</CardTitle>
                   <XCircle className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">{data.email.failed}</div>
                   <p className="text-xs text-muted-foreground">
                     {data.email.total > 0
-                      ? `${((data.email.failed / data.email.total) * 100).toFixed(1)}% failure rate`
-                      : 'No messages'}
+                      ? t('failureRate', {
+                          rate: ((data.email.failed / data.email.total) * 100).toFixed(1),
+                        })
+                      : t('noMessages')}
                   </p>
                 </CardContent>
               </Card>
@@ -269,9 +288,9 @@ export default function CampaignAnalyticsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  Daily Message Volume
+                  {t('dailyVolume.title')}
                 </CardTitle>
-                <CardDescription>SMS and email messages sent per day</CardDescription>
+                <CardDescription>{t('dailyVolume.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-end gap-1 h-[200px] overflow-x-auto pb-6">
@@ -285,7 +304,11 @@ export default function CampaignAnalyticsPage() {
                         className="flex flex-col items-center flex-1 min-w-[20px] group relative"
                       >
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-popover border rounded px-2 py-1 whitespace-nowrap z-10">
-                          {day.date}: {day.sms} SMS, {day.email} Email
+                          {t('dailyVolume.tooltip', {
+                            date: day.date,
+                            sms: day.sms,
+                            email: day.email,
+                          })}
                         </div>
                         <div className="flex flex-col-reverse w-full gap-[1px]">
                           {day.sms > 0 && (
@@ -316,10 +339,11 @@ export default function CampaignAnalyticsPage() {
                 </div>
                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-blue-500" /> SMS
+                    <span className="w-3 h-3 rounded-sm bg-blue-500" /> {t('dailyVolume.smsLegend')}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-sm bg-purple-500" /> Email
+                    <span className="w-3 h-3 rounded-sm bg-purple-500" />{' '}
+                    {t('dailyVolume.emailLegend')}
                   </span>
                 </div>
               </CardContent>
@@ -330,21 +354,21 @@ export default function CampaignAnalyticsPage() {
           {data.campaigns.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Recent Campaigns</CardTitle>
-                <CardDescription>Bulk communication campaign performance</CardDescription>
+                <CardTitle>{t('campaigns.title')}</CardTitle>
+                <CardDescription>{t('campaigns.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Campaign</TableHead>
-                      <TableHead>Channel</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Recipients</TableHead>
-                      <TableHead className="text-right">Sent</TableHead>
-                      <TableHead className="text-right">Failed</TableHead>
-                      <TableHead className="text-right">Cost</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead>{t('campaigns.colCampaign')}</TableHead>
+                      <TableHead>{t('campaigns.colChannel')}</TableHead>
+                      <TableHead>{t('campaigns.colStatus')}</TableHead>
+                      <TableHead className="text-right">{t('campaigns.colRecipients')}</TableHead>
+                      <TableHead className="text-right">{t('campaigns.colSent')}</TableHead>
+                      <TableHead className="text-right">{t('campaigns.colFailed')}</TableHead>
+                      <TableHead className="text-right">{t('campaigns.colCost')}</TableHead>
+                      <TableHead>{t('campaigns.colDate')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -352,7 +376,9 @@ export default function CampaignAnalyticsPage() {
                       <TableRow key={c.id}>
                         <TableCell className="font-medium">{c.name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{c.channel}</Badge>
+                          <Badge variant="outline">
+                            {t.has(`channel.${c.channel}`) ? t(`channel.${c.channel}`) : c.channel}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -364,17 +390,22 @@ export default function CampaignAnalyticsPage() {
                                   : 'secondary'
                             }
                           >
-                            {c.status}
+                            {t.has(`campaignStatus.${c.status}`)
+                              ? t(`campaignStatus.${c.status}`)
+                              : c.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">{c.recipientCount}</TableCell>
                         <TableCell className="text-right text-green-600">{c.sentCount}</TableCell>
                         <TableCell className="text-right text-red-600">{c.failedCount}</TableCell>
                         <TableCell className="text-right">
-                          ₹{c.actualCost > 0 ? c.actualCost.toFixed(2) : c.estimatedCost.toFixed(2)}
+                          {formatCurrency(c.actualCost > 0 ? c.actualCost : c.estimatedCost, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
-                          {new Date(c.createdAt).toLocaleDateString()}
+                          {formatDate(c.createdAt)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -391,23 +422,25 @@ export default function CampaignAnalyticsPage() {
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    Top SMS Templates
+                    {t('topSmsTitle')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {data.topTemplates.sms.map((t, i) => (
-                      <div key={t.templateId} className="flex items-center justify-between">
+                    {data.topTemplates.sms.map((tpl, i) => (
+                      <div key={tpl.templateId} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
                           <div>
-                            <p className="text-sm font-medium">{t.name}</p>
+                            <p className="text-sm font-medium">{tpl.name}</p>
                             <Badge variant="outline" className="text-xs">
-                              {t.category}
+                              {tpl.category}
                             </Badge>
                           </div>
                         </div>
-                        <span className="text-sm font-semibold">{t.count} sent</span>
+                        <span className="text-sm font-semibold">
+                          {t('sentCount', { count: tpl.count })}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -420,23 +453,25 @@ export default function CampaignAnalyticsPage() {
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    Top Email Templates
+                    {t('topEmailTitle')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {data.topTemplates.email.map((t, i) => (
-                      <div key={t.templateId} className="flex items-center justify-between">
+                    {data.topTemplates.email.map((tpl, i) => (
+                      <div key={tpl.templateId} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
                           <div>
-                            <p className="text-sm font-medium">{t.name}</p>
+                            <p className="text-sm font-medium">{tpl.name}</p>
                             <Badge variant="outline" className="text-xs">
-                              {t.category}
+                              {tpl.category}
                             </Badge>
                           </div>
                         </div>
-                        <span className="text-sm font-semibold">{t.count} sent</span>
+                        <span className="text-sm font-semibold">
+                          {t('sentCount', { count: tpl.count })}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -450,10 +485,8 @@ export default function CampaignAnalyticsPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold">No analytics data yet</h3>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Start sending SMS and emails to see campaign analytics here
-                </p>
+                <h3 className="text-lg font-semibold">{t('empty.title')}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{t('empty.description')}</p>
               </CardContent>
             </Card>
           )}

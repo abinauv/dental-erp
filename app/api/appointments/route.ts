@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { createRoom } from '@/lib/services/video.service'
+import { logger } from '@/lib/logger'
 
 // Generate unique appointment number for the hospital
 async function generateAppointmentNo(hospitalId: string): Promise<string> {
@@ -158,7 +159,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching appointments:', error)
+    logger.error({ err: error }, 'Error fetching appointments:')
     return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 })
   }
 }
@@ -329,14 +330,14 @@ export async function POST(request: NextRequest) {
           data: { videoConsultationId: consultation.id },
         })
       } catch (videoErr) {
-        console.error('Failed to create video consultation:', videoErr)
+        logger.error({ err: videoErr }, 'Failed to create video consultation:')
         // Appointment is still created — video setup can be retried
       }
     }
 
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {
-    console.error('Error creating appointment:', error)
+    logger.error({ err: error }, 'Error creating appointment:')
     return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 })
   }
 }

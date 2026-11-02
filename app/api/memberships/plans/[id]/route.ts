@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Single plan with enrolled patients
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(plan)
   } catch (err) {
-    console.error('Error fetching plan:', err)
+    logger.error({ err }, 'Error fetching plan:')
     return NextResponse.json({ error: 'Failed to fetch plan' }, { status: 500 })
   }
 }
@@ -73,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const plan = await prisma.membershipPlan.findUnique({ where: { id } })
     return NextResponse.json(plan)
   } catch (err) {
-    console.error('Error updating plan:', err)
+    logger.error({ err }, 'Error updating plan:')
     return NextResponse.json({ error: 'Failed to update plan' }, { status: 500 })
   }
 }
@@ -116,7 +117,7 @@ export async function DELETE(
     await prisma.membershipPlan.delete({ where: { id } })
     return NextResponse.json({ message: 'Plan deleted' })
   } catch (err) {
-    console.error('Error deleting plan:', err)
+    logger.error({ err }, 'Error deleting plan:')
     return NextResponse.json({ error: 'Failed to delete plan' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Mic, MicOff, Loader2 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -11,7 +12,12 @@ interface VoiceInputProps {
   className?: string
 }
 
-export function VoiceInput({ onTranscript, language = 'en-IN', className }: VoiceInputProps) {
+export function VoiceInput({ onTranscript, language, className }: VoiceInputProps) {
+  const t = useTranslations('clinical.voice')
+  const locale = useLocale()
+  // Default the speech-recognition language to the viewer's locale (a BCP-47
+  // tag like en-IN / en-US) rather than hardcoding one.
+  const recognitionLanguage = language ?? locale
   const [isListening, setIsListening] = useState(false)
   const [isSupported, setIsSupported] = useState(false)
   const [interimText, setInterimText] = useState('')
@@ -35,7 +41,7 @@ export function VoiceInput({ onTranscript, language = 'en-IN', className }: Voic
     if (!SpeechRecognition) return
 
     const recognition = new SpeechRecognition()
-    recognition.lang = language
+    recognition.lang = recognitionLanguage
     recognition.continuous = true
     recognition.interimResults = true
 
@@ -80,7 +86,7 @@ export function VoiceInput({ onTranscript, language = 'en-IN', className }: Voic
 
     recognitionRef.current = recognition
     recognition.start()
-  }, [language, onTranscript])
+  }, [recognitionLanguage, onTranscript])
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -115,21 +121,19 @@ export function VoiceInput({ onTranscript, language = 'en-IN', className }: Voic
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            {isListening ? 'Stop dictation' : 'Start voice dictation'}
-          </TooltipContent>
+          <TooltipContent>{isListening ? t('stopDictation') : t('startDictation')}</TooltipContent>
         </Tooltip>
 
         {isListening && interimText && (
           <span className="text-xs text-muted-foreground italic max-w-[200px] truncate">
-            {interimText}...
+            {interimText}…
           </span>
         )}
 
         {isListening && !interimText && (
           <span className="flex items-center gap-1 text-xs text-red-500">
             <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            Listening...
+            {t('listening')}
           </span>
         )}
       </div>

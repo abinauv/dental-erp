@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,6 +65,8 @@ const emptyForm = {
 export default function InsuranceProvidersPage() {
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
+  const t = useTranslations('billing.providers')
+  const tCommon = useTranslations('common')
   const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -77,7 +80,7 @@ export default function InsuranceProvidersPage() {
       const res = await fetch(`/api/insurance-providers?search=${encodeURIComponent(search)}`)
       if (res.ok) setProviders(await res.json())
     } catch {
-      toast({ title: 'Failed to load providers', variant: 'destructive' })
+      toast({ title: t('loadError'), variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -110,7 +113,7 @@ export default function InsuranceProvidersPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      toast({ title: 'Provider name is required', variant: 'destructive' })
+      toast({ title: t('nameRequired'), variant: 'destructive' })
       return
     }
     setSaving(true)
@@ -125,7 +128,7 @@ export default function InsuranceProvidersPage() {
         const data = await res.json()
         throw new Error(data.error || 'Failed to save')
       }
-      toast({ title: editingId ? 'Provider updated' : 'Provider created' })
+      toast({ title: editingId ? t('updated') : t('created') })
       setDialogOpen(false)
       fetchProviders()
     } catch (err: any) {
@@ -137,19 +140,19 @@ export default function InsuranceProvidersPage() {
 
   const handleDelete = async (id: string) => {
     const ok = await confirm({
-      title: 'Delete Provider',
-      description: 'Are you sure you want to delete this provider?',
-      confirmLabel: 'Delete',
+      title: t('deleteTitle'),
+      description: t('deleteDesc'),
+      confirmLabel: t('delete'),
     })
     if (!ok) return
     try {
       const res = await fetch(`/api/insurance-providers/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast({ title: 'Provider removed' })
+        toast({ title: t('removed') })
         fetchProviders()
       }
     } catch {
-      toast({ title: 'Failed to delete provider', variant: 'destructive' })
+      toast({ title: t('deleteError'), variant: 'destructive' })
     }
   }
 
@@ -157,14 +160,12 @@ export default function InsuranceProvidersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Insurance Providers</h1>
-          <p className="text-muted-foreground">
-            Manage insurance companies your hospital works with
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Provider
+          {t('add')}
         </Button>
       </div>
 
@@ -174,7 +175,7 @@ export default function InsuranceProvidersPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search providers..."
+                placeholder={t('searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -192,18 +193,18 @@ export default function InsuranceProvidersPage() {
           ) : providers.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">No insurance providers found</p>
-              <p className="text-sm">Add your first insurance provider to get started</p>
+              <p className="font-medium">{t('empty')}</p>
+              <p className="text-sm">{t('emptyHint')}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Policies</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('cols.provider')}</TableHead>
+                  <TableHead>{t('cols.code')}</TableHead>
+                  <TableHead>{t('cols.contact')}</TableHead>
+                  <TableHead>{t('cols.policies')}</TableHead>
+                  <TableHead>{t('cols.status')}</TableHead>
                   <TableHead className="w-[50px]" />
                 </TableRow>
               </TableHeader>
@@ -245,7 +246,7 @@ export default function InsuranceProvidersPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={p.isActive ? 'default' : 'secondary'}>
-                        {p.isActive ? 'Active' : 'Inactive'}
+                        {p.isActive ? t('active') : t('inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -257,13 +258,13 @@ export default function InsuranceProvidersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEdit(p)}>
-                            <Edit className="h-4 w-4 mr-2" /> Edit
+                            <Edit className="h-4 w-4 mr-2" /> {t('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDelete(p.id)}
                             className="text-destructive"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            <Trash2 className="h-4 w-4 mr-2" /> {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -280,83 +281,83 @@ export default function InsuranceProvidersPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Provider' : 'Add Insurance Provider'}</DialogTitle>
+            <DialogTitle>{editingId ? t('editTitle') : t('addTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label>Provider Name *</Label>
+                <Label>{t('name')}</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g., Star Health Insurance"
+                  placeholder={t('namePlaceholder')}
                 />
               </div>
               <div>
-                <Label>Code</Label>
+                <Label>{t('code')}</Label>
                 <Input
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
-                  placeholder="e.g., STARHI"
+                  placeholder={t('codePlaceholder')}
                 />
               </div>
               <div>
-                <Label>Contact Phone</Label>
+                <Label>{t('contactPhone')}</Label>
                 <Input
                   value={form.contactPhone}
                   onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                  placeholder="Phone number"
+                  placeholder={t('phonePlaceholder')}
                 />
               </div>
               <div className="col-span-2">
-                <Label>Contact Email</Label>
+                <Label>{t('contactEmail')}</Label>
                 <Input
                   type="email"
                   value={form.contactEmail}
                   onChange={(e) => setForm({ ...form, contactEmail: e.target.value })}
-                  placeholder="claims@provider.com"
+                  placeholder={t('emailPlaceholder')}
                 />
               </div>
               <div className="col-span-2">
-                <Label>Website</Label>
+                <Label>{t('website')}</Label>
                 <Input
                   value={form.website}
                   onChange={(e) => setForm({ ...form, website: e.target.value })}
-                  placeholder="https://provider.com"
+                  placeholder={t('websitePlaceholder')}
                 />
               </div>
               <div className="col-span-2">
-                <Label>Claim Submission URL</Label>
+                <Label>{t('claimUrl')}</Label>
                 <Input
                   value={form.claimSubmissionUrl}
                   onChange={(e) => setForm({ ...form, claimSubmissionUrl: e.target.value })}
-                  placeholder="https://provider.com/claims/submit"
+                  placeholder={t('claimUrlPlaceholder')}
                 />
               </div>
               <div>
-                <Label>Portal Username</Label>
+                <Label>{t('portalUsername')}</Label>
                 <Input
                   value={form.portalUsername}
                   onChange={(e) => setForm({ ...form, portalUsername: e.target.value })}
-                  placeholder="Username"
+                  placeholder={t('usernamePlaceholder')}
                 />
               </div>
               <div>
-                <Label>Portal Password</Label>
+                <Label>{t('portalPassword')}</Label>
                 <Input
                   type="password"
                   value={form.portalPassword}
                   onChange={(e) => setForm({ ...form, portalPassword: e.target.value })}
-                  placeholder={editingId ? 'Leave blank to keep' : 'Password'}
+                  placeholder={editingId ? t('passwordKeep') : t('passwordPlaceholder')}
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {tCommon('actions.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
+                {saving ? t('saving') : editingId ? t('update') : t('create')}
               </Button>
             </div>
           </div>

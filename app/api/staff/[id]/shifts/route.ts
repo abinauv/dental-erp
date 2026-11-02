@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { logger } from '@/lib/logger'
 
 // GET - Get staff member's shifts
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ shifts })
   } catch (error) {
-    console.error('Error fetching shifts:', error)
+    logger.error({ err: error }, 'Error fetching shifts:')
     return NextResponse.json({ error: 'Failed to fetch shifts' }, { status: 500 })
   }
 }
@@ -107,7 +108,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ shifts: result })
   } catch (error) {
-    console.error('Error updating shifts:', error)
+    logger.error({ err: error }, 'Error updating shifts:')
     return NextResponse.json({ error: 'Failed to update shifts' }, { status: 500 })
   }
 }

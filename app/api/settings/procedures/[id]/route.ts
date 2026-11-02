@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const procedureUpdateSchema = z.object({
   code: z.string().min(1).toUpperCase().optional(),
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       data: procedure,
     })
   } catch (error: any) {
-    console.error('Get procedure error:', error)
+    logger.error({ err: error }, 'Get procedure error:')
     return NextResponse.json({ error: error.message || 'Failed to get procedure' }, { status: 500 })
   }
 }
@@ -99,7 +100,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       message: 'Procedure updated successfully',
     })
   } catch (error: any) {
-    console.error('Update procedure error:', error)
+    logger.error({ err: error }, 'Update procedure error:')
     return NextResponse.json(
       { error: error.message || 'Failed to update procedure' },
       { status: 500 }
@@ -137,7 +138,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       message: 'Procedure deactivated successfully',
     })
   } catch (error: any) {
-    console.error('Delete procedure error:', error)
+    logger.error({ err: error }, 'Delete procedure error:')
     return NextResponse.json(
       { error: error.message || 'Failed to delete procedure' },
       { status: 500 }

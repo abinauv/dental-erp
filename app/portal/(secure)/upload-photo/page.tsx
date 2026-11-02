@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -16,6 +17,7 @@ import {
 import { Camera, Upload, ArrowLeft, CheckCircle, Loader2, ImageIcon, X } from 'lucide-react'
 
 export default function UploadPhotoPage() {
+  const t = useTranslations('portal.uploadPhoto')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -30,12 +32,12 @@ export default function UploadPhotoPage() {
     if (!selected) return
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(selected.type)) {
-      setError('Please select a JPEG, PNG, or WebP image')
+      setError(t('selectImageError'))
       return
     }
 
     if (selected.size > 10 * 1024 * 1024) {
-      setError('File size must be under 10MB')
+      setError(t('fileTooLarge'))
       return
     }
 
@@ -72,7 +74,7 @@ export default function UploadPhotoPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Upload failed')
+        throw new Error(data.error || t('uploadFailed'))
       }
 
       setUploaded(true)
@@ -92,11 +94,8 @@ export default function UploadPhotoPage() {
               <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <h2 className="text-xl font-semibold">Photo Uploaded Successfully</h2>
-              <p className="text-muted-foreground">
-                Your photo has been sent to your dentist for review. They will get back to you if an
-                in-person visit is needed.
-              </p>
+              <h2 className="text-xl font-semibold">{t('successTitle')}</h2>
+              <p className="text-muted-foreground">{t('successBody')}</p>
               <div className="flex gap-3 pt-4">
                 <Button
                   variant="outline"
@@ -108,10 +107,10 @@ export default function UploadPhotoPage() {
                     setCategory('')
                   }}
                 >
-                  Upload Another
+                  {t('uploadAnother')}
                 </Button>
                 <Link href="/portal">
-                  <Button>Back to Portal</Button>
+                  <Button>{t('backToPortal')}</Button>
                 </Link>
               </div>
             </div>
@@ -127,14 +126,12 @@ export default function UploadPhotoPage() {
         <Link href="/portal">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            {t('back')}
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Upload Photo</h1>
-          <p className="text-sm text-muted-foreground">
-            Send a dental photo to your doctor for triage
-          </p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -142,12 +139,9 @@ export default function UploadPhotoPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Camera className="h-4 w-4" />
-            Photo for Triage
+            {t('cardTitle')}
           </CardTitle>
-          <CardDescription>
-            Take a clear photo of the area of concern. Your dentist will review it and advise
-            whether an in-person visit is needed.
-          </CardDescription>
+          <CardDescription>{t('cardDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* File Upload */}
@@ -182,38 +176,38 @@ export default function UploadPhotoPage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="font-medium">Tap to take or select a photo</p>
-                <p className="text-sm text-muted-foreground mt-1">JPEG, PNG, or WebP (max 10MB)</p>
+                <p className="font-medium">{t('tapToTake')}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('fileHint')}</p>
               </div>
             )}
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <Label>What is the concern?</Label>
+            <Label>{t('concernLabel')}</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t('selectCategory')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pain">Pain / Toothache</SelectItem>
-                <SelectItem value="swelling">Swelling</SelectItem>
-                <SelectItem value="bleeding">Bleeding Gums</SelectItem>
-                <SelectItem value="broken">Broken / Chipped Tooth</SelectItem>
-                <SelectItem value="discoloration">Discoloration</SelectItem>
-                <SelectItem value="sensitivity">Sensitivity</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="pain">{t('category.pain')}</SelectItem>
+                <SelectItem value="swelling">{t('category.swelling')}</SelectItem>
+                <SelectItem value="bleeding">{t('category.bleeding')}</SelectItem>
+                <SelectItem value="broken">{t('category.broken')}</SelectItem>
+                <SelectItem value="discoloration">{t('category.discoloration')}</SelectItem>
+                <SelectItem value="sensitivity">{t('category.sensitivity')}</SelectItem>
+                <SelectItem value="other">{t('category.other')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label>Description (optional)</Label>
+            <Label>{t('descLabel')}</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your symptoms, when they started, and any other details..."
+              placeholder={t('descPlaceholder')}
               rows={3}
             />
           </div>
@@ -228,12 +222,12 @@ export default function UploadPhotoPage() {
             {uploading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Uploading...
+                {t('uploading')}
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Photo
+                {t('uploadPhoto')}
               </>
             )}
           </Button>
@@ -242,13 +236,13 @@ export default function UploadPhotoPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <h3 className="font-medium mb-2">Tips for a good photo</h3>
+          <h3 className="font-medium mb-2">{t('tipsTitle')}</h3>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>Use good lighting — natural light works best</li>
-            <li>Keep the camera steady and in focus</li>
-            <li>Show the affected area clearly</li>
-            <li>Include surrounding teeth for context</li>
-            <li>Use a mirror if photographing the inside of your mouth</li>
+            <li>{t('tip1')}</li>
+            <li>{t('tip2')}</li>
+            <li>{t('tip3')}</li>
+            <li>{t('tip4')}</li>
+            <li>{t('tip5')}</li>
           </ul>
         </CardContent>
       </Card>

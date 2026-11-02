@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Textarea } from '@/components/ui/textarea'
 
 export default function SecuritySettingsPage() {
+  const t = useTranslations('settings.security')
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -48,7 +50,7 @@ export default function SecuritySettingsPage() {
       setLoading(true)
       const response = await fetch('/api/settings/security')
 
-      if (!response.ok) throw new Error('Failed to load settings')
+      if (!response.ok) throw new Error(t('loadFailed'))
 
       const data = await response.json()
       const settings = data.data || {}
@@ -84,8 +86,8 @@ export default function SecuritySettingsPage() {
     } catch (error) {
       console.error('Error loading settings:', error)
       toast({
-        title: 'Error',
-        description: 'Failed to load security settings',
+        title: t('error'),
+        description: t('loadFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -115,16 +117,16 @@ export default function SecuritySettingsPage() {
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to save settings')
+      if (!response.ok) throw new Error(t('saveFailed'))
 
       toast({
-        title: 'Success',
-        description: 'Security settings saved successfully',
+        title: t('success'),
+        description: t('savedSuccess'),
       })
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to save security settings',
+        title: t('error'),
+        description: t('saveFailed'),
         variant: 'destructive',
       })
     } finally {
@@ -136,11 +138,11 @@ export default function SecuritySettingsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Security Settings</h1>
-          <p className="text-muted-foreground">Configure security policies and access controls</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading settings...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     )
@@ -151,9 +153,9 @@ export default function SecuritySettingsPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Shield className="w-8 h-8" />
-          Security Settings
+          {t('title')}
         </h1>
-        <p className="text-muted-foreground">Configure security policies and access controls</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <div className="space-y-6">
@@ -162,13 +164,13 @@ export default function SecuritySettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="w-5 h-5" />
-              Password Policy
+              {t('passwordPolicy')}
             </CardTitle>
-            <CardDescription>Configure password requirements for all users</CardDescription>
+            <CardDescription>{t('passwordPolicyDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Minimum Password Length</Label>
+              <Label>{t('minLength')}</Label>
               <Input
                 type="number"
                 value={passwordMinLength}
@@ -176,9 +178,7 @@ export default function SecuritySettingsPage() {
                 min="6"
                 max="32"
               />
-              <p className="text-sm text-muted-foreground">
-                Minimum: 6 characters, Maximum: 32 characters
-              </p>
+              <p className="text-sm text-muted-foreground">{t('minLengthHint')}</p>
             </div>
 
             <Separator />
@@ -186,10 +186,8 @@ export default function SecuritySettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Require Uppercase Letters</Label>
-                  <p className="text-sm text-muted-foreground">
-                    At least one uppercase letter (A-Z)
-                  </p>
+                  <Label>{t('requireUppercase')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('requireUppercaseHint')}</p>
                 </div>
                 <Switch
                   checked={passwordRequireUppercase}
@@ -199,10 +197,8 @@ export default function SecuritySettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Require Lowercase Letters</Label>
-                  <p className="text-sm text-muted-foreground">
-                    At least one lowercase letter (a-z)
-                  </p>
+                  <Label>{t('requireLowercase')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('requireLowercaseHint')}</p>
                 </div>
                 <Switch
                   checked={passwordRequireLowercase}
@@ -212,8 +208,8 @@ export default function SecuritySettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Require Numbers</Label>
-                  <p className="text-sm text-muted-foreground">At least one number (0-9)</p>
+                  <Label>{t('requireNumbers')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('requireNumbersHint')}</p>
                 </div>
                 <Switch
                   checked={passwordRequireNumbers}
@@ -223,10 +219,8 @@ export default function SecuritySettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Require Special Characters</Label>
-                  <p className="text-sm text-muted-foreground">
-                    At least one special character (!@#$%)
-                  </p>
+                  <Label>{t('requireSpecial')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('requireSpecialHint')}</p>
                 </div>
                 <Switch
                   checked={passwordRequireSpecialChars}
@@ -238,7 +232,7 @@ export default function SecuritySettingsPage() {
             <Separator />
 
             <div className="space-y-2">
-              <Label>Password Expiry (days)</Label>
+              <Label>{t('passwordExpiry')}</Label>
               <Input
                 type="number"
                 value={passwordExpiryDays}
@@ -246,7 +240,7 @@ export default function SecuritySettingsPage() {
                 min="0"
                 max="365"
               />
-              <p className="text-sm text-muted-foreground">Set to 0 to disable password expiry</p>
+              <p className="text-sm text-muted-foreground">{t('passwordExpiryHint')}</p>
             </div>
           </CardContent>
         </Card>
@@ -256,13 +250,13 @@ export default function SecuritySettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Session Management
+              {t('sessionManagement')}
             </CardTitle>
-            <CardDescription>Configure user session timeout and security</CardDescription>
+            <CardDescription>{t('sessionManagementDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Session Timeout (minutes)</Label>
+              <Label>{t('sessionTimeout')}</Label>
               <Input
                 type="number"
                 value={sessionTimeoutMinutes}
@@ -270,9 +264,7 @@ export default function SecuritySettingsPage() {
                 min="5"
                 max="1440"
               />
-              <p className="text-sm text-muted-foreground">
-                Users will be logged out after this period of inactivity
-              </p>
+              <p className="text-sm text-muted-foreground">{t('sessionTimeoutHint')}</p>
             </div>
           </CardContent>
         </Card>
@@ -282,14 +274,14 @@ export default function SecuritySettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserX className="w-5 h-5" />
-              Login Security
+              {t('loginSecurity')}
             </CardTitle>
-            <CardDescription>Protect against brute force attacks</CardDescription>
+            <CardDescription>{t('loginSecurityDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Maximum Login Attempts</Label>
+                <Label>{t('maxAttempts')}</Label>
                 <Input
                   type="number"
                   value={maxLoginAttempts}
@@ -297,13 +289,11 @@ export default function SecuritySettingsPage() {
                   min="1"
                   max="10"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Account will be locked after this many failed attempts
-                </p>
+                <p className="text-sm text-muted-foreground">{t('maxAttemptsHint')}</p>
               </div>
 
               <div className="space-y-2">
-                <Label>Lockout Duration (minutes)</Label>
+                <Label>{t('lockoutDuration')}</Label>
                 <Input
                   type="number"
                   value={lockoutDurationMinutes}
@@ -311,7 +301,7 @@ export default function SecuritySettingsPage() {
                   min="1"
                   max="1440"
                 />
-                <p className="text-sm text-muted-foreground">How long the account remains locked</p>
+                <p className="text-sm text-muted-foreground">{t('lockoutDurationHint')}</p>
               </div>
             </div>
           </CardContent>
@@ -322,17 +312,15 @@ export default function SecuritySettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              Two-Factor Authentication
+              {t('twoFactor')}
             </CardTitle>
-            <CardDescription>Add an extra layer of security to user accounts</CardDescription>
+            <CardDescription>{t('twoFactorDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <Label>Require Two-Factor Authentication</Label>
-                <p className="text-sm text-muted-foreground">
-                  Force all users to enable 2FA for their accounts
-                </p>
+                <Label>{t('requireTwoFactor')}</Label>
+                <p className="text-sm text-muted-foreground">{t('requireTwoFactorHint')}</p>
               </div>
               <Switch checked={requireTwoFactor} onCheckedChange={setRequireTwoFactor} />
             </div>
@@ -344,35 +332,31 @@ export default function SecuritySettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              IP Address Management
+              {t('ipManagement')}
             </CardTitle>
-            <CardDescription>Control access based on IP addresses (optional)</CardDescription>
+            <CardDescription>{t('ipManagementDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Allowed IP Addresses</Label>
+              <Label>{t('allowedIps')}</Label>
               <Textarea
                 value={allowedIPs}
                 onChange={(e) => setAllowedIPs(e.target.value)}
                 placeholder="192.168.1.100&#10;10.0.0.0/24"
                 rows={4}
               />
-              <p className="text-sm text-muted-foreground">
-                Enter one IP address or CIDR range per line. Leave empty to allow all IPs.
-              </p>
+              <p className="text-sm text-muted-foreground">{t('allowedIpsHint')}</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Blocked IP Addresses</Label>
+              <Label>{t('blockedIps')}</Label>
               <Textarea
                 value={blockedIPs}
                 onChange={(e) => setBlockedIPs(e.target.value)}
                 placeholder="192.168.1.200&#10;203.0.113.0/24"
                 rows={4}
               />
-              <p className="text-sm text-muted-foreground">
-                Enter one IP address or CIDR range per line. These IPs will be denied access.
-              </p>
+              <p className="text-sm text-muted-foreground">{t('blockedIpsHint')}</p>
             </div>
           </CardContent>
         </Card>
@@ -389,22 +373,22 @@ export default function SecuritySettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-yellow-800">
               <AlertTriangle className="w-5 h-5" />
-              Important Security Notice
+              {t('noticeTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-yellow-700 space-y-2">
-            <p>• Changes to security settings affect all users immediately</p>
-            <p>• Stricter password policies may require users to reset their passwords</p>
-            <p>• Be careful with IP restrictions to avoid locking yourself out</p>
-            <p>• Always test security changes in a non-production environment first</p>
-            <p>• Enabling 2FA is highly recommended for admin accounts</p>
+            <p>• {t('notice1')}</p>
+            <p>• {t('notice2')}</p>
+            <p>• {t('notice3')}</p>
+            <p>• {t('notice4')}</p>
+            <p>• {t('notice5')}</p>
           </CardContent>
         </Card>
 
         {/* Save Button */}
         <div className="flex justify-end">
           <Button onClick={handleSaveSettings} disabled={saving} size="lg">
-            {saving ? 'Saving...' : 'Save Security Settings'}
+            {saving ? t('saving') : t('saveSecuritySettings')}
           </Button>
         </div>
       </div>

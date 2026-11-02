@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type { VoiceState } from '@/hooks/use-web-voice'
 
 interface AudioWaveformProps {
@@ -21,6 +22,7 @@ export function AudioWaveform({
   width = 220,
   height = 36,
 }: AudioWaveformProps) {
+  const t = useTranslations('ai.waveform')
   if (state !== 'listening' && state !== 'speaking') return null
 
   const barWidth = Math.max(2, (width / barCount) * 0.55)
@@ -34,7 +36,7 @@ export function AudioWaveform({
       className="flex items-center justify-center"
       style={{ width, height }}
       role="img"
-      aria-label={state === 'listening' ? 'Audio input level' : 'Audio output level'}
+      aria-label={state === 'listening' ? t('input') : t('output')}
     >
       {Array.from({ length: barCount }, (_, i) => {
         // Center-weighted: bars near center are taller

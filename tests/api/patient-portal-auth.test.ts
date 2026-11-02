@@ -14,6 +14,12 @@ vi.mock('@/lib/patient-auth', () => ({
   requirePatientAuth: vi.fn(),
 }))
 
+// Shared rate limiter — default to allowed; individual tests block it.
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 1, retryAfterMs: 0 }),
+  getClientIp: vi.fn(() => 'test-ip'),
+}))
+
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { POST as sendOtpPOST } from '@/app/api/patient-portal/auth/send-otp/route'
@@ -21,6 +27,7 @@ import { POST as verifyOtpPOST } from '@/app/api/patient-portal/auth/verify-otp/
 import { POST as logoutPOST } from '@/app/api/patient-portal/auth/logout/route'
 import { GET as dashboardGET } from '@/app/api/patient-portal/dashboard/route'
 import { requirePatientAuth } from '@/lib/patient-auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -113,7 +120,12 @@ describe('POST /api/patient-portal/auth/send-otp', () => {
       patientPortalEnabled: true,
     } as any)
     vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'p1', firstName: 'John' } as any)
-    vi.mocked(prisma.patientOTP.count).mockResolvedValue(5)
+    // The shared limiter reports the per-phone window exhausted.
+    vi.mocked(checkRateLimit).mockResolvedValueOnce({
+      allowed: false,
+      remaining: 0,
+      retryAfterMs: 60000,
+    })
 
     const res = await sendOtpPOST(
       makeReq('/api/patient-portal/auth/send-otp', 'POST', {

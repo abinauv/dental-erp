@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import {
   startOfDay,
   endOfDay,
@@ -544,7 +545,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Analytics API error:', error)
+    logger.error({ err: error }, 'Analytics API error:')
     return NextResponse.json({ error: 'Failed to fetch analytics data' }, { status: 500 })
   }
 }

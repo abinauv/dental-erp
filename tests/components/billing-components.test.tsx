@@ -172,7 +172,7 @@ describe('PaymentCheckout', () => {
       fireEvent.click(payButtons[payButtons.length - 1])
 
       await waitFor(() => {
-        expect(screen.getByText('Preparing payment...')).toBeInTheDocument()
+        expect(screen.getByText('Preparing payment…')).toBeInTheDocument()
       })
     })
 
