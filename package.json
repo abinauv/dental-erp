@@ -130,7 +130,7 @@
     "@vitest/ui": "^5.0.5",
     "axe-core": "^4.11.1",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.1.6",
+    "eslint-config-next": "^16.4.3",
     "husky": "^9.1.7",
     "jsdom": "^25.0.1",
     "lint-staged": "^17.6.0",
