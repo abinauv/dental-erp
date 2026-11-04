@@ -344,7 +344,7 @@ npm start
 Deploying from the published image, all you need is Docker Engine 24+ with the
 Compose plugin. Building or developing from source needs:
 
-- Node.js 20+
+- Node.js 24 LTS (22.22.2+ also works for development)
 - MySQL 8.0+ (with a dedicated database)
 - Reverse proxy (nginx/Caddy) for HTTPS in production —
   [`docker-compose.caddy.yml`](docker-compose.caddy.yml) is a working example

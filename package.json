@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Open-source dental hospital management system for Indian dental clinics — AI-powered, GST billing, patient portal, tele-dentistry",
   "private": true,
+  "engines": {
+    "node": "^22.22.2 || >=24.15.0"
+  },
   "keywords": [
     "dental-software",
     "hospital-management-system",
