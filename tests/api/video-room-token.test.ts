@@ -50,6 +50,7 @@ describe('Video Room & Token API', () => {
   // ─── POST /api/video/room ─────────────────────────
   describe('POST /api/video/room', () => {
     it('creates a video room', async () => {
+      ;(prisma.videoConsultation.findFirst as any).mockResolvedValue({ id: 'consult-123' })
       mockVideoService.createRoom.mockResolvedValue({
         roomName: 'consult-123',
         roomUrl: 'https://daily.co/consult-123',
@@ -62,6 +63,19 @@ describe('Video Room & Token API', () => {
       const body = await res.json()
       expect(body.roomName).toBe('consult-123')
       expect(mockVideoService.createRoom).toHaveBeenCalledWith('consult-123')
+      expect(prisma.videoConsultation.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'consult-123', hospitalId: 'hospital-1' } })
+      )
+    })
+
+    it("returns 404 for another hospital's consultation", async () => {
+      ;(prisma.videoConsultation.findFirst as any).mockResolvedValue(null)
+
+      const res = await roomModule.POST(
+        makeRoomRequest('POST', {}, { consultationId: 'other-hospital-consult' })
+      )
+      expect(res.status).toBe(404)
+      expect(mockVideoService.createRoom).not.toHaveBeenCalled()
     })
 
     it('returns 400 when consultationId missing', async () => {
@@ -83,6 +97,7 @@ describe('Video Room & Token API', () => {
   // ─── DELETE /api/video/room ───────────────────────
   describe('DELETE /api/video/room', () => {
     it('deletes a video room', async () => {
+      ;(prisma.videoConsultation.findFirst as any).mockResolvedValue({ roomName: 'room-abc' })
       mockVideoService.deleteRoom.mockResolvedValue(undefined)
 
       const res = await roomModule.DELETE(makeRoomRequest('DELETE', { roomName: 'room-abc' }))
@@ -90,6 +105,19 @@ describe('Video Room & Token API', () => {
       const body = await res.json()
       expect(body.success).toBe(true)
       expect(mockVideoService.deleteRoom).toHaveBeenCalledWith('room-abc')
+      expect(prisma.videoConsultation.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { roomName: 'room-abc', hospitalId: 'hospital-1' } })
+      )
+    })
+
+    it("returns 404 and deletes nothing for a room outside the caller's hospital", async () => {
+      ;(prisma.videoConsultation.findFirst as any).mockResolvedValue(null)
+
+      const res = await roomModule.DELETE(
+        makeRoomRequest('DELETE', { roomName: '../meeting-tokens' })
+      )
+      expect(res.status).toBe(404)
+      expect(mockVideoService.deleteRoom).not.toHaveBeenCalled()
     })
 
     it('returns 400 when roomName missing', async () => {

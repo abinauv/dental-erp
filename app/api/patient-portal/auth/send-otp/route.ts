@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     } catch (smsErr) {
       logger.error({ err: smsErr }, '[Patient Portal OTP] SMS delivery failed:')
       if (process.env.NODE_ENV !== 'production') {
-        logger.info(`[Patient Portal OTP] ${phone}: ${otp}`)
+        logger.info({ phone, otp }, '[Patient Portal OTP] SMS not sent; dev-only code')
       }
     }
 

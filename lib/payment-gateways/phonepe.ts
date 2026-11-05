@@ -1,4 +1,5 @@
 import { createHash } from 'crypto'
+import { signaturesMatch } from './signature'
 import type {
   PaymentGateway,
   CreateOrderParams,
@@ -84,7 +85,7 @@ export class PhonePeGateway implements PaymentGateway {
   }
 
   async verifyPayment(params: VerifyPaymentParams): Promise<VerifyPaymentResult> {
-    const endpoint = `/pg/v1/status/${this.merchantId}/${params.orderId}`
+    const endpoint = `/pg/v1/status/${this.merchantId}/${encodeURIComponent(String(params.orderId))}`
     const string = endpoint + this.saltKey
     const checksum = createHash('sha256').update(string).digest('hex') + '###' + this.saltIndex
 
@@ -124,7 +125,7 @@ export class PhonePeGateway implements PaymentGateway {
       const string = base64Response + '/pg/v1/status' + this.saltKey
       const expectedChecksum =
         createHash('sha256').update(string).digest('hex') + '###' + this.saltIndex
-      return expectedChecksum === signature
+      return signaturesMatch(expectedChecksum, signature)
     } catch {
       return false
     }

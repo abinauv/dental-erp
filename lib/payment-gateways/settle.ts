@@ -91,6 +91,12 @@ export async function settlePayment(input: {
       where: { hospitalId: input.hospitalId, gatewayOrderId: input.gatewayOrderId },
     })
 
+    // A reserved order belongs to exactly one invoice. Never apply it to a
+    // different one, whatever invoice the caller names.
+    if (existing && existing.invoiceId !== input.invoiceId) {
+      throw new Error('Payment order does not belong to this invoice')
+    }
+
     if (existing && existing.status === 'COMPLETED') {
       return {
         outcome: 'already_processed',

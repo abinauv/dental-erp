@@ -294,8 +294,11 @@ class EmailService {
   }
 
   private isValidEmail(email: string): boolean {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return regex.test(email)
+    // Length-capped (RFC 5321), and domain labels can't contain dots, so no two
+    // parts of the pattern compete for the same characters: matching stays
+    // linear on hostile input.
+    const regex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/
+    return email.length <= 254 && regex.test(email)
   }
 
   async trackEmailOpen(emailLogId: string) {

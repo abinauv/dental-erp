@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma'
 import ExcelJS from 'exceljs'
 import { format } from 'date-fns'
 import { logger } from '@/lib/logger'
+import { escapeHtml } from '@/lib/html'
+import { GET as getAnalytics } from '@/app/api/reports/analytics/route'
+
+const REPORT_TYPES = ['patient', 'clinical', 'financial', 'operational']
 
 async function generateExcelReport(
   type: string,
@@ -200,8 +204,8 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
   </style>
 </head>
 <body>
-  <h1>${type.charAt(0).toUpperCase() + type.slice(1)} Analytics Report</h1>
-  <p style="text-align: center; color: #666;">Period: ${dateRange}</p>
+  <h1>${escapeHtml(type.charAt(0).toUpperCase() + type.slice(1))} Analytics Report</h1>
+  <p style="text-align: center; color: #666;">Period: ${escapeHtml(dateRange)}</p>
   <p style="text-align: center; color: #666;">Generated on: ${format(new Date(), 'PPpp')}</p>
 
   ${
@@ -231,7 +235,7 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
         ${data.acquisitionSources
           .map(
             (s: any) => `
-          <tr><td>${s.source}</td><td>${s.count}</td><td>${s.percentage.toFixed(2)}%</td></tr>
+          <tr><td>${escapeHtml(s.source)}</td><td>${s.count}</td><td>${s.percentage.toFixed(2)}%</td></tr>
         `
           )
           .join('')}
@@ -264,7 +268,7 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
         ${data.commonProcedures
           .map(
             (p: any) => `
-          <tr><td>${p.name}</td><td>${p.code}</td><td>${p.count}</td><td>${p.successRate.toFixed(2)}%</td></tr>
+          <tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.code)}</td><td>${p.count}</td><td>${p.successRate.toFixed(2)}%</td></tr>
         `
           )
           .join('')}
@@ -298,7 +302,7 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
         ${data.paymentMethodBreakdown
           .map(
             (m: any) => `
-          <tr><td>${m.method}</td><td>₹${m.amount.toFixed(2)}</td><td>${m.percentage.toFixed(2)}%</td></tr>
+          <tr><td>${escapeHtml(m.method)}</td><td>₹${m.amount.toFixed(2)}</td><td>${m.percentage.toFixed(2)}%</td></tr>
         `
           )
           .join('')}
@@ -335,7 +339,7 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
         ${data.staffProductivity
           .map(
             (s: any) => `
-          <tr><td>${s.name}</td><td>${s.role}</td><td>${s.appointmentsHandled}</td><td>${s.treatmentsCompleted}</td><td>₹${s.revenue.toFixed(2)}</td></tr>
+          <tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.role)}</td><td>${s.appointmentsHandled}</td><td>${s.treatmentsCompleted}</td><td>₹${s.revenue.toFixed(2)}</td></tr>
         `
           )
           .join('')}
@@ -348,7 +352,7 @@ async function generatePDFReport(type: string, data: any, dateRange: string, hos
   }
 
   <div class="footer">
-    <p>${hospitalName}</p>
+    <p>${escapeHtml(hospitalName)}</p>
     <p>This is a system-generated report</p>
   </div>
 </body>
@@ -381,18 +385,20 @@ export async function GET(request: NextRequest) {
     const dateFromParam = searchParams.get('dateFrom')
     const dateToParam = searchParams.get('dateTo')
 
-    // Fetch the analytics data (reuse the analytics endpoint logic)
+    if (!REPORT_TYPES.includes(type)) {
+      return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+    }
+
+    // Call the analytics handler in-process (same session, same hospital).
+    // Don't fetch it over HTTP: request.url's host comes from the client's Host
+    // header, so the caller would choose where the server sends the request.
     const analyticsUrl = new URL('/api/reports/analytics', request.url)
     analyticsUrl.searchParams.set('type', type)
     analyticsUrl.searchParams.set('preset', preset)
     if (dateFromParam) analyticsUrl.searchParams.set('dateFrom', dateFromParam)
     if (dateToParam) analyticsUrl.searchParams.set('dateTo', dateToParam)
 
-    const analyticsResponse = await fetch(analyticsUrl.toString(), {
-      headers: {
-        cookie: request.headers.get('cookie') || '',
-      },
-    })
+    const analyticsResponse = await getAnalytics(new NextRequest(analyticsUrl))
 
     if (!analyticsResponse.ok) {
       throw new Error('Failed to fetch analytics data')

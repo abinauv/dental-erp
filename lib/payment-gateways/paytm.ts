@@ -1,4 +1,5 @@
 import { createHash, createHmac } from 'crypto'
+import { signaturesMatch } from './signature'
 import type {
   PaymentGateway,
   CreateOrderParams,
@@ -29,7 +30,7 @@ function verifyPaytmChecksum(
   merchantKey: string
 ): boolean {
   const generated = generatePaytmChecksum(params, merchantKey)
-  return generated === checksum
+  return signaturesMatch(generated, checksum)
 }
 
 export class PaytmGateway implements PaymentGateway {
