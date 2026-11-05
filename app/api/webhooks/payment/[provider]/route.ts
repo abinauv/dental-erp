@@ -25,8 +25,12 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
 
-    // Determine the gateway order ID from the webhook payload based on provider
+    // Determine the gateway order ID from the webhook payload based on provider,
+    // and whether the event reports a successful payment. Gateways also send
+    // signed webhooks for failed payments, refunds and other events; only a
+    // success may settle an invoice.
     let gatewayOrderId: string | null = null
+    let succeeded = false
 
     switch (provider) {
       case 'razorpay': {
@@ -36,6 +40,7 @@ export async function POST(
         >
         const paymentEntity = entity?.entity as Record<string, string> | undefined
         gatewayOrderId = paymentEntity?.order_id || null
+        succeeded = payload.event === 'payment.captured' || payload.event === 'order.paid'
         break
       }
       case 'phonepe': {
@@ -45,6 +50,7 @@ export async function POST(
           try {
             const decoded = JSON.parse(Buffer.from(base64Response, 'base64').toString('utf8'))
             gatewayOrderId = decoded.data?.merchantTransactionId || null
+            succeeded = decoded.success === true && decoded.code === 'PAYMENT_SUCCESS'
           } catch {
             // ignore parse errors
           }
@@ -54,6 +60,7 @@ export async function POST(
       case 'paytm': {
         const paytmBody = payload.body as Record<string, string> | undefined
         gatewayOrderId = paytmBody?.ORDERID || null
+        succeeded = paytmBody?.STATUS === 'TXN_SUCCESS'
         break
       }
       default:
@@ -96,6 +103,11 @@ export async function POST(
       logger.error({ err: gatewayOrderId }, 'Webhook: signature verification failed for order')
       // Return 200 so the gateway does not retry a payload we have rejected.
       return NextResponse.json({ status: 'invalid_signature' })
+    }
+
+    if (!succeeded) {
+      logger.info({ gatewayOrderId, provider }, 'Webhook: not a successful payment, not settling')
+      return NextResponse.json({ status: 'ignored' })
     }
 
     // Settle the reserved payment and apply it to the invoice. Idempotent with the

@@ -121,6 +121,7 @@ describe('POST /api/webhooks/payment/[provider]', () => {
       makeReq(
         'razorpay',
         {
+          event: 'payment.captured',
           payload: {
             payment: {
               entity: { order_id: 'order_456', status: 'captured' },
@@ -176,6 +177,52 @@ describe('POST /api/webhooks/payment/[provider]', () => {
     const body = await res.json()
 
     expect(body.status).toBe('invalid_signature')
+    expect(prisma.invoice.update).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [
+      'razorpay',
+      {
+        event: 'payment.failed',
+        payload: { payment: { entity: { order_id: 'order_fail', status: 'failed' } } },
+      },
+    ],
+    [
+      'phonepe',
+      {
+        response: Buffer.from(
+          JSON.stringify({
+            success: false,
+            code: 'PAYMENT_ERROR',
+            data: { merchantTransactionId: 'order_fail' },
+          })
+        ).toString('base64'),
+      },
+    ],
+    ['paytm', { body: { ORDERID: 'order_fail', STATUS: 'TXN_FAILURE' } }],
+  ])('does not settle the invoice on a signed %s failure webhook', async (provider, payload) => {
+    vi.mocked(prisma.payment.findFirst).mockResolvedValue({
+      id: 'pay7',
+      hospitalId: 'h1',
+      status: 'PENDING',
+      invoiceId: 'inv7',
+      amount: 2500,
+      gatewayOrderId: 'order_fail',
+    } as any)
+    mockGetGateway.mockResolvedValue({
+      gateway: { verifyWebhook: vi.fn().mockReturnValue(true) },
+      credentials: { webhookSecret: 'whsec_123' },
+    })
+
+    const res = await webhookPOST(
+      makeReq(provider, payload, { 'x-razorpay-signature': 'sig', 'x-verify': 'sig' }),
+      makeParams(provider) as any
+    )
+    const body = await res.json()
+
+    expect(body.status).toBe('ignored')
+    expect(prisma.payment.update).not.toHaveBeenCalled()
     expect(prisma.invoice.update).not.toHaveBeenCalled()
   })
 

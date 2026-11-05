@@ -191,6 +191,48 @@ describe('POST /api/payments/verify', () => {
       expect.objectContaining({ data: expect.objectContaining({ status: 'PAID' }) })
     )
   })
+
+  it('refuses to apply an order reserved for another invoice', async () => {
+    mockHospitalAuth()
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
+      id: 'inv1',
+      hospitalId: 'h1',
+      balanceAmount: 5000,
+      paidAmount: 0,
+      totalAmount: 5000,
+    } as any)
+    vi.mocked(getGateway).mockResolvedValue({
+      gateway: {
+        verifyPayment: vi.fn().mockResolvedValue({
+          verified: true,
+          status: 'COMPLETED',
+          transactionId: 'txn9',
+          amount: 5000,
+        }),
+      },
+      credentials: { provider: 'PAYTM' },
+    } as any)
+    // The order was reserved (and paid) for a different invoice.
+    vi.mocked(prisma.payment.findFirst).mockResolvedValue({
+      id: 'pay-other',
+      paymentNo: 'PAY00009',
+      invoiceId: 'inv-other',
+      status: 'PENDING',
+      amount: 5000,
+    } as any)
+
+    const res = await verifyPOST(
+      makeReq('/api/payments/verify', 'POST', {
+        invoiceId: 'inv1',
+        orderId: 'order-for-inv-other',
+        paymentId: 'pay9',
+      })
+    )
+
+    expect(res.status).toBe(500)
+    expect(prisma.payment.update).not.toHaveBeenCalled()
+    expect(prisma.invoice.update).not.toHaveBeenCalled()
+  })
 })
 
 // ═════════════════════════════════════════════════════════════════════════════

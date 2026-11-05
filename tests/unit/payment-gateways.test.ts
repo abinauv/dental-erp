@@ -3,11 +3,33 @@ import { createHmac, createHash } from 'crypto'
 import { RazorpayGateway } from '@/lib/payment-gateways/razorpay'
 import { PhonePeGateway } from '@/lib/payment-gateways/phonepe'
 import { PaytmGateway } from '@/lib/payment-gateways/paytm'
+import { signaturesMatch } from '@/lib/payment-gateways/signature'
 import type {
   CreateOrderParams,
   GatewayCredentials,
   GatewayOrder,
 } from '@/lib/payment-gateways/types'
+
+// ---- Signature comparison ----
+
+describe('signaturesMatch', () => {
+  it('matches identical signatures', () => {
+    expect(signaturesMatch('abc123', 'abc123')).toBe(true)
+  })
+
+  it('rejects a different signature of the same length', () => {
+    expect(signaturesMatch('abc123', 'abc124')).toBe(false)
+  })
+
+  it('rejects a signature of a different length', () => {
+    expect(signaturesMatch('abc123', 'abc12')).toBe(false)
+  })
+
+  it('rejects a missing or non-string signature', () => {
+    expect(signaturesMatch('abc123', undefined)).toBe(false)
+    expect(signaturesMatch('abc123', ['abc123'])).toBe(false)
+  })
+})
 
 // ---- Shared test fixtures ----
 
@@ -178,6 +200,25 @@ describe('RazorpayGateway', () => {
 
       expect(result.verified).toBe(true)
       expect(result.status).toBe('authorized')
+    })
+
+    it('does not verify a failed payment even with a valid signature', async () => {
+      const orderId = 'order_f'
+      const paymentId = 'pay_f'
+      const sig = createHmac('sha256', creds.razorpayKeySecret!)
+        .update(`${orderId}|${paymentId}`)
+        .digest('hex')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ status: 'failed', amount: 50000, method: 'card' }),
+      })
+
+      const gw = new RazorpayGateway(creds)
+      const result = await gw.verifyPayment({ orderId, paymentId, signature: sig })
+
+      expect(result.verified).toBe(false)
+      expect(result.status).toBe('failed')
     })
   })
 

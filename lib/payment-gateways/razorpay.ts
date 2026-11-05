@@ -1,4 +1,5 @@
 import { createHmac } from 'crypto'
+import { signaturesMatch } from './signature'
 import type {
   PaymentGateway,
   CreateOrderParams,
@@ -72,14 +73,18 @@ export class RazorpayGateway implements PaymentGateway {
     const body = `${params.orderId}|${params.paymentId}`
     const expectedSignature = createHmac('sha256', this.keySecret).update(body).digest('hex')
 
-    const verified = expectedSignature === params.signature
-
-    if (!verified) {
+    if (!signaturesMatch(expectedSignature, params.signature)) {
       return { verified: false, transactionId: '', status: 'FAILED' }
     }
 
     // Fetch payment details from Razorpay to confirm
-    const payment = await this.request(`/payments/${params.paymentId}`)
+    const payment = await this.request(`/payments/${encodeURIComponent(String(params.paymentId))}`)
+
+    // The signature proves the payment belongs to the order, not that it went
+    // through: a failed or refunded payment must not settle the invoice.
+    if (payment.status !== 'captured' && payment.status !== 'authorized') {
+      return { verified: false, transactionId: params.paymentId as string, status: payment.status }
+    }
 
     return {
       verified: true,
@@ -92,7 +97,7 @@ export class RazorpayGateway implements PaymentGateway {
 
   verifyWebhook(body: string, signature: string, secret: string): boolean {
     const expectedSignature = createHmac('sha256', secret).update(body).digest('hex')
-    return expectedSignature === signature
+    return signaturesMatch(expectedSignature, signature)
   }
 
   getCheckoutConfig(order: GatewayOrder, credentials: GatewayCredentials): CheckoutConfig {
