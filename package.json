@@ -95,7 +95,7 @@
     "bullmq": "^6.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.4.0",
     "exceljs": "^4.4.0",
     "ioredis": "^6.0.0",
     "jose": "^6.2.14",
