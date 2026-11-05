@@ -196,7 +196,11 @@ model User {
   id                 String    @id @default(cuid())
   hospitalId         String
   email              String    @unique
-  password           String
+  // bcrypt hash, kept in step with the credential BaAccount row (see
+  // lib/auth-credentials). The empty default exists only so Better Auth's
+  // schema check accepts the column — Better Auth never inserts users here,
+  // the app always sets a real hash, and an empty hash can never authenticate.
+  password           String    @default("")
   name               String
   phone              String?
   role               Role      @default(RECEPTIONIST)

@@ -41,6 +41,20 @@ describe('Better Auth — role helpers', () => {
   })
 })
 
+describe('Better Auth — sign-up and credential sync config', () => {
+  it('disables Better Auth sign-up (users are created by the app only)', async () => {
+    const { auth } = await import('@/lib/auth')
+    expect(auth.options.emailAndPassword?.disableSignUp).toBe(true)
+  })
+
+  it('mirrors credential writes Better Auth makes back onto User.password', async () => {
+    const { auth } = await import('@/lib/auth')
+    const { mirrorCredentialPassword } = await import('@/lib/auth-credentials')
+    expect(auth.options.databaseHooks?.account?.create?.after).toBe(mirrorCredentialPassword)
+    expect(auth.options.databaseHooks?.account?.update?.after).toBe(mirrorCredentialPassword)
+  })
+})
+
 describe('Better Auth — route handler', () => {
   it('exposes GET and POST on the catch-all handler', async () => {
     const route = await import('@/app/api/auth/[...all]/route')

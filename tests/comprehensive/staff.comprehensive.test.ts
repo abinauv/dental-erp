@@ -52,12 +52,17 @@ const mockPrisma = vi.mocked(prisma)
 const mockRequireAuth = vi.mocked(requireAuthAndRole)
 const mockCheckStaffLimit = vi.mocked(checkStaffLimit)
 
+// Better Auth credential writes made inside the staff-creation transaction.
+const mockTxBaAccount = { updateMany: vi.fn(), create: vi.fn() }
+
 describe('Staff API - Comprehensive Tests', () => {
   const mockHospitalId = 'hospital-123'
   const mockUserId = 'user-123'
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockTxBaAccount.updateMany.mockResolvedValue({ count: 0 })
+    mockTxBaAccount.create.mockResolvedValue({})
     mockRequireAuth.mockResolvedValue({
       error: null,
       hospitalId: mockHospitalId,
@@ -209,6 +214,7 @@ describe('Staff API - Comprehensive Tests', () => {
           user: {
             create: vi.fn().mockResolvedValue({ id: 'new-user-id' }),
           },
+          baAccount: mockTxBaAccount,
           staff: {
             create: vi.fn().mockResolvedValue({
               id: 'new-staff-id',
@@ -235,6 +241,16 @@ describe('Staff API - Comprehensive Tests', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(201)
+      // The new staff member can sign in on the web: Better Auth's credential
+      // gets the same hash as User.password.
+      expect(mockTxBaAccount.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          id: 'bacred_new-user-id',
+          providerId: 'credential',
+          userId: 'new-user-id',
+          password: 'hashed_password',
+        }),
+      })
     })
 
     it('should reject staff creation without required fields', async () => {

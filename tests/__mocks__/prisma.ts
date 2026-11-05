@@ -31,6 +31,17 @@ const mockPrismaClient = {
     count: vi.fn(),
   },
 
+  // BaAccount (Better Auth credentials). Defaults model "no credential row
+  // yet", so syncCredentialAccount() creates one; tests can override.
+  baAccount: {
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(async ({ data }: any) => data),
+    update: vi.fn(),
+    updateMany: vi.fn(async () => ({ count: 0 })),
+    delete: vi.fn(),
+  },
+
   // Patient
   patient: {
     findUnique: vi.fn(),

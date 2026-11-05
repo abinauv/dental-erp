@@ -5,6 +5,7 @@ import { genericOAuth, customSession } from 'better-auth/plugins'
 import { APIError } from 'better-auth/api'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
+import { mirrorCredentialPassword } from './auth-credentials'
 
 // Better Auth replaces next-auth as the staff/web session layer. The two
 // independent token paths are unchanged and intentionally NOT routed through
@@ -19,9 +20,14 @@ import { prisma } from './prisma'
 // - Sessions/accounts/verifications live in new `BaSession`/`BaAccount`/
 //   `BaVerification` tables (the vestigial next-auth-shaped Account/Session/
 //   VerificationToken models were unused and are left alone).
-// - Existing passwords are bcrypt in `User.password`; a migration backfills a
-//   `BaAccount` credential row per user, and the custom hash/verify below keep
-//   bcrypt so no one has to reset their password.
+// - Passwords are bcrypt and live in two places that must agree: Better Auth
+//   verifies the credential `BaAccount` row, while the mobile token route and
+//   the app's user management use `User.password`. App code writes both via
+//   syncCredentialAccount (lib/auth-credentials); the account hooks below cover
+//   writes Better Auth makes itself. Migrations backfilled and re-synced the
+//   rows, and the custom hash/verify keep bcrypt so no one had to reset.
+// - Users are only ever created by the app, so Better Auth sign-up is disabled
+//   (email/password and SSO).
 
 // Keep bcrypt for both hashing new passwords and verifying existing hashes, so
 // the migration needs no password resets. Exported for tests.
@@ -47,6 +53,10 @@ const oidcPlugins = oidcEnabled
             clientId: process.env.OIDC_CLIENT_ID || '',
             clientSecret: process.env.OIDC_CLIENT_SECRET || '',
             scopes: ['openid', 'email', 'profile'],
+            // SSO signs existing staff in (matched by verified email); it never
+            // creates users. Every user must belong to a hospital, which only
+            // the app's signup / invite / staff flows can provide.
+            disableSignUp: true,
           },
         ],
       }),
@@ -61,6 +71,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    // Users are created by the app (clinic signup, invites, staff management,
+    // data import), never through Better Auth's own /sign-up/email endpoint.
+    disableSignUp: true,
     // Preserve existing bcrypt hashes (and keep hashing new passwords with
     // bcrypt) so the migration needs no password resets.
     password: { hash: hashPassword, verify: verifyPassword },
@@ -123,6 +136,13 @@ export const auth = betterAuth({
           return { data: session }
         },
       },
+    },
+    // Keep User.password in step when Better Auth itself writes a credential
+    // (e.g. its /change-password endpoint). App code syncs the other direction
+    // through syncCredentialAccount (lib/auth-credentials).
+    account: {
+      create: { after: mirrorCredentialPassword },
+      update: { after: mirrorCredentialPassword },
     },
   },
 

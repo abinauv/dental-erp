@@ -6,6 +6,7 @@ import { generateUniqueSlug, generateToken, PLAN_LIMITS } from '@/lib/api-helper
 import { Plan, Role } from '@prisma/client'
 import { sendVerificationEmail } from '@/lib/email-helpers'
 import { logger } from '@/lib/logger'
+import { syncCredentialAccount } from '@/lib/auth-credentials'
 
 const signupSchema = z.object({
   hospitalName: z.string().min(2, 'Hospital name must be at least 2 characters'),
@@ -94,6 +95,7 @@ export async function POST(request: Request) {
           },
         },
       })
+      await syncCredentialAccount(tx, user.id, hashedPassword)
 
       return { hospital, user }
     })

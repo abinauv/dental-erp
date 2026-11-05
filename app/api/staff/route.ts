@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkStaffLimit } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
+import { syncCredentialAccount } from '@/lib/auth-credentials'
 
 // GET - List staff members
 export async function GET(request: NextRequest) {
@@ -192,6 +193,7 @@ export async function POST(request: NextRequest) {
           hospitalId,
         },
       })
+      await syncCredentialAccount(tx, user.id, hashedPassword)
 
       // Create staff profile
       const staff = await tx.staff.create({
