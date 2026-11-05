@@ -6,6 +6,7 @@ import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
+import { syncCredentialAccount } from '@/lib/auth-credentials'
 
 export async function POST(req: NextRequest) {
   const { error, session, hospitalId } = await requireAuthAndRole(['ADMIN'])
@@ -361,6 +362,7 @@ async function importStaff(
             mustChangePassword: true,
           },
         })
+        await syncCredentialAccount(tx, user.id, hashedPassword)
 
         await tx.staff.create({
           data: {

@@ -67,6 +67,18 @@ describe('POST /api/public/invite/accept', () => {
     const body = await res.json()
     expect(body.success).toBe(true)
     expect(body.hospitalName).toBe('Test Clinic')
+
+    // The invited user can sign in on the web: their Better Auth credential is
+    // created with the same hash written to User.password.
+    const userPassword = (prisma.user.create as any).mock.calls[0][0].data.password
+    expect(prisma.baAccount.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        id: 'bacred_user-new',
+        providerId: 'credential',
+        userId: 'user-new',
+        password: userPassword,
+      }),
+    })
   })
 
   it('returns 400 for Zod validation failure', async () => {

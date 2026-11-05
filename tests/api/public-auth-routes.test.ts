@@ -112,6 +112,10 @@ describe('POST /api/public/signup', () => {
       user: {
         create: vi.fn().mockResolvedValue({ id: 'u1', email: 'admin@testdental.com' }),
       },
+      baAccount: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+        create: vi.fn().mockResolvedValue({}),
+      },
     }
     vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as any))
 
@@ -150,6 +154,18 @@ describe('POST /api/public/signup', () => {
         }),
       })
     )
+
+    // Better Auth web sign-in reads the credential BaAccount, so the new admin
+    // gets one with the same hash as User.password, in the same transaction.
+    expect(mockTx.baAccount.create).toHaveBeenCalledWith({
+      data: {
+        id: 'bacred_u1',
+        accountId: 'u1',
+        providerId: 'credential',
+        userId: 'u1',
+        password: '$2a$10$hashedpassword',
+      },
+    })
   })
 
   it('handles email sending failure gracefully', async () => {
@@ -159,6 +175,10 @@ describe('POST /api/public/signup', () => {
     const mockTx = {
       hospital: { create: vi.fn().mockResolvedValue({ id: 'h1' }) },
       user: { create: vi.fn().mockResolvedValue({ id: 'u1' }) },
+      baAccount: {
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+        create: vi.fn().mockResolvedValue({}),
+      },
     }
     vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as any))
 

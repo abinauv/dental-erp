@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { StaffInviteStatus, Role } from '@prisma/client'
 import { logger } from '@/lib/logger'
+import { syncCredentialAccount } from '@/lib/auth-credentials'
 
 const acceptInviteSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
           },
         },
       })
+      await syncCredentialAccount(tx, user.id, hashedPassword)
 
       // Mark invite as accepted
       await tx.staffInvite.update({

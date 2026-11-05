@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
+import { syncCredentialAccount } from '@/lib/auth-credentials'
 
 // GET - Get single staff member details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -120,6 +121,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           where: { id: existingStaff.userId },
           data: userUpdateData,
         })
+        if (userUpdateData.password) {
+          await syncCredentialAccount(tx, existingStaff.userId, userUpdateData.password)
+        }
       }
 
       // Update staff profile

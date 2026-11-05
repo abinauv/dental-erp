@@ -98,6 +98,50 @@ describe('POST /api/data-import/commit', () => {
     )
   })
 
+  it('gives imported staff a Better Auth credential matching User.password', async () => {
+    ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
+      id: 'job-staff',
+      hospitalId: 'hospital-1',
+      entityType: 'staff',
+      filePath: 'uploads/hospital-1/imports/staff.csv',
+      fileType: 'csv',
+      fileName: 'staff.csv',
+    })
+    ;(prisma.dataImportJob.update as any).mockResolvedValue({})
+    mockStorage.get.mockResolvedValue({
+      body: Buffer.from('data'),
+      contentType: 'text/csv',
+      size: 4,
+    })
+    mockParsers.parseFile.mockResolvedValue({
+      columns: ['Name', 'Email', 'Phone', 'Emp'],
+      rows: [{ Name: 'Asha Rao', Email: 'asha@clinic.test', Phone: '9876500001', Emp: 'EMP900' }],
+      totalRows: 1,
+    })
+    ;(prisma.user.findUnique as any).mockResolvedValue(null)
+    ;(prisma.user.create as any).mockResolvedValue({ id: 'imported-user-1' })
+    ;(prisma.staff.create as any).mockResolvedValue({})
+    ;(prisma.auditLog.create as any).mockResolvedValue({})
+
+    const res = await mod.POST(
+      makeRequest({
+        jobId: 'job-staff',
+        mapping: { Name: 'firstName', Email: 'email', Phone: 'phone', Emp: 'employeeId' },
+      })
+    )
+
+    expect(res.status).toBe(200)
+    expect((await res.json()).imported).toBe(1)
+    expect(prisma.baAccount.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        id: 'bacred_imported-user-1',
+        providerId: 'credential',
+        userId: 'imported-user-1',
+        password: 'hashed-password',
+      }),
+    })
+  })
+
   it('imports inventory items successfully', async () => {
     ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
       id: 'job-2',
