@@ -125,7 +125,6 @@ async function main() {
     }
 
     const absolute = path.join(options.root, ...relative.split('/'))
-    const size = (await stat(absolute)).size
 
     if (!options.overwrite && (await target.exists(key))) {
       skipped++
@@ -133,6 +132,7 @@ async function main() {
     }
 
     if (options.dryRun) {
+      const size = (await stat(absolute)).size
       console.log(`would copy  ${key}  (${humanBytes(size)})`)
       copied++
       bytes += size
@@ -140,7 +140,11 @@ async function main() {
     }
 
     try {
-      await target.put(key, await readFile(absolute))
+      // Read once and check the copy against the bytes actually read, not an
+      // earlier stat the file may have changed since.
+      const body = await readFile(absolute)
+      const size = body.length
+      await target.put(key, body)
 
       // Verify rather than trust. A silent short write here is patient data
       // that looks migrated and is not.

@@ -209,7 +209,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
   }
 
   // In-call view
-  if (inCall && tokenData && consultation) {
+  if (inCall && tokenData) {
     return (
       <div className="h-[calc(100vh-120px)]">
         <VideoRoom
