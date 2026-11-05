@@ -114,7 +114,7 @@ export async function deleteRoom(roomName: string): Promise<void> {
   if (provider !== 'daily') return
 
   try {
-    await dailyFetch(`/rooms/${roomName}`, { method: 'DELETE' })
+    await dailyFetch(`/rooms/${encodeURIComponent(roomName)}`, { method: 'DELETE' })
   } catch {
     // Room may already be expired/deleted — ignore
   }
@@ -162,7 +162,7 @@ export async function getRoomInfo(roomName: string) {
   if (provider !== 'daily') return null
 
   try {
-    return await dailyFetch(`/rooms/${roomName}`)
+    return await dailyFetch(`/rooms/${encodeURIComponent(roomName)}`)
   } catch {
     return null
   }

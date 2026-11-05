@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { createRoom, deleteRoom } from '@/lib/services/video.service'
 
@@ -7,7 +8,7 @@ import { createRoom, deleteRoom } from '@/lib/services/video.service'
  * Create a video room for a consultation.
  */
 export async function POST(req: Request) {
-  const { error } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error) return error
 
   const body = await req.json()
@@ -17,7 +18,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'consultationId is required' }, { status: 400 })
   }
 
-  const room = await createRoom(consultationId)
+  const consultation = await prisma.videoConsultation.findFirst({
+    where: { id: consultationId, hospitalId },
+    select: { id: true },
+  })
+  if (!consultation) {
+    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
+  }
+
+  const room = await createRoom(consultation.id)
   return NextResponse.json(room, { status: 201 })
 }
 
@@ -26,7 +35,7 @@ export async function POST(req: Request) {
  * Delete/cleanup a video room.
  */
 export async function DELETE(req: Request) {
-  const { error } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error) return error
 
   const { searchParams } = new URL(req.url)
@@ -36,6 +45,15 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: 'roomName is required' }, { status: 400 })
   }
 
-  await deleteRoom(roomName)
+  // Only rooms that belong to one of this hospital's consultations.
+  const consultation = await prisma.videoConsultation.findFirst({
+    where: { roomName, hospitalId },
+    select: { roomName: true },
+  })
+  if (!consultation) {
+    return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+  }
+
+  await deleteRoom(consultation.roomName)
   return NextResponse.json({ success: true })
 }
