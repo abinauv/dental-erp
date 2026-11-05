@@ -5,11 +5,11 @@ const mockAuth = vi.hoisted(() => ({
   requireAuthAndRole: vi.fn(),
 }))
 
-const mockFetch = vi.hoisted(() => vi.fn())
+const mockAnalytics = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
-vi.stubGlobal('fetch', mockFetch)
+vi.mock('@/app/api/reports/analytics/route', () => ({ GET: mockAnalytics }))
 
 const mod = await import('@/app/api/reports/export/route')
 
@@ -31,8 +31,7 @@ describe('GET /api/reports/export', () => {
   })
 
   it('returns Excel file for patient analytics export', async () => {
-    // Mock internal fetch to analytics endpoint
-    mockFetch.mockResolvedValue({
+    mockAnalytics.mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -54,7 +53,7 @@ describe('GET /api/reports/export', () => {
   })
 
   it('returns HTML for PDF format export', async () => {
-    mockFetch.mockResolvedValue({
+    mockAnalytics.mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -77,7 +76,7 @@ describe('GET /api/reports/export', () => {
   })
 
   it('exports financial report with payment method breakdown', async () => {
-    mockFetch.mockResolvedValue({
+    mockAnalytics.mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -101,7 +100,7 @@ describe('GET /api/reports/export', () => {
   })
 
   it('exports operational report', async () => {
-    mockFetch.mockResolvedValue({
+    mockAnalytics.mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -127,7 +126,7 @@ describe('GET /api/reports/export', () => {
   })
 
   it('returns 400 for invalid export format', async () => {
-    mockFetch.mockResolvedValue({
+    mockAnalytics.mockResolvedValue({
       ok: true,
       json: () =>
         Promise.resolve({
@@ -146,11 +145,69 @@ describe('GET /api/reports/export', () => {
   })
 
   it('returns 500 when analytics fetch fails', async () => {
-    mockFetch.mockResolvedValue({ ok: false })
+    mockAnalytics.mockResolvedValue({ ok: false })
 
     const req = makeRequest({ type: 'patient', format: 'excel' })
     const res = await mod.GET(req)
     expect(res.status).toBe(500)
+  })
+
+  it('calls the analytics handler in-process with the report parameters', async () => {
+    mockAnalytics.mockResolvedValue({ ok: false })
+
+    await mod.GET(makeRequest({ type: 'clinical', format: 'pdf', preset: 'last_month' }))
+
+    expect(mockAnalytics).toHaveBeenCalledTimes(1)
+    const url = new URL(mockAnalytics.mock.calls[0][0].url)
+    expect(url.pathname).toBe('/api/reports/analytics')
+    expect(url.searchParams.get('type')).toBe('clinical')
+    expect(url.searchParams.get('preset')).toBe('last_month')
+  })
+
+  it('returns 400 for an unknown report type without running analytics', async () => {
+    const res = await mod.GET(makeRequest({ type: '<script>', format: 'pdf' }))
+    expect(res.status).toBe(400)
+    expect(mockAnalytics).not.toHaveBeenCalled()
+  })
+
+  it('escapes request and database text in the HTML report', async () => {
+    ;(prisma.hospital.findUnique as any).mockResolvedValue({ name: 'Clinic <b>One</b>' })
+    mockAnalytics.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          totalAppointments: 1,
+          completedAppointments: 1,
+          cancelledAppointments: 0,
+          noShowCount: 0,
+          noShowRate: 0,
+          appointmentUtilization: 0,
+          avgWaitTime: 0,
+          inventoryTurnover: 0,
+          lowStockItems: 0,
+          staffProductivity: [
+            {
+              name: '<script>alert(1)</script>',
+              role: '"><img src=x onerror=alert(2)>',
+              appointmentsHandled: 1,
+              treatmentsCompleted: 1,
+              revenue: 0,
+            },
+          ],
+        }),
+    })
+
+    const res = await mod.GET(
+      makeRequest({ type: 'operational', format: 'pdf', preset: '<img src=x onerror=alert(3)>' })
+    )
+    expect(res.status).toBe(200)
+    const body = await res.text()
+    expect(body).not.toContain('<script>alert(1)</script>')
+    expect(body.toLowerCase()).not.toContain('<img src=x')
+    expect(body).toContain('&lt;Img Src=X Onerror=Alert(3)&gt;')
+    expect(body).not.toContain('<b>One</b>')
+    expect(body).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+    expect(body).toContain('Clinic &lt;b&gt;One&lt;/b&gt;')
   })
 
   it('returns 401 when not authenticated', async () => {

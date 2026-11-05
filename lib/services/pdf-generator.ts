@@ -7,6 +7,8 @@
  * and can also be served as a downloadable HTML document.
  */
 
+import { escapeHtml } from '@/lib/html'
+
 interface PdfFormData {
   clinicName: string
   clinicAddress?: string
@@ -170,13 +172,4 @@ export function generateFormPdfHtml(data: PdfFormData): string {
   </div>
 </body>
 </html>`
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
 }
