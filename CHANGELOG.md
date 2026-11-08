@@ -11,6 +11,8 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-08
+
 ### Fixed
 
 - Clinics are no longer capped at 3 staff, 100 patients and 500 MB of
