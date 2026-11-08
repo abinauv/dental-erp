@@ -11,6 +11,8 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-08
+
 ### Added
 
 - Internationalization across the client UI with `next-intl` and clinic-aware
