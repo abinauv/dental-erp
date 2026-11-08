@@ -18,6 +18,15 @@ async function verifyMobileToken(): Promise<any | null> {
     const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
     const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] })
 
+    // A JWT can't be revoked, so check on every request that the user and the
+    // clinic are still active. Deactivating staff then cuts off mobile access
+    // straight away instead of when the token expires.
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { isActive: true, hospital: { select: { isActive: true } } },
+    })
+    if (!user?.isActive || !user.hospital?.isActive) return null
+
     return {
       id: payload.sub,
       email: payload.email,

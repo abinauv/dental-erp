@@ -42,6 +42,11 @@ const mockPrismaClient = {
     delete: vi.fn(),
   },
 
+  // BaSession (Better Auth web sessions), revoked on deactivation/reset.
+  baSession: {
+    deleteMany: vi.fn(async () => ({ count: 0 })),
+  },
+
   // Patient
   patient: {
     findUnique: vi.fn(),

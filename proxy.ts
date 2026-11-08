@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
+import { auth } from '@/lib/auth'
 
 // Routes that require specific roles
 const roleRoutes: Record<string, string[]> = {
@@ -30,25 +31,23 @@ const publicRoutes = [
   '/pay',
 ]
 
-// Fetch the full session (incl. role) for role-gated prefixes. getSessionCookie
+// Read the full session (incl. role) for role-gated prefixes. getSessionCookie
 // is presence-only, so role checks need the session itself. This runs only on
 // navigations to role-gated areas, keeping the common path cookie-only.
-async function getSessionRole(req: NextRequest, origin: string): Promise<string | null> {
+//
+// Read in-process (proxy runs on the Node.js runtime), not by fetching
+// /api/auth/get-session: those self-requests all came from one address, so
+// Better Auth's rate limiter throttled them as a single client.
+async function getSessionRole(req: NextRequest): Promise<string | null> {
   try {
-    const res = await fetch(`${origin}/api/auth/get-session`, {
-      headers: { cookie: req.headers.get('cookie') || '' },
-      // Avoid caching a per-user session response.
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return (data?.user?.role as string) ?? null
+    const session = await auth.api.getSession({ headers: req.headers })
+    return (session?.user as { role?: string } | undefined)?.role ?? null
   } catch {
     return null
   }
 }
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { nextUrl } = req
   const pathname = nextUrl.pathname
 
@@ -87,8 +86,9 @@ export default async function middleware(req: NextRequest) {
   // Role-based access for the gated prefixes.
   const gatedPrefix = Object.keys(roleRoutes).find((p) => pathname.startsWith(p))
   if (gatedPrefix) {
-    const role = await getSessionRole(req, nextUrl.origin)
-    if (role && !roleRoutes[gatedPrefix].includes(role)) {
+    // Fail closed: a role we can't read is not a role that's allowed in.
+    const role = await getSessionRole(req)
+    if (!role || !roleRoutes[gatedPrefix].includes(role)) {
       return NextResponse.redirect(new URL('/dashboard', nextUrl))
     }
   }

@@ -4,6 +4,7 @@ import { requireAuthAndRole, checkStaffLimit } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import { redactStaff } from '@/lib/staff-privacy'
 
 // GET - List staff members
 export async function GET(request: NextRequest) {
@@ -68,7 +69,10 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      staff,
+      staff:
+        session?.user.role === 'ADMIN'
+          ? staff
+          : staff.map((s) => (s.userId === session?.user.id ? s : redactStaff(s))),
       pagination: {
         page,
         limit,

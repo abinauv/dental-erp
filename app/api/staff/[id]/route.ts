@@ -4,6 +4,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import { redactStaff } from '@/lib/staff-privacy'
 
 // GET - Get single staff member details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -44,7 +45,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
     }
 
-    return NextResponse.json(staff)
+    const canSeeAll = session?.user.role === 'ADMIN' || staff.userId === session?.user.id
+    return NextResponse.json(canSeeAll ? staff : redactStaff(staff))
   } catch (error) {
     logger.error({ err: error }, 'Error fetching staff:')
     return NextResponse.json({ error: 'Failed to fetch staff details' }, { status: 500 })
@@ -123,6 +125,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         })
         if (userUpdateData.password) {
           await syncCredentialAccount(tx, existingStaff.userId, userUpdateData.password)
+        }
+        // Deactivation and an admin password reset both end the user's web
+        // sessions. Sign-in already refuses inactive users; this stops the
+        // ones that are signed in now (after the 5-minute session cookie cache).
+        if (isActive === false || userUpdateData.password) {
+          await tx.baSession.deleteMany({ where: { userId: existingStaff.userId } })
         }
       }
 
@@ -211,6 +219,7 @@ export async function DELETE(
         where: { id },
         data: { isActive: false },
       }),
+      prisma.baSession.deleteMany({ where: { userId: staff.userId } }),
     ])
 
     return NextResponse.json({ message: 'Staff member deactivated successfully' })

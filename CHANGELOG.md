@@ -63,6 +63,11 @@ before it are not itemized here; see the git history and the
 - Analytics report export (HTML) escapes all request and database text, and
   fetches its data in-process instead of from a host taken from the request.
 - The video-room API only acts on the caller's own hospital's consultations.
+- Staff Aadhaar/PAN numbers, salary, bank details, date of birth and home
+  address are only returned to admins and to the staff member themselves.
+- Deactivating a staff member, or resetting their password, ends their web
+  sessions; mobile tokens stop working as soon as the user or their clinic is
+  deactivated.
 - Email address validation no longer backtracks quadratically on long input.
 - nodemailer 10.1.4 (address-parser fixes).
 

@@ -66,5 +66,55 @@ describe('PATCH /api/staff/[id] — password reset', () => {
     expect(prisma.user.update).toHaveBeenCalled()
     expect(prisma.baAccount.updateMany).not.toHaveBeenCalled()
     expect(prisma.baAccount.create).not.toHaveBeenCalled()
+    expect(prisma.baSession.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('ends the user’s web sessions on a password reset', async () => {
+    await patch({ newPassword: 'NewSecret123!' })
+    expect(prisma.baSession.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-9' } })
+  })
+
+  it('ends the user’s web sessions when they are deactivated', async () => {
+    const res = await patch({ isActive: false })
+
+    expect(res.status).toBe(200)
+    expect(prisma.baSession.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-9' } })
+  })
+
+  it('keeps sessions when a user is reactivated', async () => {
+    await patch({ isActive: true })
+    expect(prisma.baSession.deleteMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('DELETE /api/staff/[id] — deactivation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuth.requireAuthAndRole.mockResolvedValue({
+      error: null,
+      hospitalId: 'h1',
+      session: { user: { id: 'admin-1', role: 'ADMIN', hospitalId: 'h1' } },
+    })
+    ;(prisma.staff.findUnique as any).mockResolvedValue({
+      id: 'staff-1',
+      userId: 'user-9',
+      user: { id: 'user-9' },
+    })
+  })
+
+  it('deactivates the user and ends their web sessions in one transaction', async () => {
+    // DELETE uses the array form of $transaction.
+    ;(prisma.$transaction as any).mockImplementationOnce((ops: Promise<unknown>[]) =>
+      Promise.all(ops)
+    )
+    const { DELETE } = await import('@/app/api/staff/[id]/route')
+    const res = await DELETE(
+      new NextRequest('http://localhost/api/staff/staff-1', { method: 'DELETE' }),
+      { params: Promise.resolve({ id: 'staff-1' }) }
+    )
+
+    expect(res.status).toBe(200)
+    expect(prisma.baSession.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-9' } })
+    expect(prisma.$transaction).toHaveBeenCalled()
   })
 })
