@@ -17,6 +17,7 @@ vi.mock('@/lib/api-helpers', () => ({
   PLAN_LIMITS: {
     FREE: { patientLimit: 100, staffLimit: 5, storageLimitMb: 500 },
     PROFESSIONAL: { patientLimit: 1000, staffLimit: 25, storageLimitMb: 5000 },
+    SELF_HOSTED: { patientLimit: -1, staffLimit: -1, storageLimitMb: -1 },
   },
 }))
 
@@ -25,7 +26,12 @@ vi.mock('@/lib/email-helpers', () => ({
 }))
 
 vi.mock('@prisma/client', () => ({
-  Plan: { FREE: 'FREE', PROFESSIONAL: 'PROFESSIONAL', ENTERPRISE: 'ENTERPRISE' },
+  Plan: {
+    FREE: 'FREE',
+    PROFESSIONAL: 'PROFESSIONAL',
+    ENTERPRISE: 'ENTERPRISE',
+    SELF_HOSTED: 'SELF_HOSTED',
+  },
   Role: { ADMIN: 'ADMIN', DOCTOR: 'DOCTOR', STAFF: 'STAFF' },
 }))
 
@@ -127,12 +133,15 @@ describe('POST /api/public/signup', () => {
     expect(body.hospitalId).toBe('h1')
     expect(body.emailSent).toBe(true)
 
-    // Verify hospital created with FREE plan
+    // Self-hosted clinics are created unlimited (no 3-staff / 100-patient cap)
     expect(mockTx.hospital.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           name: 'Test Dental Clinic',
-          plan: 'FREE',
+          plan: 'SELF_HOSTED',
+          patientLimit: -1,
+          staffLimit: -1,
+          storageLimitMb: -1,
           isActive: true,
         }),
       })

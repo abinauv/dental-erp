@@ -54,19 +54,19 @@ export async function POST(request: Request) {
 
     // Create hospital and admin user in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create the hospital with FREE plan limits
+      // Self-hosted: no plan tiers, so every clinic is unlimited.
       const hospital = await tx.hospital.create({
         data: {
           name: hospitalName,
           slug,
           email,
           phone,
-          plan: Plan.FREE,
+          plan: Plan.SELF_HOSTED,
           isActive: true,
           onboardingCompleted: false,
-          patientLimit: PLAN_LIMITS.FREE.patientLimit,
-          staffLimit: PLAN_LIMITS.FREE.staffLimit,
-          storageLimitMb: PLAN_LIMITS.FREE.storageLimitMb,
+          patientLimit: PLAN_LIMITS.SELF_HOSTED.patientLimit,
+          staffLimit: PLAN_LIMITS.SELF_HOSTED.staffLimit,
+          storageLimitMb: PLAN_LIMITS.SELF_HOSTED.storageLimitMb,
           emailVerificationToken: verificationToken,
           emailVerificationExpiry: verificationExpiry,
         },
