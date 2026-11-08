@@ -86,7 +86,7 @@
 #### Config & Middleware
 
 - [x] `config/nav.ts` — navigation structure, section/item validation, getNavigationForRole (ADMIN/DOCTOR/RECEPTIONIST/ACCOUNTANT/LAB_TECH filtering, subItem filtering, empty section removal) (tests/unit/nav-config.test.ts — 22 tests)
-- [x] `middleware.ts` — public routes, API passthrough, logged-in redirect, unauthenticated redirect with callbackUrl, role-based access (ADMIN/DOCTOR/RECEPTIONIST/ACCOUNTANT/LAB_TECH), onboarding, matcher config (tests/unit/middleware.test.ts — 34 tests)
+- [x] `proxy.ts` (formerly `middleware.ts`) — public routes, API passthrough, logged-in redirect, unauthenticated redirect with callbackUrl, role-based access (ADMIN/DOCTOR/RECEPTIONIST/ACCOUNTANT/LAB_TECH), onboarding, matcher config, role gate fails closed when the session cannot be read (tests/unit/proxy.test.ts)
 - [x] `lib/auth.config.ts` — trustHost, pages config, jwt callback (user→token copy, subsequent pass-through), session callback (token→session copy), authorized callback (public routes, login redirect, auth required) (tests/unit/auth-config.test.ts — 24 tests)
 
 ### 1.2 Integration Tests — API Routes (`tests/integration/`)

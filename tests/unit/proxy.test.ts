@@ -18,16 +18,17 @@ vi.mock('better-auth/cookies', () => ({
     req.headers.get('cookie')?.includes('session') ? 'session-token' : null,
 }))
 
-import middleware, { config } from '@/middleware'
+// The session (and role) for role-gated prefixes is read in-process.
+const mockGetSession = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/auth', () => ({ auth: { api: { getSession: mockGetSession } } }))
+
+import middleware, { config } from '@/proxy'
 
 // Build a request. `loggedIn` controls the session cookie; `role` is what the
-// mocked /api/auth/get-session returns for role-gated prefixes.
+// mocked auth.api.getSession returns for role-gated prefixes.
 function makeRequest(pathname: string, { loggedIn = false, role = 'ADMIN' } = {}) {
   const url = new URL(`http://localhost:3000${pathname}`)
-  global.fetch = vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => (loggedIn ? { user: { role } } : null),
-  }) as any
+  mockGetSession.mockResolvedValue(loggedIn ? { user: { role } } : null)
   return {
     nextUrl: url,
     url: url.toString(),
@@ -37,7 +38,7 @@ function makeRequest(pathname: string, { loggedIn = false, role = 'ADMIN' } = {}
   }
 }
 
-describe('middleware', () => {
+describe('proxy', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRedirect.mockImplementation((url) => ({ type: 'redirect', url }))
@@ -107,7 +108,7 @@ describe('middleware', () => {
     expect(mockRedirect.mock.calls[0][0].searchParams.get('callbackUrl')).toBe('/patients')
   })
 
-  // Role-based access (role comes from the mocked get-session fetch)
+  // Role-based access (role comes from the mocked auth.api.getSession)
   it('allows ADMIN to access /settings', async () => {
     await middleware(makeRequest('/settings', { loggedIn: true, role: 'ADMIN' }))
     expect(mockNext).toHaveBeenCalled()
@@ -176,6 +177,32 @@ describe('middleware', () => {
 })
 
 describe('middleware config', () => {
+  // Fail closed: a session cookie without a readable session/role must not
+  // reach a role-gated area.
+  it('redirects to /dashboard when the session cannot be read (stale cookie)', async () => {
+    const req = makeRequest('/settings', { loggedIn: true })
+    mockGetSession.mockResolvedValue(null)
+    await middleware(req)
+    expect(mockRedirect).toHaveBeenCalled()
+    expect(mockRedirect.mock.calls[0][0].pathname).toBe('/dashboard')
+    expect(mockNext).not.toHaveBeenCalled()
+  })
+
+  it('redirects to /dashboard when reading the session throws', async () => {
+    const req = makeRequest('/staff', { loggedIn: true })
+    mockGetSession.mockRejectedValue(new Error('db down'))
+    await middleware(req)
+    expect(mockRedirect.mock.calls[0][0].pathname).toBe('/dashboard')
+    expect(mockNext).not.toHaveBeenCalled()
+  })
+
+  it('reads the session in-process from the request headers', async () => {
+    const req = makeRequest('/settings', { loggedIn: true, role: 'ADMIN' })
+    await middleware(req)
+    expect(mockGetSession).toHaveBeenCalledWith({ headers: req.headers })
+    expect(mockNext).toHaveBeenCalled()
+  })
+
   it('exports matcher config', () => {
     expect(config).toBeDefined()
     expect(config.matcher).toBeDefined()
