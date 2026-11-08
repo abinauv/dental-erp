@@ -38,11 +38,13 @@ model Hospital {
   currency String @default("INR")
   timezone String @default("Asia/Kolkata")
 
-  plan           Plan      @default(FREE)
+  // Self-hosted clinics are unlimited (-1 = no limit). The other plans are
+  // left from the hosted edition; nothing assigns them any more.
+  plan           Plan      @default(SELF_HOSTED)
   planExpiresAt  DateTime?
-  patientLimit   Int       @default(100)
-  staffLimit     Int       @default(3)
-  storageLimitMb Int       @default(500)
+  patientLimit   Int       @default(-1)
+  staffLimit     Int       @default(-1)
+  storageLimitMb Int       @default(-1)
 
   isActive            Boolean @default(true)
   onboardingCompleted Boolean @default(false)

@@ -50,7 +50,6 @@ describe('proxy', () => {
     '/login',
     '/signup',
     '/forgot-password',
-    '/pricing',
     '/verify-email',
     '/invite/accept',
     '/',

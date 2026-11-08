@@ -202,9 +202,4 @@ test.describe('Public Routes', () => {
     await page.goto('/signup')
     await expect(page).toHaveURL(/.*signup/)
   })
-
-  test('should allow access to pricing page', async ({ page }) => {
-    await page.goto('/pricing')
-    await expect(page).toHaveURL(/.*pricing/)
-  })
 })

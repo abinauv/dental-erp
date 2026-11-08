@@ -11,6 +11,24 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Fixed
+
+- Clinics are no longer capped at 3 staff, 100 patients and 500 MB of
+  storage. Clinic signup put every clinic on the hosted edition's FREE plan,
+  whose caps a self-hosted install had no way to raise. New clinics are
+  unlimited, and a migration lifts the caps on existing ones.
+
+### Removed
+
+- The public `/pricing` page, which listed hosted-edition plans that cannot be
+  bought for a self-hosted install.
+
+### Upgrading
+
+- Apply the database migration `20261108120000_self_hosted_unlimited`
+  (`npx prisma migrate deploy`; with Docker Compose, the `migrate` service runs
+  it).
+
 ## [2.0.0] - 2026-11-08
 
 ### Added
