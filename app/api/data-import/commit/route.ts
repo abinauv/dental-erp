@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
 
@@ -67,6 +68,9 @@ export async function POST(req: NextRequest) {
     let successCount = 0
     let errorCount = 0
     const importErrors: { row: number; message: string }[] = []
+    // Temporary passwords for imported staff. Returned once in this response
+    // (the only place they exist in plain text) so the admin can hand them out.
+    const credentials: StaffCredential[] = []
 
     try {
       switch (job.entityType) {
@@ -83,7 +87,8 @@ export async function POST(req: NextRequest) {
             hospitalId,
             transformedRows,
             skipErrorRows,
-            importErrors
+            importErrors,
+            credentials
           ))
           break
         case 'appointments':
@@ -137,14 +142,19 @@ export async function POST(req: NextRequest) {
           errorCount,
         },
       })
-      return NextResponse.json({
-        success: false,
-        jobId,
-        totalRows: parsed.totalRows,
-        imported: successCount,
-        skipped: errorCount,
-        errors: [{ row: 0, message: batchErr.message }],
-      })
+      // Staff created before the failure still need their passwords.
+      return NextResponse.json(
+        {
+          success: false,
+          jobId,
+          totalRows: parsed.totalRows,
+          imported: successCount,
+          skipped: errorCount,
+          errors: [{ row: 0, message: batchErr.message }],
+          ...(credentials.length > 0 && { credentials }),
+        },
+        { headers: { 'Cache-Control': 'no-store' } }
+      )
     }
 
     // Update job as completed
@@ -177,14 +187,18 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      jobId,
-      totalRows: parsed.totalRows,
-      imported: successCount,
-      skipped: errorCount,
-      errors: importErrors.slice(0, 50),
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        jobId,
+        totalRows: parsed.totalRows,
+        imported: successCount,
+        skipped: errorCount,
+        errors: importErrors.slice(0, 50),
+        ...(credentials.length > 0 && { credentials }),
+      },
+      { headers: { 'Cache-Control': 'no-store' } }
+    )
   } catch (err: any) {
     logger.error({ err }, 'Data import commit error:')
     return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 })
@@ -290,11 +304,30 @@ async function importPatients(
   return { successCount, errorCount }
 }
 
+interface StaffCredential {
+  name: string
+  email: string
+  temporaryPassword: string
+}
+
+const STAFF_ROLES = ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'LAB_TECH', 'ACCOUNTANT']
+
+// "Lab Tech", "lab-tech" and "LAB_TECH" all mean LAB_TECH. Anything that isn't
+// one of the app's roles (e.g. "Nurse") becomes RECEPTIONIST.
+function normalizeStaffRole(value: unknown): string {
+  const role = String(value ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_')
+  return STAFF_ROLES.includes(role) ? role : 'RECEPTIONIST'
+}
+
 async function importStaff(
   hospitalId: string,
   rows: Record<string, any>[],
   skipErrors: boolean,
-  errors: { row: number; message: string }[]
+  errors: { row: number; message: string }[],
+  credentials: StaffCredential[]
 ) {
   let successCount = 0,
     errorCount = 0
@@ -331,24 +364,10 @@ async function importStaff(
 
       const employeeId =
         row.employeeId || (await generateId(hospitalId, 'staff', 'EMP', 'employeeId'))
-      const tempPassword = crypto.randomUUID().slice(0, 12)
+      // 72 random bits, URL-safe so it survives copy and paste.
+      const tempPassword = randomBytes(9).toString('base64url')
       const hashedPassword = await bcrypt.hash(tempPassword, 10)
-
-      // Determine role
-      const roleMap: Record<string, string> = {
-        DOCTOR: 'DOCTOR',
-        RECEPTIONIST: 'RECEPTIONIST',
-        NURSE: 'NURSE',
-        LAB_TECH: 'LAB_TECH',
-        ADMIN: 'ADMIN',
-        Doctor: 'DOCTOR',
-        Receptionist: 'RECEPTIONIST',
-        Nurse: 'NURSE',
-        doctor: 'DOCTOR',
-        receptionist: 'RECEPTIONIST',
-        nurse: 'NURSE',
-      }
-      const role = roleMap[row.role] || 'RECEPTIONIST'
+      const role = normalizeStaffRole(row.role)
 
       await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
@@ -388,6 +407,11 @@ async function importStaff(
             panNumber: row.panNumber || undefined,
           },
         })
+      })
+      credentials.push({
+        name: `${firstName} ${lastName}`.trim(),
+        email: row.email,
+        temporaryPassword: tempPassword,
       })
       successCount++
     } catch (err: any) {

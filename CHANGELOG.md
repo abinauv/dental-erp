@@ -11,6 +11,15 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Fixed
+
+- Staff created by a data import can now sign in. Each was given a random
+  temporary password that was never shown to anyone; the import result now
+  lists them once, with a copy button, for the admin to hand out.
+- Staff import maps role names like "Lab Tech" or "accountant" onto the
+  app's roles. Unknown roles (e.g. "Nurse", which used to fail the row) import
+  as receptionists.
+
 ## [2.0.1] - 2026-11-08
 
 ### Fixed

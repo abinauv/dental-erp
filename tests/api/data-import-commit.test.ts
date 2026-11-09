@@ -142,6 +142,102 @@ describe('POST /api/data-import/commit', () => {
     })
   })
 
+  describe('imported staff accounts', () => {
+    async function importStaffRows(rows: Record<string, string>[]) {
+      ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
+        id: 'job-staff',
+        hospitalId: 'hospital-1',
+        entityType: 'staff',
+        filePath: 'uploads/hospital-1/imports/staff.csv',
+        fileType: 'csv',
+        fileName: 'staff.csv',
+      })
+      ;(prisma.dataImportJob.update as any).mockResolvedValue({})
+      mockStorage.get.mockResolvedValue({
+        body: Buffer.from('data'),
+        contentType: 'text/csv',
+        size: 4,
+      })
+      mockParsers.parseFile.mockResolvedValue({
+        columns: Object.keys(rows[0]),
+        rows,
+        totalRows: rows.length,
+      })
+      ;(prisma.user.findUnique as any).mockResolvedValue(null)
+      ;(prisma.user.create as any).mockImplementation(async ({ data }: any) => ({
+        id: `user-${data.email}`,
+      }))
+      ;(prisma.staff.create as any).mockResolvedValue({})
+      ;(prisma.auditLog.create as any).mockResolvedValue({})
+
+      return mod.POST(
+        makeRequest({
+          jobId: 'job-staff',
+          mapping: { Name: 'firstName', Email: 'email', Phone: 'phone', Role: 'role' },
+        })
+      )
+    }
+
+    it('returns each new account’s temporary password once, uncached', async () => {
+      const bcrypt = (await import('bcryptjs')).default as any
+
+      const res = await importStaffRows([
+        { Name: 'Asha Rao', Email: 'asha@clinic.test', Phone: '9876500001', Role: 'Doctor' },
+      ])
+      const body = await res.json()
+
+      expect(res.headers.get('Cache-Control')).toBe('no-store')
+      expect(body.credentials).toEqual([
+        { name: 'Asha Rao', email: 'asha@clinic.test', temporaryPassword: expect.any(String) },
+      ])
+      // The password handed back is the one whose hash was stored.
+      const temporaryPassword = body.credentials[0].temporaryPassword
+      expect(temporaryPassword).toMatch(/^[A-Za-z0-9_-]{12}$/)
+      expect(bcrypt.hash).toHaveBeenCalledWith(temporaryPassword, 10)
+    })
+
+    it('maps role names onto the app’s roles, and unknown ones to RECEPTIONIST', async () => {
+      await importStaffRows([
+        { Name: 'A One', Email: 'a@clinic.test', Phone: '9876500011', Role: 'Lab Tech' },
+        { Name: 'B Two', Email: 'b@clinic.test', Phone: '9876500012', Role: 'accountant' },
+        { Name: 'C Three', Email: 'c@clinic.test', Phone: '9876500013', Role: 'Nurse' },
+      ])
+
+      const roles = (prisma.user.create as any).mock.calls.map((c: any) => c[0].data.role)
+      expect(roles).toEqual(['LAB_TECH', 'ACCOUNTANT', 'RECEPTIONIST'])
+    })
+
+    it('does not return credentials for non-staff imports', async () => {
+      ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
+        id: 'job-p',
+        hospitalId: 'hospital-1',
+        entityType: 'patients',
+        filePath: 'uploads/hospital-1/imports/p.csv',
+        fileType: 'csv',
+        fileName: 'p.csv',
+      })
+      ;(prisma.dataImportJob.update as any).mockResolvedValue({})
+      mockStorage.get.mockResolvedValue({
+        body: Buffer.from('d'),
+        contentType: 'text/csv',
+        size: 1,
+      })
+      mockParsers.parseFile.mockResolvedValue({
+        columns: ['Name', 'Phone'],
+        rows: [{ Name: 'Pat One', Phone: '9876500021' }],
+        totalRows: 1,
+      })
+      ;(prisma.patient.findFirst as any).mockResolvedValue(null)
+      ;(prisma.patient.create as any).mockResolvedValue({})
+      ;(prisma.auditLog.create as any).mockResolvedValue({})
+
+      const res = await mod.POST(
+        makeRequest({ jobId: 'job-p', mapping: { Name: 'firstName', Phone: 'phone' } })
+      )
+      expect((await res.json()).credentials).toBeUndefined()
+    })
+  })
+
   it('imports inventory items successfully', async () => {
     ;(prisma.dataImportJob.findFirst as any).mockResolvedValue({
       id: 'job-2',
