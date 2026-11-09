@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateOTP } from '@/lib/patient-auth'
+import { generateOTP, hashOTP } from '@/lib/patient-auth'
 import { smsService } from '@/lib/services/sms.service'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       data: {
         hospitalId: hospital.id,
         phone,
-        otp,
+        otp: hashOTP(otp, hospital.id, phone),
         expiresAt,
       },
     })

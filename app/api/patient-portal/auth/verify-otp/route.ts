@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createPatientToken, setPatientCookie } from '@/lib/patient-auth'
+import { createPatientToken, setPatientCookie, otpMatches } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify OTP
-    if (otpRecord.otp !== otp) {
+    if (!otpMatches(String(otp), otpRecord.otp, hospital.id, phone)) {
       await prisma.patientOTP.update({
         where: { id: otpRecord.id },
         data: { attempts: { increment: 1 } },

@@ -6,7 +6,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 vi.mock('@/lib/prisma', () => import('../__mocks__/prisma'))
 
-vi.mock('@/lib/patient-auth', () => ({
+// The real OTP hashing is used, so these tests store what the route stores.
+vi.mock('@/lib/patient-auth', async (importOriginal) => ({
+  hashOTP: ((await importOriginal()) as any).hashOTP,
+  otpMatches: ((await importOriginal()) as any).otpMatches,
   generateOTP: vi.fn(() => '123456'),
   createPatientToken: vi.fn(() => Promise.resolve('mock-jwt-token')),
   setPatientCookie: vi.fn((response) => response),
@@ -26,7 +29,10 @@ import { POST as sendOtpPOST } from '@/app/api/patient-portal/auth/send-otp/rout
 import { POST as verifyOtpPOST } from '@/app/api/patient-portal/auth/verify-otp/route'
 import { POST as logoutPOST } from '@/app/api/patient-portal/auth/logout/route'
 import { GET as dashboardGET } from '@/app/api/patient-portal/dashboard/route'
-import { requirePatientAuth } from '@/lib/patient-auth'
+import { requirePatientAuth, hashOTP } from '@/lib/patient-auth'
+
+// What PatientOTP holds for code 123456 sent to the test phone at clinic h1.
+const STORED_123456 = hashOTP('123456', 'h1', '9876543210')
 import { checkRateLimit } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 
@@ -164,7 +170,7 @@ describe('POST /api/patient-portal/auth/send-otp', () => {
         data: expect.objectContaining({
           hospitalId: 'h1',
           phone: '9876543210',
-          otp: '123456',
+          otp: STORED_123456,
         }),
       })
     )
@@ -225,7 +231,7 @@ describe('POST /api/patient-portal/auth/verify-otp', () => {
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({ id: 'h1', name: 'Clinic' } as any)
     vi.mocked(prisma.patientOTP.findFirst).mockResolvedValue({
       id: 'otp1',
-      otp: '123456',
+      otp: STORED_123456,
       attempts: 3,
       verified: false,
     } as any)
@@ -245,7 +251,7 @@ describe('POST /api/patient-portal/auth/verify-otp', () => {
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({ id: 'h1', name: 'Clinic' } as any)
     vi.mocked(prisma.patientOTP.findFirst).mockResolvedValue({
       id: 'otp1',
-      otp: '123456',
+      otp: STORED_123456,
       attempts: 1,
       verified: false,
     } as any)
@@ -269,11 +275,56 @@ describe('POST /api/patient-portal/auth/verify-otp', () => {
     )
   })
 
-  it('verifies OTP and returns patient data', async () => {
+  it('never stores the code itself', async () => {
+    expect(STORED_123456).toMatch(/^[0-9a-f]{64}$/)
+    expect(STORED_123456).not.toContain('123456')
+  })
+
+  it('rejects the right code when the stored hash was for another phone', async () => {
+    vi.mocked(prisma.hospital.findUnique).mockResolvedValue({ id: 'h1', name: 'Clinic' } as any)
+    vi.mocked(prisma.patientOTP.findFirst).mockResolvedValue({
+      id: 'otp1',
+      otp: hashOTP('123456', 'h1', '9999999999'),
+      attempts: 0,
+      verified: false,
+    } as any)
+    vi.mocked(prisma.patientOTP.update).mockResolvedValue({} as any)
+
+    const res = await verifyOtpPOST(
+      makeReq('/api/patient-portal/auth/verify-otp', 'POST', {
+        phone: '9876543210',
+        otp: '123456',
+        hospitalSlug: 'test-clinic',
+      })
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('does not accept a code stored in plain text before this change', async () => {
     vi.mocked(prisma.hospital.findUnique).mockResolvedValue({ id: 'h1', name: 'Clinic' } as any)
     vi.mocked(prisma.patientOTP.findFirst).mockResolvedValue({
       id: 'otp1',
       otp: '123456',
+      attempts: 0,
+      verified: false,
+    } as any)
+    vi.mocked(prisma.patientOTP.update).mockResolvedValue({} as any)
+
+    const res = await verifyOtpPOST(
+      makeReq('/api/patient-portal/auth/verify-otp', 'POST', {
+        phone: '9876543210',
+        otp: '123456',
+        hospitalSlug: 'test-clinic',
+      })
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('verifies OTP and returns patient data', async () => {
+    vi.mocked(prisma.hospital.findUnique).mockResolvedValue({ id: 'h1', name: 'Clinic' } as any)
+    vi.mocked(prisma.patientOTP.findFirst).mockResolvedValue({
+      id: 'otp1',
+      otp: STORED_123456,
       attempts: 0,
       verified: false,
     } as any)
