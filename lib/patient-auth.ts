@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { SignJWT, jwtVerify } from 'jose'
+import { createHmac, randomInt, timingSafeEqual } from 'crypto'
 import { prisma } from './prisma'
 
 const COOKIE_NAME = 'patient-portal-token'
-const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'patient-portal-secret')
+
+// Patient session tokens and OTP hashes are keyed with NEXTAUTH_SECRET. The
+// development fallback must never be used in production, where anyone who
+// read this file could forge a patient session with it. Resolved on use, not
+// at import, because `next build` runs in production mode without secrets.
+function secret(): string {
+  const value = process.env.NEXTAUTH_SECRET
+  if (value) return value
+  if (process.env.NODE_ENV === 'production') throw new Error('NEXTAUTH_SECRET is not set')
+  return 'patient-portal-secret'
+}
+
+function jwtSecret(): Uint8Array {
+  return new TextEncoder().encode(secret())
+}
 
 interface PatientTokenPayload {
   patientId: string
@@ -13,10 +28,33 @@ interface PatientTokenPayload {
 }
 
 /**
- * Generate a 6-digit OTP
+ * Generate a 6-digit OTP from a cryptographic source. Math.random() is
+ * predictable once a few outputs are known, e.g. codes sent to your own phone.
  */
 export function generateOTP(): string {
-  return String(Math.floor(100000 + Math.random() * 900000))
+  return String(randomInt(100000, 1000000))
+}
+
+/**
+ * What PatientOTP stores instead of the code. A 6-digit code has only a million
+ * values, so a plain hash would fall to brute force from a database dump;
+ * keying it with the server secret means a dump alone can't recover a live
+ * code. Bound to the clinic and phone it was sent to.
+ */
+export function hashOTP(otp: string, hospitalId: string, phone: string): string {
+  return createHmac('sha256', secret()).update(`${hospitalId}:${phone}:${otp}`).digest('hex')
+}
+
+/** Constant-time check of a submitted code against a stored hashOTP value. */
+export function otpMatches(
+  otp: string,
+  storedHash: string,
+  hospitalId: string,
+  phone: string
+): boolean {
+  const expected = Buffer.from(hashOTP(otp, hospitalId, phone))
+  const stored = Buffer.from(storedHash)
+  return expected.length === stored.length && timingSafeEqual(expected, stored)
 }
 
 /**
@@ -27,7 +65,7 @@ export async function createPatientToken(payload: PatientTokenPayload): Promise<
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(JWT_SECRET)
+    .sign(jwtSecret())
 }
 
 /**
@@ -35,7 +73,7 @@ export async function createPatientToken(payload: PatientTokenPayload): Promise<
  */
 async function verifyPatientToken(token: string): Promise<PatientTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
+    const { payload } = await jwtVerify(token, jwtSecret())
     return payload as unknown as PatientTokenPayload
   } catch {
     return null

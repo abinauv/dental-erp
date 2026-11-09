@@ -27,6 +27,12 @@ before it are not itemized here; see the git history and the
   `X-Forwarded-For` entry, which let a client pick a fresh rate-limit key per
   request behind a proxy that appends to that header. They now use the same
   rules as the sign-in limiter, and IPv6 clients are limited per /64.
+- Patient portal OTPs are stored as an HMAC keyed with `NEXTAUTH_SECRET`
+  instead of the code itself, compared in constant time, and generated from a
+  cryptographic source instead of `Math.random()`. Codes requested before the
+  upgrade (valid for 5 minutes) stop working; patients request a new one.
+- The patient portal no longer falls back to a built-in signing secret when
+  `NEXTAUTH_SECRET` is unset in production; it refuses to sign instead.
 
 ### Added
 
