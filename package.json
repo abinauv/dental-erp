@@ -121,7 +121,7 @@
     "@eslint/eslintrc": "^3.3.5",
     "@playwright/test": "^1.40.0",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.2.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^25.0.3",
