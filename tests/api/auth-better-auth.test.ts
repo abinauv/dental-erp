@@ -53,6 +53,12 @@ describe('Better Auth — sign-up and credential sync config', () => {
     expect(auth.options.databaseHooks?.account?.create?.after).toBe(mirrorCredentialPassword)
     expect(auth.options.databaseHooks?.account?.update?.after).toBe(mirrorCredentialPassword)
   })
+
+  it('gives the sign-in limiter the same trusted proxies as the app’s rate limiter', async () => {
+    const { auth } = await import('@/lib/auth')
+    const { trustedProxies } = await import('@/lib/trusted-proxies')
+    expect(auth.options.advanced?.ipAddress?.trustedProxies).toEqual(trustedProxies())
+  })
 })
 
 describe('Better Auth — route handler', () => {

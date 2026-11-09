@@ -137,6 +137,16 @@ Already run nginx or Traefik? Skip this file and proxy to `127.0.0.1:3000`
 yourself. Forward `X-Forwarded-Proto`, or the app will build `http://` URLs
 behind your `https://` and the login flow will break.
 
+Rate limits (sign-in, OTP, booking, payments) key on the client's IP from
+`X-Forwarded-For`. The simplest correct setup is a proxy that **overwrites**
+it with the client address, as the bundled Caddy file does — nginx:
+`proxy_set_header X-Forwarded-For $remote_addr;`. If your proxy appends
+instead (`$proxy_add_x_forwarded_for`), or you have more than one hop (a CDN in
+front of nginx), set `TRUSTED_PROXIES` in `.env` to the proxies' addresses or
+CIDR ranges so the client can be found from the right of the chain. Without
+either, requests that arrive with a forwarded chain share one rate-limit
+bucket rather than trusting an address the client wrote.
+
 ## 5. Backups — do this before you need it
 
 The scripts live in the repository:
