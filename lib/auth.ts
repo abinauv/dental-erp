@@ -6,6 +6,7 @@ import { APIError } from 'better-auth/api'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import { mirrorCredentialPassword } from './auth-credentials'
+import { trustedProxies } from './trusted-proxies'
 
 // Better Auth replaces next-auth as the staff/web session layer. The two
 // independent token paths are unchanged and intentionally NOT routed through
@@ -118,6 +119,10 @@ export const auth = betterAuth({
       '/sign-in/email': { window: 60, max: 5 },
       '/sign-in/oauth2': { window: 60, max: 10 },
     },
+  },
+  // Which X-Forwarded-For entry is the client: see lib/trusted-proxies.ts.
+  advanced: {
+    ipAddress: { trustedProxies: trustedProxies() },
   },
 
   databaseHooks: {

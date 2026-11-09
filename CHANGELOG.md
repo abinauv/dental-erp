@@ -20,6 +20,21 @@ before it are not itemized here; see the git history and the
   app's roles. Unknown roles (e.g. "Nurse", which used to fail the row) import
   as receptionists.
 
+### Security
+
+- Rate limits on the mobile token, patient OTP, public booking and public
+  payment endpoints no longer trust the client-supplied first
+  `X-Forwarded-For` entry, which let a client pick a fresh rate-limit key per
+  request behind a proxy that appends to that header. They now use the same
+  rules as the sign-in limiter, and IPv6 clients are limited per /64.
+
+### Added
+
+- `TRUSTED_PROXIES` (optional): the addresses or CIDR ranges of your reverse
+  proxies, for setups where the proxy appends to `X-Forwarded-For` or there is
+  more than one hop. Not needed behind the bundled Caddy config. See
+  SELF_HOSTING.md.
+
 ## [2.0.1] - 2026-11-08
 
 ### Fixed
