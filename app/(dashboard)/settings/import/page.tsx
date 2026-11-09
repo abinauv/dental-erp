@@ -24,6 +24,8 @@ import {
   Check,
   ArrowLeft,
   Info,
+  Copy,
+  KeyRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -61,6 +63,8 @@ interface ImportResult {
   imported: number
   skipped: number
   errors: { row: number; message: string }[]
+  // Staff imports only: each new account's temporary password, sent once.
+  credentials?: { name: string; email: string; temporaryPassword: string }[]
 }
 
 // ---------------------------------------------------------------------------
@@ -315,6 +319,19 @@ export default function DataImportPage() {
       toast({ variant: 'destructive', title: t('importFailedTitle'), description: err.message })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const copyCredentials = async () => {
+    if (!importResult?.credentials) return
+    const text = importResult.credentials
+      .map((c) => `${c.name} <${c.email}>: ${c.temporaryPassword}`)
+      .join('\n')
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({ title: t('tempPasswordsCopied') })
+    } catch {
+      toast({ variant: 'destructive', title: t('tempPasswordsCopyFailed') })
     }
   }
 
@@ -989,6 +1006,45 @@ export default function DataImportPage() {
                     <p className="text-xs text-muted-foreground">{t('skipped')}</p>
                   </div>
                 </div>
+
+                {importResult.credentials && importResult.credentials.length > 0 && (
+                  <div className="border border-amber-200 rounded-lg p-4 text-left space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-medium flex items-center gap-2">
+                          <KeyRound className="h-4 w-4 text-amber-600" />
+                          {t('tempPasswordsHeading')}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('tempPasswordsNote')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={copyCredentials}
+                        className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted inline-flex items-center gap-1"
+                      >
+                        <Copy className="h-3.5 w-3.5" /> {t('tempPasswordsCopy')}
+                      </button>
+                    </div>
+                    <div className="max-h-60 overflow-auto">
+                      <table className="w-full text-xs">
+                        <tbody>
+                          {importResult.credentials.map((c) => (
+                            <tr key={c.email} className="border-t">
+                              <td className="py-1.5 pr-2">
+                                <p className="font-medium">{c.name}</p>
+                                <p className="text-muted-foreground">{c.email}</p>
+                              </td>
+                              <td className="py-1.5 font-mono text-right select-all">
+                                {c.temporaryPassword}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 {importResult.errors.length > 0 && (
                   <div className="border rounded-lg p-4 text-left">
