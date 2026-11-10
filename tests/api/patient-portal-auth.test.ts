@@ -17,6 +17,9 @@ vi.mock('@/lib/patient-auth', async (importOriginal) => ({
   requirePatientAuth: vi.fn(),
 }))
 
+const mockSendSMS = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/services/sms.service', () => ({ smsService: { sendSMS: mockSendSMS } }))
+
 // Shared rate limiter — default to allowed; individual tests block it.
 vi.mock('@/lib/rate-limit', () => ({
   checkRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 1, retryAfterMs: 0 }),
@@ -174,6 +177,29 @@ describe('POST /api/patient-portal/auth/send-otp', () => {
         }),
       })
     )
+  })
+
+  it('texts the real code but keeps it out of the SMS log', async () => {
+    vi.mocked(prisma.hospital.findUnique).mockResolvedValue({
+      id: 'h1',
+      name: 'Test Clinic',
+      patientPortalEnabled: true,
+    } as any)
+    vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'p1', firstName: 'John' } as any)
+    vi.mocked(prisma.patientOTP.create).mockResolvedValue({} as any)
+    mockSendSMS.mockResolvedValue('sms-1')
+
+    await sendOtpPOST(
+      makeReq('/api/patient-portal/auth/send-otp', 'POST', {
+        phone: '9876543210',
+        hospitalSlug: 'test-clinic',
+      })
+    )
+
+    const sent = mockSendSMS.mock.calls[0][0]
+    expect(sent.message).toContain('123456')
+    expect(sent.logMessage).not.toContain('123456')
+    expect(sent.logMessage).toContain('••••••')
   })
 })
 

@@ -23,13 +23,14 @@ const bulkSMSSchema = z.object({
   templateId: z.string().optional(),
 })
 
+// Query-string filters for GET. Dates may be plain dates or full timestamps.
 const historySchema = z.object({
   patientId: z.string().optional(),
   phone: z.string().optional(),
   status: z.string().optional(),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
-  limit: z.number().min(1).max(1000).optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(100),
 })
 
 // POST /api/communications/sms - Send SMS
@@ -72,18 +73,22 @@ export async function GET(req: NextRequest) {
 
   try {
     const searchParams = req.nextUrl.searchParams
-
-    const filters = {
+    const query = historySchema.safeParse({
       patientId: searchParams.get('patientId') || undefined,
       phone: searchParams.get('phone') || undefined,
       status: searchParams.get('status') || undefined,
-      from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
-      to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100,
-      hospitalId,
+      from: searchParams.get('from') || undefined,
+      to: searchParams.get('to') || undefined,
+      limit: searchParams.get('limit') || undefined,
+    })
+    if (!query.success) {
+      return NextResponse.json(
+        { error: 'Invalid filters', details: query.error.flatten() },
+        { status: 400 }
+      )
     }
 
-    const history = await smsService.getSMSHistory(filters)
+    const history = await smsService.getSMSHistory({ ...query.data, hospitalId })
 
     return NextResponse.json({
       success: true,

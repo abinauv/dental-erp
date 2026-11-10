@@ -4,6 +4,16 @@ import { emailService } from '@/lib/services/email.service'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 
+// Query-string filters for GET. Dates may be plain dates or full timestamps.
+const historySchema = z.object({
+  patientId: z.string().optional(),
+  email: z.string().optional(),
+  status: z.string().optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(100),
+})
+
 const sendEmailSchema = z.object({
   to: z.string().email(),
   subject: z.string().min(1),
@@ -102,18 +112,22 @@ export async function GET(req: NextRequest) {
 
   try {
     const searchParams = req.nextUrl.searchParams
-
-    const filters = {
+    const query = historySchema.safeParse({
       patientId: searchParams.get('patientId') || undefined,
       email: searchParams.get('email') || undefined,
       status: searchParams.get('status') || undefined,
-      from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
-      to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 100,
-      hospitalId,
+      from: searchParams.get('from') || undefined,
+      to: searchParams.get('to') || undefined,
+      limit: searchParams.get('limit') || undefined,
+    })
+    if (!query.success) {
+      return NextResponse.json(
+        { error: 'Invalid filters', details: query.error.flatten() },
+        { status: 400 }
+      )
     }
 
-    const history = await emailService.getEmailHistory(filters)
+    const history = await emailService.getEmailHistory({ ...query.data, hospitalId })
 
     return NextResponse.json({
       success: true,
