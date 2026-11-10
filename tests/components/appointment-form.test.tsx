@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 // ---------------------------------------------------------------------------
@@ -478,7 +478,6 @@ describe('NewAppointmentPage', () => {
 
   describe('Error handling', () => {
     it('shows error when API call fails', async () => {
-      let submitCalled = false
       ;(global.fetch as any).mockImplementation((url: string, options?: any) => {
         if (url.includes('/api/patients')) {
           return Promise.resolve({
@@ -493,7 +492,6 @@ describe('NewAppointmentPage', () => {
           })
         }
         if (options?.method === 'POST') {
-          submitCalled = true
           return Promise.resolve({
             ok: false,
             json: () => Promise.resolve({ error: 'Slot already booked' }),

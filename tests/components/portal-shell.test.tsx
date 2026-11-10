@@ -170,7 +170,6 @@ describe('PortalShell', () => {
     )
     // The logout button contains the LogOut icon
     const buttons = screen.getAllByRole('button')
-    const logoutBtn = buttons.find((b) => b.textContent === '' || b.querySelector('svg'))
     // Click the last button (logout)
     fireEvent.click(buttons[buttons.length - 1])
 

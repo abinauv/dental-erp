@@ -337,7 +337,6 @@ describe('POST /api/prescriptions', () => {
         medications: [],
       })
     )
-    const body = await res.json()
 
     expect(res.status).toBe(400)
   })

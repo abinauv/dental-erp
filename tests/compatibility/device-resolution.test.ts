@@ -5,8 +5,7 @@
  * Desktop (1280×800), Wide (1920×1080), Ultra-wide (2560×1440)
  * viewports on dashboard, patients, appointments, and billing pages.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import React from 'react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // Viewport Helper

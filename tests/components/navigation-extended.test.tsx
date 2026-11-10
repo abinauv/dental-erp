@@ -200,7 +200,7 @@ describe('Navigation — Keyboard Shortcuts', () => {
 
   describe('Tab navigation', () => {
     it('Tab key cycles through focusable elements', () => {
-      const { container } = render(
+      render(
         <form>
           <input type="text" aria-label="First" data-testid="first" />
           <input type="text" aria-label="Second" data-testid="second" />
@@ -239,7 +239,7 @@ describe('Navigation — Keyboard Shortcuts', () => {
     })
 
     it('Shift+Tab moves focus backwards', () => {
-      const { container } = render(
+      render(
         <form>
           <input type="text" aria-label="A" data-testid="a" />
           <input type="text" aria-label="B" data-testid="b" />
@@ -270,7 +270,7 @@ describe('Navigation — Keyboard Shortcuts', () => {
         if (e.key === 'n') handler()
       }
 
-      const { container } = render(
+      render(
         <div>
           <input type="text" data-testid="input" />
           <div data-testid="outside">Outside</div>
@@ -317,7 +317,7 @@ describe('Navigation — Keyboard Shortcuts', () => {
         }
       }
 
-      const { container } = render(<input type="text" data-testid="input" />)
+      render(<input type="text" data-testid="input" />)
 
       document.addEventListener('keydown', listener)
 

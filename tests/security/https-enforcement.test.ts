@@ -4,26 +4,18 @@
  * Verifies that the application enforces HTTPS in production via
  * security headers, HSTS, and redirect configuration.
  */
-import { describe, it, expect, vi } from 'vitest'
-import fs from 'fs'
-import path from 'path'
+import { describe, it, expect } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // Read the Next.js config to verify security headers
 // ---------------------------------------------------------------------------
 
-const nextConfigPath = path.resolve(__dirname, '../../next.config.js')
-let nextConfigContent = ''
-
 try {
-  nextConfigContent = fs.readFileSync(nextConfigPath, 'utf-8')
 } catch {
   // Config may be .mjs or .ts
   try {
-    nextConfigContent = fs.readFileSync(nextConfigPath.replace('.js', '.mjs'), 'utf-8')
   } catch {
     try {
-      nextConfigContent = fs.readFileSync(nextConfigPath.replace('.js', '.ts'), 'utf-8')
     } catch {
       // Will handle in tests
     }
@@ -63,7 +55,6 @@ describe('Security — HTTPS Enforcement', () => {
 
   describe('HTTP to HTTPS redirect pattern', () => {
     it('production should redirect HTTP to HTTPS', () => {
-      const isProduction = process.env.NODE_ENV === 'production'
       const redirectConfig = {
         enabled: true,
         permanent: true,

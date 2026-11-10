@@ -350,7 +350,6 @@ describe('DELETE /api/devices/status', () => {
   it('returns 400 when id missing', async () => {
     mockAuth()
     const res = await statusDELETE(makeReq('/api/devices/status', 'DELETE'))
-    const body = await res.json()
 
     expect(res.status).toBe(400)
   })

@@ -4,8 +4,8 @@
  * - DentalChart (interactive dental chart with tooth click, condition dialog)
  * - Dental3DViewer (SVG arch viewer with zoom, fullscreen, tooth inspect)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 // ---------------------------------------------------------------------------
@@ -79,10 +79,8 @@ vi.mock('@/components/ui/textarea', () => ({
   Textarea: (props: any) => <textarea {...props} />,
 }))
 
-let dialogOpen = false
 vi.mock('@/components/ui/dialog', () => ({
   Dialog: ({ children, open, onOpenChange }: any) => {
-    dialogOpen = open
     return (
       <div data-testid="dialog" data-open={String(!!open)}>
         {open ? children : null}

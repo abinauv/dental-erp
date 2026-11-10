@@ -3,7 +3,7 @@
  * Comprehensive Patient API Tests
  * Tests all patient-related endpoints with full business logic validation
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 // Mock Prisma

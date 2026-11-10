@@ -68,36 +68,6 @@ import SignupPage from '@/app/(auth)/signup/page'
 // Helpers
 // ---------------------------------------------------------------------------
 
-function fillForm(overrides: Record<string, string> = {}) {
-  const defaults = {
-    hospitalName: 'Test Dental Clinic',
-    adminName: 'Dr. Test Admin',
-    email: 'admin@test.com',
-    phone: '9876543210',
-    password: 'password123',
-    confirmPassword: 'password123',
-  }
-  const values = { ...defaults, ...overrides }
-
-  Object.entries(values).forEach(([id, value]) => {
-    const input =
-      screen.getByPlaceholderText(getPlaceholder(id)) || screen.getByLabelText(new RegExp(id, 'i'))
-    fireEvent.change(input, { target: { value } })
-  })
-}
-
-function getPlaceholder(field: string): string {
-  const map: Record<string, string> = {
-    hospitalName: "Dr. Smith's Dental Clinic",
-    adminName: 'Dr. John Smith',
-    email: 'doctor@clinic.com',
-    phone: '9876543210',
-    password: 'At least 8 characters',
-    confirmPassword: 'Confirm your password',
-  }
-  return map[field] || ''
-}
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------

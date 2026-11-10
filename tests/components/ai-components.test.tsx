@@ -44,7 +44,6 @@ import { TreatmentAssist } from '@/components/ai/treatment-assist'
 import { ReportBuilder } from '@/components/ai/report-builder'
 import { AuditMonitor } from '@/components/ai/audit-monitor'
 import { AIUsageStats } from '@/components/ai/ai-usage-stats'
-import React from 'react'
 
 // ---------------------------------------------------------------------------
 // Reset mocks before each test

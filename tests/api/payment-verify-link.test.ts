@@ -82,7 +82,6 @@ describe('POST /api/payments/verify', () => {
   it('returns 400 when required fields missing', async () => {
     mockHospitalAuth()
     const res = await verifyPOST(makeReq('/api/payments/verify', 'POST', { invoiceId: 'inv1' }))
-    const body = await res.json()
     expect(res.status).toBe(400)
   })
 
@@ -251,7 +250,6 @@ describe('POST /api/payments/link', () => {
   it('returns 400 when invoiceId missing', async () => {
     mockHospitalAuth()
     const res = await linkPOST(makeReq('/api/payments/link', 'POST', {}))
-    const body = await res.json()
     expect(res.status).toBe(400)
   })
 
