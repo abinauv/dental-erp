@@ -21,7 +21,6 @@ import {
   Play,
   CheckCircle,
   XCircle,
-  Clock,
   ChevronLeft,
   ChevronRight,
   Eye,

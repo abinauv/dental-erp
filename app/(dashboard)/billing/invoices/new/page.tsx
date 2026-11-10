@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -34,7 +33,6 @@ import {
   Plus,
   Trash2,
   AlertCircle,
-  IndianRupee,
   Calculator,
   FileText,
 } from 'lucide-react'
@@ -85,7 +83,6 @@ export default function NewInvoicePage() {
   const formatCurrency = (amount: Parameters<typeof fc>[0]) =>
     fc(amount, { minimumFractionDigits: 2 })
 
-  const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -150,7 +147,6 @@ export default function NewInvoicePage() {
     if (preSelectedPatientId) {
       const fetchPatient = async () => {
         try {
-          setLoading(true)
           const response = await fetch(`/api/patients?search=${preSelectedPatientId}`)
           if (!response.ok) throw new Error('Failed to fetch patient')
           const data = await response.json()
@@ -159,8 +155,6 @@ export default function NewInvoicePage() {
           }
         } catch (error) {
           console.error('Error fetching patient:', error)
-        } finally {
-          setLoading(false)
         }
       }
       fetchPatient()

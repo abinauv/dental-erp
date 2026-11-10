@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -15,7 +14,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  BarChart3,
   Download,
   TrendingUp,
   TrendingDown,
@@ -27,10 +25,8 @@ import {
   UserCheck,
   FileText,
   Stethoscope,
-  Package,
 } from 'lucide-react'
 import {
-  LineChart,
   Line,
   BarChart,
   Bar,
@@ -44,7 +40,6 @@ import {
   Legend,
   ResponsiveContainer,
   ComposedChart,
-  Area,
 } from 'recharts'
 
 import { ReportBuilder } from '@/components/ai/report-builder'

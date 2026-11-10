@@ -34,18 +34,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
-import {
-  Zap,
-  Plus,
-  Loader2,
-  Pencil,
-  Trash2,
-  Calendar,
-  Clock,
-  Play,
-  Pause,
-  RefreshCw,
-} from 'lucide-react'
+import { Zap, Plus, Loader2, Pencil, Trash2, RefreshCw } from 'lucide-react'
 
 // Values only — labels and param labels live in the
 // `communications.automations.trigger` / `.triggerParam` / `.action`

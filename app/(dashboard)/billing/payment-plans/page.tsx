@@ -21,7 +21,6 @@ import {
   CalendarClock,
   CheckCircle,
   AlertTriangle,
-  XCircle,
   ChevronLeft,
   ChevronRight,
   IndianRupee,

@@ -9,7 +9,6 @@ import {
   Calendar,
   Receipt,
   TrendingUp,
-  TrendingDown,
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,

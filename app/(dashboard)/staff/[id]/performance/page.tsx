@@ -21,7 +21,6 @@ import {
   Clock,
   FileText,
   UserCheck,
-  UserX,
   AlertCircle,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'

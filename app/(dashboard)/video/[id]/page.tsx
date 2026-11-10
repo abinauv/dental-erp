@@ -10,17 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import VideoRoom from '@/components/video/video-room'
-import {
-  ArrowLeft,
-  Video,
-  Clock,
-  User,
-  Calendar,
-  Phone,
-  Play,
-  XCircle,
-  Loader2,
-} from 'lucide-react'
+import { ArrowLeft, Video, User, Phone, XCircle, Loader2 } from 'lucide-react'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface Consultation {

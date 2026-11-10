@@ -26,8 +26,6 @@ import {
   BarChart3,
   Mail,
   MessageSquare,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
   Eye,
   MousePointerClick,
@@ -36,7 +34,6 @@ import {
   Send,
   XCircle,
   CheckCircle2,
-  Clock,
 } from 'lucide-react'
 
 interface AnalyticsData {
