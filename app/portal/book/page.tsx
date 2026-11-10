@@ -8,25 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  CalendarPlus,
-  User,
-  Calendar,
-  Clock,
-  Loader2,
-  CheckCircle,
-  ArrowLeft,
-  ArrowRight,
-} from 'lucide-react'
+import { User, Calendar, Loader2, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generateClaimNo } from '@/lib/billing-utils'
-import { InsuranceClaimStatus } from '@prisma/client'
 import { logger } from '@/lib/logger'
 
 // GET - List insurance claims with filters

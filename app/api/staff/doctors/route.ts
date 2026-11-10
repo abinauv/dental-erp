@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger'
 
 // GET - List doctors only (for appointments)
 export async function GET(request: NextRequest) {
-  const { error, hospitalId, session } = await requireAuthAndRole()
+  const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

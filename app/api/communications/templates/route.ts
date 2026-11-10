@@ -23,15 +23,6 @@ const createTemplateSchema = z.object({
   isDefault: z.boolean().optional(),
 })
 
-const updateTemplateSchema = z.object({
-  name: z.string().optional(),
-  subject: z.string().optional(),
-  content: z.string().optional(),
-  language: z.string().optional(),
-  isActive: z.boolean().optional(),
-  isDefault: z.boolean().optional(),
-})
-
 // POST /api/communications/templates - Create template
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])

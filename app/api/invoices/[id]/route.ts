@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
-import { calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
+import { calculateInvoiceTotals } from '@/lib/billing-utils'
 import { DiscountType, InvoiceStatus } from '@prisma/client'
 import { logger } from '@/lib/logger'
 

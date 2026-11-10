@@ -30,7 +30,7 @@ async function generatePlanNumber(hospitalId: string): Promise<string> {
 
 // GET - List treatment plans with filters
 export async function GET(request: NextRequest) {
-  const { error, hospitalId, session } = await requireAuthAndRole()
+  const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

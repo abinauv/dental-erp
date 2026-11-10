@@ -7,16 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Calendar,
-  CreditCard,
-  ClipboardList,
-  Activity,
-  ArrowRight,
-  Clock,
-  User,
-  CalendarPlus,
-} from 'lucide-react'
+import { Calendar, CreditCard, Activity, ArrowRight, Clock, User, CalendarPlus } from 'lucide-react'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface DashboardData {

@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     const employeeId = `EMP${String(staffCount + 1).padStart(3, '0')}`
 
     // Create user and staff in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // Create the user
       const user = await tx.user.create({
         data: {

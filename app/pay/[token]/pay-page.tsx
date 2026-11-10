@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
   CreditCard,
@@ -15,7 +14,6 @@ import {
   Building2,
   Phone,
   Mail,
-  MapPin,
 } from 'lucide-react'
 import { formatCurrency as formatAmount } from '@/lib/i18n/format'
 

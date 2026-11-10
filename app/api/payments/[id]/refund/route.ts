@@ -62,7 +62,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Process refund
-    const payment = await prisma.payment.update({
+    await prisma.payment.update({
       where: { id, hospitalId },
       data: {
         status: 'REFUNDED',

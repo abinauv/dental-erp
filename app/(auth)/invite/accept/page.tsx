@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -32,7 +32,6 @@ type InviteData = {
 function AcceptInviteContent() {
   const t = useTranslations('auth.invite')
   const tRole = useTranslations('staff.role')
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'success'>('loading')
