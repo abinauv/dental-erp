@@ -2,7 +2,7 @@
  * Video Consultation Service
  *
  * Uses Daily.co REST API for video room management.
- * Env vars: DAILY_API_KEY, DAILY_DOMAIN (optional, defaults to daily.co)
+ * Env var: DAILY_API_KEY (room URLs come back from the API).
  *
  * If DAILY_API_KEY is not set, falls back to Jitsi Meet (free, no API key needed).
  */
@@ -11,10 +11,6 @@ const DAILY_API_BASE = 'https://api.daily.co/v1'
 
 function getDailyApiKey(): string | null {
   return process.env.DAILY_API_KEY || null
-}
-
-function getDailyDomain(): string {
-  return process.env.DAILY_DOMAIN || 'your-domain.daily.co'
 }
 
 function getJitsiDomain(): string {

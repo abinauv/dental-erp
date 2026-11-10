@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { CreditCard, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react'
+import { CreditCard, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 interface PaymentCheckoutProps {

@@ -1,4 +1,4 @@
-import { getRedisConnection, isQueueEnabled } from './connection'
+import { getRedisConnection } from './connection'
 import { QUEUE_NAME, getJobHandlers, type JobName, type JobPayloads } from './jobs'
 
 export { isQueueEnabled } from './connection'

@@ -286,12 +286,7 @@ function ToothShape({
   )
 }
 
-export default function Dental3DViewer({
-  patientId,
-  chartData = [],
-  readOnly = false,
-  onToothClick,
-}: Dental3DViewerProps) {
+export default function Dental3DViewer({ chartData = [], onToothClick }: Dental3DViewerProps) {
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
   const [zoom, setZoom] = useState(1)
   const [viewAngle, setViewAngle] = useState<'front' | 'upper' | 'lower'>('front')
@@ -350,16 +345,12 @@ export default function Dental3DViewer({
   // Build arch positions — teeth arranged in a U-shape
   function getArchPositions(teeth: number[], isUpper: boolean, side: 'left' | 'right') {
     const positions: { num: number; x: number; y: number }[] = []
-    const startAngle = side === 'right' ? Math.PI : 0
-    const endAngle = side === 'right' ? Math.PI / 2 : Math.PI / 2
     const radiusX = 250
     const radiusY = isUpper ? 110 : 110
     const centerY = isUpper ? archCenterY - 30 : archCenterY + 30
 
     teeth.forEach((num, i) => {
       const t = i / (teeth.length - 1)
-      const angle =
-        side === 'right' ? startAngle - t * (startAngle - endAngle) : endAngle + t * endAngle // from π/2 to π for left, 0 to π/2 for right
       const actualAngle =
         side === 'left' ? Math.PI / 2 - (t * Math.PI) / 2 : Math.PI / 2 + (t * Math.PI) / 2
 
