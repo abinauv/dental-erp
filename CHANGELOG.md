@@ -11,6 +11,13 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Security
+
+- Dependency overrides for the two open advisories: exceljs's uuid is raised
+  to 11.1.1 (exceljs's latest release still pins uuid 8; the affected v3/v5/v6
+  functions were never called), and the ESLint tooling's minimatch to 11
+  (development only).
+
 ### Fixed
 
 - Removing a device on the Devices page did nothing: the page waited for a
