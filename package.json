@@ -124,7 +124,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.2.0",
     "@types/bcryptjs": "^3.0.0",
-    "@types/node": "^25.0.3",
+    "@types/node": "^26.6.6",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
