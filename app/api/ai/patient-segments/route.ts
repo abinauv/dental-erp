@@ -11,9 +11,9 @@ import { logger } from '@/lib/logger'
  */
 export async function GET(req: Request) {
   try {
-    const { session, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
-    if (!hospitalId) {
-      return NextResponse.json({ error: 'Hospital not found' }, { status: 401 })
+    const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
+    if (error || !hospitalId) {
+      return error || NextResponse.json({ error: 'Hospital not found' }, { status: 401 })
     }
 
     const now = new Date()
