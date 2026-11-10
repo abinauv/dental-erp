@@ -537,6 +537,8 @@ export default function DevicesPage() {
           </pre>
         </CardContent>
       </Card>
+
+      {ConfirmDialogComponent}
     </div>
   )
 }
