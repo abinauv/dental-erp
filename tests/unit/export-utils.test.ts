@@ -2,39 +2,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { downloadCSV, downloadExcel } from '@/lib/export-utils'
 
 // ---- DOM mocks ----
-let appendedElement: HTMLAnchorElement | null = null
-let clickedHref = ''
 let clickedDownload = ''
 let createdObjectUrl = ''
-let revokedUrl = ''
 
 beforeEach(() => {
-  appendedElement = null
-  clickedHref = ''
   clickedDownload = ''
   createdObjectUrl = ''
-  revokedUrl = ''
 
   // @ts-ignore
-  globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+  globalThis.URL.createObjectURL = vi.fn(() => {
     createdObjectUrl = `blob:http://localhost/${Math.random()}`
     return createdObjectUrl
   })
   // @ts-ignore
-  globalThis.URL.revokeObjectURL = vi.fn((url: string) => {
-    revokedUrl = url
-  })
+  globalThis.URL.revokeObjectURL = vi.fn((url: string) => {})
 
   vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
-    appendedElement = node as HTMLAnchorElement
     return node
   })
   vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node)
-  vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+  vi.spyOn(document, 'createElement').mockImplementation(() => {
     const el = { href: '', download: '', click: vi.fn() } as any
     Object.defineProperty(el, 'click', {
       value: vi.fn(() => {
-        clickedHref = el.href
         clickedDownload = el.download
       }),
     })
@@ -84,9 +74,8 @@ describe('downloadCSV', () => {
   it('escapes values containing commas', () => {
     const data = [{ note: 'a, b, c' }]
 
-    let blobContent = ''
     // @ts-ignore
-    globalThis.URL.createObjectURL = vi.fn((blob: Blob) => {
+    globalThis.URL.createObjectURL = vi.fn(() => {
       // Read blob synchronously via the constructor args
       return 'blob:test'
     })

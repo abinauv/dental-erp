@@ -92,17 +92,8 @@ test.describe('AI Settings', () => {
       const toggles = page.getByRole('switch')
       const firstToggle = toggles.first()
       if (await firstToggle.isVisible()) {
-        const initialState =
-          (await firstToggle.getAttribute('aria-checked').catch(() => null)) ||
-          (await firstToggle.getAttribute('data-state').catch(() => null))
-
         await firstToggle.click()
         await page.waitForTimeout(500)
-
-        // State should have changed
-        const newState =
-          (await firstToggle.getAttribute('aria-checked').catch(() => null)) ||
-          (await firstToggle.getAttribute('data-state').catch(() => null))
 
         // Toggle back to original state
         await firstToggle.click()

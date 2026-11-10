@@ -74,10 +74,6 @@ test.describe('Patient Portal', () => {
     test('should show OTP input field after sending OTP', async ({ page }) => {
       await page.goto('/portal/login')
       // This test verifies the UI has an OTP input mechanism
-      const otpInput = page
-        .getByLabel(/otp|verification|code/i)
-        .or(page.getByPlaceholder(/otp|code|verify/i))
-        .first()
       // OTP input may only show after step 1
       await expect(page.locator('body')).toBeVisible()
     })

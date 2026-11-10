@@ -112,7 +112,6 @@ test.describe('Appointment Management', () => {
       await page.goto('/appointments')
       await page.waitForTimeout(1000)
       // Check-in buttons should exist for appropriate appointments
-      const checkInButton = page.getByRole('button', { name: /check.?in/i }).first()
       // May or may not be visible depending on data
       await expect(page.locator('body')).toBeVisible()
     })

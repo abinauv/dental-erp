@@ -419,7 +419,7 @@ describe('Billing Utils - getDateRangeFromPreset', () => {
   })
 
   it('should return this_year range', () => {
-    const { startDate, endDate } = getDateRangeFromPreset('this_year')
+    const { startDate } = getDateRangeFromPreset('this_year')
     expect(startDate.getMonth()).toBe(0) // January
     expect(startDate.getDate()).toBe(1)
     expect(startDate.getFullYear()).toBe(2024)

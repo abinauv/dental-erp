@@ -1,4 +1,4 @@
-import { test, expect, login, TEST_ADMIN, TEST_DOCTOR, TEST_RECEPTIONIST } from './fixtures/auth'
+import { test, expect } from './fixtures/auth'
 
 test.describe('Role-Based Access Control', () => {
   test.describe('Admin Access', () => {

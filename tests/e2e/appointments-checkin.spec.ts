@@ -52,9 +52,6 @@ test.describe('Appointment Check-in / Check-out Workflow', () => {
     test('should have check-out button for checked-in patients', async ({ adminPage: page }) => {
       await page.goto('/appointments/queue')
       await page.waitForTimeout(1000)
-      const checkOutBtn = page
-        .getByRole('button', { name: /check.?out|log.?out|complete/i })
-        .first()
       // Check-out button should exist for in-progress appointments
       await expect(page.locator('body')).toBeVisible()
     })

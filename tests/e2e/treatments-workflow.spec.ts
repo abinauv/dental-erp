@@ -119,7 +119,6 @@ test.describe('Treatment Workflow', () => {
       await page.goto('/treatments')
       await page.waitForTimeout(1000)
       // Start/complete buttons should exist for appropriate treatments
-      const startButton = page.getByRole('button', { name: /start/i }).first()
       // May or may not be visible depending on data
       await expect(page.locator('body')).toBeVisible()
     })
@@ -127,7 +126,6 @@ test.describe('Treatment Workflow', () => {
     test('should show complete button for in-progress treatments', async ({ adminPage: page }) => {
       await page.goto('/treatments')
       await page.waitForTimeout(1000)
-      const completeButton = page.getByRole('button', { name: /complete/i }).first()
       await expect(page.locator('body')).toBeVisible()
     })
   })

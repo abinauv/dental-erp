@@ -58,10 +58,6 @@ test.describe('Lab Orders', () => {
         .getByRole('tab', { name: /active/i })
         .or(page.getByText(/active/i).first())
         .first()
-      const completedTab = page
-        .getByRole('tab', { name: /completed/i })
-        .or(page.getByText(/completed/i).first())
-        .first()
       if (await activeTab.isVisible()) {
         await expect(activeTab).toBeVisible()
       }
