@@ -11,6 +11,8 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-10
+
 ### Fixed
 
 - Staff created by a data import can now sign in. Each was given a random
@@ -40,6 +42,20 @@ before it are not itemized here; see the git history and the
   proxies, for setups where the proxy appends to `X-Forwarded-For` or there is
   more than one hop. Not needed behind the bundled Caddy config. See
   SELF_HOSTING.md.
+
+### Changed
+
+- Dependency updates: Next.js 16.4.5, Better Auth 1.7.18, @hookform/resolvers
+  7, nodemailer 10.3.1, lucide-react 1.70, the AWS and Anthropic SDKs, and
+  (development) jsdom 31, @testing-library/jest-dom 7, Vite 8.3.6, Vitest 5.1
+  and @types/node 26. GitHub Actions moved to setup-node 7, upload-artifact 7,
+  docker/metadata-action 6 and docker/login-action 4.
+
+### Upgrading
+
+- No database migrations and no required configuration changes. Set
+  `TRUSTED_PROXIES` only if your reverse proxy appends to `X-Forwarded-For`
+  (see SELF_HOSTING.md).
 
 ## [2.0.1] - 2026-11-08
 

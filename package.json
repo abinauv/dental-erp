@@ -1,6 +1,6 @@
 {
   "name": "dental-erp",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Open-source dental hospital management system for Indian dental clinics — AI-powered, GST billing, patient portal, tele-dentistry",
   "private": true,
   "engines": {
