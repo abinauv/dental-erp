@@ -52,6 +52,7 @@ function wrapHTML(content: string): string {
  * Non-blocking — logs errors but does not throw.
  */
 export async function sendInviteEmail(params: {
+  hospitalId: string
   to: string
   inviteeName: string
   hospitalName: string
@@ -59,7 +60,7 @@ export async function sendInviteEmail(params: {
   inviterName: string
   token: string
 }): Promise<boolean> {
-  const { to, inviteeName, hospitalName, role, inviterName, token } = params
+  const { hospitalId, to, inviteeName, hospitalName, role, inviterName, token } = params
   const link = `${baseUrl()}/invite/accept?token=${token}`
   const roleLabel = role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ')
 
@@ -79,6 +80,7 @@ export async function sendInviteEmail(params: {
 
   try {
     await emailService.sendEmail({
+      hospitalId,
       to,
       subject: `You're invited to join ${hospitalName} on ${APP_NAME}`,
       body: html,
@@ -95,12 +97,13 @@ export async function sendInviteEmail(params: {
  * Non-blocking — logs errors but does not throw.
  */
 export async function sendVerificationEmail(params: {
+  hospitalId: string
   to: string
   userName: string
   hospitalName: string
   token: string
 }): Promise<boolean> {
-  const { to, userName, hospitalName, token } = params
+  const { hospitalId, to, userName, hospitalName, token } = params
   const link = `${baseUrl()}/verify-email?token=${token}`
 
   const html = wrapHTML(`
@@ -118,6 +121,7 @@ export async function sendVerificationEmail(params: {
 
   try {
     await emailService.sendEmail({
+      hospitalId,
       to,
       subject: `Verify your email — ${APP_NAME}`,
       body: html,

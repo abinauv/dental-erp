@@ -103,6 +103,7 @@ export async function POST(request: Request) {
 
     // Send invite email (non-blocking — logs error if SMTP not configured)
     const emailSent = await sendInviteEmail({
+      hospitalId,
       to: email,
       inviteeName: name,
       hospitalName: hospital?.name || 'Your Dental Clinic',

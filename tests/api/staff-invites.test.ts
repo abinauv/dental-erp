@@ -125,7 +125,9 @@ describe('Staff Invites API', () => {
       const body = await res.json()
       expect(body.success).toBe(true)
       expect(body.emailSent).toBe(true)
-      expect(mockEmailHelpers.sendInviteEmail).toHaveBeenCalled()
+      expect(mockEmailHelpers.sendInviteEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ hospitalId: expect.any(String) })
+      )
     })
 
     it('returns 400 for invalid email', async () => {

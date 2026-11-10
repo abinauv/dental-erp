@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
       const data = sendWithTemplateSchema.parse(body)
 
       const emailLogId = await emailService.sendWithTemplate(
+        hospitalId,
         data.to,
         data.templateId,
         data.variables,

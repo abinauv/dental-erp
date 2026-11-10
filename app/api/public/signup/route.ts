@@ -102,6 +102,7 @@ export async function POST(request: Request) {
 
     // Send verification email (non-blocking — logs error if SMTP not configured)
     const emailSent = await sendVerificationEmail({
+      hospitalId: result.hospital.id,
       to: email,
       userName: adminName,
       hospitalName,

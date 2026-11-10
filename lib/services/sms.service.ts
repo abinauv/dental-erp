@@ -13,7 +13,7 @@ export interface SMSConfig {
 }
 
 export interface SMSPayload {
-  hospitalId?: string
+  hospitalId: string
   phone: string
   message: string
   patientId?: string
@@ -85,7 +85,7 @@ class SMSService {
     // Create SMS log entry
     const smsLog = await prisma.sMSLog.create({
       data: {
-        hospitalId: payload.hospitalId || '',
+        hospitalId: payload.hospitalId,
         patientId: payload.patientId || null,
         phone: payload.phone,
         message: payload.logMessage ?? payload.message,

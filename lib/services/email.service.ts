@@ -22,7 +22,7 @@ export interface EmailConfig {
 }
 
 export interface EmailPayload {
-  hospitalId?: string
+  hospitalId: string
   to: string
   subject: string
   body: string
@@ -113,7 +113,7 @@ class EmailService {
     // Create email log entry
     const emailLog = await prisma.emailLog.create({
       data: {
-        hospitalId: payload.hospitalId || '',
+        hospitalId: payload.hospitalId,
         patientId: payload.patientId || null,
         email: payload.to,
         subject: payload.subject,
@@ -224,14 +224,16 @@ class EmailService {
   }
 
   async sendWithTemplate(
+    hospitalId: string,
     to: string,
     templateId: string,
     variables: Record<string, string>,
     attachments?: EmailAttachment[],
     patientId?: string
   ): Promise<string> {
-    const template = await prisma.communicationTemplate.findUnique({
-      where: { id: templateId },
+    // Only this clinic's templates.
+    const template = await prisma.communicationTemplate.findFirst({
+      where: { id: templateId, hospitalId },
     })
 
     if (!template || !template.isActive) {
@@ -253,6 +255,7 @@ class EmailService {
     }
 
     return this.sendEmail({
+      hospitalId,
       to,
       subject,
       body,

@@ -84,6 +84,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // Resend invite email (non-blocking)
     const emailSent = await sendInviteEmail({
+      hospitalId,
       to: invite.email,
       inviteeName: invite.name ?? invite.email.split('@')[0],
       hospitalName: hospital?.name || 'Your Dental Clinic',

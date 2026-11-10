@@ -27,6 +27,7 @@ vi.mock('@/lib/prisma', () => {
     },
     communicationTemplate: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
   }
   return { default: mock, prisma: mock }
@@ -287,50 +288,62 @@ describe('EmailService - generateEmailHTML', () => {
 // ---------------------------------------------------------------------------
 
 describe('EmailService - sendWithTemplate', () => {
+  it('only uses a template from the caller’s clinic', async () => {
+    const { emailService } = emailServiceModule
+    vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue(null)
+
+    await expect(
+      emailService.sendWithTemplate('hosp-1', 'test@example.com', 'tpl-of-another-clinic', {})
+    ).rejects.toThrow('Template not found')
+    expect(prisma.communicationTemplate.findFirst).toHaveBeenCalledWith({
+      where: { id: 'tpl-of-another-clinic', hospitalId: 'hosp-1' },
+    })
+  })
+
   it('throws for non-existent template', async () => {
     const { emailService } = emailServiceModule
 
-    vi.mocked(prisma.communicationTemplate.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue(null)
 
     await expect(
-      emailService.sendWithTemplate('test@example.com', 'tpl-missing', {})
+      emailService.sendWithTemplate('hosp-1', 'test@example.com', 'tpl-missing', {})
     ).rejects.toThrow('Template not found')
   })
 
   it('throws for inactive template', async () => {
     const { emailService } = emailServiceModule
 
-    vi.mocked(prisma.communicationTemplate.findUnique).mockResolvedValue({
+    vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue({
       id: 'tpl-1',
       isActive: false,
       channel: 'EMAIL',
       content: 'Test',
     } as any)
 
-    await expect(emailService.sendWithTemplate('test@example.com', 'tpl-1', {})).rejects.toThrow(
-      'Template not found'
-    )
+    await expect(
+      emailService.sendWithTemplate('hosp-1', 'test@example.com', 'tpl-1', {})
+    ).rejects.toThrow('Template not found')
   })
 
   it('throws for non-email template', async () => {
     const { emailService } = emailServiceModule
 
-    vi.mocked(prisma.communicationTemplate.findUnique).mockResolvedValue({
+    vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue({
       id: 'tpl-1',
       isActive: true,
       channel: 'SMS',
       content: 'Test',
     } as any)
 
-    await expect(emailService.sendWithTemplate('test@example.com', 'tpl-1', {})).rejects.toThrow(
-      'not for email'
-    )
+    await expect(
+      emailService.sendWithTemplate('hosp-1', 'test@example.com', 'tpl-1', {})
+    ).rejects.toThrow('not for email')
   })
 
   it('replaces variables in subject and body', async () => {
     const { emailService } = emailServiceModule
 
-    vi.mocked(prisma.communicationTemplate.findUnique).mockResolvedValue({
+    vi.mocked(prisma.communicationTemplate.findFirst).mockResolvedValue({
       id: 'tpl-1',
       isActive: true,
       channel: 'EMAIL',
@@ -343,7 +356,7 @@ describe('EmailService - sendWithTemplate', () => {
     vi.mocked(prisma.setting.findMany).mockResolvedValue([])
 
     try {
-      await emailService.sendWithTemplate('test@example.com', 'tpl-1', {
+      await emailService.sendWithTemplate('hosp-1', 'test@example.com', 'tpl-1', {
         patientName: 'Rahul',
         appointmentDate: '25-Jan-2026',
       })
@@ -355,6 +368,7 @@ describe('EmailService - sendWithTemplate', () => {
     expect(prisma.emailLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
+          hospitalId: 'hosp-1',
           subject: 'Appointment for Rahul',
           body: 'Dear Rahul, your appointment is on 25-Jan-2026',
         }),

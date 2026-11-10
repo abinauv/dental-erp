@@ -133,6 +133,11 @@ describe('POST /api/public/signup', () => {
     expect(body.hospitalId).toBe('h1')
     expect(body.emailSent).toBe(true)
 
+    // The verification email is logged against the new clinic.
+    expect(sendVerificationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ hospitalId: 'h1' })
+    )
+
     // Self-hosted clinics are created unlimited (no 3-staff / 100-patient cap)
     expect(mockTx.hospital.create).toHaveBeenCalledWith(
       expect.objectContaining({
