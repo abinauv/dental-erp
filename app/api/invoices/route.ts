@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger'
 
 // GET - List invoices with filters
 export async function GET(request: NextRequest) {
-  const { error, hospitalId, session } = await requireAuthAndRole()
+  const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

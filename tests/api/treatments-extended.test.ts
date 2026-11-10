@@ -301,7 +301,6 @@ describe('GET/POST /api/treatment-plans', () => {
       },
     })
     const res = await POST(req)
-    const data = await res.json()
 
     expect(res.status).toBe(201)
     expect(prisma.treatmentPlan.create).toHaveBeenCalled()

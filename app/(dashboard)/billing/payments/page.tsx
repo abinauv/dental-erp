@@ -33,7 +33,6 @@ import {
   Banknote,
   Smartphone,
   Building2,
-  FileText,
   MoreHorizontal,
   Eye,
   RotateCcw,

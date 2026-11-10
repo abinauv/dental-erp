@@ -133,7 +133,6 @@ test.describe('Inventory Management', () => {
       await page.goto('/inventory')
       await page.waitForTimeout(1000)
       // Low stock items should show badge or alert
-      const lowStockBadge = page.getByText(/low stock|out of stock/i).first()
       // May or may not exist based on data
       await expect(page.locator('body')).toBeVisible()
     })

@@ -1,4 +1,4 @@
-import { createHash, createHmac } from 'crypto'
+import { createHmac } from 'crypto'
 import { signaturesMatch } from './signature'
 import type {
   PaymentGateway,

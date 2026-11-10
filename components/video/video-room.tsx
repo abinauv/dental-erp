@@ -7,11 +7,6 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  MonitorUp,
   Phone,
   MessageSquare,
   FileText,
@@ -63,11 +58,9 @@ export default function VideoRoom({
   provider,
   participantName,
   isDoctor,
-  consultationId,
   patient,
   appointment,
   onEnd,
-  onStatusChange,
 }: VideoRoomProps) {
   const t = useTranslations('video.room')
   const iframeRef = useRef<HTMLIFrameElement>(null)

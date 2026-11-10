@@ -71,7 +71,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
  * Update consultation: start, end, cancel, add notes.
  */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error) return error
 
   const { id } = await params

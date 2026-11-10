@@ -3,7 +3,6 @@ import {
   Role,
   Gender,
   BloodGroup,
-  ProcedureCategory,
   Plan,
   InvoiceStatus,
   SupplierStatus,

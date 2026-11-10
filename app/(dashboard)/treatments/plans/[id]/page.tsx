@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
@@ -32,7 +31,6 @@ import {
   User,
   Phone,
   Mail,
-  Calendar,
   FileText,
   CheckCircle,
   XCircle,
@@ -98,7 +96,6 @@ interface TreatmentPlan {
 
 export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
   const t = useTranslations('treatments.planDetail')
   const tStatus = useTranslations('treatments.planStatus')
   const tItemStatus = useTranslations('treatments.itemStatus')

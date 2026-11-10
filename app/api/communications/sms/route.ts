@@ -12,17 +12,6 @@ const sendSMSSchema = z.object({
   scheduledFor: z.string().datetime().optional(),
 })
 
-const bulkSMSSchema = z.object({
-  recipients: z.array(
-    z.object({
-      phone: z.string().min(10),
-      message: z.string().min(1).max(500),
-      patientId: z.string().optional(),
-    })
-  ),
-  templateId: z.string().optional(),
-})
-
 // Query-string filters for GET. Dates may be plain dates or full timestamps.
 const historySchema = z.object({
   patientId: z.string().optional(),

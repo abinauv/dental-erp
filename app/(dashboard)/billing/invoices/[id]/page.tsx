@@ -2,13 +2,13 @@
 
 import { useState, useEffect, use } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -44,16 +44,13 @@ import {
   Printer,
   CreditCard,
   FileText,
-  Calendar,
   Clock,
-  CheckCircle,
   AlertCircle,
   IndianRupee,
   Banknote,
   Smartphone,
   Building2,
   Share2,
-  Copy,
   Check,
   Loader2,
 } from 'lucide-react'
@@ -147,7 +144,6 @@ interface Invoice {
 
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const showPaymentDialog = searchParams.get('action') === 'payment'
 
@@ -175,7 +171,6 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
   // Payment link state
   const [linkLoading, setLinkLoading] = useState(false)
-  const [paymentLink, setPaymentLink] = useState('')
   const [linkCopied, setLinkCopied] = useState(false)
 
   const fetchInvoice = async () => {
@@ -258,7 +253,6 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         throw new Error(data.error || 'Failed to generate link')
       }
       const data = await res.json()
-      setPaymentLink(data.link.url)
       await navigator.clipboard.writeText(data.link.url)
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 3000)

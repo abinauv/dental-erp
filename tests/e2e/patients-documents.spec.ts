@@ -182,17 +182,8 @@ test.describe('Patient Documents', () => {
             .first()
           if (await documentItem.isVisible()) {
             // Look for action buttons
-            const annotateBtn = page.getByRole('button', { name: /annotate/i })
-            const compareBtn = page.getByRole('button', { name: /compare/i })
-            const viewBtn = page.getByRole('button', { name: /view|open/i }).first()
-            const deleteBtn = page.getByRole('button', { name: /delete|remove/i }).first()
 
             // At least view or some action should be available
-            const hasActions =
-              (await annotateBtn.isVisible()) ||
-              (await compareBtn.isVisible()) ||
-              (await viewBtn.isVisible()) ||
-              (await deleteBtn.isVisible())
 
             // Actions present (or empty state is acceptable)
             await expect(page.locator('body')).toBeVisible()

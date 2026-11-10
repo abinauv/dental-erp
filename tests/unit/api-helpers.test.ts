@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { requireRole, generateToken, PLAN_LIMITS } from '@/lib/api-helpers'
 import { NextResponse } from 'next/server'
 
@@ -113,8 +113,6 @@ describe('API Helpers - generateToken', () => {
 })
 
 describe('API Helpers - Role Authorization Matrix', () => {
-  const roles = ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'LAB_TECH', 'ACCOUNTANT']
-
   it('should allow ADMIN access to all features', () => {
     const adminFeatures = [
       ['ADMIN'],

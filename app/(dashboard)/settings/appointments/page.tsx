@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
-import { Calendar, Clock, Plus, Trash2, Save } from 'lucide-react'
+import { Calendar, Plus, Trash2, Save } from 'lucide-react'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 
 export default function AppointmentSettingsPage() {

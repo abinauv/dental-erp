@@ -22,13 +22,6 @@ const createSurveySchema = z.object({
   validUntil: z.string().datetime().optional(),
 })
 
-const updateSurveySchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  isActive: z.boolean().optional(),
-  validUntil: z.string().datetime().optional(),
-})
-
 // POST /api/communications/surveys - Create survey
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()

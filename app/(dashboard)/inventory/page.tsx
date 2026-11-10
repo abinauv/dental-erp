@@ -38,7 +38,6 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Settings,
   FileText,
   TrendingUp,
   Users,

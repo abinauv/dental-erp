@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { useToast } from '@/hooks/use-toast'
@@ -40,7 +39,6 @@ interface Supplier {
 }
 
 export default function SuppliersPage() {
-  const router = useRouter()
   const t = useTranslations('inventory.suppliers')
   const tStatus = useTranslations('inventory.supplierStatus')
   const tForm = useTranslations('inventory.suppliers.form')

@@ -149,7 +149,6 @@ export function SignaturePad({
     if (!ctx) return
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    const dpr = window.devicePixelRatio || 1
 
     // Redraw placeholder
     ctx.strokeStyle = '#e5e7eb'

@@ -189,15 +189,8 @@ test.describe('Patient Insurance', () => {
           await page.waitForTimeout(1000)
 
           // Look for verify button on unverified policies
-          const verifyButton = page.getByRole('button', { name: /verify/i })
-          const editButton = page.getByRole('button', { name: /edit/i }).first()
-          const activateButton = page.getByRole('button', { name: /activate|deactivate/i }).first()
 
           // If policies exist, there should be action buttons
-          const hasActions =
-            (await verifyButton.isVisible()) ||
-            (await editButton.isVisible()) ||
-            (await activateButton.isVisible())
 
           // This is acceptable — either has actions or no policies
           await expect(page.locator('body')).toBeVisible()

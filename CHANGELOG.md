@@ -11,6 +11,23 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Fixed
+
+- Removing a device on the Devices page did nothing: the page waited for a
+  confirmation dialog that it never displayed.
+- The AI settings page shows whether the AI provider's credentials are
+  configured, instead of always saying "Check .env".
+- The AI analytics endpoints (patient segments, no-show risk, inventory and
+  cash-flow forecasts) answer a signed-in user without the right role with
+  403 instead of 401.
+
+### Changed
+
+- Removed about 200 unused imports, variables, functions and validation
+  schemas flagged by code scanning. No behaviour change. `DAILY_DOMAIN` is
+  dropped from the docs: the app never read it (Daily.co room URLs come from
+  its API).
+
 ## [2.1.1] - 2026-11-10
 
 ### Security

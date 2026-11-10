@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const now = new Date()
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 

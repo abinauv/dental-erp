@@ -22,7 +22,6 @@ import {
   Loader2,
   X,
   Check,
-  ArrowLeft,
   Info,
   Copy,
   KeyRound,

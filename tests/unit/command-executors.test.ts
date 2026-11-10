@@ -10,7 +10,6 @@ const {
   execBookAppointment,
   execCancelAppointment,
   execCreateInvoice,
-  execRecordPayment,
   execCheckStock,
   execLowStock,
   execShowStaff,

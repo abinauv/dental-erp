@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -107,7 +106,6 @@ interface PlanDetail {
 
 export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
   const { toast } = useToast()
   const { confirm, ConfirmDialogComponent } = useConfirmDialog()
   const t = useTranslations('billing.planDetail')

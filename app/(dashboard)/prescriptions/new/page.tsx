@@ -100,7 +100,6 @@ export default function NewPrescriptionPage() {
   // Medication search
   const [medSearch, setMedSearch] = useState('')
   const [medOptions, setMedOptions] = useState<MedicationOption[]>([])
-  const [searchingMeds, setSearchingMeds] = useState(false)
   const [activeMedRow, setActiveMedRow] = useState<number | null>(null)
 
   // Form data
@@ -167,7 +166,6 @@ export default function NewPrescriptionPage() {
       return
     }
     const timer = setTimeout(async () => {
-      setSearchingMeds(true)
       try {
         const res = await fetch(
           `/api/medications?search=${encodeURIComponent(medSearch)}&limit=10&active=true`
@@ -177,7 +175,6 @@ export default function NewPrescriptionPage() {
       } catch {
         /* ignore */
       }
-      setSearchingMeds(false)
     }, 300)
     return () => clearTimeout(timer)
   }, [medSearch])

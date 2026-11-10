@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Mic, MicOff, Loader2 } from 'lucide-react'
+import { Mic, MicOff } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface VoiceInputProps {

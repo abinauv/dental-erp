@@ -2,11 +2,10 @@
 
 import { useState, useEffect, use } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -108,7 +107,6 @@ interface Treatment {
 
 export default function TreatmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
   const t = useTranslations('treatments.detail')
   const tStatus = useTranslations('treatments.status')
   const tCategory = useTranslations('treatments.category')

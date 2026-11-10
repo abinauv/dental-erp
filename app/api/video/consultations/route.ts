@@ -72,7 +72,7 @@ export async function GET(req: Request) {
  * Create a new video consultation (optionally linked to an appointment).
  */
 export async function POST(req: Request) {
-  const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error) return error
 
   const body = await req.json()

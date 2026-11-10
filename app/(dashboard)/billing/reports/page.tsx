@@ -23,17 +23,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  BarChart3,
   Download,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
   Users,
   Stethoscope,
   Calendar,
-  Clock,
   AlertCircle,
-  IndianRupee,
   CreditCard,
   Banknote,
 } from 'lucide-react'

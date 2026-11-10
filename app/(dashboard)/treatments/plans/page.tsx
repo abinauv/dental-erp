@@ -43,7 +43,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { treatmentPlanStatusConfig, calculatePlanProgress } from '@/lib/treatment-utils'

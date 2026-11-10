@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -41,7 +41,6 @@ import {
   ChevronRight,
   Check,
   X,
-  Clock,
   Loader2,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'

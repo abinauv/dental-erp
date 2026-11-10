@@ -6,7 +6,7 @@ import { useConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -40,14 +40,12 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
-  Eye,
   Edit,
   Trash,
   FlaskConical,
   Star,
   Phone,
   Mail,
-  MapPin,
   Clock,
   CheckCircle,
   XCircle,

@@ -5,7 +5,7 @@
  * Add new regression tests here when bugs are found and fixed.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // ============================================================
 // 1. Hospital Isolation — Cross-tenant data leaks

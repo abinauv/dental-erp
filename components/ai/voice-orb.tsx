@@ -18,7 +18,6 @@ interface VoiceOrbProps {
  */
 export function VoiceOrb({ state, audioLevel, size = 120, onPress, disabled }: VoiceOrbProps) {
   const t = useTranslations('ai.orb')
-  const isActive = state !== 'idle'
   // Dynamic scale based on audio level when listening
   const dynamicScale = state === 'listening' ? 1 + audioLevel * 0.15 : 1
 

@@ -107,7 +107,6 @@ export default function AttendancePage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [todayData, setTodayData] = useState<TodayAttendance | null>(null)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
 
   // Mark attendance dialog
   const [dialogOpen, setDialogOpen] = useState(false)

@@ -2,18 +2,16 @@
 
 import { useState, useEffect, use } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import {
   ArrowLeft,
   Calendar,
-  Clock,
   User,
   Phone,
   Mail,
@@ -26,7 +24,6 @@ import {
   AlertTriangle,
   Stethoscope,
   FileText,
-  History,
   Video,
 } from 'lucide-react'
 import {
@@ -114,7 +111,6 @@ interface Appointment {
 
 export default function AppointmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const router = useRouter()
   const t = useTranslations('appointments.detail')
   const tStatus = useTranslations('appointments.status')
   const tType = useTranslations('appointments.type')

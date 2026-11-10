@@ -39,7 +39,6 @@ import {
   CheckCircle,
   Stethoscope,
   Calendar,
-  Clock,
   FileText,
   AlertCircle,
 } from 'lucide-react'

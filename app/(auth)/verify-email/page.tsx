@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, CheckCircle2, XCircle, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast'
 
 function VerifyEmailContent() {
   const t = useTranslations('auth.verifyEmail')
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'pending'>('loading')

@@ -33,7 +33,6 @@ function PatientLoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [clinicSlug, setClinicSlug] = useState(clinic)
-  const [clinicName, setClinicName] = useState('')
 
   const sendOTP = async () => {
     if (!phone || phone.length < 10) {

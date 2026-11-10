@@ -8,7 +8,7 @@ import { logger } from '@/lib/logger'
  */
 export async function POST(request: NextRequest) {
   try {
-    const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
+    const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
     if (error) return error
 
     const body = await request.json()

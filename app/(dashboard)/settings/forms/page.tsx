@@ -25,7 +25,6 @@ import {
 import {
   Plus,
   MoreHorizontal,
-  Pencil,
   Trash2,
   Eye,
   FileText,

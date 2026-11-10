@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -22,11 +21,8 @@ import {
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
 import {
-  BarChart3,
   Star,
   TrendingUp,
-  TrendingDown,
-  Minus,
   Smile,
   Meh,
   Frown,
@@ -492,7 +488,7 @@ export default function FeedbackAnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {data.wordFrequencies.map((w, i) => {
+                  {data.wordFrequencies.map((w) => {
                     const maxCount = data.wordFrequencies[0]?.count || 1
                     const scale = 0.7 + (w.count / maxCount) * 1.3 // 0.7x to 2x
                     const opacity = 0.5 + (w.count / maxCount) * 0.5
