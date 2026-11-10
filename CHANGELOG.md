@@ -11,6 +11,8 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-11-10
+
 ### Security
 
 - Dependency overrides for the two open advisories: exceljs's uuid is raised
@@ -42,6 +44,13 @@ before it are not itemized here; see the git history and the
   schemas flagged by code scanning. No behaviour change. `DAILY_DOMAIN` is
   dropped from the docs: the app never read it (Daily.co room URLs come from
   its API).
+
+### Upgrading
+
+- No migrations or configuration changes. Automated reminders, signup
+  verification emails and staff invitations start sending once SMTP/SMS is
+  configured; check your templates and trigger settings before upgrading if
+  you don't want them to start.
 
 ## [2.1.1] - 2026-11-10
 
