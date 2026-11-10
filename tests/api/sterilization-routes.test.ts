@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -278,7 +278,6 @@ describe('POST /api/sterilization/logs', () => {
         completedAt: '2026-02-20T10:30:00',
       })
     )
-    const body = await res.json()
 
     expect(res.status).toBe(201)
     expect(prisma.$transaction).toHaveBeenCalled()

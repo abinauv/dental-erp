@@ -1,7 +1,5 @@
 // @ts-nocheck
-import { describe, it, expect, vi } from 'vitest'
-import path from 'path'
-import fs from 'fs'
+import { describe, it, expect } from 'vitest'
 
 // ============================================================
 // Section 9.1 — Build Testing

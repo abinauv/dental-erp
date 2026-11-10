@@ -149,10 +149,6 @@ function mockAuthError() {
   } as any)
 }
 
-function mockAuthRole(role: string) {
-  mockAuth({ user: { id: 'u1', name: 'Test User', role } })
-}
-
 // ---------------------------------------------------------------------------
 // Common prisma setup helpers
 // ---------------------------------------------------------------------------

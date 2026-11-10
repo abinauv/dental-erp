@@ -220,7 +220,7 @@ describe('PUT /api/settings/billing/gateway', () => {
       isLiveMode: false,
     } as any)
 
-    const res = await gatewayPUT(
+    await gatewayPUT(
       makeReq('/api/settings/billing/gateway', 'PUT', {
         provider: 'RAZORPAY',
         isEnabled: true,
@@ -502,7 +502,6 @@ describe('GET /api/settings/procedures/[id]', () => {
       makeReq('/api/settings/procedures/p1'),
       makeParams('p1') as any
     )
-    const body = await res.json()
     expect(res.status).toBe(404)
   })
 

@@ -138,7 +138,7 @@ describe('Database — Concurrent Appointment Booking', () => {
 
     // User A reads version 1
     mockPrisma.appointment.findUnique.mockResolvedValue(appointmentV1)
-    const readByA = await mockPrisma.appointment.findUnique({ where: { id: 'a1' } })
+    await mockPrisma.appointment.findUnique({ where: { id: 'a1' } })
 
     // User B also reads version 1 and updates (version becomes 2)
     mockPrisma.appointment.update.mockResolvedValueOnce({

@@ -266,7 +266,6 @@ describe('POST /api/staff/attendance', () => {
         clockOut: '2026-02-20T18:00:00',
       })
     )
-    const body = await res.json()
 
     expect(res.status).toBe(200)
     expect(prisma.attendance.update).toHaveBeenCalled()

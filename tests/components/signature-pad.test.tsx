@@ -63,8 +63,6 @@ const mockCtx = {
 }
 
 // Mock HTMLCanvasElement.getContext and toDataURL
-const originalGetContext = HTMLCanvasElement.prototype.getContext
-const originalToDataURL = HTMLCanvasElement.prototype.toDataURL
 
 beforeEach(() => {
   HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(mockCtx)

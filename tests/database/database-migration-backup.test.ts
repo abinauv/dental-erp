@@ -598,7 +598,7 @@ describe('8.5 Database Performance', () => {
 
       mockPrisma.$transaction.mockResolvedValue(batchItems)
 
-      const result = await mockPrisma.$transaction(
+      await mockPrisma.$transaction(
         batchItems.map((item) => mockPrisma.patient.create({ data: item }))
       )
 

@@ -178,7 +178,6 @@ describe('NewPrescriptionPage', () => {
       render(<NewPrescriptionPage />)
 
       // With one row, no delete button
-      const trashIcons = screen.queryAllByTestId('lucide-Trash2')
       // The trash icon shouldn't be visible for the only row
 
       // Add second row

@@ -145,7 +145,6 @@ import {
   PLAN_LIMITS,
   checkPatientLimit,
   checkStaffLimit,
-  generateToken,
 } from '@/lib/api-helpers'
 
 const mockGetSession = vi.mocked(auth.api.getSession)
@@ -361,7 +360,7 @@ describe('Security — Input Validation & Injection', () => {
     beforeEach(async () => {
       // The PDF generator has an escapeHtml function
       try {
-        const mod = await import('@/lib/services/pdf-generator')
+        await import('@/lib/services/pdf-generator')
         // escapeHtml might not be exported; test the module itself
         escapeHtml = (str: string) =>
           str

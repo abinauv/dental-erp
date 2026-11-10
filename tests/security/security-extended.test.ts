@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -80,7 +80,6 @@ describe('Security — Brute Force Protection', () => {
   describe('Rate limiting via audit log', () => {
     it('counts login attempts within time window', () => {
       const maxAttempts = 5
-      const windowMs = 15 * 60 * 1000 // 15 minutes
 
       // Simulate 6 failed attempts
       const attempts = 6
@@ -90,7 +89,6 @@ describe('Security — Brute Force Protection', () => {
     })
 
     it('allows login after window expires', () => {
-      const maxAttempts = 5
       const windowMs = 15 * 60 * 1000
       const lastAttemptTime = Date.now() - windowMs - 1000 // window expired
 
@@ -174,7 +172,6 @@ describe('Security — CSRF Protection', () => {
 
     it('rejects requests with no origin header (non-browser)', () => {
       const origin = undefined
-      const allowedOrigins = ['https://app.dentalerp.com']
 
       // Depending on config, missing origin may be blocked or allowed
       expect(origin).toBeUndefined()

@@ -53,7 +53,6 @@ function badSecretReq(path: string, method = 'GET'): Request {
 // ── Common mock data ─────────────────────────────────────────────────────────
 
 const now = new Date()
-const todayStr = now.toISOString().split('T')[0]
 
 const mockHospitals = [{ id: 'h1', name: 'Test Clinic' }]
 

@@ -351,7 +351,6 @@ describe('Complete Business Workflows', () => {
   describe('Workflow 2: Partial Payment Scenario', () => {
     it('Should handle partial payments correctly', async () => {
       const invoiceId = 'invoice-partial'
-      const totalAmount = 10000
 
       // First partial payment
       mockPrisma.payment.create.mockResolvedValueOnce({
@@ -546,8 +545,6 @@ describe('Complete Business Workflows', () => {
 
   describe('Workflow 5: Treatment Plan with Multi-Visit Treatments', () => {
     it('Should track treatment plan progress across visits', async () => {
-      const patientId = 'patient-plan'
-
       // Create treatment plan with multiple items
       const planItems = [
         { id: 'item-1', sequence: 1, procedure: 'Root Canal - Visit 1', status: 'COMPLETED' },
@@ -706,7 +703,6 @@ describe('Complete Business Workflows', () => {
     })
 
     it('Should calculate invoice balance correctly', async () => {
-      const invoiceId = 'invoice-balance'
       const totalAmount = 10000
       const payments = [3000, 4000, 2000]
       const paidAmount = payments.reduce((sum, p) => sum + p, 0)

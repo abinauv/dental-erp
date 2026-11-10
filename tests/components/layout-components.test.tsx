@@ -381,7 +381,7 @@ describe('GlobalSearch', () => {
   })
 
   it('does NOT open dialog when "/" pressed inside an input', async () => {
-    const { container } = render(
+    render(
       <div>
         <input data-testid="other-input" />
         <GlobalSearch />

@@ -390,7 +390,6 @@ describe('POST /api/patient-portal/auth/logout', () => {
 
   it('clears patient cookie', async () => {
     const res = await logoutPOST(makeReq('/api/patient-portal/auth/logout', 'POST'))
-    const body = await res.json()
 
     expect(res.status).toBe(200)
   })

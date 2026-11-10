@@ -157,7 +157,6 @@ describe('POST /api/loyalty', () => {
   it('returns 400 when required fields missing', async () => {
     mockAuth()
     const res = await loyaltyPOST(makeReq('/api/loyalty', 'POST', { patientId: 'p1' }))
-    const body = await res.json()
     expect(res.status).toBe(400)
   })
 
