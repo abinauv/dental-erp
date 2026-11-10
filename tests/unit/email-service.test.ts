@@ -158,12 +158,23 @@ describe('EmailService - Email Logging', () => {
 // ---------------------------------------------------------------------------
 
 describe('EmailService - getEmailHistory', () => {
+  it('always scopes history to one clinic', async () => {
+    const { emailService } = emailServiceModule
+    vi.mocked(prisma.emailLog.findMany).mockResolvedValue([])
+
+    await emailService.getEmailHistory({ hospitalId: 'hosp-1' })
+
+    expect(prisma.emailLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ hospitalId: 'hosp-1' }) })
+    )
+  })
   it('queries with correct filters', async () => {
     const { emailService } = emailServiceModule
 
     vi.mocked(prisma.emailLog.findMany).mockResolvedValue([])
 
     await emailService.getEmailHistory({
+      hospitalId: 'hosp-1',
       patientId: 'pat-1',
       status: 'SENT',
       limit: 50,
@@ -186,7 +197,7 @@ describe('EmailService - getEmailHistory', () => {
 
     vi.mocked(prisma.emailLog.findMany).mockResolvedValue([])
 
-    await emailService.getEmailHistory({})
+    await emailService.getEmailHistory({ hospitalId: 'hosp-1' })
 
     expect(prisma.emailLog.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 100 }))
   })
@@ -198,7 +209,7 @@ describe('EmailService - getEmailHistory', () => {
     const from = new Date('2026-01-01')
     const to = new Date('2026-01-31')
 
-    await emailService.getEmailHistory({ from, to })
+    await emailService.getEmailHistory({ hospitalId: 'hosp-1', from, to })
 
     expect(prisma.emailLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

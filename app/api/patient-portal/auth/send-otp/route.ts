@@ -91,6 +91,8 @@ export async function POST(req: NextRequest) {
         hospitalId: hospital.id,
         phone,
         message,
+        // The SMS log must not hold a live login code.
+        logMessage: message.replace(otp, '••••••'),
         transactional: true,
       })
       delivered = true

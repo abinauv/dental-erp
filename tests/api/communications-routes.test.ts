@@ -284,6 +284,25 @@ describe('POST /api/communications/sms', () => {
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/communications/sms', () => {
+  it('scopes history to the caller’s clinic and caps limit at 1000', async () => {
+    mockAuth()
+    vi.mocked(smsService.getSMSHistory).mockResolvedValue([])
+
+    const res = await smsGET(makeReq('/api/communications/sms?limit=5000'))
+    expect(res.status).toBe(400)
+    expect(smsService.getSMSHistory).not.toHaveBeenCalled()
+
+    await smsGET(makeReq('/api/communications/sms?from=2026-11-01'))
+    expect(smsService.getSMSHistory).toHaveBeenCalledWith(
+      expect.objectContaining({ hospitalId: 'h1', limit: 100, from: new Date('2026-11-01') })
+    )
+  })
+
+  it('rejects a date that is not a date', async () => {
+    mockAuth()
+    const res = await smsGET(makeReq('/api/communications/sms?to=not-a-date'))
+    expect(res.status).toBe(400)
+  })
   beforeEach(() => vi.clearAllMocks())
 
   it('returns 401 when unauthenticated', async () => {
@@ -382,6 +401,25 @@ describe('POST /api/communications/email', () => {
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/communications/email', () => {
+  it('scopes history to the caller’s clinic and caps limit at 1000', async () => {
+    mockAuth()
+    vi.mocked(emailService.getEmailHistory).mockResolvedValue([])
+
+    const res = await emailGET(makeReq('/api/communications/email?limit=5000'))
+    expect(res.status).toBe(400)
+    expect(emailService.getEmailHistory).not.toHaveBeenCalled()
+
+    await emailGET(makeReq('/api/communications/email?from=2026-11-01'))
+    expect(emailService.getEmailHistory).toHaveBeenCalledWith(
+      expect.objectContaining({ hospitalId: 'h1', limit: 100, from: new Date('2026-11-01') })
+    )
+  })
+
+  it('rejects a date that is not a date', async () => {
+    mockAuth()
+    const res = await emailGET(makeReq('/api/communications/email?to=not-a-date'))
+    expect(res.status).toBe(400)
+  })
   beforeEach(() => vi.clearAllMocks())
 
   it('returns 401 when unauthenticated', async () => {

@@ -262,7 +262,9 @@ class EmailService {
     })
   }
 
+  // Always scoped to one clinic: EmailLog holds every clinic's messages.
   async getEmailHistory(filters: {
+    hospitalId: string
     patientId?: string
     email?: string
     status?: string
@@ -270,7 +272,7 @@ class EmailService {
     to?: Date
     limit?: number
   }) {
-    const where: any = {}
+    const where: any = { hospitalId: filters.hospitalId }
 
     if (filters.patientId) where.patientId = filters.patientId
     if (filters.email) where.email = { contains: filters.email }

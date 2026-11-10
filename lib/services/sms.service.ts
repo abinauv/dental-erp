@@ -23,6 +23,9 @@ export interface SMSPayload {
   // promotional 9 AM–9 PM window and from marketing DND/consent checks under
   // TRAI rules. Set this for those; leave it off for marketing messages.
   transactional?: boolean
+  // Recorded in SMSLog instead of `message`, e.g. with a one-time code
+  // masked. The gateway still sends `message`.
+  logMessage?: string
 }
 
 class SMSService {
@@ -85,7 +88,7 @@ class SMSService {
         hospitalId: payload.hospitalId || '',
         patientId: payload.patientId || null,
         phone: payload.phone,
-        message: payload.message,
+        message: payload.logMessage ?? payload.message,
         templateId: payload.templateId || null,
         scheduledFor: payload.scheduledFor,
         status: payload.scheduledFor ? 'PENDING' : 'QUEUED',
@@ -362,7 +365,9 @@ class SMSService {
     return smsLog.status
   }
 
+  // Always scoped to one clinic: SMSLog holds every clinic's messages.
   async getSMSHistory(filters: {
+    hospitalId: string
     patientId?: string
     phone?: string
     status?: string
@@ -370,7 +375,7 @@ class SMSService {
     to?: Date
     limit?: number
   }) {
-    const where: any = {}
+    const where: any = { hospitalId: filters.hospitalId }
 
     if (filters.patientId) where.patientId = filters.patientId
     if (filters.phone) where.phone = { contains: filters.phone }

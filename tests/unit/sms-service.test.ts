@@ -211,6 +211,30 @@ describe('SMSService - SMS Logging', () => {
     vi.useRealTimers()
   })
 
+  it('records logMessage instead of the message, so a code never sits in the log', async () => {
+    const { smsService } = smsServiceModule
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-19T06:30:00Z'))
+    vi.mocked(prisma.sMSLog.create).mockResolvedValue({ id: 'sms-1' } as any)
+    vi.mocked(prisma.setting.findMany).mockResolvedValue([])
+
+    try {
+      await smsService.sendSMS({
+        phone: '9876543210',
+        message: 'Your code is 123456',
+        logMessage: 'Your code is ••••••',
+        hospitalId: 'hosp-1',
+        transactional: true,
+      })
+    } catch {
+      // Expected to fail at gateway init
+    }
+
+    const logged = vi.mocked(prisma.sMSLog.create).mock.calls[0][0] as any
+    expect(logged.data.message).toBe('Your code is ••••••')
+    vi.useRealTimers()
+  })
+
   it('creates PENDING status for scheduled SMS', async () => {
     const { smsService } = smsServiceModule
 
@@ -318,12 +342,23 @@ describe('SMSService - getDeliveryStatus', () => {
 // ---------------------------------------------------------------------------
 
 describe('SMSService - getSMSHistory', () => {
+  it('always scopes history to one clinic', async () => {
+    const { smsService } = smsServiceModule
+    vi.mocked(prisma.sMSLog.findMany).mockResolvedValue([])
+
+    await smsService.getSMSHistory({ hospitalId: 'hosp-1' })
+
+    expect(prisma.sMSLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ hospitalId: 'hosp-1' }) })
+    )
+  })
   it('queries with correct filters', async () => {
     const { smsService } = smsServiceModule
 
     vi.mocked(prisma.sMSLog.findMany).mockResolvedValue([])
 
     await smsService.getSMSHistory({
+      hospitalId: 'hosp-1',
       patientId: 'pat-1',
       status: 'SENT',
       limit: 50,
@@ -346,7 +381,7 @@ describe('SMSService - getSMSHistory', () => {
 
     vi.mocked(prisma.sMSLog.findMany).mockResolvedValue([])
 
-    await smsService.getSMSHistory({})
+    await smsService.getSMSHistory({ hospitalId: 'hosp-1' })
 
     expect(prisma.sMSLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -362,7 +397,7 @@ describe('SMSService - getSMSHistory', () => {
     const from = new Date('2026-01-01')
     const to = new Date('2026-01-31')
 
-    await smsService.getSMSHistory({ from, to })
+    await smsService.getSMSHistory({ hospitalId: 'hosp-1', from, to })
 
     expect(prisma.sMSLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

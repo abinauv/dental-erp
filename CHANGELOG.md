@@ -11,6 +11,18 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Security
+
+- SMS and email history (`GET /api/communications/sms` and `/email`) returned
+  every clinic's messages, not just the caller's: any signed-in staff member
+  could read other clinics' patient phone numbers, email addresses and message
+  text. Both are now scoped to the caller's clinic. Present since the first
+  release.
+- The SMS log no longer stores patient-portal login codes: the code is masked
+  in the log, while the patient still receives it.
+- Message history filters are validated: `limit` is capped at 1000 and invalid
+  dates are rejected.
+
 ## [2.1.0] - 2026-11-10
 
 ### Fixed
