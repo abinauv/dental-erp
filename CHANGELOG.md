@@ -11,6 +11,8 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-11-10
+
 ### Security
 
 - SMS and email history (`GET /api/communications/sms` and `/email`) returned
@@ -22,6 +24,11 @@ before it are not itemized here; see the git history and the
   in the log, while the patient still receives it.
 - Message history filters are validated: `limit` is capped at 1000 and invalid
   dates are rejected.
+
+### Upgrading
+
+- No migrations or configuration changes. Upgrade promptly: every earlier
+  release exposes other clinics' message history to signed-in staff.
 
 ## [2.1.0] - 2026-11-10
 
