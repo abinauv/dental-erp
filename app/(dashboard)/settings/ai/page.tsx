@@ -127,9 +127,19 @@ export default function AISettingsPage() {
             <p className="text-sm font-semibold">{t('apiKeyTitle')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{t('apiKeyDesc')}</p>
           </div>
-          <span className="text-xs rounded-full px-2.5 py-1 bg-blue-100 text-blue-800">
-            {t('checkEnv')}
-          </span>
+          {apiKeyStatus === 'configured' ? (
+            <span className="text-xs rounded-full px-2.5 py-1 bg-green-100 text-green-800">
+              {t('keyConfigured')}
+            </span>
+          ) : apiKeyStatus === 'missing' ? (
+            <span className="text-xs rounded-full px-2.5 py-1 bg-amber-100 text-amber-800">
+              {t('keyMissing')}
+            </span>
+          ) : (
+            <span className="text-xs rounded-full px-2.5 py-1 bg-blue-100 text-blue-800">
+              {t('checkEnv')}
+            </span>
+          )}
         </div>
       </div>
 

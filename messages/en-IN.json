@@ -2592,6 +2592,8 @@
       "apiKeyTitle": "AI Provider API Key",
       "apiKeyDesc": "Choose the backend with AI_PROVIDER (openrouter by default, or anthropic / bedrock) and set its credentials: OPENROUTER_API_KEY, ANTHROPIC_API_KEY, or AWS credentials for Bedrock. Restart the app after changes.",
       "checkEnv": "Check .env",
+      "keyConfigured": "Configured",
+      "keyMissing": "Not configured",
       "masterTitle": "AI Features Master Switch",
       "masterDesc": "Enable or disable all AI features at once",
       "featuresHeading": "Features",
