@@ -20,6 +20,14 @@ before it are not itemized here; see the git history and the
 
 ### Fixed
 
+- Automated and system messages were never sent: appointment reminders,
+  birthday wishes, payment reminders, lab-ready notifications, review
+  requests, clinic-signup verification emails, staff invitations (and
+  resends), and the settings "send test message" button. Each failed before
+  sending because its log row was written without a clinic, which the
+  database rejected. They now record the clinic. Messages sent by hand from
+  the Communications page were not affected.
+- Template emails only use templates that belong to the sender's clinic.
 - Removing a device on the Devices page did nothing: the page waited for a
   confirmation dialog that it never displayed.
 - The AI settings page shows whether the AI provider's credentials are

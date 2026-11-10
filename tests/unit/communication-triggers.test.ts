@@ -70,10 +70,10 @@ describe('CommunicationTriggersService', () => {
       await communicationTriggersService.sendAppointmentReminders24Hours()
 
       expect(mockSmsService.sendSMS).toHaveBeenCalledWith(
-        expect.objectContaining({ phone: '9876543210', patientId: 'pat-1' })
+        expect.objectContaining({ hospitalId: 'h1', phone: '9876543210', patientId: 'pat-1' })
       )
       expect(mockEmailService.sendEmail).toHaveBeenCalledWith(
-        expect.objectContaining({ to: 'john@test.com', patientId: 'pat-1' })
+        expect.objectContaining({ hospitalId: 'h1', to: 'john@test.com', patientId: 'pat-1' })
       )
       expect(prisma.appointmentReminder.create).toHaveBeenCalled()
     })
@@ -164,7 +164,7 @@ describe('CommunicationTriggersService', () => {
       await communicationTriggersService.sendBirthdayWishes()
 
       expect(mockSmsService.sendSMS).toHaveBeenCalledWith(
-        expect.objectContaining({ phone: '9876543210', patientId: 'pat-1' })
+        expect.objectContaining({ hospitalId: 'h1', phone: '9876543210', patientId: 'pat-1' })
       )
     })
 
@@ -244,7 +244,7 @@ describe('CommunicationTriggersService', () => {
       await communicationTriggersService.sendPaymentReminders()
 
       expect(mockSmsService.sendSMS).toHaveBeenCalledWith(
-        expect.objectContaining({ phone: '9876543210', patientId: 'pat-1' })
+        expect.objectContaining({ hospitalId: 'h1', phone: '9876543210', patientId: 'pat-1' })
       )
     })
 
@@ -296,7 +296,7 @@ describe('CommunicationTriggersService', () => {
       await communicationTriggersService.sendLabWorkReadyNotifications()
 
       expect(mockSmsService.sendSMS).toHaveBeenCalledWith(
-        expect.objectContaining({ phone: '9876543210', patientId: 'pat-1' })
+        expect.objectContaining({ hospitalId: 'h1', phone: '9876543210', patientId: 'pat-1' })
       )
       expect(prisma.labOrder.update).toHaveBeenCalledWith(
         expect.objectContaining({

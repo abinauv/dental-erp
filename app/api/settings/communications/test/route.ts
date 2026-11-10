@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
           'This is a test message from DentalERP. Your SMS gateway is configured correctly.'
 
         await smsService.sendSMS({
+          hospitalId,
           phone: testData.phone,
           message: testMessage,
         })
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
         `
 
         await emailService.sendEmail({
+          hospitalId,
           to: testData.email,
           subject: testSubject,
           body: testBody,

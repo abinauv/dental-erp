@@ -28,6 +28,7 @@ describe('sendInviteEmail', () => {
     mockSendEmail.mockResolvedValue(undefined)
 
     const result = await sendInviteEmail({
+      hospitalId: 'h1',
       to: 'john@example.com',
       inviteeName: 'John',
       hospitalName: 'Smile Dental',
@@ -39,6 +40,9 @@ describe('sendInviteEmail', () => {
     expect(result).toBe(true)
     expect(mockSendEmail).toHaveBeenCalledTimes(1)
     const call = mockSendEmail.mock.calls[0][0]
+    // The email log row needs the clinic (a blank one failed its foreign key,
+    // so no invite was ever sent).
+    expect(call.hospitalId).toBe('h1')
     expect(call.to).toBe('john@example.com')
     expect(call.subject).toContain('Smile Dental')
     expect(call.body).toContain('John')
@@ -52,6 +56,7 @@ describe('sendInviteEmail', () => {
     mockSendEmail.mockRejectedValue(new Error('SMTP error'))
 
     const result = await sendInviteEmail({
+      hospitalId: 'h1',
       to: 'john@example.com',
       inviteeName: 'John',
       hospitalName: 'Smile Dental',
@@ -67,6 +72,7 @@ describe('sendInviteEmail', () => {
     mockSendEmail.mockResolvedValue(undefined)
 
     await sendInviteEmail({
+      hospitalId: 'h1',
       to: 'jane@example.com',
       inviteeName: 'Jane',
       hospitalName: 'Clinic',
@@ -91,6 +97,7 @@ describe('sendVerificationEmail', () => {
     mockSendEmail.mockResolvedValue(undefined)
 
     const result = await sendVerificationEmail({
+      hospitalId: 'h1',
       to: 'admin@example.com',
       userName: 'Admin',
       hospitalName: 'New Clinic',
@@ -100,6 +107,7 @@ describe('sendVerificationEmail', () => {
     expect(result).toBe(true)
     expect(mockSendEmail).toHaveBeenCalledTimes(1)
     const call = mockSendEmail.mock.calls[0][0]
+    expect(call.hospitalId).toBe('h1')
     expect(call.to).toBe('admin@example.com')
     expect(call.subject).toContain('Verify')
     expect(call.body).toContain('Admin')
@@ -111,6 +119,7 @@ describe('sendVerificationEmail', () => {
     mockSendEmail.mockRejectedValue(new Error('Connection timeout'))
 
     const result = await sendVerificationEmail({
+      hospitalId: 'h1',
       to: 'admin@example.com',
       userName: 'Admin',
       hospitalName: 'New Clinic',
@@ -124,6 +133,7 @@ describe('sendVerificationEmail', () => {
     mockSendEmail.mockResolvedValue(undefined)
 
     await sendVerificationEmail({
+      hospitalId: 'h1',
       to: 'test@test.com',
       userName: 'Test',
       hospitalName: 'Test Clinic',

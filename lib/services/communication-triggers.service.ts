@@ -80,6 +80,7 @@ class CommunicationTriggersService {
             const message = templateService.replaceVariables(smsTemplate.content, variables)
 
             await smsService.sendSMS({
+              hospitalId: appointment.hospitalId,
               phone: appointment.patient.phone,
               message,
               patientId: appointment.patientId,
@@ -106,6 +107,7 @@ class CommunicationTriggersService {
             )
 
             await emailService.sendEmail({
+              hospitalId: appointment.hospitalId,
               to: appointment.patient.email,
               subject: templateService.replaceVariables(
                 emailTemplate.subject || 'Appointment Reminder',
@@ -199,6 +201,7 @@ class CommunicationTriggersService {
             const message = templateService.replaceVariables(smsTemplate.content, variables)
 
             await smsService.sendSMS({
+              hospitalId: patient.hospitalId,
               phone: patient.phone,
               message,
               patientId: patient.id,
@@ -274,6 +277,7 @@ class CommunicationTriggersService {
             const message = templateService.replaceVariables(smsTemplate.content, variables)
 
             await smsService.sendSMS({
+              hospitalId: invoice.hospitalId,
               phone: invoice.patient.phone,
               message,
               patientId: invoice.patientId,
@@ -332,6 +336,7 @@ class CommunicationTriggersService {
             const message = templateService.replaceVariables(smsTemplate.content, variables)
 
             await smsService.sendSMS({
+              hospitalId: order.hospitalId,
               phone: order.patient.phone,
               message,
               patientId: order.patientId,
@@ -444,6 +449,7 @@ class CommunicationTriggersService {
               const message = `Hi ${appt.patient.firstName}, thank you for visiting ${clinicName}! We'd love to hear about your experience. Please leave us a review: ${reviewUrl}`
 
               await smsService.sendSMS({
+                hospitalId: hospital.id,
                 phone: appt.patient.phone,
                 message,
                 patientId: appt.patientId,
