@@ -13,6 +13,15 @@ before it are not itemized here; see the git history and the
 
 ### Changed
 
+- **Browser support: Safari 16.4+, Chrome and Edge 111+, Firefox 128+.** The
+  app's styles move to Tailwind CSS 4 (from 3.4), which relies on CSS features
+  (cascade layers, `@property`, `color-mix()`) that older browsers lack; in
+  them the app renders unstyled or broken. The look is unchanged in supported
+  browsers.
+- Tailwind CSS 4: the configuration moves from `tailwind.config.js` into
+  `app/globals.css` (`@theme`), PostCSS uses `@tailwindcss/postcss` instead of
+  `tailwindcss` + `autoprefixer`, and `tailwindcss-animate` is replaced by
+  `tw-animate-css`.
 - Prisma 7 (from 5.22). The app reaches MySQL through Prisma's MariaDB driver
   adapter (`@prisma/adapter-mariadb`) instead of Prisma's native query engine.
   The generated client lives in `lib/generated/prisma` (created by
@@ -36,6 +45,9 @@ before it are not itemized here; see the git history and the
 
 ### Upgrading
 
+- Before upgrading, check that the browsers your clinic uses are supported
+  (see above). On iPhones and iPads, Safari updates with the system, so they
+  need iOS/iPadOS 16.4 or later.
 - No database migrations. `DATABASE_URL` keeps its format and its
   `connection_limit`, `pool_timeout`, `connect_timeout` and `socket`
   parameters; other Prisma-specific parameters are ignored.

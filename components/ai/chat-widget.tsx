@@ -82,7 +82,7 @@ function TypingDots() {
 function BlinkingCursor() {
   return (
     <span
-      className="inline-block w-[2px] h-[1em] bg-current align-text-bottom ml-[1px]"
+      className="inline-block w-[2px] h-[1em] bg-current align-text-bottom ml-px"
       style={{ animation: 'chat-blink 0.8s step-end infinite' }}
     />
   )
@@ -379,7 +379,7 @@ export function ChatWidget() {
               }}
               placeholder={listening ? t('listening') : t('inputPlaceholder')}
               rows={1}
-              className="flex-1 resize-none rounded-md border bg-muted px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+              className="flex-1 resize-none rounded-md border bg-muted px-3 py-2 text-sm outline-hidden placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
             />
             {/* Mic button */}
             {voice.voiceSupported && (

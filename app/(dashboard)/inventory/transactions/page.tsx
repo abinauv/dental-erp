@@ -209,12 +209,12 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-background rounded-lg shadow p-4 mb-6">
+      <div className="bg-background rounded-lg shadow-sm p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <select
             value={transactionType}
             onChange={(e) => setTransactionType(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           >
             <option value="">{t('allTypes')}</option>
             <option value="purchase">{tType('purchase')}</option>
@@ -229,7 +229,7 @@ export default function TransactionsPage() {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             placeholder={t('startDate')}
           />
 
@@ -237,14 +237,14 @@ export default function TransactionsPage() {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             placeholder={t('endDate')}
           />
         </div>
       </div>
 
       {/* Transactions Table */}
-      <div className="bg-background rounded-lg shadow overflow-hidden">
+      <div className="bg-background rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">{t('loading')}</div>
         ) : transactions.length === 0 ? (
@@ -329,7 +329,7 @@ export default function TransactionsPage() {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-xs -space-x-px">
                     <button
                       onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                       disabled={pagination.page === 1}
@@ -368,7 +368,7 @@ export default function TransactionsPage() {
                     value={formData.type}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="purchase">{tType('purchase')}</option>
                     <option value="adjustment">{tType('adjustment')}</option>
@@ -387,7 +387,7 @@ export default function TransactionsPage() {
                     value={formData.itemId}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">{t('selectItem')}</option>
                     {items.map((item) => (
@@ -409,7 +409,7 @@ export default function TransactionsPage() {
                     onChange={handleChange}
                     required
                     step="0.01"
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -423,7 +423,7 @@ export default function TransactionsPage() {
                     value={formData.unitPrice}
                     onChange={handleChange}
                     step="0.01"
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -437,7 +437,7 @@ export default function TransactionsPage() {
                     value={formData.transactionDate}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -450,7 +450,7 @@ export default function TransactionsPage() {
                       name="supplierId"
                       value={formData.supplierId}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">{t('selectSupplier')}</option>
                       {suppliers.map((supplier) => (
@@ -472,7 +472,7 @@ export default function TransactionsPage() {
                   value={formData.notes}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
