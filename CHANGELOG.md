@@ -56,6 +56,8 @@ changes.
 - The AI suggestions' count of unconfirmed appointments for tomorrow always
   came out as zero.
 - The demo users created by `npm run db:seed` couldn't sign in.
+- SELF_HOSTING.md showed image versions with a leading `v` (`v1.0.0`), a tag
+  that doesn't exist; the images are tagged `3.0.0`, `3.0`, `3` and `latest`.
 
 ### Upgrading
 
