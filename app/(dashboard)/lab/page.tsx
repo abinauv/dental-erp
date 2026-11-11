@@ -470,7 +470,6 @@ export default function LabWorkPage() {
                 <SelectItem value="all">{t('allPriorities')}</SelectItem>
                 <SelectItem value="normal">{tPriority('normal')}</SelectItem>
                 <SelectItem value="urgent">{tPriority('urgent')}</SelectItem>
-                <SelectItem value="rush">{tPriority('rush')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

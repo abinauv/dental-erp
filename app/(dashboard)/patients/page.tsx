@@ -332,7 +332,7 @@ export default function PatientsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() => router.push(`/patients/${patient.id}/medical-history`)}
+                            onClick={() => router.push(`/patients/${patient.id}#medical-history`)}
                           >
                             <FileText className="h-4 w-4 mr-2" />
                             {t('medicalHistory')}

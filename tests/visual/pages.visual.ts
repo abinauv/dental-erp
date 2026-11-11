@@ -115,6 +115,30 @@ const DETAIL_PAGES: {
     core: true,
   },
   { name: 'staff-member', api: '/api/staff?limit=1', key: 'staff', path: (id) => `/staff/${id}` },
+  {
+    name: 'inventory-item',
+    api: '/api/inventory/items?limit=1',
+    key: 'data',
+    path: (id) => `/inventory/${id}`,
+  },
+  {
+    name: 'inventory-item-edit',
+    api: '/api/inventory/items?limit=1',
+    key: 'data',
+    path: (id) => `/inventory/${id}/edit`,
+  },
+  {
+    name: 'lab-order',
+    api: '/api/lab-orders?limit=1',
+    key: 'data',
+    path: (id) => `/lab/orders/${id}`,
+  },
+  {
+    name: 'lab-order-edit',
+    api: '/api/lab-orders?limit=1',
+    key: 'data',
+    path: (id) => `/lab/orders/${id}/edit`,
+  },
 ]
 
 // Signed-out pages.

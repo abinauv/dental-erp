@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { LabOrderPriority } from '@/lib/generated/prisma/enums'
 
 // GET - Fetch all lab orders with filters
 export async function GET(request: NextRequest) {
@@ -15,8 +16,11 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || ''
-    const labVendorId = searchParams.get('vendor_id') || ''
-    const workType = searchParams.get('work_type') || ''
+    // The lab page sends vendorId / workType / priority; older callers used
+    // vendor_id / work_type.
+    const labVendorId = searchParams.get('vendorId') || searchParams.get('vendor_id') || ''
+    const workType = searchParams.get('workType') || searchParams.get('work_type') || ''
+    const priority = (searchParams.get('priority') || '').toUpperCase()
     const dateFrom = searchParams.get('date_from') || ''
     const dateTo = searchParams.get('date_to') || ''
     const page = parseInt(searchParams.get('page') || '1')
@@ -29,19 +33,19 @@ export async function GET(request: NextRequest) {
     // Add search filter
     if (search) {
       where.OR = [
-        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { orderNumber: { contains: search } },
         {
           patient: {
             OR: [
-              { firstName: { contains: search, mode: 'insensitive' } },
-              { lastName: { contains: search, mode: 'insensitive' } },
-              { patientId: { contains: search, mode: 'insensitive' } },
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+              { patientId: { contains: search } },
             ],
           },
         },
         {
           labVendor: {
-            name: { contains: search, mode: 'insensitive' },
+            name: { contains: search },
           },
         },
       ]
@@ -60,6 +64,11 @@ export async function GET(request: NextRequest) {
     // Add work type filter
     if (workType) {
       where.workType = workType
+    }
+
+    // Add priority filter
+    if ((Object.values(LabOrderPriority) as string[]).includes(priority)) {
+      where.priority = priority
     }
 
     // Add date range filters

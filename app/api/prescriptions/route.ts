@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { prescriptionNo: { contains: search, mode: 'insensitive' } },
+        { prescriptionNo: { contains: search } },
         {
           patient: {
             OR: [
-              { firstName: { contains: search, mode: 'insensitive' } },
-              { lastName: { contains: search, mode: 'insensitive' } },
-              { patientId: { contains: search, mode: 'insensitive' } },
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+              { patientId: { contains: search } },
             ],
           },
         },
