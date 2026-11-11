@@ -14,18 +14,6 @@ vi.mock('@/lib/billing-utils', () => ({
   generateClaimNo: vi.fn(() => 'CLM2026-0001'),
 }))
 
-vi.mock('@prisma/client', () => ({
-  InsuranceClaimStatus: {
-    DRAFT: 'DRAFT',
-    SUBMITTED: 'SUBMITTED',
-    UNDER_REVIEW: 'UNDER_REVIEW',
-    APPROVED: 'APPROVED',
-    PARTIALLY_APPROVED: 'PARTIALLY_APPROVED',
-    REJECTED: 'REJECTED',
-    SETTLED: 'SETTLED',
-  },
-}))
-
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { GET as claimsGET, POST as claimsPOST } from '@/app/api/insurance-claims/route'

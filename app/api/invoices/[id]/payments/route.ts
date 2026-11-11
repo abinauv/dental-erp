@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generatePaymentNo } from '@/lib/billing-utils'
-import { PaymentMethod } from '@prisma/client'
+import { PaymentMethod } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 
 // GET - Get payments for an invoice

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { LabOrderStatus, QualityCheckStatus } from '@prisma/client'
+import { LabOrderStatus, QualityCheckStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 
 // Only orders that have not been sent anywhere yet may be removed.

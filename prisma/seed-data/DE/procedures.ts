@@ -1,4 +1,4 @@
-import { ProcedureCategory } from '@prisma/client'
+import { ProcedureCategory } from '../../../lib/generated/prisma/enums'
 
 /**
  * Germany dental procedure catalogue — representative set with German names and

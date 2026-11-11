@@ -4,19 +4,38 @@ FROM node:24-alpine AS base
 FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
-COPY package.json package-lock.json* ./
+# The schema and prisma.config.ts are here because postinstall runs
+# `prisma generate`.
+COPY package.json package-lock.json* prisma.config.ts ./
 COPY prisma ./prisma/
 RUN npm ci
-RUN npx prisma generate
 
 # Stage 2: Build the application
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# The generated client (lib/generated, excluded from the build context).
+RUN npx prisma generate
 RUN npm run build
 
-# Stage 3: Production runner
+# Stage 3: The Prisma CLI, for migrations in the runtime image (see below).
+# Prisma 7's CLI loads these packages even for `migrate deploy`: the CLI
+# itself, its config loader, the schema engine, and the top level of Studio and
+# `prisma dev`, but not their UI or database dependencies, which only those
+# commands use. Its full dependency tree is about 230 MB; this is about 170 MB.
+# A package missing from the list fails the build below, not a deployment.
+FROM deps AS prisma-cli
+RUN mkdir -p /cli/node_modules && cd /app/node_modules && tar -cf - \
+      prisma @prisma/config @prisma/debug @prisma/dev @prisma/engines \
+      @prisma/engines-version @prisma/fetch-engine @prisma/studio-core \
+      @standard-schema/spec c12 confbox deepmerge-ts defu destr dotenv empathic \
+      exsolve fast-check get-port-please giget graceful-fs grammex graphmatch \
+      ohash pathe perfect-debounce pkg-types proper-lockfile pure-rand rc9 \
+      remeda retry valibot zeptomatch \
+    | tar -xf - -C /cli/node_modules
+
+# Stage 4: Production runner
 FROM base AS runner
 WORKDIR /app
 
@@ -35,28 +54,26 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# The Prisma CLI, so the image can migrate its own database. Next's standalone
-# tracing pulls in @prisma/client because the app imports it, but not the CLI —
-# that is a devDependency used only at build time. Without these three copies
-# there is no way to run `prisma migrate deploy` against a deployment except by
-# checking out the source and building a second toolchain next to it, which is
-# not a self-hosting story.
+# The Prisma CLI, so the image can migrate its own database (the compose
+# `migrate` service runs `node node_modules/prisma/build/index.js migrate
+# deploy`). Next's standalone tracing pulls in what the app imports, but not
+# the CLI — a devDependency used only at build time. Without it there is no way
+# to run `prisma migrate deploy` against a deployment except by checking out the
+# source and building a second toolchain next to it, which is not a
+# self-hosting story.
 #
-# Kept to the CLI and the packages it actually resolves at runtime rather than
-# the whole node_modules tree. @prisma/client is deliberately NOT among them:
-# the standalone build above ships its own generated copy, and overwriting that
-# with the ungenerated one would break the running application to make a
-# migration command work.
+# @prisma/client is deliberately NOT among the copied packages: the app runs
+# on the client generated into the build, and its runtime is already traced
+# into the standalone output.
 #
-# These land after the standalone copy on purpose. @prisma/engines from the
-# deps stage is a superset of what standalone traced, and it is the one
-# carrying the schema engine that `migrate deploy` needs.
-COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
-COPY --from=deps /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
-COPY --from=deps /app/node_modules/@prisma/engines-version ./node_modules/@prisma/engines-version
-COPY --from=deps /app/node_modules/@prisma/debug ./node_modules/@prisma/debug
-COPY --from=deps /app/node_modules/@prisma/get-platform ./node_modules/@prisma/get-platform
-COPY --from=deps /app/node_modules/@prisma/fetch-engine ./node_modules/@prisma/fetch-engine
+# These land after the standalone copy on purpose: @prisma/engines from the
+# deps stage is the one carrying the schema engine that `migrate deploy` needs.
+# Any package both copies share is the same install, so overlaps are identical.
+COPY --from=prisma-cli /cli/node_modules ./node_modules
+# The CLI's settings: schema and migrations paths, and DATABASE_URL.
+COPY --from=builder /app/prisma.config.ts ./
+# Fail the build, not a deployment, if the CLI can't load.
+RUN node node_modules/prisma/build/index.js migrate deploy --help > /dev/null
 
 # Create uploads directory
 RUN mkdir -p uploads && chown nextjs:nodejs uploads

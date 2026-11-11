@@ -75,12 +75,9 @@ services:
       # service was actually created with. Anything DATABASE_URL in .env is
       # overridden by this.
       #
-      # connection_limit is set explicitly because Prisma's default is
-      # num_cpus * 2 + 1, and in a container num_cpus is the *host's* core
-      # count — not this container's share of it. On a 16-core host that is 33
-      # connections per replica against MySQL's default ceiling of 151, so
-      # five replicas exhaust the server. Pick a number and do the arithmetic
-      # instead: replicas x DB_CONNECTION_LIMIT + headroom < MYSQL_MAX_CONNECTIONS.
+      # connection_limit is how many connections each replica opens at start-up
+      # and keeps, against MySQL's default ceiling of 151. Pick a number and do
+      # the arithmetic: replicas x DB_CONNECTION_LIMIT + headroom < MYSQL_MAX_CONNECTIONS.
       DATABASE_URL: mysql://${MYSQL_USER:-dental}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-dental_erp}?connection_limit=${DB_CONNECTION_LIMIT:-10}&pool_timeout=20
       # Blanked deliberately. Compose reads .env for interpolation, and env_file
       # then hands that same file to the container — which would otherwise give

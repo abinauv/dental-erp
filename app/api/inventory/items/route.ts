@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
-import { InventoryItemType } from '@prisma/client'
+import { InventoryItemType } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 
 // GET - Fetch all inventory items with filters

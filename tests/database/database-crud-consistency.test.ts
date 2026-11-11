@@ -83,12 +83,6 @@ vi.mock('@/lib/billing-utils', async () => {
   }
 })
 
-vi.mock('@prisma/client', () => ({
-  Prisma: { JsonNull: 'DbNull' },
-  DiscountType: { PERCENTAGE: 'PERCENTAGE', FIXED: 'FIXED' },
-  InvoiceStatus: { DRAFT: 'DRAFT', PENDING: 'PENDING', PAID: 'PAID' },
-}))
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makeRequest(url: string, options?: any) {

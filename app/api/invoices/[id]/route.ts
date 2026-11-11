@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { calculateInvoiceTotals } from '@/lib/billing-utils'
-import { DiscountType, InvoiceStatus } from '@prisma/client'
+import { DiscountType, InvoiceStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 
 // GET - Get single invoice with full details

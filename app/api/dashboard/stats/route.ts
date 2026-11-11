@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns'
 import { logger } from '@/lib/logger'
+import { ceilToUTCDay } from '@/lib/date-column'
 
 // Helper function to convert BigInt to Number in query results
 function convertBigIntToNumber(obj: any): any {
@@ -86,7 +87,7 @@ export async function GET(req: NextRequest) {
             hospitalId,
             status: { in: ['SCHEDULED', 'CONFIRMED'] },
             scheduledDate: {
-              gte: now,
+              gte: ceilToUTCDay(now),
             },
           },
         }),
@@ -217,7 +218,7 @@ export async function GET(req: NextRequest) {
           where: {
             hospitalId,
             scheduledDate: {
-              gte: now,
+              gte: ceilToUTCDay(now),
             },
             status: { in: ['SCHEDULED', 'CONFIRMED'] },
           },

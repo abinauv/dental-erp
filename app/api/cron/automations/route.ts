@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { ceilToUTCDay } from '@/lib/date-column'
 
 /**
  * POST /api/cron/automations
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
               hospitalId: auto.hospitalId,
               isActive: true,
               appointments: {
-                every: { scheduledDate: { lt: cutoff } },
+                every: { scheduledDate: { lt: ceilToUTCDay(cutoff) } },
               },
             },
             select: { id: true },
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
             where: {
               hospitalId: auto.hospitalId,
               status: 'COMPLETED',
-              scheduledDate: { gte: dayBefore, lt: yesterday },
+              scheduledDate: { gte: ceilToUTCDay(dayBefore), lt: ceilToUTCDay(yesterday) },
             },
             select: { patientId: true },
             distinct: ['patientId'],

@@ -1,4 +1,4 @@
-import { ProcedureCategory } from '@prisma/client'
+import { ProcedureCategory } from '../../../lib/generated/prisma/enums'
 
 /**
  * US dental procedure catalogue — representative ADA CDT-coded set with USD base

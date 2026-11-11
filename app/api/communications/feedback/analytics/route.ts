@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { ceilToUTCDay } from '@/lib/date-column'
 
 /**
  * GET /api/communications/feedback/analytics
@@ -118,7 +119,7 @@ export async function GET(req: Request) {
         hospitalId: hospitalId!,
         patientId: { in: patientIds },
         status: 'COMPLETED',
-        scheduledDate: dateFilter,
+        scheduledDate: since ? { gte: ceilToUTCDay(since) } : undefined,
       },
       select: {
         patientId: true,

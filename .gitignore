@@ -53,6 +53,8 @@ next-env.d.ts
 # Prisma
 # migration_lock.toml records the datasource provider and MUST be committed —
 # `prisma migrate` errors without it. Do not add it back here.
+# The generated client (prisma generate, run by postinstall).
+/lib/generated/
 
 # Uploads
 /uploads/*

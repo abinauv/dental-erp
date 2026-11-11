@@ -2,15 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import prisma from '@/tests/__mocks__/prisma'
 
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
-vi.mock('@prisma/client', () => ({
-  StaffInviteStatus: {
-    PENDING: 'PENDING',
-    ACCEPTED: 'ACCEPTED',
-    EXPIRED: 'EXPIRED',
-    CANCELLED: 'CANCELLED',
-  },
-  Role: { ADMIN: 'ADMIN', DOCTOR: 'DOCTOR', RECEPTIONIST: 'RECEPTIONIST', STAFF: 'STAFF' },
-}))
 vi.mock('bcryptjs', () => ({
   default: { hash: vi.fn().mockResolvedValue('hashed-password') },
 }))

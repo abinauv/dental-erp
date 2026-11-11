@@ -8,11 +8,10 @@
  * taxAmount; the renderer also falls back to the CGST/SGST columns, so this is
  * for completeness/reporting hygiene rather than correctness.
  *
- *   npx tsx scripts/backfill-tax-components.ts
+ *   npx tsx --env-file-if-exists=.env scripts/backfill-tax-components.ts
  */
-import { PrismaClient, Prisma } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { Prisma } from '../lib/generated/prisma/client'
+import { prisma } from '../lib/prisma'
 
 async function main() {
   const invoices = await prisma.invoice.findMany({

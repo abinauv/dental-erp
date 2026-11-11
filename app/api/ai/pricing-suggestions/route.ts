@@ -5,6 +5,7 @@ import { getModelForSkill } from '@/lib/ai/models'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getSkill } from '@/lib/ai/skills'
 import { logger } from '@/lib/logger'
+import { ceilToUTCDay } from '@/lib/date-column'
 
 /**
  * GET /api/ai/pricing-suggestions — AI-powered pricing recommendations
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       prisma.appointment.findMany({
         where: {
           hospitalId: hospitalId!,
-          scheduledDate: { gte: ninetyDaysAgo },
+          scheduledDate: { gte: ceilToUTCDay(ninetyDaysAgo) },
         },
         select: {
           scheduledDate: true,

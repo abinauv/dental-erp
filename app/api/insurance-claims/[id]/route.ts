@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
-import { InsuranceClaimStatus } from '@prisma/client'
+import { InsuranceClaimStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 
 // GET - Get single insurance claim details

@@ -97,10 +97,12 @@ Changing `prisma/schema.prisma` means committing a migration alongside it, so
 that every deployment can reach the new schema with `prisma migrate deploy`:
 
 ```bash
-npx prisma migrate dev --name short_description_of_change
+npm run db:migrate -- --name short_description_of_change
 ```
 
-Commit the generated folder under `prisma/migrations/`. Please don't use
+This also regenerates the Prisma client in `lib/generated/prisma`, which
+`prisma migrate dev` no longer does by itself. Commit the generated folder
+under `prisma/migrations/`. Please don't use
 `prisma db push` for a change you intend to submit — it updates your local
 database without leaving a migration behind, and the history silently drifts
 out of step with the models.
