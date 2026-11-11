@@ -603,6 +603,13 @@
 - [x] Mobile Chrome (Android viewport) — configured in Playwright (mobile-chrome project, Pixel 5)
 - [x] Mobile Safari (iOS viewport) — configured in Playwright (mobile-safari project, iPhone 13)
 
+### 2.3a Visual Snapshots (`tests/visual/`, `playwright.visual.config.ts`)
+
+Manual, not in CI: for checking UI-wide changes (such as a CSS framework upgrade) against the UI as it was. Runs against a running app seeded with `npm run db:seed`; `npm run visual:baseline` records, `npm run visual:compare` diffs (report in `.visual/report/`). Record the baseline and the candidate in the same session against the same database, since dates on the pages are relative to today.
+
+- [x] 72 dashboard pages, 5 detail pages and 4 signed-out pages, full height, desktop 1440×900 (tests/visual/pages.visual.ts — 81 snapshots)
+- [x] Core pages (dashboard, lists, invoice and patient detail, settings, login) on a phone (Pixel 7) and in dark mode (13 + 13 snapshots)
+
 ### 2.4 Form Validation Tests
 
 - [x] FormRenderer — required field validation (text, number, select, date, textarea, radio) (tests/components/form-validation.test.tsx — 6 tests)

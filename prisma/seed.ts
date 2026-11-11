@@ -18,6 +18,7 @@ import {
 } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { getSeedData } from './seed-data'
+import { syncCredentialAccount } from '../lib/auth-credentials'
 
 const prisma = new PrismaClient()
 
@@ -96,6 +97,9 @@ async function main() {
     },
   })
 
+  // Web sign-in (Better Auth) checks the credential row, not User.password.
+  // Copy the stored hash so a re-run keeps the two in step.
+  await syncCredentialAccount(prisma, admin.id, admin.password)
   console.log('Created admin user:', admin.email)
 
   // Create doctor user
@@ -128,6 +132,7 @@ async function main() {
     },
   })
 
+  await syncCredentialAccount(prisma, doctor.id, doctor.password)
   console.log('Created doctor user:', doctor.email)
 
   // Create receptionist user
@@ -158,6 +163,7 @@ async function main() {
     },
   })
 
+  await syncCredentialAccount(prisma, receptionist.id, receptionist.password)
   console.log('Created receptionist user:', receptionist.email)
 
   // Create sample patients

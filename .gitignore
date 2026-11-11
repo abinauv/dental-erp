@@ -67,3 +67,6 @@ next-env.d.ts
 
 # Windows reserved names (can't be deleted normally)
 **/nul
+
+# Visual snapshot runs (playwright.visual.config.ts)
+/.visual/
