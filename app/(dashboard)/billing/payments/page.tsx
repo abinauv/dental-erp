@@ -47,6 +47,7 @@ import {
 import { paymentMethodConfig, paymentStatusConfig } from '@/lib/billing-utils'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { ExportMenu } from '@/components/ui/export-menu'
+import { RefundDialog } from '@/components/billing/refund-dialog'
 
 interface Payment {
   id: string
@@ -96,6 +97,7 @@ export default function PaymentsPage() {
     fc(amount, { minimumFractionDigits: 2 })
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
+  const [refunding, setRefunding] = useState<Payment | null>(null)
   const [summary, setSummary] = useState<Summary>({ totalReceived: 0, totalRefunded: 0 })
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -431,9 +433,7 @@ export default function PaymentsPage() {
                             {t('viewInvoice')}
                           </DropdownMenuItem>
                           {payment.status === 'COMPLETED' && (
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/billing/payments/${payment.id}/refund`)}
-                            >
+                            <DropdownMenuItem onClick={() => setRefunding(payment)}>
                               <RotateCcw className="h-4 w-4 mr-2" />
                               {t('processRefund')}
                             </DropdownMenuItem>
@@ -487,6 +487,11 @@ export default function PaymentsPage() {
           )}
         </CardContent>
       </Card>
+      <RefundDialog
+        payment={refunding}
+        onOpenChange={(open) => !open && setRefunding(null)}
+        onRefunded={fetchPayments}
+      />
     </div>
   )
 }

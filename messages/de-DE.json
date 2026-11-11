@@ -178,7 +178,20 @@
       "refund": "Refund: {amount}",
       "viewInvoice": "View Invoice",
       "processRefund": "Process Refund",
-      "showing": "Showing {from} to {to} of {total} payments"
+      "showing": "Showing {from} to {to} of {total} payments",
+      "refundDialog": {
+        "title": "Zahlung erstatten",
+        "description": "Zahlung {number} über {amount}. Die Erstattung wird vom bezahlten Betrag der Rechnung abgezogen.",
+        "amount": "Erstattungsbetrag",
+        "maxAmount": "Höchstens {amount}",
+        "reason": "Grund",
+        "reasonPlaceholder": "Warum wird diese Zahlung erstattet?",
+        "submit": "Erstatten",
+        "submitting": "Wird erstattet…",
+        "success": "Erstattung erfasst",
+        "failed": "Die Erstattung konnte nicht durchgeführt werden.",
+        "invalidAmount": "Geben Sie einen Betrag über 0 und bis {amount} ein."
+      }
     },
     "planStatus": {
       "all": "All",
@@ -4660,6 +4673,47 @@
       "deleteConfirm": "Are you sure you want to delete this vendor?",
       "deleteFailed": "Failed to delete vendor",
       "deletedSuccess": "Lab vendor deleted successfully"
+    },
+    "orderEdit": {
+      "title": "Laborauftrag bearbeiten",
+      "subtitle": "Aktualisieren Sie die Angaben des Auftrags. Der Status wird auf der Auftragsseite geändert.",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "updated": "Laborauftrag aktualisiert",
+      "loadError": "Dieser Laborauftrag konnte nicht geladen werden."
+    },
+    "orderDetail": {
+      "notFound": "Dieser Laborauftrag existiert nicht oder wurde gelöscht.",
+      "backToLab": "Zurück zu den Laboraufträgen",
+      "edit": "Bearbeiten",
+      "changeStatus": "Status",
+      "updateStatus": "Status aktualisieren",
+      "updating": "Wird aktualisiert…",
+      "statusUpdated": "Status aktualisiert",
+      "statusFailed": "Der Status konnte nicht aktualisiert werden.",
+      "work": "Arbeit",
+      "patient": "Patient",
+      "teeth": "Zähne",
+      "shade": "Farbe",
+      "createdBy": "Bestellt von",
+      "description": "Beschreibung",
+      "lab": "Labor",
+      "schedule": "Termine und Kosten",
+      "orderDate": "Bestellt",
+      "expectedDate": "Erwartet",
+      "sentDate": "An Labor gesendet",
+      "receivedDate": "Eingegangen",
+      "deliveredDate": "Geliefert",
+      "estimatedCost": "Geschätzte Kosten",
+      "actualCost": "Tatsächliche Kosten",
+      "quality": "Qualität und Notizen",
+      "qualityCheck": "Qualitätsprüfung",
+      "notes": "Notizen",
+      "specialInstructions": "Besondere Hinweise",
+      "history": "Statusverlauf",
+      "noHistory": "Noch keine Statusänderungen.",
+      "documents": "Dokumente",
+      "noDocuments": "Keine Dokumente."
     }
   },
   "inventory": {
@@ -4778,7 +4832,10 @@
       "creating": "Creating…",
       "createItem": "Create Item",
       "createSuccess": "Inventory item created successfully!",
-      "createFailed": "Failed to create inventory item"
+      "createFailed": "Failed to create inventory item",
+      "saveChanges": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "stockViaTransactions": "Der Bestand ändert sich über Lagerbewegungen."
     },
     "supplierStatus": {
       "ACTIVE": "Active",
@@ -4832,7 +4889,14 @@
         "requiredError": "Code, Name und Telefon sind erforderlich",
         "createSuccess": "Lieferant erstellt",
         "createError": "Lieferant konnte nicht erstellt werden",
-        "codeExists": "Lieferantencode existiert bereits"
+        "codeExists": "Lieferantencode existiert bereits",
+        "editTitle": "Lieferant bearbeiten",
+        "editDesc": "Aktualisieren Sie die Angaben des Lieferanten.",
+        "status": "Status",
+        "close": "Schließen",
+        "loadError": "Der Lieferant konnte nicht geladen werden.",
+        "updateSuccess": "Lieferant aktualisiert",
+        "updateError": "Lieferant konnte nicht aktualisiert werden"
       }
     },
     "txnType": {
@@ -4937,6 +5001,70 @@
       "colStock": "Stock",
       "colUnitPrice": "Unit Price",
       "colStockValue": "Stock Value"
+    },
+    "edit": {
+      "title": "Artikel bearbeiten",
+      "backToItem": "Zurück zum Artikel",
+      "loading": "Wird geladen…",
+      "notFound": "Dieser Artikel existiert nicht oder wurde gelöscht.",
+      "updateSuccess": "Artikel aktualisiert",
+      "updateFailed": "Artikel konnte nicht aktualisiert werden",
+      "codeExists": "Artikelcode existiert bereits"
+    },
+    "detail": {
+      "backToInventory": "Zurück zum Lager",
+      "notFound": "Dieser Artikel existiert nicht oder wurde gelöscht.",
+      "edit": "Bearbeiten",
+      "stockHistory": "Bestandsverlauf",
+      "stock": "Bestand",
+      "minimumStock": "Mindestbestand",
+      "reorderLevel": "Nachbestellen bei",
+      "maximumStock": "Höchstbestand",
+      "purchases30": "Eingang (30 Tage)",
+      "usage30": "Verbrauch (30 Tage)",
+      "details": "Details",
+      "type": "Typ",
+      "purchasePrice": "Einkaufspreis",
+      "sellingPrice": "Verkaufspreis",
+      "tax": "Steuer",
+      "hsnCode": "HSN-Code",
+      "location": "Lagerort",
+      "tracking": "Nachverfolgung",
+      "expiryTracking": "Verfallsdatum",
+      "batchTracking": "Charge",
+      "none": "Keine",
+      "status": "Status",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "supplier": "Bevorzugter Lieferant",
+      "noSupplier": "Kein bevorzugter Lieferant",
+      "description": "Beschreibung",
+      "notes": "Notizen",
+      "transactions": "Letzte Lagerbewegungen",
+      "noTransactions": "Noch keine Lagerbewegungen.",
+      "colDate": "Datum",
+      "colType": "Typ",
+      "colQuantity": "Menge",
+      "colStockAfter": "Bestand danach",
+      "colSupplier": "Lieferant",
+      "colBy": "Durch",
+      "batches": "Chargen",
+      "noBatches": "Keine Chargen.",
+      "colBatch": "Charge",
+      "colExpiry": "Verfällt",
+      "colRemaining": "Verbleibend",
+      "colReceived": "Eingegangen",
+      "txType": {
+        "PURCHASE": "Einkauf",
+        "SALE": "Verkauf",
+        "ADJUSTMENT_IN": "Korrektur (Zugang)",
+        "ADJUSTMENT_OUT": "Korrektur (Abgang)",
+        "DAMAGED": "Beschädigt",
+        "EXPIRED": "Abgelaufen",
+        "RETURNED": "Rückgabe",
+        "TRANSFERRED": "Umgelagert",
+        "CONSUMPTION": "Verbrauch"
+      }
     }
   },
   "nav": {

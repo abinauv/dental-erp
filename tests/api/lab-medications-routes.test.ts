@@ -126,6 +126,46 @@ describe('GET /api/lab-orders', () => {
     )
   })
 
+  it("accepts the lab page's vendorId, workType and priority params", async () => {
+    mockAuth()
+    vi.mocked(prisma.labOrder.count).mockResolvedValue(0)
+    vi.mocked(prisma.labOrder.findMany).mockResolvedValue([])
+
+    await labOrdersGET(makeReq('/api/lab-orders?vendorId=v2&workType=CROWN&priority=urgent'))
+
+    expect(prisma.labOrder.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          labVendorId: 'v2',
+          workType: 'CROWN',
+          priority: 'URGENT',
+        }),
+      })
+    )
+  })
+
+  it('ignores a priority that is not a LabOrderPriority', async () => {
+    mockAuth()
+    vi.mocked(prisma.labOrder.count).mockResolvedValue(0)
+    vi.mocked(prisma.labOrder.findMany).mockResolvedValue([])
+
+    await labOrdersGET(makeReq('/api/lab-orders?priority=rush'))
+
+    const where = vi.mocked(prisma.labOrder.findMany).mock.calls[0][0].where
+    expect(where).not.toHaveProperty('priority')
+  })
+
+  it("searches without Prisma's mode option, which MySQL rejects", async () => {
+    mockAuth()
+    vi.mocked(prisma.labOrder.count).mockResolvedValue(0)
+    vi.mocked(prisma.labOrder.findMany).mockResolvedValue([])
+
+    await labOrdersGET(makeReq('/api/lab-orders?search=crown'))
+
+    const where = vi.mocked(prisma.labOrder.findMany).mock.calls[0][0].where
+    expect(JSON.stringify(where)).not.toContain('mode')
+  })
+
   it('applies date range filters', async () => {
     mockAuth()
     vi.mocked(prisma.labOrder.count).mockResolvedValue(0)

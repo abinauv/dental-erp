@@ -106,6 +106,25 @@ test.describe('signed in', () => {
     await shot(page, 'tabs-second.png', page.getByRole('tabpanel'))
   })
 
+  test('refund dialog', async ({ page }) => {
+    await open(page, '/billing/payments')
+    await page.locator('table tbody tr').first().getByRole('button').last().click()
+    await page.getByRole('menuitem', { name: /refund/i }).click()
+    await shot(page, 'dialog-refund.png', page.getByRole('dialog'))
+  })
+
+  test('supplier dialog', async ({ page }) => {
+    await open(page, '/inventory/suppliers')
+    await page.getByRole('button', { name: 'View' }).first().click()
+    await shot(page, 'dialog-supplier.png', page.locator('#sup-status'))
+  })
+
+  test('stock transaction dialog', async ({ page }) => {
+    await open(page, '/inventory/transactions')
+    await page.getByRole('button', { name: /new transaction/i }).click()
+    await shot(page, 'dialog-stock-transaction.png', page.locator('form select').first())
+  })
+
   test('row hover', async ({ page }) => {
     await open(page, '/patients')
     await page.locator('table tbody tr').first().hover()

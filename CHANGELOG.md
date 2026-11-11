@@ -11,6 +11,30 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Added
+
+- An inventory item page (stock levels and status, prices, supplier, recent
+  stock transactions and batches) and item editing. The inventory list's
+  "View details" and "Edit" used to open a missing page.
+- A lab order page (details, status history and documents) with a control to
+  change the order's status, and lab order editing.
+- Refunds from the Payments page, in a dialog.
+- Viewing and editing suppliers, including their status, in the supplier
+  dialog.
+
+### Fixed
+
+- Creating a lab order always failed: the form sent work types the database
+  rejects.
+- Searching lab orders, lab vendors, inventory items, medications and
+  prescriptions failed with an error.
+- The lab orders list ignored its vendor, work type and priority filters. The
+  priority filter no longer offers "Rush", which no order can have.
+- The supplier and new stock transaction dialogs had an opaque black backdrop
+  (since 3.0.0).
+- "Medical history" in the patients list opened a missing page; it now opens
+  the patient's medical history.
+
 ## [3.0.0] - 2026-11-11
 
 A major version because of the browser requirements below. Docker Compose

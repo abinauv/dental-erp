@@ -178,7 +178,20 @@
       "refund": "Refund: {amount}",
       "viewInvoice": "View Invoice",
       "processRefund": "Process Refund",
-      "showing": "Showing {from} to {to} of {total} payments"
+      "showing": "Showing {from} to {to} of {total} payments",
+      "refundDialog": {
+        "title": "Refund payment",
+        "description": "Payment {number} of {amount}. The refund is taken off the invoice's paid amount.",
+        "amount": "Refund amount",
+        "maxAmount": "Up to {amount}",
+        "reason": "Reason",
+        "reasonPlaceholder": "Why is this payment being refunded?",
+        "submit": "Refund",
+        "submitting": "Refunding…",
+        "success": "Refund recorded",
+        "failed": "The refund couldn't be processed.",
+        "invalidAmount": "Enter an amount above 0 and up to {amount}."
+      }
     },
     "planStatus": {
       "all": "All",
@@ -4660,6 +4673,47 @@
       "deleteConfirm": "Are you sure you want to delete this vendor?",
       "deleteFailed": "Failed to delete vendor",
       "deletedSuccess": "Lab vendor deleted successfully"
+    },
+    "orderEdit": {
+      "title": "Edit Lab Order",
+      "subtitle": "Update the order's details. Its status changes on the order page.",
+      "save": "Save Changes",
+      "saving": "Saving…",
+      "updated": "Lab order updated",
+      "loadError": "Couldn't load this lab order."
+    },
+    "orderDetail": {
+      "notFound": "This lab order doesn't exist or was deleted.",
+      "backToLab": "Back to Lab Orders",
+      "edit": "Edit",
+      "changeStatus": "Status",
+      "updateStatus": "Update Status",
+      "updating": "Updating…",
+      "statusUpdated": "Status updated",
+      "statusFailed": "Couldn't update the status.",
+      "work": "Work",
+      "patient": "Patient",
+      "teeth": "Teeth",
+      "shade": "Shade",
+      "createdBy": "Ordered by",
+      "description": "Description",
+      "lab": "Lab",
+      "schedule": "Schedule and cost",
+      "orderDate": "Ordered",
+      "expectedDate": "Expected",
+      "sentDate": "Sent to lab",
+      "receivedDate": "Received",
+      "deliveredDate": "Delivered",
+      "estimatedCost": "Estimated cost",
+      "actualCost": "Actual cost",
+      "quality": "Quality and notes",
+      "qualityCheck": "Quality check",
+      "notes": "Notes",
+      "specialInstructions": "Special instructions",
+      "history": "Status history",
+      "noHistory": "No status changes yet.",
+      "documents": "Documents",
+      "noDocuments": "No documents."
     }
   },
   "inventory": {
@@ -4778,7 +4832,10 @@
       "creating": "Creating…",
       "createItem": "Create Item",
       "createSuccess": "Inventory item created successfully!",
-      "createFailed": "Failed to create inventory item"
+      "createFailed": "Failed to create inventory item",
+      "saveChanges": "Save Changes",
+      "saving": "Saving…",
+      "stockViaTransactions": "Stock changes through stock transactions."
     },
     "supplierStatus": {
       "ACTIVE": "Active",
@@ -4832,7 +4889,14 @@
         "requiredError": "Code, name and phone are required",
         "createSuccess": "Supplier created",
         "createError": "Failed to create supplier",
-        "codeExists": "Supplier code already exists"
+        "codeExists": "Supplier code already exists",
+        "editTitle": "Edit Supplier",
+        "editDesc": "Update the supplier's details.",
+        "status": "Status",
+        "close": "Close",
+        "loadError": "Couldn't load the supplier.",
+        "updateSuccess": "Supplier updated",
+        "updateError": "Failed to update supplier"
       }
     },
     "txnType": {
@@ -4937,6 +5001,70 @@
       "colStock": "Stock",
       "colUnitPrice": "Unit Price",
       "colStockValue": "Stock Value"
+    },
+    "edit": {
+      "title": "Edit Inventory Item",
+      "backToItem": "Back to Item",
+      "loading": "Loading…",
+      "notFound": "This inventory item doesn't exist or was deleted.",
+      "updateSuccess": "Item updated",
+      "updateFailed": "Failed to update item",
+      "codeExists": "Item code already exists"
+    },
+    "detail": {
+      "backToInventory": "Back to Inventory",
+      "notFound": "This inventory item doesn't exist or was deleted.",
+      "edit": "Edit",
+      "stockHistory": "Stock History",
+      "stock": "Stock",
+      "minimumStock": "Minimum",
+      "reorderLevel": "Reorder at",
+      "maximumStock": "Maximum",
+      "purchases30": "Received (30 days)",
+      "usage30": "Used (30 days)",
+      "details": "Details",
+      "type": "Type",
+      "purchasePrice": "Purchase price",
+      "sellingPrice": "Selling price",
+      "tax": "Tax",
+      "hsnCode": "HSN code",
+      "location": "Storage location",
+      "tracking": "Tracking",
+      "expiryTracking": "Expiry",
+      "batchTracking": "Batch",
+      "none": "None",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "supplier": "Preferred supplier",
+      "noSupplier": "No preferred supplier",
+      "description": "Description",
+      "notes": "Notes",
+      "transactions": "Recent transactions",
+      "noTransactions": "No stock transactions yet.",
+      "colDate": "Date",
+      "colType": "Type",
+      "colQuantity": "Quantity",
+      "colStockAfter": "Stock after",
+      "colSupplier": "Supplier",
+      "colBy": "By",
+      "batches": "Batches",
+      "noBatches": "No batches.",
+      "colBatch": "Batch",
+      "colExpiry": "Expires",
+      "colRemaining": "Remaining",
+      "colReceived": "Received",
+      "txType": {
+        "PURCHASE": "Purchase",
+        "SALE": "Sale",
+        "ADJUSTMENT_IN": "Adjustment (in)",
+        "ADJUSTMENT_OUT": "Adjustment (out)",
+        "DAMAGED": "Damaged",
+        "EXPIRED": "Expired",
+        "RETURNED": "Returned",
+        "TRANSFERRED": "Transferred",
+        "CONSUMPTION": "Consumption"
+      }
     }
   },
   "nav": {

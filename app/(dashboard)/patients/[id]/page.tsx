@@ -264,6 +264,14 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
     }
   }, [activeTab, fetchTimeline])
 
+  // The patients list's "Medical history" opens this page at #medical-history,
+  // but that card only exists once the patient has loaded.
+  useEffect(() => {
+    if (patient && window.location.hash === '#medical-history') {
+      document.getElementById('medical-history')?.scrollIntoView({ block: 'start' })
+    }
+  }, [patient])
+
   const handleUploadDocument = async () => {
     if (!uploadFile || !uploadType) {
       toast({
@@ -623,8 +631,8 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
               </CardContent>
             </Card>
 
-            {/* Medical History Summary */}
-            <Card>
+            {/* Medical History Summary (the patients list's "Medical history" links here) */}
+            <Card id="medical-history" className="scroll-mt-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
