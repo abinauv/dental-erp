@@ -87,9 +87,7 @@ describe('GET /api/medications', () => {
     expect(prisma.medication.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          OR: expect.arrayContaining([
-            expect.objectContaining({ name: { contains: 'amox', mode: 'insensitive' } }),
-          ]),
+          OR: expect.arrayContaining([expect.objectContaining({ name: { contains: 'amox' } })]),
         }),
       })
     )
