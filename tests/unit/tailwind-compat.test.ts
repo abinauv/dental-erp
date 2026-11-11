@@ -26,7 +26,8 @@ for (const dir of ['app', 'components', 'lib']) {
   }
 }
 const css = readFileSync(join(ROOT, 'app', 'globals.css'), 'utf8')
-const escape = (cls: string) => cls.replace(/\./g, '\\.')
+// As the class appears in the CSS source (".space-y-1.5" is written ".space-y-1\.5").
+const escape = (cls: string) => cls.replace(/[\\.]/g, '\\$&')
 
 describe('Tailwind 3 space-x/space-y compatibility', () => {
   it('finds the space utilities in use', () => {
