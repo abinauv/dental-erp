@@ -21,12 +21,16 @@ before it are not itemized here; see the git history and the
 - `npm run db:migrate` and `npm run db:push` regenerate the client themselves
   (Prisma 7's commands no longer do), and `npm run db:seed` runs
   `prisma db seed`.
+- The Docker image is about 85 MB larger (664 MB). It still carries the Prisma
+  CLI for `migrate deploy`, and Prisma 7's CLI loads more packages, although
+  the app no longer needs Prisma's query engine.
 
 ### Fixed
 
 - Each app instance could open up to three connection pools of
   `connection_limit` connections (one per server bundle). It now opens one,
-  so `DB_CONNECTION_LIMIT` is the real per-instance maximum.
+  and opens its connections at start-up, so each instance holds exactly
+  `DB_CONNECTION_LIMIT`.
 - The AI suggestions' count of unconfirmed appointments for tomorrow always
   came out as zero.
 

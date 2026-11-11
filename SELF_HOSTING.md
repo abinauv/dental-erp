@@ -244,11 +244,16 @@ defaults assume. Local disk for uploads, no Redis, one app container.
    four replicas is comfortable and eight is not. Leave a dozen spare for the
    migrate job and your own `mysql` shell.
 
-   The default matters more than it looks: Prisma's own default is
-   `num_cpus * 2 + 1`, and inside a container `num_cpus` is the **host's** core
-   count, not the container's share of it. On a 16-core host that is 33
-   connections per replica, and five replicas would exhaust a stock MySQL.
-   Setting it explicitly is what stops that being discovered in production.
+   Count them all as in use: each replica opens its `DB_CONNECTION_LIMIT`
+   connections when it starts and keeps them open.
+
+**A MySQL server outside Compose** (a managed database, say): the bundled
+MySQL is reached over Compose's private network without encryption. If you
+point `DATABASE_URL` at a server elsewhere, add `sslaccept=strict` to it, which
+verifies the server's certificate (for a private CA, add
+`sslcert=/path/to/ca.pem` too). Without one of them the connection is not
+encrypted. `DATABASE_URL` also takes `connection_limit`, `pool_timeout` and
+`connect_timeout` (in seconds).
 
 ---
 

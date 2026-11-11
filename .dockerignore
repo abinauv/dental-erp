@@ -1,5 +1,7 @@
 node_modules
 .next
+# The generated Prisma client; the build generates its own.
+lib/generated
 .env
 .env.*
 !.env.example
