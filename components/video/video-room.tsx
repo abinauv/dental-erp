@@ -207,7 +207,7 @@ export default function VideoRoom({
             onClick={handleEndCall}
             className="rounded-full px-6"
           >
-            <Phone className="h-5 w-5 mr-2 rotate-[135deg]" />
+            <Phone className="h-5 w-5 mr-2 rotate-135" />
             {t('endCall')}
           </Button>
         </div>

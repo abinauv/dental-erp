@@ -82,7 +82,7 @@ export function CommandBar() {
               if (e.key === 'Escape') setOpen(false)
             }}
             placeholder={t('placeholder')}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="flex-1 bg-transparent text-sm outline-hidden placeholder:text-muted-foreground"
           />
           <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">ESC</span>
         </div>

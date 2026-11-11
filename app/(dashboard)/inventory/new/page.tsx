@@ -124,7 +124,7 @@ export default function NewInventoryItemPage() {
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-background rounded-lg shadow p-6">
+      <form onSubmit={handleSubmit} className="bg-background rounded-lg shadow-sm p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Item Code */}
           <div>
@@ -137,7 +137,7 @@ export default function NewInventoryItemPage() {
               value={formData.sku}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder={t('itemCodePlaceholder')}
             />
           </div>
@@ -153,7 +153,7 @@ export default function NewInventoryItemPage() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder={t('itemNamePlaceholder')}
             />
           </div>
@@ -167,7 +167,7 @@ export default function NewInventoryItemPage() {
               name="categoryId"
               value={formData.categoryId}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             >
               <option value="">{t('selectCategory')}</option>
               {categories.map((cat) => (
@@ -188,7 +188,7 @@ export default function NewInventoryItemPage() {
               value={formData.itemType}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             >
               <option value="DENTAL_MATERIAL">{tType('DENTAL_MATERIAL')}</option>
               <option value="INSTRUMENT">{tType('INSTRUMENT')}</option>
@@ -210,7 +210,7 @@ export default function NewInventoryItemPage() {
               value={formData.unit}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder={t('unitPlaceholder')}
             />
           </div>
@@ -226,7 +226,7 @@ export default function NewInventoryItemPage() {
               value={formData.currentStock}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -241,7 +241,7 @@ export default function NewInventoryItemPage() {
               value={formData.minimumStock}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -256,7 +256,7 @@ export default function NewInventoryItemPage() {
               value={formData.reorderLevel}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -271,7 +271,7 @@ export default function NewInventoryItemPage() {
               value={formData.maximumStock}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -286,7 +286,7 @@ export default function NewInventoryItemPage() {
               value={formData.purchasePrice}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -301,7 +301,7 @@ export default function NewInventoryItemPage() {
               value={formData.sellingPrice}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -313,7 +313,7 @@ export default function NewInventoryItemPage() {
               name="hsnCode"
               value={formData.hsnCode}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -328,7 +328,7 @@ export default function NewInventoryItemPage() {
               value={formData.taxPercentage}
               onChange={handleChange}
               step="0.01"
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -341,7 +341,7 @@ export default function NewInventoryItemPage() {
               name="preferredSupplierId"
               value={formData.preferredSupplierId}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             >
               <option value="">{t('selectSupplier')}</option>
               {suppliers.map((supplier) => (
@@ -362,7 +362,7 @@ export default function NewInventoryItemPage() {
               name="storageLocation"
               value={formData.storageLocation}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder={t('storagePlaceholder')}
             />
           </div>
@@ -378,7 +378,7 @@ export default function NewInventoryItemPage() {
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -426,7 +426,7 @@ export default function NewInventoryItemPage() {
             value={formData.notes}
             onChange={handleChange}
             rows={2}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
         </div>
 

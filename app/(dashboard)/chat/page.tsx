@@ -32,7 +32,7 @@ function TypingDots() {
 function BlinkingCursor() {
   return (
     <span
-      className="inline-block w-[2px] h-[1em] bg-current align-text-bottom ml-[1px]"
+      className="inline-block w-[2px] h-[1em] bg-current align-text-bottom ml-px"
       style={{ animation: 'chat-blink 0.8s step-end infinite' }}
     />
   )
@@ -278,7 +278,7 @@ export default function ChatPage() {
               className={cn(
                 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all border',
                 voice.handsFreeMode
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                   : 'text-muted-foreground hover:bg-muted border-border'
               )}
               title={t('handsFreeTitle')}
@@ -472,7 +472,7 @@ export default function ChatPage() {
                         : 'bg-muted text-foreground'
                     )}
                   >
-                    <div className="whitespace-pre-wrap break-words">
+                    <div className="whitespace-pre-wrap wrap-break-word">
                       {msg.content}
                       {isStreaming && !isEmpty && <BlinkingCursor />}
                     </div>
@@ -582,7 +582,7 @@ export default function ChatPage() {
               voice.state === 'listening' ? t('status.listening') : t('inputPlaceholder')
             }
             rows={1}
-            className="flex-1 resize-none rounded-xl border bg-muted px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+            className="flex-1 resize-none rounded-xl border bg-muted px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
           />
           {/* Mic button */}
           {voice.voiceSupported && (
@@ -600,7 +600,7 @@ export default function ChatPage() {
               className={cn(
                 'rounded-xl px-3 py-3 transition-all shrink-0',
                 voice.state === 'listening'
-                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm shadow-red-200 dark:shadow-red-900/30'
+                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-xs shadow-red-200 dark:shadow-red-900/30'
                   : voice.state === 'speaking'
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
                     : 'bg-muted border hover:bg-accent text-muted-foreground disabled:opacity-40'

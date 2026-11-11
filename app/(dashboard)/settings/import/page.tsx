@@ -423,7 +423,7 @@ export default function DataImportPage() {
                       key={opt.key}
                       onClick={() => setEntityType(opt.key)}
                       className={cn(
-                        'rounded-lg border p-3 text-left transition-all hover:shadow-sm',
+                        'rounded-lg border p-3 text-left transition-all hover:shadow-xs',
                         selected
                           ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
                           : 'hover:bg-muted'
@@ -616,7 +616,7 @@ export default function DataImportPage() {
                             <select
                               value={target || ''}
                               onChange={(e) => updateMapping(col, e.target.value || null)}
-                              className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                              className="w-full rounded-md border bg-background px-2 py-1.5 text-sm outline-hidden focus:ring-2 focus:ring-primary"
                             >
                               <option value="">{t('skipColumn')}</option>
                               {schema.fields.map((f) => (
@@ -718,7 +718,7 @@ export default function DataImportPage() {
                               value={row[f.name] ?? ''}
                               onChange={(e) => handleCellEdit(i, f.name, e.target.value)}
                               className={cn(
-                                'w-full rounded border px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary bg-transparent',
+                                'w-full rounded border px-2 py-1 text-xs outline-hidden focus:ring-1 focus:ring-primary bg-transparent',
                                 f.required && !row[f.name]
                                   ? 'border-red-300 bg-red-50 dark:bg-red-950/20'
                                   : 'border-transparent hover:border-border'

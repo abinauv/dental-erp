@@ -307,7 +307,7 @@ export default function CampaignAnalyticsPage() {
                             email: day.email,
                           })}
                         </div>
-                        <div className="flex flex-col-reverse w-full gap-[1px]">
+                        <div className="flex flex-col-reverse w-full gap-px">
                           {day.sms > 0 && (
                             <div
                               className="bg-blue-500 rounded-t-sm w-full"

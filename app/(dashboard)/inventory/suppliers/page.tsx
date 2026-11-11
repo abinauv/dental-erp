@@ -172,20 +172,20 @@ export default function SuppliersPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-background rounded-lg shadow p-4 mb-6">
+      <div className="bg-background rounded-lg shadow-sm p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
             placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">{t('allStatus')}</option>
             <option value="ACTIVE">{tStatus('ACTIVE')}</option>
@@ -196,7 +196,7 @@ export default function SuppliersPage() {
       </div>
 
       {/* Suppliers Table */}
-      <div className="bg-background rounded-lg shadow overflow-hidden">
+      <div className="bg-background rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">{t('loading')}</div>
         ) : suppliers.length === 0 ? (
@@ -296,7 +296,7 @@ export default function SuppliersPage() {
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <nav className="relative z-0 inline-flex rounded-md shadow-xs -space-x-px">
                     <button
                       onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
                       disabled={pagination.page === 1}
@@ -354,7 +354,7 @@ export default function SuppliersPage() {
                     type={field === 'creditLimit' ? 'number' : field === 'email' ? 'email' : 'text'}
                     value={supplierForm[field]}
                     onChange={(e) => setField(field, e.target.value)}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary"
                   />
                 </div>
               ))}
@@ -367,7 +367,7 @@ export default function SuppliersPage() {
                   type="text"
                   value={supplierForm.address}
                   onChange={(e) => setField('address', e.target.value)}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div className="space-y-1 sm:col-span-2">
@@ -379,7 +379,7 @@ export default function SuppliersPage() {
                   rows={2}
                   value={supplierForm.notes}
                   onChange={(e) => setField('notes', e.target.value)}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>

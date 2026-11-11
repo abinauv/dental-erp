@@ -55,7 +55,7 @@ export default function InventoryReportsPage() {
       <div>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('totalItems')}</h3>
             <p className="text-3xl font-bold mt-2">{reportData.summary.totalItems}</p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -63,7 +63,7 @@ export default function InventoryReportsPage() {
             </p>
           </div>
 
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('outOfStock')}</h3>
             <p className="text-3xl font-bold mt-2 text-red-600">
               {reportData.summary.outOfStockItems}
@@ -71,7 +71,7 @@ export default function InventoryReportsPage() {
             <p className="text-sm text-muted-foreground mt-1">{t('itemsNeedRestock')}</p>
           </div>
 
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('lowStock')}</h3>
             <p className="text-3xl font-bold mt-2 text-orange-600">
               {reportData.summary.lowStockItems}
@@ -79,7 +79,7 @@ export default function InventoryReportsPage() {
             <p className="text-sm text-muted-foreground mt-1">{t('itemsBelowMin')}</p>
           </div>
 
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('inventoryValue')}</h3>
             <p className="text-3xl font-bold mt-2 text-green-600">
               {formatCurrency(reportData.summary.totalInventoryValue || 0)}
@@ -89,7 +89,7 @@ export default function InventoryReportsPage() {
         </div>
 
         {/* Category Breakdown */}
-        <div className="bg-background p-6 rounded-lg shadow mb-6">
+        <div className="bg-background p-6 rounded-lg shadow-sm mb-6">
           <h3 className="text-lg font-bold mb-4">{t('byCategory')}</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
@@ -126,7 +126,7 @@ export default function InventoryReportsPage() {
         </div>
 
         {/* Type Breakdown */}
-        <div className="bg-background p-6 rounded-lg shadow">
+        <div className="bg-background p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-bold mb-4">{t('byType')}</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
@@ -172,7 +172,7 @@ export default function InventoryReportsPage() {
     if (!reportData || !Array.isArray(reportData)) return null
 
     return (
-      <div className="bg-background rounded-lg shadow overflow-hidden">
+      <div className="bg-background rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted/50">
@@ -253,7 +253,7 @@ export default function InventoryReportsPage() {
       <div>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('expiredBatches')}</h3>
             <p className="text-3xl font-bold mt-2 text-red-600">
               {reportData.summary.expiredBatches || 0}
@@ -263,7 +263,7 @@ export default function InventoryReportsPage() {
             </p>
           </div>
 
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('expiringSoon')}</h3>
             <p className="text-3xl font-bold mt-2 text-orange-600">
               {reportData.summary.expiringSoonBatches || 0}
@@ -277,7 +277,7 @@ export default function InventoryReportsPage() {
         </div>
 
         {/* Items Table */}
-        <div className="bg-background rounded-lg shadow overflow-hidden">
+        <div className="bg-background rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted/50">
@@ -358,7 +358,7 @@ export default function InventoryReportsPage() {
       <div>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">
               {t('totalStockValueTitle')}
             </h3>
@@ -367,12 +367,12 @@ export default function InventoryReportsPage() {
             </p>
           </div>
 
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('itemsInStock')}</h3>
             <p className="text-3xl font-bold mt-2">{reportData.totals.itemsInStock || 0}</p>
           </div>
 
-          <div className="bg-background p-6 rounded-lg shadow">
+          <div className="bg-background p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-muted-foreground">{t('avgItemValue')}</h3>
             <p className="text-3xl font-bold mt-2">
               {formatCurrency(reportData.totals.averageItemValue || 0)}
@@ -381,7 +381,7 @@ export default function InventoryReportsPage() {
         </div>
 
         {/* Items Table */}
-        <div className="bg-background rounded-lg shadow overflow-hidden">
+        <div className="bg-background rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted/50">
@@ -450,7 +450,7 @@ export default function InventoryReportsPage() {
       </div>
 
       {/* Report Tabs */}
-      <div className="bg-background rounded-lg shadow mb-6">
+      <div className="bg-background rounded-lg shadow-sm mb-6">
         <div className="border-b border-border">
           <nav className="flex space-x-8 px-6" aria-label="Tabs">
             {[
@@ -498,7 +498,7 @@ export default function InventoryReportsPage() {
       {/* Report Content */}
       <div className="mt-6">
         {loading ? (
-          <div className="bg-background rounded-lg shadow p-8 text-center">{t('loading')}</div>
+          <div className="bg-background rounded-lg shadow-sm p-8 text-center">{t('loading')}</div>
         ) : (
           <>
             {activeReport === 'summary' && renderSummaryReport()}

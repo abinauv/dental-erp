@@ -92,7 +92,7 @@ export function ReportBuilder() {
             if (e.key === 'Enter') execute()
           }}
           placeholder={t('placeholder')}
-          className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
+          className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
         />
         <button
           onClick={execute}
