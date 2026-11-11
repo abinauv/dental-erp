@@ -609,6 +609,7 @@ Manual, not in CI: for checking UI-wide changes (such as a CSS framework upgrade
 
 - [x] 72 dashboard pages, 5 detail pages and 4 signed-out pages, full height, desktop 1440×900 (tests/visual/pages.visual.ts — 81 snapshots)
 - [x] Core pages (dashboard, lists, invoice and patient detail, settings, login) on a phone (Pixel 7) and in dark mode (13 + 13 snapshots)
+- [x] Interactive states: user/notification/theme menus, global search, form and payment dialogs, an open select, tooltip, error toast, tab switch, row hover, keyboard focus on an input and a button, and the mobile sidebar (tests/visual/interactive.visual.ts — 14 states, 26 snapshots across the projects)
 
 ### 2.4 Form Validation Tests
 
