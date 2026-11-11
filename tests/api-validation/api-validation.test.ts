@@ -93,11 +93,6 @@ vi.mock('@/lib/billing-utils', () => ({
   gstConfig: { cgstRate: 9, sgstRate: 9 },
 }))
 
-vi.mock('@prisma/client', () => ({
-  DiscountType: { FIXED: 'FIXED', PERCENTAGE: 'PERCENTAGE' },
-  InvoiceStatus: { DRAFT: 'DRAFT', PENDING: 'PENDING', PAID: 'PAID' },
-}))
-
 // ── Imports (after mocks) ──────────────────────────────────────────────────────
 import { prisma } from '@/lib/prisma'
 

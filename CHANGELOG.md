@@ -11,6 +11,37 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Changed
+
+- Prisma 7 (from 5.22). The app reaches MySQL through Prisma's MariaDB driver
+  adapter (`@prisma/adapter-mariadb`) instead of Prisma's native query engine.
+  The generated client lives in `lib/generated/prisma` (created by
+  `npm install`; import from `@/lib/generated/prisma/client`, or `.../enums`
+  for enums), and the CLI's settings are in `prisma.config.ts`.
+- `npm run db:migrate` and `npm run db:push` regenerate the client themselves
+  (Prisma 7's commands no longer do), and `npm run db:seed` runs
+  `prisma db seed`.
+
+### Fixed
+
+- Each app instance could open up to three connection pools of
+  `connection_limit` connections (one per server bundle). It now opens one,
+  so `DB_CONNECTION_LIMIT` is the real per-instance maximum.
+- The AI suggestions' count of unconfirmed appointments for tomorrow always
+  came out as zero.
+
+### Upgrading
+
+- No database migrations. `DATABASE_URL` keeps its format and its
+  `connection_limit`, `pool_timeout`, `connect_timeout` and `socket`
+  parameters; other Prisma-specific parameters are ignored.
+- The connection to MySQL is encrypted only when `DATABASE_URL` has
+  `sslaccept=strict` (verify the server certificate), `sslaccept=accept_invalid_certs`
+  or `sslcert=<CA file>`. If your database requires TLS, add one of them. The
+  bundled Docker Compose setup doesn't need it.
+- Prisma no longer reads `.env` itself. The npm scripts load it; when running
+  a script directly, use `npx tsx --env-file-if-exists=.env <script>`.
+
 ## [2.1.2] - 2026-11-10
 
 ### Security

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkStaffLimit, generateToken } from '@/lib/api-helpers'
-import { Role, StaffInviteStatus } from '@prisma/client'
+import { Role, StaffInviteStatus } from '@/lib/generated/prisma/enums'
 import { sendInviteEmail } from '@/lib/email-helpers'
 import { logger } from '@/lib/logger'
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { ceilToUTCDay } from '@/lib/date-column'
 
 // GET - CRM dashboard stats
 export async function GET(request: NextRequest) {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
         where: {
           hospitalId,
           isActive: true,
-          appointments: { some: { scheduledDate: { gte: sixMonthsAgo } } },
+          appointments: { some: { scheduledDate: { gte: ceilToUTCDay(sixMonthsAgo) } } },
         },
       }),
     ])

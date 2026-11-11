@@ -29,6 +29,7 @@ const eslintConfig = [
       'test-results/**',
       'blob-report/**',
       'prisma/**',
+      'lib/generated/**',
       '**/*.test.ts',
       '**/*.test.tsx',
       '__tests__/**',

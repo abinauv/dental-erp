@@ -25,16 +25,6 @@ vi.mock('@/lib/email-helpers', () => ({
   sendVerificationEmail: vi.fn().mockResolvedValue(true),
 }))
 
-vi.mock('@prisma/client', () => ({
-  Plan: {
-    FREE: 'FREE',
-    PROFESSIONAL: 'PROFESSIONAL',
-    ENTERPRISE: 'ENTERPRISE',
-    SELF_HOSTED: 'SELF_HOSTED',
-  },
-  Role: { ADMIN: 'ADMIN', DOCTOR: 'DOCTOR', STAFF: 'STAFF' },
-}))
-
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { POST as signupPOST } from '@/app/api/public/signup/route'

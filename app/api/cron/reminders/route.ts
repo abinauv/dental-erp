@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { ceilToUTCDay } from '@/lib/date-column'
 
 /**
  * GET /api/cron/reminders
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
   const appointments = await prisma.appointment.findMany({
     where: {
       status: { in: ['SCHEDULED', 'CONFIRMED'] },
-      scheduledDate: { gte: now, lte: in24Hours },
+      scheduledDate: { gte: ceilToUTCDay(now), lte: in24Hours },
     },
     include: {
       patient: { select: { id: true, firstName: true, lastName: true, phone: true } },
@@ -43,7 +44,7 @@ export async function GET(req: Request) {
     by: ['patientId'],
     where: {
       patientId: { in: patientIds },
-      scheduledDate: { lt: now },
+      scheduledDate: { lt: ceilToUTCDay(now) },
     },
     _count: true,
   })

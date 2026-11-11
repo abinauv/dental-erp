@@ -6,7 +6,7 @@ import {
   PaymentStatus,
   InsuranceClaimStatus,
   DiscountType,
-} from '@prisma/client'
+} from '@/lib/generated/prisma/enums'
 import {
   formatCurrency as baseFormatCurrency,
   formatDate as baseFormatDate,

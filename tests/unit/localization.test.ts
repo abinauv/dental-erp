@@ -1,45 +1,6 @@
 // @ts-nocheck
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@prisma/client', () => ({
-  InvoiceStatus: {
-    DRAFT: 'DRAFT',
-    PENDING: 'PENDING',
-    PARTIALLY_PAID: 'PARTIALLY_PAID',
-    PAID: 'PAID',
-    OVERDUE: 'OVERDUE',
-    CANCELLED: 'CANCELLED',
-    REFUNDED: 'REFUNDED',
-  },
-  PaymentMethod: {
-    CASH: 'CASH',
-    CARD: 'CARD',
-    UPI: 'UPI',
-    BANK_TRANSFER: 'BANK_TRANSFER',
-    CHEQUE: 'CHEQUE',
-    INSURANCE: 'INSURANCE',
-    WALLET: 'WALLET',
-    ONLINE: 'ONLINE',
-  },
-  PaymentStatus: {
-    PENDING: 'PENDING',
-    COMPLETED: 'COMPLETED',
-    FAILED: 'FAILED',
-    REFUNDED: 'REFUNDED',
-    CANCELLED: 'CANCELLED',
-  },
-  InsuranceClaimStatus: {
-    DRAFT: 'DRAFT',
-    SUBMITTED: 'SUBMITTED',
-    UNDER_REVIEW: 'UNDER_REVIEW',
-    APPROVED: 'APPROVED',
-    PARTIALLY_APPROVED: 'PARTIALLY_APPROVED',
-    REJECTED: 'REJECTED',
-    SETTLED: 'SETTLED',
-  },
-  DiscountType: { PERCENTAGE: 'PERCENTAGE', FIXED: 'FIXED' },
-}))
-
 import {
   formatCurrency,
   formatDate,

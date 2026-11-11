@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { StaffInviteStatus, Role } from '@prisma/client'
+import { StaffInviteStatus, Role } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
 

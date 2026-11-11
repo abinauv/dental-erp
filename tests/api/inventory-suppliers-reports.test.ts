@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { PurchaseOrderStatus, SupplierStatus } from '@prisma/client'
+import { PurchaseOrderStatus, SupplierStatus } from '@/lib/generated/prisma/enums'
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 

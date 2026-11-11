@@ -1,14 +1,18 @@
 // Dental Hospital Management System - Database Schema
 // Multi-Tenant SaaS Architecture
 
+// Generated into lib/generated/prisma (gitignored) by `prisma generate`, which
+// postinstall runs. Server code imports from '@/lib/generated/prisma/client';
+// enum-only imports use '.../enums', which is also safe in client components.
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
+// The connection URL is in prisma.config.ts (for the CLI) and lib/prisma.ts
+// (for the app, through the MariaDB driver adapter).
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ==================== MULTI-TENANCY ====================

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { LabOrderStatus } from '@prisma/client'
+import { LabOrderStatus } from '@/lib/generated/prisma/enums'
 
 const mockAuth = vi.hoisted(() => ({
   requireAuthAndRole: vi.fn(),

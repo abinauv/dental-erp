@@ -1,5 +1,4 @@
 import {
-  PrismaClient,
   Role,
   Gender,
   BloodGroup,
@@ -15,12 +14,11 @@ import {
   LabWorkType,
   AppointmentStatus,
   AppointmentType,
-} from '@prisma/client'
+} from '../lib/generated/prisma/enums'
 import bcrypt from 'bcryptjs'
 import { getSeedData } from './seed-data'
 import { syncCredentialAccount } from '../lib/auth-credentials'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma'
 
 // Kept in sync with tests/e2e/public-payment.spec.ts.
 const E2E_PAYMENT_TOKEN = 'e2e-payment-link-token'

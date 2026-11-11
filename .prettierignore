@@ -7,4 +7,5 @@ test-results
 uploads
 package-lock.json
 prisma/migrations
+lib/generated
 *.tsbuildinfo

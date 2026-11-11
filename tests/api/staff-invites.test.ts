@@ -14,22 +14,6 @@ const mockEmailHelpers = vi.hoisted(() => ({
 vi.mock('@/lib/api-helpers', () => mockAuth)
 vi.mock('@/lib/prisma', () => ({ prisma, default: prisma }))
 vi.mock('@/lib/email-helpers', () => mockEmailHelpers)
-vi.mock('@prisma/client', () => ({
-  Role: {
-    ADMIN: 'ADMIN',
-    DOCTOR: 'DOCTOR',
-    RECEPTIONIST: 'RECEPTIONIST',
-    LAB_TECH: 'LAB_TECH',
-    ACCOUNTANT: 'ACCOUNTANT',
-  },
-  StaffInviteStatus: {
-    PENDING: 'PENDING',
-    ACCEPTED: 'ACCEPTED',
-    EXPIRED: 'EXPIRED',
-    CANCELLED: 'CANCELLED',
-  },
-}))
-
 const invitesListModule = await import('@/app/api/staff-invites/route')
 const inviteDetailModule = await import('@/app/api/staff-invites/[id]/route')
 

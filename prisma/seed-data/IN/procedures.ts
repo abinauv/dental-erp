@@ -1,4 +1,4 @@
-import { ProcedureCategory } from '@prisma/client'
+import { ProcedureCategory } from '../../../lib/generated/prisma/enums'
 
 /**
  * India dental procedure catalogue (INR base prices). Extracted verbatim from
