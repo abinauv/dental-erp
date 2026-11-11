@@ -58,6 +58,8 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
+    "visual:baseline": "playwright test -c playwright.visual.config.ts --update-snapshots=all",
+    "visual:compare": "playwright test -c playwright.visual.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:all": "npm run test && npm run test:e2e",
     "prepare": "husky"
