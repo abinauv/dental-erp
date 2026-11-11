@@ -72,10 +72,12 @@ Two that are easy to get wrong:
   copy somewhere other than this server.
 
 Then pin your version. `latest` means the next `docker compose pull` changes
-what you are running without asking:
+what you are running without asking. Image tags are the version number
+without a leading `v` (`3.0.0`, or `3.0` / `3` to follow patch or minor
+releases):
 
 ```bash
-DENTAL_ERP_VERSION="v1.0.0"
+DENTAL_ERP_VERSION="3.0.0"
 ```
 
 ## 3. Start it
@@ -204,7 +206,7 @@ lifecycle policy there. The database backup still covers everything else.
 
 ```bash
 ./backup.sh                          # first, always
-# edit .env: DENTAL_ERP_VERSION="v1.1.0"
+# edit .env: DENTAL_ERP_VERSION="3.0.1"
 docker compose pull
 docker compose up -d
 ```

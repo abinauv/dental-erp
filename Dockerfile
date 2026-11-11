@@ -31,7 +31,7 @@ RUN mkdir -p /cli/node_modules && cd /app/node_modules && tar -cf - \
       @prisma/engines-version @prisma/fetch-engine @prisma/studio-core \
       @standard-schema/spec c12 confbox deepmerge-ts defu destr dotenv empathic \
       exsolve fast-check get-port-please giget graceful-fs grammex graphmatch \
-      ohash pathe perfect-debounce pkg-types proper-lockfile pure-rand rc9 \
+      jiti ohash pathe perfect-debounce pkg-types proper-lockfile pure-rand rc9 \
       remeda retry valibot zeptomatch \
     | tar -xf - -C /cli/node_modules
 

@@ -11,6 +11,12 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-11
+
+A major version because of the browser requirements below. Docker Compose
+installs upgrade as usual: no database migrations and no configuration
+changes.
+
 ### Changed
 
 - **Browser support: Safari 16.4+, Chrome and Edge 111+, Firefox 128+.** The
@@ -34,6 +40,13 @@ before it are not itemized here; see the git history and the
   CLI for `migrate deploy`, and Prisma 7's CLI loads more packages, although
   the app no longer needs Prisma's query engine.
 
+### Added
+
+- Visual snapshot tests for checking UI-wide changes against the UI as it
+  was (`npm run visual:baseline` / `npm run visual:compare`, see
+  TEST_PLAN.md): every page, plus menus, dialogs, toasts and focus states,
+  on desktop, phone and in dark mode. Not run in CI.
+
 ### Fixed
 
 - Each app instance could open up to three connection pools of
@@ -42,6 +55,9 @@ before it are not itemized here; see the git history and the
   `DB_CONNECTION_LIMIT`.
 - The AI suggestions' count of unconfirmed appointments for tomorrow always
   came out as zero.
+- The demo users created by `npm run db:seed` couldn't sign in.
+- SELF_HOSTING.md showed image versions with a leading `v` (`v1.0.0`), a tag
+  that doesn't exist; the images are tagged `3.0.0`, `3.0`, `3` and `latest`.
 
 ### Upgrading
 
