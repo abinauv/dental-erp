@@ -153,29 +153,38 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       updateData.status = status
 
       // Set date fields based on status
+      // The model's date columns are submittedDate / approvedDate /
+      // settledDate (these used other names, which the database rejected, so
+      // no status change could be saved). A rejection has no date column.
       switch (status) {
         case 'SUBMITTED':
-          updateData.submissionDate = new Date()
+          updateData.submittedDate = new Date()
           break
         case 'APPROVED':
         case 'PARTIALLY_APPROVED':
-          updateData.approvalDate = new Date()
+          updateData.approvedDate = new Date()
           if (approvedAmount !== undefined) {
             updateData.approvedAmount = approvedAmount
+          } else if (status === 'APPROVED') {
+            // Approved in full.
+            updateData.approvedAmount = existingClaim.claimAmount
+          } else {
+            return NextResponse.json(
+              { error: 'A partial approval needs the approved amount' },
+              { status: 400 }
+            )
           }
           break
         case 'REJECTED':
-          updateData.rejectionDate = new Date()
           if (rejectionReason) {
             updateData.rejectionReason = rejectionReason
           }
           break
         case 'SETTLED':
-          updateData.settlementDate = new Date()
+          updateData.settledDate = new Date()
           if (settledAmount !== undefined) {
             updateData.settledAmount = settledAmount
           }
-          // Record insurance payment on linked invoices
           break
       }
     }
