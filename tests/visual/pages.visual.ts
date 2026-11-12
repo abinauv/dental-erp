@@ -26,6 +26,7 @@ const PAGES: { path: string; core?: boolean }[] = [
   { path: '/billing/payment-plans' },
   { path: '/billing/payment-plans/new' },
   { path: '/billing/insurance' },
+  { path: '/billing/insurance/new' },
   { path: '/billing/insurance/providers' },
   { path: '/billing/insurance/pre-auth' },
   { path: '/billing/insurance/pre-auth/new' },

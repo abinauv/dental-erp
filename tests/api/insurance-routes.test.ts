@@ -23,6 +23,7 @@ import {
   DELETE as claimDELETE,
 } from '@/app/api/insurance-claims/[id]/route'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { Prisma } from '@/lib/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -127,7 +128,7 @@ describe('GET /api/insurance-claims', () => {
     expect(prisma.insuranceClaim.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          submissionDate: expect.objectContaining({
+          submittedDate: expect.objectContaining({
             gte: new Date('2026-01-01'),
           }),
         }),
@@ -372,7 +373,7 @@ describe('PUT /api/insurance-claims/[id]', () => {
     vi.mocked(prisma.insuranceClaim.update).mockResolvedValue({
       id: 'c1',
       status: 'SUBMITTED',
-      submissionDate: new Date(),
+      submittedDate: new Date(),
     } as any)
 
     const res = await claimPUT(
@@ -385,7 +386,7 @@ describe('PUT /api/insurance-claims/[id]', () => {
     expect(body.status).toBe('SUBMITTED')
   })
 
-  it('sets approvalDate on APPROVED status', async () => {
+  it('sets approvedDate on APPROVED status', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
       id: 'c1',
@@ -406,14 +407,14 @@ describe('PUT /api/insurance-claims/[id]', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           status: 'APPROVED',
-          approvalDate: expect.any(Date),
+          approvedDate: expect.any(Date),
           approvedAmount: 4500,
         }),
       })
     )
   })
 
-  it('sets rejectionDate and reason on REJECTED status', async () => {
+  it('sets the reason on REJECTED status', async () => {
     mockAuth()
     vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
       id: 'c1',
@@ -437,7 +438,6 @@ describe('PUT /api/insurance-claims/[id]', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           status: 'REJECTED',
-          rejectionDate: expect.any(Date),
           rejectionReason: 'Incomplete docs',
         }),
       })
@@ -477,6 +477,50 @@ describe('PUT /api/insurance-claims/[id]', () => {
 // ═════════════════════════════════════════════════════════════════════════════
 // 5. DELETE /api/insurance-claims/[id]
 // ═════════════════════════════════════════════════════════════════════════════
+
+describe('PUT /api/insurance-claims/[id] — status dates and amounts', () => {
+  // Every field the route writes must be a real InsuranceClaim column. With
+  // Prisma mocked, a misspelt one (as submissionDate was) only fails against a
+  // real database.
+  const columns = new Set(Object.values(Prisma.InsuranceClaimScalarFieldEnum))
+  const written = () => Object.keys(vi.mocked(prisma.insuranceClaim.update).mock.calls[0][0].data)
+
+  async function transition(from: string, body: Record<string, unknown>) {
+    mockAuth()
+    vi.mocked(prisma.insuranceClaim.findUnique).mockResolvedValue({
+      id: 'c1',
+      status: from,
+      hospitalId: 'h1',
+      claimAmount: 5000,
+    } as any)
+    vi.mocked(prisma.insuranceClaim.update).mockResolvedValue({ id: 'c1' } as any)
+    return claimPUT(makeReq('/api/insurance-claims/c1', 'PUT', body), makeParams('c1'))
+  }
+
+  it.each([
+    ['DRAFT', { status: 'SUBMITTED' }, 'submittedDate'],
+    ['SUBMITTED', { status: 'APPROVED', approvedAmount: 4000 }, 'approvedDate'],
+    ['UNDER_REVIEW', { status: 'PARTIALLY_APPROVED', approvedAmount: 2500 }, 'approvedDate'],
+    ['SUBMITTED', { status: 'REJECTED', rejectionReason: 'Not covered' }, 'rejectionReason'],
+    ['APPROVED', { status: 'SETTLED', settledAmount: 4000 }, 'settledDate'],
+  ])('%s -> %o writes only real columns, including %s', async (from, body, field) => {
+    const res = await transition(from, body)
+    expect(res.status).toBe(200)
+    expect(written()).toContain(field)
+    for (const key of written()) expect(columns, `${key} is not a column`).toContain(key)
+  })
+
+  it('approves the whole claim when no amount is given', async () => {
+    await transition('SUBMITTED', { status: 'APPROVED' })
+    expect(vi.mocked(prisma.insuranceClaim.update).mock.calls[0][0].data.approvedAmount).toBe(5000)
+  })
+
+  it('refuses a partial approval without an amount', async () => {
+    const res = await transition('SUBMITTED', { status: 'PARTIALLY_APPROVED' })
+    expect(res.status).toBe(400)
+    expect(prisma.insuranceClaim.update).not.toHaveBeenCalled()
+  })
+})
 
 describe('DELETE /api/insurance-claims/[id]', () => {
   beforeEach(() => vi.clearAllMocks())

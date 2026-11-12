@@ -66,9 +66,9 @@ interface InsuranceClaim {
   approvedAmount: string | number | null
   settledAmount: string | number | null
   status: string
-  submissionDate: string | null
-  approvalDate: string | null
-  settlementDate: string | null
+  submittedDate: string | null
+  approvedDate: string | null
+  settledDate: string | null
   rejectionReason: string | null
   denialCode: string | null
   appealDeadline: string | null
@@ -483,8 +483,8 @@ export default function InsuranceClaimsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {claim.submissionDate ? (
-                        formatDate(claim.submissionDate)
+                      {claim.submittedDate ? (
+                        formatDate(claim.submittedDate)
                       ) : (
                         <span className="text-muted-foreground">{t('notSubmitted')}</span>
                       )}
