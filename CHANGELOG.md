@@ -21,6 +21,11 @@ before it are not itemized here; see the git history and the
 - Refunds from the Payments page, in a dialog.
 - Viewing and editing suppliers, including their status, in the supplier
   dialog.
+- Editing draft invoices (items, discount, payment terms, notes), saving them
+  as drafts or finalizing them.
+- Editing treatments (clinical notes, teeth, cost, follow-up) and treatment
+  plans (details and procedures; procedures already started stay in the
+  plan with their progress).
 
 ### Fixed
 

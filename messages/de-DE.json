@@ -869,6 +869,18 @@
       "defaulted": "Defaulted",
       "outstandingEmi": "Outstanding EMI",
       "createPlan": "Create New Payment Plan"
+    },
+    "invoiceEdit": {
+      "title": "Rechnung {number} bearbeiten",
+      "subtitle": "Ein Entwurf kann geändert werden, bis er abgeschlossen ist.",
+      "saveDraft": "Entwurf speichern",
+      "saveFinalize": "Speichern & abschließen",
+      "saving": "Wird gespeichert…",
+      "saveFailed": "Die Rechnung konnte nicht gespeichert werden",
+      "loading": "Wird geladen…",
+      "notEditable": "Rechnung {number} ist kein Entwurf mehr und kann nicht bearbeitet werden.",
+      "loadError": "Diese Rechnung konnte nicht geladen werden.",
+      "backToInvoice": "Zurück zur Rechnung"
     }
   },
   "patients": {
@@ -1776,6 +1788,28 @@
       "cancel": "Cancel",
       "saving": "Saving…",
       "save": "Save"
+    },
+    "edit": {
+      "title": "Behandlung {number} bearbeiten",
+      "subtitle": "Aktualisieren Sie Befunde, Zähne, Kosten und Nachsorge. Patient, Arzt und Leistung bleiben unverändert.",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "saveFailed": "Die Behandlung konnte nicht gespeichert werden",
+      "loading": "Wird geladen…",
+      "notEditable": "Behandlung {number} ist abgeschlossen oder storniert und kann nicht bearbeitet werden.",
+      "loadError": "Diese Behandlung konnte nicht geladen werden.",
+      "backToTreatment": "Zurück zur Behandlung"
+    },
+    "planEdit": {
+      "title": "Behandlungsplan bearbeiten",
+      "subtitle": "Ändern Sie die Angaben und Leistungen des Plans. Bereits begonnene Leistungen bleiben im Plan.",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "saveFailed": "Der Behandlungsplan konnte nicht gespeichert werden",
+      "loading": "Wird geladen…",
+      "notEditable": "Dieser Plan ist abgeschlossen oder storniert und kann nicht bearbeitet werden.",
+      "loadError": "Dieser Behandlungsplan konnte nicht geladen werden.",
+      "backToPlan": "Zurück zum Plan"
     }
   },
   "clinical": {

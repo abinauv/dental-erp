@@ -869,6 +869,18 @@
       "defaulted": "Defaulted",
       "outstandingEmi": "Outstanding EMI",
       "createPlan": "Create New Payment Plan"
+    },
+    "invoiceEdit": {
+      "title": "Edit Invoice {number}",
+      "subtitle": "A draft can be changed until it's finalized.",
+      "saveDraft": "Save Draft",
+      "saveFinalize": "Save & Finalize",
+      "saving": "Saving…",
+      "saveFailed": "Failed to save the invoice",
+      "loading": "Loading…",
+      "notEditable": "Invoice {number} isn't a draft any more, so it can't be edited.",
+      "loadError": "Couldn't load this invoice.",
+      "backToInvoice": "Back to Invoice"
     }
   },
   "patients": {
@@ -1776,6 +1788,28 @@
       "cancel": "Cancel",
       "saving": "Saving…",
       "save": "Save"
+    },
+    "edit": {
+      "title": "Edit Treatment {number}",
+      "subtitle": "Update the clinical notes, teeth, cost and follow-up. The patient, doctor and procedure stay as they are.",
+      "save": "Save Changes",
+      "saving": "Saving…",
+      "saveFailed": "Failed to save the treatment",
+      "loading": "Loading…",
+      "notEditable": "Treatment {number} is completed or cancelled, so it can't be edited.",
+      "loadError": "Couldn't load this treatment.",
+      "backToTreatment": "Back to Treatment"
+    },
+    "planEdit": {
+      "title": "Edit Treatment Plan",
+      "subtitle": "Change the plan's details and procedures. Procedures already started stay in the plan.",
+      "save": "Save Changes",
+      "saving": "Saving…",
+      "saveFailed": "Failed to save the treatment plan",
+      "loading": "Loading…",
+      "notEditable": "This plan is completed or cancelled, so it can't be edited.",
+      "loadError": "Couldn't load this treatment plan.",
+      "backToPlan": "Back to Plan"
     }
   },
   "clinical": {
