@@ -26,6 +26,10 @@ before it are not itemized here; see the git history and the
 - Editing treatments (clinical notes, teeth, cost, follow-up) and treatment
   plans (details and procedures; procedures already started stay in the
   plan with their progress).
+- Insurance claim pages: create a claim from a patient's invoices and
+  insurance policy, view it, edit it while it's a draft, and move it through
+  submission, review, the insurer's decision and settlement. "New Claim",
+  and a claim's "View Details" and "Edit", used to open missing pages.
 
 ### Fixed
 
@@ -39,6 +43,10 @@ before it are not itemized here; see the git history and the
   (since 3.0.0).
 - "Medical history" in the patients list opened a missing page; it now opens
   the patient's medical history.
+- Changing an insurance claim's status (submitting, approving, rejecting or
+  settling it) always failed with an error.
+- Filtering insurance claims by date failed with an error, and the claims
+  list's "Submitted" column was always empty.
 
 ## [3.0.0] - 2026-11-11
 
