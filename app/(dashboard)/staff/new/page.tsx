@@ -22,10 +22,15 @@ import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
 import { RegionField } from '@/components/geo/region-field'
 import { getLocaleDefaults } from '@/lib/i18n/config'
 import { useToast } from '@/hooks/use-toast'
+import { PasswordRules } from '@/components/auth/password-rules'
+import { usePasswordPolicy } from '@/hooks/use-password-policy'
+import { passwordProblems } from '@/lib/password-policy'
 
 export default function NewStaffPage() {
   const router = useRouter()
   const t = useTranslations('staff.new')
+  // The clinic's password rules (Settings → Security).
+  const { policy } = usePasswordPolicy()
   const { currencySymbol } = useClinicFormatters()
   const clinicCountry = getLocaleDefaults(useLocale()).country
   const { toast } = useToast()
@@ -94,11 +99,11 @@ export default function NewStaffPage() {
       return
     }
 
-    if (formData.password.length < 6) {
+    if (passwordProblems(formData.password, policy).length) {
       toast({
         variant: 'destructive',
         title: t('validationError'),
-        description: t('passwordLength'),
+        description: t('passwordRules'),
       })
       return
     }
@@ -207,6 +212,8 @@ export default function NewStaffPage() {
                     value={formData.password}
                     onChange={(e) => handleChange('password', e.target.value)}
                     placeholder={t('passwordPlaceholder')}
+                    autoComplete="new-password"
+                    aria-describedby="staff-password-rules"
                     required
                   />
                   <Button
@@ -219,6 +226,12 @@ export default function NewStaffPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                <p className="text-sm text-muted-foreground">{t('passwordHint')}</p>
+                <PasswordRules
+                  id="staff-password-rules"
+                  policy={policy}
+                  password={formData.password}
+                />
               </div>
 
               <div className="space-y-2">

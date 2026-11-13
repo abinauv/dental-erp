@@ -22,6 +22,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { ArrowLeft, Loader2, Eye, EyeOff, Clock } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { PasswordRules } from '@/components/auth/password-rules'
+import { usePasswordPolicy } from '@/hooks/use-password-policy'
+import { passwordProblems } from '@/lib/password-policy'
 
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -31,6 +34,8 @@ export default function EditStaffPage({ params }: { params: Promise<{ id: string
   const t = useTranslations('staff.edit')
   const tNew = useTranslations('staff.new')
   const tDays = useTranslations('staff.detail')
+  // The clinic's password rules (Settings → Security).
+  const { policy } = usePasswordPolicy()
   const { currencySymbol } = useClinicFormatters()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
@@ -177,6 +182,15 @@ export default function EditStaffPage({ params }: { params: Promise<{ id: string
         variant: 'destructive',
         title: t('validationError'),
         description: t('requiredFields'),
+      })
+      return
+    }
+
+    if (formData.newPassword && passwordProblems(formData.newPassword, policy).length) {
+      toast({
+        variant: 'destructive',
+        title: t('validationError'),
+        description: t('passwordRules'),
       })
       return
     }
@@ -331,6 +345,7 @@ export default function EditStaffPage({ params }: { params: Promise<{ id: string
                     value={formData.newPassword}
                     onChange={(e) => handleChange('newPassword', e.target.value)}
                     placeholder={t('newPasswordPlaceholder')}
+                    autoComplete="new-password"
                   />
                   <Button
                     type="button"
@@ -342,6 +357,12 @@ export default function EditStaffPage({ params }: { params: Promise<{ id: string
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                {formData.newPassword && (
+                  <>
+                    <p className="text-sm text-muted-foreground">{t('newPasswordHint')}</p>
+                    <PasswordRules policy={policy} password={formData.newPassword} />
+                  </>
+                )}
               </div>
 
               <div className="flex items-center justify-between">

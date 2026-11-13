@@ -93,7 +93,12 @@ function LoginForm() {
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">{t('password')}</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">{t('password')}</Label>
+              <a href="/forgot-password" className="text-sm text-primary hover:underline">
+                {t('forgotPassword')}
+              </a>
+            </div>
             <Input
               id="password"
               type="password"

@@ -37,7 +37,8 @@
       "demoCredentials": "Demo-Zugangsdaten:",
       "loginFailed": "Anmeldung fehlgeschlagen",
       "invalidCredentials": "Ungültige E-Mail oder Passwort. Bitte versuchen Sie es erneut.",
-      "errorTitle": "Fehler"
+      "errorTitle": "Fehler",
+      "forgotPassword": "Passwort vergessen?"
     },
     "verifyEmail": {
       "loading": "Wird geladen...",
@@ -120,6 +121,71 @@
       "confirmPlaceholder": "Bestätigen Sie Ihr Passwort",
       "createAccount": "Konto erstellen",
       "terms": "Mit der Erstellung eines Kontos stimmen Sie unseren Nutzungsbedingungen und der Datenschutzerklärung zu."
+    },
+    "passwordRules": {
+      "title": "Ihr Passwort muss:",
+      "minLength": "Mindestens {count} Zeichen lang sein",
+      "maxLength": "Höchstens {count} Zeichen lang sein",
+      "uppercase": "Einen Großbuchstaben enthalten",
+      "lowercase": "Einen Kleinbuchstaben enthalten",
+      "number": "Eine Ziffer enthalten",
+      "special": "Ein Sonderzeichen enthalten",
+      "met": "erfüllt",
+      "notMet": "noch nicht erfüllt",
+      "notAllowed": "Das Passwort erfüllt die aufgeführten Regeln nicht.",
+      "mismatch": "Die Passwörter stimmen nicht überein."
+    },
+    "forgot": {
+      "heading": "Passwort vergessen?",
+      "subheading": "Geben Sie die E-Mail-Adresse ein, mit der Sie sich anmelden. Wir senden Ihnen einen Link, um ein neues Passwort zu wählen.",
+      "email": "E-Mail",
+      "emailPlaceholder": "sie@praxis.de",
+      "vEmail": "Geben Sie eine gültige E-Mail-Adresse ein.",
+      "submit": "Link senden",
+      "sending": "Wird gesendet…",
+      "sentTitle": "Prüfen Sie Ihre E-Mails",
+      "sentBody": "Falls {email} ein Konto hat, haben wir einen Link zum Wählen eines neuen Passworts gesendet. Der Link funktioniert einmal und läuft nach 1 Stunde ab.",
+      "noEmailHint": "Nichts angekommen? Prüfen Sie den Spam-Ordner. Hat Ihre Praxis keinen E-Mail-Versand eingerichtet, bitten Sie einen Administrator, auf der Personalseite ein neues Passwort für Sie festzulegen.",
+      "backToLogin": "Zurück zur Anmeldung",
+      "tooMany": "Zu viele Anfragen. Warten Sie eine Minute und versuchen Sie es erneut.",
+      "failed": "Der Link konnte nicht gesendet werden. Versuchen Sie es erneut."
+    },
+    "reset": {
+      "heading": "Neues Passwort wählen",
+      "subheading": "Damit melden Sie sich ab jetzt an.",
+      "loading": "Ihr Link wird geprüft…",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Neues Passwort bestätigen",
+      "submit": "Neues Passwort festlegen",
+      "saving": "Wird gespeichert…",
+      "invalidTitle": "Dieser Link funktioniert nicht",
+      "invalidBody": "Er ist abgelaufen oder wurde bereits verwendet. Fordern Sie einen neuen an.",
+      "requestNew": "Neuen Link anfordern",
+      "doneTitle": "Passwort geändert",
+      "doneBody": "Melden Sie sich mit Ihrem neuen Passwort an. Überall sonst wurden Sie abgemeldet.",
+      "signIn": "Anmelden",
+      "failed": "Das Passwort konnte nicht geändert werden. Versuchen Sie es erneut.",
+      "tooMany": "Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut."
+    },
+    "changePassword": {
+      "heading": "Passwort ändern",
+      "subheading": "Hier bleiben Sie angemeldet, auf Ihren anderen Geräten werden Sie abgemeldet.",
+      "requiredHeading": "Eigenes Passwort wählen",
+      "requiredBody": "Ihr Passwort wurde von einem Administrator festgelegt. Wählen Sie eines, das nur Sie kennen, um fortzufahren.",
+      "loading": "Wird geladen…",
+      "currentPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Neues Passwort bestätigen",
+      "submit": "Passwort ändern",
+      "saving": "Wird gespeichert…",
+      "wrongCurrent": "Ihr aktuelles Passwort ist falsch.",
+      "unchanged": "Wählen Sie ein anderes Passwort als Ihr aktuelles.",
+      "done": "Passwort geändert",
+      "doneBody": "Auf Ihren anderen Geräten wurden Sie abgemeldet.",
+      "failed": "Das Passwort konnte nicht geändert werden. Versuchen Sie es erneut.",
+      "tooMany": "Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es erneut.",
+      "signOut": "Stattdessen abmelden",
+      "back": "Zurück"
     }
   },
   "billing": {
@@ -2547,7 +2613,9 @@
     },
     "profile": {
       "title": "My Profile",
-      "subtitle": "Preferences that apply to your account only — {name} ({email})"
+      "subtitle": "Preferences that apply to your account only — {name} ({email})",
+      "passwordTitle": "Passwort",
+      "passwordDescription": "Ändern Sie das Passwort, mit dem Sie sich anmelden."
     },
     "billing": {
       "title": "Billing Settings",
@@ -4454,7 +4522,9 @@
       "validationError": "Validation Error",
       "requiredFields": "Please fill in all required fields",
       "updateSuccess": "Staff member updated successfully",
-      "updateFailed": "Failed to update staff member"
+      "updateFailed": "Failed to update staff member",
+      "newPasswordHint": "Ist es nicht Ihr eigenes Konto, wird die Person bei der nächsten Anmeldung gebeten, ein eigenes Passwort zu wählen.",
+      "passwordRules": "Das Passwort erfüllt die Passwortregeln Ihrer Praxis nicht."
     },
     "performance": {
       "notFoundToast": "Not Found",
@@ -4609,7 +4679,9 @@
       "success": "Success",
       "createdDesc": "Staff member {name} created successfully",
       "error": "Error",
-      "createFailed": "Failed to create staff member"
+      "createFailed": "Failed to create staff member",
+      "passwordHint": "Bei der ersten Anmeldung wählt die Person ein eigenes Passwort.",
+      "passwordRules": "Das Passwort erfüllt die Passwortregeln Ihrer Praxis nicht."
     }
   },
   "lab": {

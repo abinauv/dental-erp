@@ -15,7 +15,8 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     hospital: { findUnique: vi.fn() },
     patient: { count: vi.fn() },
-    user: { count: vi.fn() },
+    // getAuthenticatedHospital checks whether a password change is required.
+    user: { count: vi.fn(), findUnique: vi.fn().mockResolvedValue({ mustChangePassword: false }) },
   },
 }))
 

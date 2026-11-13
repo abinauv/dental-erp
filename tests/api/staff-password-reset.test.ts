@@ -28,6 +28,8 @@ function patch(body: Record<string, unknown>) {
 describe('PATCH /api/staff/[id] — password reset', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // No saved password rules: the defaults apply.
+    ;(prisma.setting.findMany as any).mockResolvedValue([])
     mockAuth.requireAuthAndRole.mockResolvedValue({
       error: null,
       hospitalId: 'h1',
@@ -85,11 +87,48 @@ describe('PATCH /api/staff/[id] — password reset', () => {
     await patch({ isActive: true })
     expect(prisma.baSession.deleteMany).not.toHaveBeenCalled()
   })
+
+  it('makes the person choose their own password at next sign-in', async () => {
+    await patch({ newPassword: 'NewSecret123!' })
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-9' },
+      data: expect.objectContaining({ mustChangePassword: true }),
+    })
+  })
+
+  it('doesn’t make an admin change a password they set for themselves', async () => {
+    ;(prisma.staff.findUnique as any).mockResolvedValue({
+      id: 'staff-1',
+      userId: 'admin-1',
+      firstName: 'Admin',
+      lastName: 'User',
+      user: { id: 'admin-1' },
+    })
+    await patch({ newPassword: 'NewSecret123!' })
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'admin-1' },
+      data: expect.objectContaining({ mustChangePassword: false }),
+    })
+  })
+
+  it('refuses a password that breaks the clinic’s rules, changing nothing', async () => {
+    ;(prisma.setting.findMany as any).mockResolvedValue([{ key: 'passwordMinLength', value: '16' }])
+    const res = await patch({ newPassword: 'NewSecret123!' })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({
+      error: 'Password must be at least 16 characters.',
+      code: 'PASSWORD_POLICY',
+    })
+    expect(prisma.user.update).not.toHaveBeenCalled()
+    expect(prisma.baAccount.updateMany).not.toHaveBeenCalled()
+  })
 })
 
 describe('DELETE /api/staff/[id] — deactivation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // No saved password rules: the defaults apply.
+    ;(prisma.setting.findMany as any).mockResolvedValue([])
     mockAuth.requireAuthAndRole.mockResolvedValue({
       error: null,
       hospitalId: 'h1',

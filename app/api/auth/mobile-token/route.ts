@@ -62,6 +62,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
+    // A password set by an admin or an import has to be replaced first, and
+    // that happens on the web app.
+    if (user.mustChangePassword) {
+      return NextResponse.json(
+        {
+          error: 'Sign in on the web app and choose a new password first.',
+          code: 'PASSWORD_CHANGE_REQUIRED',
+        },
+        { status: 403 }
+      )
+    }
+
     // Create JWT token using jose directly (avoids NextAuth encode() salt issues)
     const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
     const token = await new SignJWT({

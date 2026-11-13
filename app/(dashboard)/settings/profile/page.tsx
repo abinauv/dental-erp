@@ -1,9 +1,11 @@
 import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
+import { PasswordCard } from '@/components/auth/password-card'
 import { LanguagePreferenceCard } from '@/components/i18n/language-preference-card'
 import { getServerSession } from '@/lib/auth'
 import { locales } from '@/lib/i18n/config'
+import { getPasswordPolicy } from '@/lib/password-policy.server'
 import { prisma } from '@/lib/prisma'
 
 export async function generateMetadata() {
@@ -25,6 +27,7 @@ export default async function ProfileSettingsPage() {
       name: true,
       email: true,
       locale: true,
+      hospitalId: true,
       hospital: { select: { locale: true, currency: true } },
     },
   })
@@ -49,6 +52,8 @@ export default async function ProfileSettingsPage() {
         supportedLocales={locales}
         endpoint="/api/settings/profile"
       />
+
+      <PasswordCard policy={await getPasswordPolicy(user.hospitalId)} />
     </div>
   )
 }

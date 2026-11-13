@@ -37,6 +37,8 @@ const validInvite = {
 describe('POST /api/public/invite/accept', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // No saved password rules: the defaults apply.
+    ;(prisma.setting.findMany as any).mockResolvedValue([])
   })
 
   it('accepts invite and creates user + staff in transaction', async () => {
@@ -70,6 +72,20 @@ describe('POST /api/public/invite/accept', () => {
         password: userPassword,
       }),
     })
+  })
+
+  it('refuses a password that breaks the clinic’s rules', async () => {
+    ;(prisma.staffInvite.findUnique as any).mockResolvedValue(validInvite)
+    ;(prisma.user.findUnique as any).mockResolvedValue(null)
+    const res = await mod.POST(
+      makePostRequest({ token: 'valid-token-123', password: 'password123', phone: '9876543210' })
+    )
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({
+      code: 'PASSWORD_POLICY',
+      error: 'Password must include an uppercase letter and a symbol.',
+    })
+    expect(prisma.user.create).not.toHaveBeenCalled()
   })
 
   it('returns 400 for Zod validation failure', async () => {
@@ -176,6 +192,8 @@ describe('POST /api/public/invite/accept', () => {
 describe('GET /api/public/invite/accept', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // No saved password rules: the defaults apply.
+    ;(prisma.setting.findMany as any).mockResolvedValue([])
   })
 
   it('validates a valid token and returns invite details', async () => {
@@ -190,6 +208,14 @@ describe('GET /api/public/invite/accept', () => {
     expect(body.valid).toBe(true)
     expect(body.invite.email).toBe('jane@example.com')
     expect(body.invite.hospitalName).toBe('Test Clinic')
+    // The clinic's password rules, for the form (defaults: nothing saved).
+    expect(body.passwordPolicy).toEqual({
+      minLength: 8,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumbers: true,
+      requireSpecialChars: true,
+    })
   })
 
   it('returns 400 when token query param missing', async () => {

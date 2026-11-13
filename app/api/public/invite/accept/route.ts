@@ -5,10 +5,16 @@ import { prisma } from '@/lib/prisma'
 import { StaffInviteStatus, Role } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import {
+  PasswordPolicyError,
+  assertPasswordAllowed,
+  getPasswordPolicy,
+} from '@/lib/password-policy.server'
 
 const acceptInviteSchema = z.object({
   token: z.string().min(1, 'Token is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  // Checked against the clinic's password rules once the invite is found.
+  password: z.string().min(1, 'Password is required'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
 })
 
@@ -76,6 +82,16 @@ export async function POST(request: Request) {
         { error: 'An account with this email already exists' },
         { status: 409 }
       )
+    }
+
+    // The clinic's password rules (Settings → Security).
+    try {
+      await assertPasswordAllowed(invite.hospitalId, password)
+    } catch (err) {
+      if (err instanceof PasswordPolicyError) {
+        return NextResponse.json({ error: err.message, code: err.code }, { status: 400 })
+      }
+      throw err
     }
 
     // Hash password
@@ -184,6 +200,7 @@ export async function GET(request: Request) {
         hospitalName: invite.hospital.name,
         expiresAt: invite.expiresAt,
       },
+      passwordPolicy: await getPasswordPolicy(invite.hospitalId),
     })
   } catch (error) {
     logger.error({ err: error }, 'Validate invite error:')

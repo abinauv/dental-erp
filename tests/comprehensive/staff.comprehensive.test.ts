@@ -34,6 +34,10 @@ vi.mock('@/lib/prisma', () => ({
     hospital: {
       findUnique: vi.fn(),
     },
+    // No saved password rules: the defaults apply.
+    setting: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     $transaction: vi.fn(),
   },
 }))
@@ -253,6 +257,53 @@ describe('Staff API - Comprehensive Tests', () => {
       })
     })
 
+    it('makes the new staff member choose their own password at first sign-in', async () => {
+      const userCreate = vi.fn().mockResolvedValue({ id: 'new-user-id' })
+      mockPrisma.$transaction.mockImplementation(async (callback: any) =>
+        callback({
+          user: { create: userCreate },
+          baAccount: mockTxBaAccount,
+          staff: { create: vi.fn().mockResolvedValue({ id: 'new-staff-id' }) },
+        })
+      )
+      const response = await POST(
+        new NextRequest('http://localhost/api/staff', {
+          method: 'POST',
+          body: JSON.stringify({
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane@example.com',
+            phone: '9876543210',
+            role: 'DOCTOR',
+            password: 'SecurePass123!',
+          }),
+        })
+      )
+      expect(response.status).toBe(201)
+      expect(userCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({ mustChangePassword: true }),
+      })
+    })
+
+    it('refuses a password that breaks the clinic’s rules', async () => {
+      const response = await POST(
+        new NextRequest('http://localhost/api/staff', {
+          method: 'POST',
+          body: JSON.stringify({
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane@example.com',
+            phone: '9876543210',
+            role: 'DOCTOR',
+            password: 'securepass',
+          }),
+        })
+      )
+      expect(response.status).toBe(400)
+      expect(await response.json()).toMatchObject({ code: 'PASSWORD_POLICY' })
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+    })
+
     it('should reject staff creation without required fields', async () => {
       const request = new NextRequest('http://localhost/api/staff', {
         method: 'POST',
@@ -343,14 +394,14 @@ describe('Staff API - Comprehensive Tests', () => {
           email: 'jane@example.com',
           phone: '9876543210',
           role: 'DOCTOR',
-          password: 'PlainTextPassword',
+          password: 'PlainText1!',
         }),
       })
       await POST(request)
 
       // bcrypt.hash should have been called
       const bcrypt = await import('bcryptjs')
-      expect(bcrypt.default.hash).toHaveBeenCalledWith('PlainTextPassword', 10)
+      expect(bcrypt.default.hash).toHaveBeenCalledWith('PlainText1!', 10)
     })
 
     it('should generate unique employee ID', async () => {
