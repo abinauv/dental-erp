@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthenticatedHospital } from '@/lib/api-helpers'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/notifications — list notifications for current user
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await getAuthenticatedHospital()
   if (error || !user || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const { searchParams } = new URL(req.url)
@@ -48,7 +51,9 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const { error, user, hospitalId } = await getAuthenticatedHospital()
   if (error || !user || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const body = await req.json()
@@ -67,7 +72,10 @@ export async function PUT(req: NextRequest) {
       data: { isRead: true, readAt: now },
     })
   } else {
-    return NextResponse.json({ error: "Provide 'ids' array or 'all: true'" }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError("Provide 'ids' array or 'all: true'") },
+      { status: 400 }
+    )
   }
 
   const unreadCount = await prisma.notification.count({

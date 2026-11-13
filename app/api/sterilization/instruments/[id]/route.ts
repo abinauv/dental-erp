@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/sterilization/instruments/[id]
@@ -22,7 +23,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   })
 
   if (!instrument) {
-    return NextResponse.json({ error: 'Instrument not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Instrument not found') },
+      { status: 404 }
+    )
   }
 
   return NextResponse.json({ instrument })
@@ -42,7 +46,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     where: { id, hospitalId: hospitalId! },
   })
   if (!existing) {
-    return NextResponse.json({ error: 'Instrument not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Instrument not found') },
+      { status: 404 }
+    )
   }
 
   const updateData: Record<string, unknown> = {}
@@ -87,7 +94,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     where: { id, hospitalId: hospitalId! },
   })
   if (!existing) {
-    return NextResponse.json({ error: 'Instrument not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Instrument not found') },
+      { status: 404 }
+    )
   }
 
   await prisma.instrument.delete({ where: { id } })

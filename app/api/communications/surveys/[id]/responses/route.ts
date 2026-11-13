@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const submitResponseSchema = z.object({
   patientId: z.string().optional(),
@@ -22,16 +23,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!survey) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Survey not found') }, { status: 404 })
     }
 
     if (!survey.isActive) {
-      return NextResponse.json({ error: 'Survey is not active' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Survey is not active') },
+        { status: 400 }
+      )
     }
 
     // Check if survey is still valid
     if (survey.validUntil && new Date() > survey.validUntil) {
-      return NextResponse.json({ error: 'Survey has expired' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Survey has expired') },
+        { status: 400 }
+      )
     }
 
     // Determine sentiment based on rating
@@ -69,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error: any) {
     logger.error({ err: error }, 'Submit survey response error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to submit response' },
+      { error: await translateError(error.message || 'Failed to submit response') },
       { status: 500 }
     )
   }
@@ -82,7 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // This endpoint requires authentication
     // const session = await auth();
     // if (!session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    //   return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 });
     // }
 
     const searchParams = req.nextUrl.searchParams
@@ -129,6 +136,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get survey responses error:')
-    return NextResponse.json({ error: error.message || 'Failed to get responses' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get responses') },
+      { status: 500 }
+    )
   }
 }

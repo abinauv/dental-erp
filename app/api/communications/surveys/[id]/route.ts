@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const updateSurveySchema = z.object({
   title: z.string().optional(),
@@ -16,7 +17,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -39,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!survey) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Survey not found') }, { status: 404 })
     }
 
     // Parse questions and answers
@@ -58,7 +61,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get survey error:')
-    return NextResponse.json({ error: error.message || 'Failed to get survey' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get survey') },
+      { status: 500 }
+    )
   }
 }
 
@@ -67,14 +73,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
 
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     // Verify survey belongs to this hospital
@@ -83,7 +91,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Survey not found') }, { status: 404 })
     }
 
     const body = await req.json()
@@ -105,7 +113,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Update survey error:')
-    return NextResponse.json({ error: error.message || 'Failed to update survey' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to update survey') },
+      { status: 500 }
+    )
   }
 }
 
@@ -114,14 +125,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
 
     if (session?.user?.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     // Verify survey belongs to this hospital
@@ -130,7 +143,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Survey not found') }, { status: 404 })
     }
 
     await prisma.survey.delete({
@@ -143,6 +156,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Delete survey error:')
-    return NextResponse.json({ error: error.message || 'Failed to delete survey' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to delete survey') },
+      { status: 500 }
+    )
   }
 }

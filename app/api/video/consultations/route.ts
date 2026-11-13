@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { createRoom } from '@/lib/services/video.service'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/video/consultations
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
 
   if (!patientId || !doctorId || !scheduledAt) {
     return NextResponse.json(
-      { error: 'patientId, doctorId, and scheduledAt are required' },
+      { error: await translateError('patientId, doctorId, and scheduledAt are required') },
       { status: 400 }
     )
   }
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
     where: { id: patientId, hospitalId },
   })
   if (!patient) {
-    return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+    return NextResponse.json({ error: await translateError('Patient not found') }, { status: 404 })
   }
 
   // Validate doctor belongs to hospital
@@ -98,7 +99,7 @@ export async function POST(req: Request) {
     where: { id: doctorId, hospitalId },
   })
   if (!doctor) {
-    return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+    return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
   }
 
   // If linked to appointment, validate it
@@ -107,7 +108,10 @@ export async function POST(req: Request) {
       where: { id: appointmentId, hospitalId },
     })
     if (!appointment) {
-      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Appointment not found') },
+        { status: 404 }
+      )
     }
 
     // Check no existing consultation for this appointment
@@ -116,7 +120,7 @@ export async function POST(req: Request) {
     })
     if (existing) {
       return NextResponse.json(
-        { error: 'A video consultation already exists for this appointment' },
+        { error: await translateError('A video consultation already exists for this appointment') },
         { status: 409 }
       )
     }

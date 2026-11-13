@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const fieldSchema = z.object({
   id: z.string(),
@@ -48,7 +49,9 @@ const createTemplateSchema = z.object({
 export async function GET() {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -63,7 +66,10 @@ export async function GET() {
     return NextResponse.json({ templates })
   } catch (err) {
     logger.error({ err }, 'List form templates error:')
-    return NextResponse.json({ error: 'Failed to list templates' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to list templates') },
+      { status: 500 }
+    )
   }
 }
 
@@ -71,7 +77,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -92,9 +100,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ template }, { status: 201 })
   } catch (err: any) {
     if (err.name === 'ZodError') {
-      return NextResponse.json({ error: 'Invalid form data', details: err.errors }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid form data'), details: err.errors },
+        { status: 400 }
+      )
     }
     logger.error({ err }, 'Create form template error:')
-    return NextResponse.json({ error: 'Failed to create template' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create template') },
+      { status: 500 }
+    )
   }
 }

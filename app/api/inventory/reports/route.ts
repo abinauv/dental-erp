@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { StockTransactionType, SupplierStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * These reports multiply columns together (SUM(stock * price)) and do date
@@ -42,7 +43,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -63,12 +66,18 @@ export async function GET(request: NextRequest) {
       case 'movement':
         return await getStockMovementReport(hospitalId, searchParams)
       default:
-        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Invalid report type') },
+          { status: 400 }
+        )
     }
   } catch (error: any) {
     logger.error({ err: error }, 'Error generating inventory report:')
     return NextResponse.json(
-      { error: 'Failed to generate inventory report', details: error.message },
+      {
+        error: await translateError('Failed to generate inventory report'),
+        details: error.message,
+      },
       { status: 500 }
     )
   }
@@ -353,7 +362,7 @@ async function getStockMovementReport(hospitalId: string, searchParams: URLSearc
 
   if (!startDate || !endDate) {
     return NextResponse.json(
-      { error: 'Start date and end date are required for movement report' },
+      { error: await translateError('Start date and end date are required for movement report') },
       { status: 400 }
     )
   }

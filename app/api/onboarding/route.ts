@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const onboardingSchema = z.object({
   // Step 1: Clinic Details
@@ -33,13 +34,15 @@ export async function POST(request: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   // Only hospital admin can complete onboarding
   if (!user?.isHospitalAdmin) {
     return NextResponse.json(
-      { error: 'Only the hospital admin can complete onboarding' },
+      { error: await translateError('Only the hospital admin can complete onboarding') },
       { status: 403 }
     )
   }
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validated.error.flatten() },
+        { error: await translateError('Validation failed'), details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -92,7 +95,7 @@ export async function POST(request: Request) {
   } catch (error) {
     logger.error({ err: error }, 'Onboarding error:')
     return NextResponse.json(
-      { error: 'An error occurred during onboarding. Please try again.' },
+      { error: await translateError('An error occurred during onboarding. Please try again.') },
       { status: 500 }
     )
   }
@@ -103,7 +106,9 @@ export async function GET() {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -136,12 +141,18 @@ export async function GET() {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Hospital not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Hospital not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(hospital)
   } catch (error) {
     logger.error({ err: error }, 'Get onboarding status error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }

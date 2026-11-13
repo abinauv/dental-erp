@@ -6,6 +6,7 @@ import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getSkill } from '@/lib/ai/skills'
 import { logger } from '@/lib/logger'
 import { ceilToUTCDay } from '@/lib/date-column'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/ai/pricing-suggestions — AI-powered pricing recommendations
@@ -17,7 +18,10 @@ export async function GET(request: NextRequest) {
 
     const skill = getSkill('dynamic-pricing')
     if (!skill) {
-      return NextResponse.json({ error: 'Dynamic pricing skill not found' }, { status: 500 })
+      return NextResponse.json(
+        { error: await translateError('Dynamic pricing skill not found') },
+        { status: 500 }
+      )
     }
 
     // Gather scheduling and revenue data
@@ -70,7 +74,10 @@ export async function GET(request: NextRequest) {
     ])
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Hospital not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Hospital not found') },
+        { status: 404 }
+      )
     }
 
     // Analyze appointment patterns by day and hour
@@ -143,7 +150,10 @@ REVENUE (Last 30 days):
     try {
       suggestions = JSON.parse(extractJSON(response.content))
     } catch {
-      suggestions = { raw: response.content, error: 'Failed to parse structured response' }
+      suggestions = {
+        raw: response.content,
+        error: await translateError('Failed to parse structured response'),
+      }
     }
 
     // Log the skill execution
@@ -168,6 +178,9 @@ REVENUE (Last 30 days):
     })
   } catch (err) {
     logger.error({ err }, 'Pricing suggestions error:')
-    return NextResponse.json({ error: 'Failed to generate pricing suggestions' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to generate pricing suggestions') },
+      { status: 500 }
+    )
   }
 }

@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const createSurveySchema = z.object({
   title: z.string().min(1),
@@ -27,12 +28,14 @@ export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     const body = await req.json()
@@ -59,7 +62,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Create survey error:')
-    return NextResponse.json({ error: error.message || 'Failed to create survey' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to create survey') },
+      { status: 500 }
+    )
   }
 }
 
@@ -68,7 +74,9 @@ export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -111,6 +119,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get surveys error:')
-    return NextResponse.json({ error: error.message || 'Failed to get surveys' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get surveys') },
+      { status: 500 }
+    )
   }
 }

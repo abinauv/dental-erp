@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { communicationTriggersService } from '@/lib/services/communication-triggers.service'
 import { enqueue } from '@/lib/queue'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST /api/communications/triggers - Run communication triggers
 // This endpoint should be called by a cron job (e.g., every hour)
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     const cronSecret = process.env.CRON_SECRET
 
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     // Run all automated communication triggers. With a queue configured this
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Communication triggers error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to run communication triggers' },
+      { error: await translateError(error.message || 'Failed to run communication triggers') },
       { status: 500 }
     )
   }
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
     // Only allow in development or with admin authentication
     if (process.env.NODE_ENV === 'production') {
       return NextResponse.json(
-        { error: 'Manual triggers not allowed in production' },
+        { error: await translateError('Manual triggers not allowed in production') },
         { status: 403 }
       )
     }
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Communication triggers error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to run communication triggers' },
+      { error: await translateError(error.message || 'Failed to run communication triggers') },
       { status: 500 }
     )
   }

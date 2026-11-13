@@ -3,12 +3,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { InventoryItemType } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Fetch all inventory items with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -125,7 +128,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching inventory items:')
     return NextResponse.json(
-      { error: 'Failed to fetch inventory items', details: error.message },
+      { error: await translateError('Failed to fetch inventory items'), details: error.message },
       { status: 500 }
     )
   }
@@ -135,7 +138,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -171,7 +176,7 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!sku || !name || !unit || purchasePrice === undefined) {
       return NextResponse.json(
-        { error: 'Missing required fields: sku, name, unit, purchasePrice' },
+        { error: await translateError('Missing required fields: sku, name, unit, purchasePrice') },
         { status: 400 }
       )
     }
@@ -182,7 +187,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (existing) {
-      return NextResponse.json({ error: 'SKU already exists' }, { status: 409 })
+      return NextResponse.json(
+        { error: await translateError('SKU already exists') },
+        { status: 409 }
+      )
     }
 
     // Create inventory item
@@ -246,7 +254,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error creating inventory item:')
     return NextResponse.json(
-      { error: 'Failed to create inventory item', details: error.message },
+      { error: await translateError('Failed to create inventory item'), details: error.message },
       { status: 500 }
     )
   }

@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET — single prescription with medications
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -48,7 +51,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!prescription) {
-      return NextResponse.json({ error: 'Prescription not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Prescription not found') },
+        { status: 404 }
+      )
     }
 
     // Also fetch hospital info for the print view
@@ -72,7 +78,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   } catch (err: any) {
     logger.error({ err }, 'Error fetching prescription:')
     return NextResponse.json(
-      { error: err.message || 'Failed to fetch prescription' },
+      { error: await translateError(err.message || 'Failed to fetch prescription') },
       { status: 500 }
     )
   }
@@ -85,14 +91,19 @@ export async function DELETE(
 ) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
     const existing = await prisma.prescription.findFirst({ where: { id, hospitalId } })
     if (!existing) {
-      return NextResponse.json({ error: 'Prescription not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Prescription not found') },
+        { status: 404 }
+      )
     }
 
     await prisma.prescription.delete({ where: { id } })
@@ -101,7 +112,7 @@ export async function DELETE(
   } catch (err: any) {
     logger.error({ err }, 'Error deleting prescription:')
     return NextResponse.json(
-      { error: err.message || 'Failed to delete prescription' },
+      { error: await translateError(err.message || 'Failed to delete prescription') },
       { status: 500 }
     )
   }

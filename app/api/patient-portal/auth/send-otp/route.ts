@@ -4,6 +4,7 @@ import { generateOTP, hashOTP } from '@/lib/patient-auth'
 import { smsService } from '@/lib/services/sms.service'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST: Send OTP to patient's phone for portal login.
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     if (!phone || !hospitalSlug) {
       return NextResponse.json(
-        { error: 'Phone number and clinic identifier are required' },
+        { error: await translateError('Phone number and clinic identifier are required') },
         { status: 400 }
       )
     }
@@ -30,12 +31,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Clinic not found') }, { status: 404 })
     }
 
     if (!hospital.patientPortalEnabled) {
       return NextResponse.json(
-        { error: 'Patient portal is not enabled for this clinic' },
+        { error: await translateError('Patient portal is not enabled for this clinic') },
         { status: 403 }
       )
     }
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     if (!patient) {
       return NextResponse.json(
-        { error: 'No patient account found with this phone number' },
+        { error: await translateError('No patient account found with this phone number') },
         { status: 404 }
       )
     }
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (!byPhone.allowed || !byIp.allowed) {
       return NextResponse.json(
-        { error: 'Too many OTP requests. Please try again in 10 minutes.' },
+        { error: await translateError('Too many OTP requests. Please try again in 10 minutes.') },
         { status: 429 }
       )
     }
@@ -106,7 +107,11 @@ export async function POST(req: NextRequest) {
     // In production we must not claim success if nothing was sent.
     if (!delivered && process.env.NODE_ENV === 'production') {
       return NextResponse.json(
-        { error: 'Could not send the verification code right now. Please try again shortly.' },
+        {
+          error: await translateError(
+            'Could not send the verification code right now. Please try again shortly.'
+          ),
+        },
         { status: 502 }
       )
     }
@@ -119,6 +124,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: unknown) {
     logger.error({ err }, 'Send OTP error:')
-    return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 })
+    return NextResponse.json({ error: await translateError('Failed to send OTP') }, { status: 500 })
   }
 }

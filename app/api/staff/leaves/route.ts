@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get leave requests with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -91,7 +94,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching leaves:')
-    return NextResponse.json({ error: 'Failed to fetch leave requests' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch leave requests') },
+      { status: 500 }
+    )
   }
 }
 
@@ -99,7 +105,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -108,7 +116,11 @@ export async function POST(request: NextRequest) {
 
     if (!staffId || !leaveType || !startDate || !endDate) {
       return NextResponse.json(
-        { error: 'Missing required fields: staffId, leaveType, startDate, endDate' },
+        {
+          error: await translateError(
+            'Missing required fields: staffId, leaveType, startDate, endDate'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -118,14 +130,17 @@ export async function POST(request: NextRequest) {
       where: { id: staffId, hospitalId },
     })
     if (!staffMember) {
-      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Staff not found') }, { status: 404 })
     }
 
     const start = new Date(startDate)
     const end = new Date(endDate)
 
     if (end < start) {
-      return NextResponse.json({ error: 'End date must be after start date' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('End date must be after start date') },
+        { status: 400 }
+      )
     }
 
     // Check for overlapping leaves
@@ -143,7 +158,7 @@ export async function POST(request: NextRequest) {
 
     if (existingLeave) {
       return NextResponse.json(
-        { error: 'There is already a leave request for these dates' },
+        { error: await translateError('There is already a leave request for these dates') },
         { status: 400 }
       )
     }
@@ -172,6 +187,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(leave, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating leave:')
-    return NextResponse.json({ error: 'Failed to create leave request' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create leave request') },
+      { status: 500 }
+    )
   }
 }

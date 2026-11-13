@@ -19,6 +19,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   switch (body.type) {
@@ -61,7 +62,10 @@ export async function POST(req: NextRequest) {
     case 'audit_analysis':
       return auditAnalysis(hospitalId!, body)
     default:
-      return NextResponse.json({ error: 'Unknown clinical type' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Unknown clinical type') },
+        { status: 400 }
+      )
   }
 }
 
@@ -71,10 +75,12 @@ export async function POST(req: NextRequest) {
 async function patientSummary(hospitalId: string, body: Record<string, unknown>) {
   const patientId = body.patientId as string
   const refresh = body.refresh === true
-  if (!patientId) return NextResponse.json({ error: 'patientId required' }, { status: 400 })
+  if (!patientId)
+    return NextResponse.json({ error: await translateError('patientId required') }, { status: 400 })
 
   const patient = await prisma.patient.findFirst({ where: { id: patientId, hospitalId } })
-  if (!patient) return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+  if (!patient)
+    return NextResponse.json({ error: await translateError('Patient not found') }, { status: 404 })
 
   // Return cached summary if available and not force-refreshing
   if (!refresh && patient.aiSummary && patient.aiSummaryAt) {

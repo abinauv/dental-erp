@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - List membership plans
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -28,7 +31,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(plans)
   } catch (err) {
     logger.error({ err }, 'Error fetching membership plans:')
-    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch plans') },
+      { status: 500 }
+    )
   }
 }
 
@@ -36,25 +42,39 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only admins can create plans' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Only admins can create plans') },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
     const { name, description, price, duration, benefits, maxMembers } = body
 
     if (!name?.trim()) {
-      return NextResponse.json({ error: 'Plan name is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Plan name is required') },
+        { status: 400 }
+      )
     }
     if (!price || price <= 0) {
-      return NextResponse.json({ error: 'Valid price is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Valid price is required') },
+        { status: 400 }
+      )
     }
     if (!duration || duration <= 0) {
-      return NextResponse.json({ error: 'Valid duration (months) is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Valid duration (months) is required') },
+        { status: 400 }
+      )
     }
 
     const plan = await prisma.membershipPlan.create({
@@ -72,6 +92,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(plan, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Error creating membership plan:')
-    return NextResponse.json({ error: 'Failed to create plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create plan') },
+      { status: 500 }
+    )
   }
 }

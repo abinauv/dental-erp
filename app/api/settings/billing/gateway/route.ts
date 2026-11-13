@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { encrypt, decrypt } from '@/lib/encryption'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET: Fetch payment gateway configuration for the hospital.
@@ -10,7 +11,9 @@ import { encrypt, decrypt } from '@/lib/encryption'
 export async function GET() {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const config = await prisma.paymentGatewayConfig.findUnique({
@@ -48,7 +51,9 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const body = await req.json()
@@ -68,7 +73,7 @@ export async function PUT(req: NextRequest) {
 
   if (!provider || !['RAZORPAY', 'PHONEPE', 'PAYTM'].includes(provider)) {
     return NextResponse.json(
-      { error: 'Valid provider is required (RAZORPAY, PHONEPE, PAYTM)' },
+      { error: await translateError('Valid provider is required (RAZORPAY, PHONEPE, PAYTM)') },
       { status: 400 }
     )
   }

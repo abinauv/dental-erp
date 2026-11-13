@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Generate unique procedure code
 async function generateProcedureCode(category: string, hospitalId: string): Promise<string> {
@@ -44,7 +45,9 @@ async function generateProcedureCode(category: string, hospitalId: string): Prom
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -98,7 +101,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching procedures:')
-    return NextResponse.json({ error: 'Failed to fetch procedures' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch procedures') },
+      { status: 500 }
+    )
   }
 }
 
@@ -106,14 +112,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission (Admin or Doctor)
     if (!['ADMIN', 'DOCTOR'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to create procedures" },
+        { error: await translateError("You don't have permission to create procedures") },
         { status: 403 }
       )
     }
@@ -133,7 +141,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!name || !category || !basePrice) {
       return NextResponse.json(
-        { error: 'Name, category, and base price are required' },
+        { error: await translateError('Name, category, and base price are required') },
         { status: 400 }
       )
     }
@@ -150,7 +158,7 @@ export async function POST(request: NextRequest) {
 
     if (existingProcedure) {
       return NextResponse.json(
-        { error: 'A procedure with this name already exists' },
+        { error: await translateError('A procedure with this name already exists') },
         { status: 409 }
       )
     }
@@ -178,6 +186,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(procedure, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating procedure:')
-    return NextResponse.json({ error: 'Failed to create procedure' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create procedure') },
+      { status: 500 }
+    )
   }
 }

@@ -4,13 +4,16 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { StaffInviteStatus } from '@/lib/generated/prisma/enums'
 import { sendInviteEmail } from '@/lib/email-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Cancel/revoke an invite
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -21,11 +24,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     })
 
     if (!invite || invite.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Invite not found') }, { status: 404 })
     }
 
     if (invite.status !== StaffInviteStatus.PENDING) {
-      return NextResponse.json({ error: 'Can only cancel pending invites' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Can only cancel pending invites') },
+        { status: 400 }
+      )
     }
 
     await prisma.staffInvite.update({
@@ -39,7 +45,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     })
   } catch (error) {
     logger.error({ err: error }, 'Cancel invite error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }
 
@@ -48,7 +57,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -59,11 +70,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     })
 
     if (!invite || invite.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Invite not found') }, { status: 404 })
     }
 
     if (invite.status !== StaffInviteStatus.PENDING) {
-      return NextResponse.json({ error: 'Can only resend pending invites' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Can only resend pending invites') },
+        { status: 400 }
+      )
     }
 
     // Extend expiry
@@ -103,6 +117,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     })
   } catch (error) {
     logger.error({ err: error }, 'Resend invite error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }

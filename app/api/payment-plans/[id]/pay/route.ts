@@ -2,17 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST /api/payment-plans/[id]/pay — Record payment for an installment
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Insufficient permissions') },
+        { status: 403 }
+      )
     }
 
     const { id } = await params
@@ -20,7 +26,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { scheduleId, amount, paymentMethod = 'CASH', transactionId, notes } = body
 
     if (!scheduleId) {
-      return NextResponse.json({ error: 'Schedule ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Schedule ID is required') },
+        { status: 400 }
+      )
     }
 
     const plan = await prisma.paymentPlan.findFirst({
@@ -29,7 +38,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!plan) {
-      return NextResponse.json({ error: 'Active payment plan not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Active payment plan not found') },
+        { status: 404 }
+      )
     }
 
     const schedule = await prisma.paymentPlanSchedule.findFirst({
@@ -37,15 +49,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!schedule) {
-      return NextResponse.json({ error: 'Installment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Installment not found') },
+        { status: 404 }
+      )
     }
 
     if (schedule.status === 'PAID') {
-      return NextResponse.json({ error: 'This installment is already paid' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('This installment is already paid') },
+        { status: 400 }
+      )
     }
 
     if (schedule.status === 'WAIVED') {
-      return NextResponse.json({ error: 'This installment has been waived' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('This installment has been waived') },
+        { status: 400 }
+      )
     }
 
     const payAmount = amount ? Number(amount) : Number(schedule.amount)
@@ -151,6 +172,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
   } catch (err) {
     logger.error({ err }, 'Error recording installment payment:')
-    return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to record payment') },
+      { status: 500 }
+    )
   }
 }

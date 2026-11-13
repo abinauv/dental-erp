@@ -3,12 +3,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { smsService } from '@/lib/services/sms.service'
 import { emailService } from '@/lib/services/email.service'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST - Test SMS or email connection
 export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -16,18 +19,21 @@ export async function POST(request: NextRequest) {
     const { type, testData } = body
 
     if (!type) {
-      return NextResponse.json({ error: 'Type is required' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('Type is required') }, { status: 400 })
     }
 
     if (type !== 'sms' && type !== 'email') {
-      return NextResponse.json({ error: "Type must be 'sms' or 'email'" }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError("Type must be 'sms' or 'email'") },
+        { status: 400 }
+      )
     }
 
     // Test SMS connection
     if (type === 'sms') {
       if (!testData?.phone) {
         return NextResponse.json(
-          { error: 'Phone number is required for SMS test' },
+          { error: await translateError('Phone number is required for SMS test') },
           { status: 400 }
         )
       }
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Failed to send test SMS',
+            error: await translateError('Failed to send test SMS'),
             details: error.message,
           },
           { status: 400 }
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (type === 'email') {
       if (!testData?.email) {
         return NextResponse.json(
-          { error: 'Email address is required for email test' },
+          { error: await translateError('Email address is required for email test') },
           { status: 400 }
         )
       }
@@ -114,7 +120,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: 'Failed to send test email',
+            error: await translateError('Failed to send test email'),
             details: error.message,
           },
           { status: 400 }
@@ -122,13 +128,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid request') }, { status: 400 })
   } catch (error: any) {
     logger.error({ err: error }, 'Error testing communication settings:')
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to test communication settings',
+        error: await translateError('Failed to test communication settings'),
         details: error.message,
       },
       { status: 500 }

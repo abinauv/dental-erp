@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const fieldSchema = z.object({
   id: z.string(),
@@ -49,7 +50,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -73,13 +76,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Template not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ template })
   } catch (err) {
     logger.error({ err }, 'Get form template error:')
-    return NextResponse.json({ error: 'Failed to get template' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to get template') },
+      { status: 500 }
+    )
   }
 }
 
@@ -88,7 +97,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -96,7 +107,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id, hospitalId },
     })
     if (!existing) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Template not found') },
+        { status: 404 }
+      )
     }
 
     const body = await req.json()
@@ -116,10 +130,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ template })
   } catch (err: any) {
     if (err.name === 'ZodError') {
-      return NextResponse.json({ error: 'Invalid form data', details: err.errors }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid form data'), details: err.errors },
+        { status: 400 }
+      )
     }
     logger.error({ err }, 'Update form template error:')
-    return NextResponse.json({ error: 'Failed to update template' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update template') },
+      { status: 500 }
+    )
   }
 }
 
@@ -128,7 +148,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -137,7 +159,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       include: { _count: { select: { submissions: true } } },
     })
     if (!existing) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Template not found') },
+        { status: 404 }
+      )
     }
 
     if (existing._count.submissions > 0) {
@@ -153,6 +178,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ message: 'Template deleted' })
   } catch (err) {
     logger.error({ err }, 'Delete form template error:')
-    return NextResponse.json({ error: 'Failed to delete template' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete template') },
+      { status: 500 }
+    )
   }
 }

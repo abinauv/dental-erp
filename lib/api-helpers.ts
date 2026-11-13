@@ -4,14 +4,18 @@ import { headers } from 'next/headers'
 import { jwtVerify } from 'jose'
 import { auth } from './auth'
 import { prisma } from './prisma'
+import { translateError } from './i18n/api-messages'
 
 // Someone whose password was set by an admin or an import must choose their
 // own before using the app. The web app sends them to /change-password; the
 // API answers this until they have.
 export const PASSWORD_CHANGE_REQUIRED = 'PASSWORD_CHANGE_REQUIRED'
-function passwordChangeRequired() {
+async function passwordChangeRequired() {
   return NextResponse.json(
-    { error: 'Choose a new password before continuing.', code: PASSWORD_CHANGE_REQUIRED },
+    {
+      error: await translateError('Choose a new password before continuing.'),
+      code: PASSWORD_CHANGE_REQUIRED,
+    },
     { status: 403 }
   )
 }
@@ -80,7 +84,7 @@ export async function getAuthenticatedHospital() {
       select: { mustChangePassword: true },
     })
     if (flags?.mustChangePassword) {
-      return { error: passwordChangeRequired(), user: null, hospitalId: null }
+      return { error: await passwordChangeRequired(), user: null, hospitalId: null }
     }
     return {
       error: null,
@@ -101,7 +105,7 @@ export async function getAuthenticatedHospital() {
   // Fallback: try mobile Bearer token
   const mobileUser = await verifyMobileToken()
   if (mobileUser === PASSWORD_CHANGE_REQUIRED) {
-    return { error: passwordChangeRequired(), user: null, hospitalId: null }
+    return { error: await passwordChangeRequired(), user: null, hospitalId: null }
   }
   if (mobileUser) {
     return {
@@ -112,7 +116,7 @@ export async function getAuthenticatedHospital() {
   }
 
   return {
-    error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+    error: NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 }),
     user: null,
     hospitalId: null,
   }
@@ -138,7 +142,9 @@ export async function requireAuthAndRole(allowedRoles?: string[]) {
 
   if (error || !user || !hospitalId) {
     return {
-      error: error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
+      error:
+        error ||
+        NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 }),
       user: null,
       hospitalId: null,
       session: null,
@@ -146,9 +152,14 @@ export async function requireAuthAndRole(allowedRoles?: string[]) {
   }
 
   if (allowedRoles) {
-    const roleError = requireRole(user.role, allowedRoles)
-    if (roleError) {
-      return { error: roleError, user: null, hospitalId: null, session: null }
+    // As requireRole, with the message in the requester's language.
+    if (requireRole(user.role, allowedRoles)) {
+      return {
+        error: NextResponse.json({ error: await translateError('Forbidden') }, { status: 403 }),
+        user: null,
+        hospitalId: null,
+        session: null,
+      }
     }
   }
 

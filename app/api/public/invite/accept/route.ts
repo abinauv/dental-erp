@@ -10,6 +10,7 @@ import {
   assertPasswordAllowed,
   getPasswordPolicy,
 } from '@/lib/password-policy.server'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const acceptInviteSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validated.error.flatten() },
+        { error: await translateError('Validation failed'), details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -44,12 +45,15 @@ export async function POST(request: Request) {
     })
 
     if (!invite) {
-      return NextResponse.json({ error: 'Invalid invite token' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid invite token') },
+        { status: 400 }
+      )
     }
 
     if (invite.status !== StaffInviteStatus.PENDING) {
       return NextResponse.json(
-        { error: 'This invite has already been used or cancelled' },
+        { error: await translateError('This invite has already been used or cancelled') },
         { status: 400 }
       )
     }
@@ -60,14 +64,14 @@ export async function POST(request: Request) {
         data: { status: StaffInviteStatus.EXPIRED },
       })
       return NextResponse.json(
-        { error: 'This invite has expired. Please ask for a new invite.' },
+        { error: await translateError('This invite has expired. Please ask for a new invite.') },
         { status: 400 }
       )
     }
 
     if (!invite.hospital.isActive) {
       return NextResponse.json(
-        { error: 'This hospital account is no longer active' },
+        { error: await translateError('This hospital account is no longer active') },
         { status: 400 }
       )
     }
@@ -79,7 +83,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'An account with this email already exists' },
+        { error: await translateError('An account with this email already exists') },
         { status: 409 }
       )
     }
@@ -89,7 +93,10 @@ export async function POST(request: Request) {
       await assertPasswordAllowed(invite.hospitalId, password)
     } catch (err) {
       if (err instanceof PasswordPolicyError) {
-        return NextResponse.json({ error: err.message, code: err.code }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError(err.message), code: err.code },
+          { status: 400 }
+        )
       }
       throw err
     }
@@ -146,7 +153,10 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Accept invite error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }
 
@@ -157,7 +167,10 @@ export async function GET(request: Request) {
     const token = searchParams.get('token')
 
     if (!token) {
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Token is required') },
+        { status: 400 }
+      )
     }
 
     const invite = await prisma.staffInvite.findUnique({
@@ -170,23 +183,32 @@ export async function GET(request: Request) {
     })
 
     if (!invite) {
-      return NextResponse.json({ valid: false, error: 'Invalid invite token' }, { status: 400 })
+      return NextResponse.json(
+        { valid: false, error: await translateError('Invalid invite token') },
+        { status: 400 }
+      )
     }
 
     if (invite.status !== StaffInviteStatus.PENDING) {
       return NextResponse.json(
-        { valid: false, error: 'This invite has already been used or cancelled' },
+        {
+          valid: false,
+          error: await translateError('This invite has already been used or cancelled'),
+        },
         { status: 400 }
       )
     }
 
     if (new Date() > invite.expiresAt) {
-      return NextResponse.json({ valid: false, error: 'This invite has expired' }, { status: 400 })
+      return NextResponse.json(
+        { valid: false, error: await translateError('This invite has expired') },
+        { status: 400 }
+      )
     }
 
     if (!invite.hospital.isActive) {
       return NextResponse.json(
-        { valid: false, error: 'This hospital account is no longer active' },
+        { valid: false, error: await translateError('This hospital account is no longer active') },
         { status: 400 }
       )
     }
@@ -204,6 +226,9 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Validate invite error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }

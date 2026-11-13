@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, PurchaseOrderStatus, SupplierStatus } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
 
@@ -26,7 +27,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -37,7 +40,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!supplier) {
-      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Supplier not found') },
+        { status: 404 }
+      )
     }
 
     const [items, purchaseOrders] = await Promise.all([
@@ -83,7 +89,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching supplier:')
     return NextResponse.json(
-      { error: 'Failed to fetch supplier', details: error.message },
+      { error: await translateError('Failed to fetch supplier'), details: error.message },
       { status: 500 }
     )
   }
@@ -94,7 +100,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -107,7 +115,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Supplier not found') },
+        { status: 404 }
+      )
     }
 
     if (body.code && body.code !== existing.code) {
@@ -117,7 +128,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       })
 
       if (duplicate) {
-        return NextResponse.json({ error: 'Supplier code already exists' }, { status: 409 })
+        return NextResponse.json(
+          { error: await translateError('Supplier code already exists') },
+          { status: 409 }
+        )
       }
     }
 
@@ -153,7 +167,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating supplier:')
     return NextResponse.json(
-      { error: 'Failed to update supplier', details: error.message },
+      { error: await translateError('Failed to update supplier'), details: error.message },
       { status: 500 }
     )
   }
@@ -167,7 +181,9 @@ export async function DELETE(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -179,7 +195,10 @@ export async function DELETE(
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Supplier not found') },
+        { status: 404 }
+      )
     }
 
     const [purchaseOrderCount, itemCount] = await Promise.all([
@@ -202,7 +221,7 @@ export async function DELETE(
   } catch (error: any) {
     logger.error({ err: error }, 'Error deleting supplier:')
     return NextResponse.json(
-      { error: 'Failed to delete supplier', details: error.message },
+      { error: await translateError('Failed to delete supplier'), details: error.message },
       { status: 500 }
     )
   }

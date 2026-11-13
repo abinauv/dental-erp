@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { buildContext, serializeContext } from '@/lib/ai/context-builder'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { translateError } from '@/lib/i18n/api-messages'
 
 function suggestionsPrompt(contextStr: string, page: string) {
   return `You are the context-aware suggestion engine for DentalERP.
@@ -41,7 +42,9 @@ Keep it concise and relevant.`
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   const searchParams = req.nextUrl.searchParams
   const page = searchParams.get('page') || '/dashboard'

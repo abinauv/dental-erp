@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createPatientToken, setPatientCookie, otpMatches } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST: Verify OTP and return JWT in httpOnly cookie.
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
 
     if (!phone || !otp || !hospitalSlug) {
       return NextResponse.json(
-        { error: 'Phone, OTP, and clinic identifier are required' },
+        { error: await translateError('Phone, OTP, and clinic identifier are required') },
         { status: 400 }
       )
     }
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
     ])
     if (!byPhone.allowed || !byIp.allowed) {
       return NextResponse.json(
-        { error: 'Too many attempts. Please try again later.' },
+        { error: await translateError('Too many attempts. Please try again later.') },
         { status: 429 }
       )
     }
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Clinic not found') }, { status: 404 })
     }
 
     // Find the most recent unverified OTP for this phone
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     if (!otpRecord) {
       return NextResponse.json(
-        { error: 'OTP expired or not found. Please request a new one.' },
+        { error: await translateError('OTP expired or not found. Please request a new one.') },
         { status: 400 }
       )
     }
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     // Check attempts (max 3)
     if (otpRecord.attempts >= 3) {
       return NextResponse.json(
-        { error: 'Too many failed attempts. Please request a new OTP.' },
+        { error: await translateError('Too many failed attempts. Please request a new OTP.') },
         { status: 429 }
       )
     }
@@ -79,7 +80,10 @@ export async function POST(req: NextRequest) {
         where: { id: otpRecord.id },
         data: { attempts: { increment: 1 } },
       })
-      return NextResponse.json({ error: 'Invalid OTP. Please try again.' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid OTP. Please try again.') },
+        { status: 400 }
+      )
     }
 
     // Mark OTP as verified
@@ -103,7 +107,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Generate JWT
@@ -127,6 +134,9 @@ export async function POST(req: NextRequest) {
     return setPatientCookie(response, token)
   } catch (err: unknown) {
     logger.error({ err }, 'Verify OTP error:')
-    return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Verification failed') },
+      { status: 500 }
+    )
   }
 }

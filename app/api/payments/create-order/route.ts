@@ -4,12 +4,15 @@ import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { getGateway } from '@/lib/payment-gateways'
 import { reservePendingPayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function POST(req: NextRequest) {
   try {
     const { error, user, hospitalId } = await getAuthenticatedHospital()
     if (error || !user || !hospitalId) {
-      return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return (
+        error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+      )
     }
 
     const body = await req.json()
@@ -19,7 +22,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!invoiceId) {
-      return NextResponse.json({ error: 'invoiceId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('invoiceId is required') },
+        { status: 400 }
+      )
     }
 
     // Fetch invoice and validate
@@ -34,24 +40,33 @@ export async function POST(req: NextRequest) {
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     const balance = Number(invoice.balanceAmount)
     if (balance <= 0) {
-      return NextResponse.json({ error: 'Invoice is already fully paid' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invoice is already fully paid') },
+        { status: 400 }
+      )
     }
 
     const payAmount = amount ? Math.min(amount, balance) : balance
     if (payAmount <= 0) {
-      return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid payment amount') },
+        { status: 400 }
+      )
     }
 
     // Get gateway
     const gatewayResult = await getGateway(hospitalId)
     if (!gatewayResult) {
       return NextResponse.json(
-        { error: 'Payment gateway is not configured or not enabled' },
+        { error: await translateError('Payment gateway is not configured or not enabled') },
         { status: 400 }
       )
     }
@@ -115,6 +130,6 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     logger.error({ err }, 'Payment order creation error:')
     const message = err instanceof Error ? err.message : 'Failed to create payment order'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: await translateError(message) }, { status: 500 })
   }
 }

@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single treatment plan with all details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -53,13 +56,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!treatmentPlan) {
-      return NextResponse.json({ error: 'Treatment plan not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Treatment plan not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(treatmentPlan)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching treatment plan:')
-    return NextResponse.json({ error: 'Failed to fetch treatment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch treatment plan') },
+      { status: 500 }
+    )
   }
 }
 
@@ -68,14 +77,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
       return NextResponse.json(
-        { error: "You don't have permission to update treatment plans" },
+        { error: await translateError("You don't have permission to update treatment plans") },
         { status: 403 }
       )
     }
@@ -90,7 +101,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existingPlan) {
-      return NextResponse.json({ error: 'Treatment plan not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Treatment plan not found') },
+        { status: 404 }
+      )
     }
 
     // Prevent updates to completed or cancelled plans (except by admin)
@@ -99,7 +113,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       session?.user?.role !== 'ADMIN'
     ) {
       return NextResponse.json(
-        { error: 'Cannot modify completed or cancelled treatment plans' },
+        { error: await translateError('Cannot modify completed or cancelled treatment plans') },
         { status: 400 }
       )
     }
@@ -202,7 +216,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(treatmentPlan)
   } catch (error) {
     logger.error({ err: error }, 'Error updating treatment plan:')
-    return NextResponse.json({ error: 'Failed to update treatment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update treatment plan') },
+      { status: 500 }
+    )
   }
 }
 
@@ -214,14 +231,16 @@ export async function DELETE(
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Only admin can delete treatment plans
     if (session?.user?.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Only administrators can delete treatment plans' },
+        { error: await translateError('Only administrators can delete treatment plans') },
         { status: 403 }
       )
     }
@@ -237,7 +256,10 @@ export async function DELETE(
     })
 
     if (!treatmentPlan) {
-      return NextResponse.json({ error: 'Treatment plan not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Treatment plan not found') },
+        { status: 404 }
+      )
     }
 
     // Check if any items are in progress or completed
@@ -247,7 +269,11 @@ export async function DELETE(
 
     if (hasActiveItems) {
       return NextResponse.json(
-        { error: 'Cannot delete treatment plan with active or completed items' },
+        {
+          error: await translateError(
+            'Cannot delete treatment plan with active or completed items'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -267,6 +293,9 @@ export async function DELETE(
     })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting treatment plan:')
-    return NextResponse.json({ error: 'Failed to delete treatment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete treatment plan') },
+      { status: 500 }
+    )
   }
 }

@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get dental chart entries for a patient
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -19,7 +22,10 @@ export async function GET(request: NextRequest) {
     const isActive = searchParams.get('isActive')
 
     if (!patientId) {
-      return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient ID is required') },
+        { status: 400 }
+      )
     }
 
     // Verify patient belongs to this hospital
@@ -28,7 +34,10 @@ export async function GET(request: NextRequest) {
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Build where clause
@@ -87,7 +96,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching dental chart:')
-    return NextResponse.json({ error: 'Failed to fetch dental chart' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch dental chart') },
+      { status: 500 }
+    )
   }
 }
 
@@ -96,14 +108,16 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
       return NextResponse.json(
-        { error: "You don't have permission to update dental charts" },
+        { error: await translateError("You don't have permission to update dental charts") },
         { status: 403 }
       )
     }
@@ -126,7 +140,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!patientId || !toothNumber || !condition) {
       return NextResponse.json(
-        { error: 'Patient ID, tooth number, and condition are required' },
+        { error: await translateError('Patient ID, tooth number, and condition are required') },
         { status: 400 }
       )
     }
@@ -139,7 +153,11 @@ export async function POST(request: NextRequest) {
 
     if (!validToothNumbers.includes(toothNumber)) {
       return NextResponse.json(
-        { error: 'Invalid tooth number. Use FDI notation (11-18, 21-28, 31-38, 41-48)' },
+        {
+          error: await translateError(
+            'Invalid tooth number. Use FDI notation (11-18, 21-28, 31-38, 41-48)'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -149,7 +167,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // If condition is MISSING or EXTRACTION, mark previous entries as resolved
@@ -199,6 +220,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(entry, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating dental chart entry:')
-    return NextResponse.json({ error: 'Failed to create dental chart entry' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create dental chart entry') },
+      { status: 500 }
+    )
   }
 }

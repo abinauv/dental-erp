@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get available time slots for a doctor on a specific date
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -18,7 +21,10 @@ export async function GET(request: NextRequest) {
     const duration = parseInt(searchParams.get('duration') || '30')
 
     if (!doctorId || !date) {
-      return NextResponse.json({ error: 'Doctor ID and date are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Doctor ID and date are required') },
+        { status: 400 }
+      )
     }
 
     // Get hospital working hours (default 9 AM to 9 PM)
@@ -60,7 +66,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!doctor) {
-      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
     }
 
     // Get doctor's shift for the day of week
@@ -168,6 +174,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching time slots:')
-    return NextResponse.json({ error: 'Failed to fetch time slots' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch time slots') },
+      { status: 500 }
+    )
   }
 }

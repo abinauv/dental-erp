@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET: Single submission detail
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -20,13 +23,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!submission) {
-      return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Submission not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ submission })
   } catch (err) {
     logger.error({ err }, 'Get submission error:')
-    return NextResponse.json({ error: 'Failed to get submission' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to get submission') },
+      { status: 500 }
+    )
   }
 }
 
@@ -35,7 +44,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
   const { error, hospitalId, user } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -43,14 +54,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id, hospitalId },
     })
     if (!existing) {
-      return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Submission not found') },
+        { status: 404 }
+      )
     }
 
     const body = await req.json()
     const { status, reviewNotes } = body
 
     if (!['REVIEWED', 'APPROVED', 'REJECTED'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('Invalid status') }, { status: 400 })
     }
 
     const submission = await prisma.formSubmission.update({
@@ -66,6 +80,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ submission })
   } catch (err) {
     logger.error({ err }, 'Review submission error:')
-    return NextResponse.json({ error: 'Failed to update submission' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update submission') },
+      { status: 500 }
+    )
   }
 }

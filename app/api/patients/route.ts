@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkPatientLimit } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Generate unique patient ID for the hospital
 async function generatePatientId(hospitalId: string): Promise<string> {
@@ -33,7 +34,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -93,7 +96,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching patients:')
-    return NextResponse.json({ error: 'Failed to fetch patients' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch patients') },
+      { status: 500 }
+    )
   }
 }
 
@@ -102,7 +108,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -111,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (!patientLimit.allowed) {
       return NextResponse.json(
         {
-          error: 'Patient limit reached',
+          error: await translateError('Patient limit reached'),
           message: `Your plan allows up to ${patientLimit.max} patients. Please upgrade to add more.`,
           current: patientLimit.current,
           max: patientLimit.max,
@@ -147,7 +155,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!firstName || !lastName || !phone) {
       return NextResponse.json(
-        { error: 'First name, last name, and phone are required' },
+        { error: await translateError('First name, last name, and phone are required') },
         { status: 400 }
       )
     }
@@ -159,7 +167,7 @@ export async function POST(request: NextRequest) {
 
     if (existingPatient) {
       return NextResponse.json(
-        { error: 'A patient with this phone number already exists' },
+        { error: await translateError('A patient with this phone number already exists') },
         { status: 409 }
       )
     }
@@ -205,6 +213,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(patient, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating patient:')
-    return NextResponse.json({ error: 'Failed to create patient' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create patient') },
+      { status: 500 }
+    )
   }
 }

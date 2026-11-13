@@ -2,17 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // PUT - Update referral (mark converted, give reward, etc.)
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'RECEPTIONIST'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+      return NextResponse.json({ error: await translateError('Not authorized') }, { status: 403 })
     }
 
     const { id } = await params
@@ -20,7 +23,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const existing = await prisma.referral.findUnique({ where: { id } })
     if (!existing || existing.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: 'Referral not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Referral not found') },
+        { status: 404 }
+      )
     }
 
     const updateData: any = {}
@@ -48,6 +54,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(referral)
   } catch (err) {
     logger.error({ err }, 'Error updating referral:')
-    return NextResponse.json({ error: 'Failed to update referral' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update referral') },
+      { status: 500 }
+    )
   }
 }

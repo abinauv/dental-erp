@@ -3,12 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generateClaimNo } from '@/lib/billing-utils'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - List insurance claims with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -125,7 +128,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching insurance claims:')
-    return NextResponse.json({ error: 'Failed to fetch insurance claims' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch insurance claims') },
+      { status: 500 }
+    )
   }
 }
 
@@ -133,14 +139,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to create insurance claims" },
+        { error: await translateError("You don't have permission to create insurance claims") },
         { status: 403 }
       )
     }
@@ -158,19 +166,31 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!patientId) {
-      return NextResponse.json({ error: 'Patient is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient is required') },
+        { status: 400 }
+      )
     }
 
     if (!insuranceProvider) {
-      return NextResponse.json({ error: 'Insurance provider is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Insurance provider is required') },
+        { status: 400 }
+      )
     }
 
     if (!policyNumber) {
-      return NextResponse.json({ error: 'Policy number is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Policy number is required') },
+        { status: 400 }
+      )
     }
 
     if (!claimAmount || claimAmount <= 0) {
-      return NextResponse.json({ error: 'Valid claim amount is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Valid claim amount is required') },
+        { status: 400 }
+      )
     }
 
     // Check if patient exists
@@ -178,7 +198,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Validate invoices if provided
@@ -193,7 +216,11 @@ export async function POST(request: NextRequest) {
 
       if (invoices.length !== invoiceIds.length) {
         return NextResponse.json(
-          { error: "One or more invoices not found or don't belong to this patient" },
+          {
+            error: await translateError(
+              "One or more invoices not found or don't belong to this patient"
+            ),
+          },
           { status: 400 }
         )
       }
@@ -244,6 +271,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(fullClaim, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating insurance claim:')
-    return NextResponse.json({ error: 'Failed to create insurance claim' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create insurance claim') },
+      { status: 500 }
+    )
   }
 }

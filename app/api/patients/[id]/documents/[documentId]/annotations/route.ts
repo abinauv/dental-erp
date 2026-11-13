@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // PUT /api/patients/[id]/documents/[documentId]/annotations — Save annotations
 export async function PUT(
@@ -10,12 +11,17 @@ export async function PUT(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'DOCTOR'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Only doctors and admins can annotate' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Only doctors and admins can annotate') },
+        { status: 403 }
+      )
     }
 
     const { id, documentId } = await params
@@ -23,7 +29,10 @@ export async function PUT(
     const { annotations } = body
 
     if (!Array.isArray(annotations)) {
-      return NextResponse.json({ error: 'annotations must be an array' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('annotations must be an array') },
+        { status: 400 }
+      )
     }
 
     const document = await prisma.document.findFirst({
@@ -35,7 +44,10 @@ export async function PUT(
     })
 
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Document not found') },
+        { status: 404 }
+      )
     }
 
     const updated = await prisma.document.update({
@@ -55,7 +67,10 @@ export async function PUT(
     })
   } catch (err) {
     logger.error({ err }, 'Error saving annotations:')
-    return NextResponse.json({ error: 'Failed to save annotations' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to save annotations') },
+      { status: 500 }
+    )
   }
 }
 
@@ -66,7 +81,9 @@ export async function GET(
 ) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -86,7 +103,10 @@ export async function GET(
     })
 
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Document not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({
@@ -96,6 +116,9 @@ export async function GET(
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching annotations:')
-    return NextResponse.json({ error: 'Failed to fetch annotations' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch annotations') },
+      { status: 500 }
+    )
   }
 }

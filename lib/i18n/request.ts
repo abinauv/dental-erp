@@ -92,6 +92,36 @@ export async function getLocaleForRequest(): Promise<Locale> {
 }
 
 /**
+ * Locale for an API response, e.g. its error messages. The same as a page
+ * render (staff, then patient, then the default), plus the mobile app's
+ * Bearer token, which carries the staff user's id. Anonymous requests get
+ * the default, as public pages do, so an error matches the page showing it.
+ */
+export async function getLocaleForApiRequest(): Promise<Locale> {
+  try {
+    const { headers } = await import('next/headers')
+    const authorization = (await headers()).get('authorization')
+    if (authorization?.startsWith('Bearer ')) {
+      const { jwtVerify } = await import('jose')
+      const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!)
+      const { payload } = await jwtVerify(authorization.slice(7), secret, {
+        algorithms: ['HS256'],
+      })
+      if (typeof payload.sub === 'string') {
+        const user = await prisma.user.findUnique({
+          where: { id: payload.sub },
+          select: { locale: true, hospital: { select: { locale: true } } },
+        })
+        if (user) return resolveLocaleCascade(user.locale, user.hospital?.locale)
+      }
+    }
+  } catch {
+    // Not a valid mobile token: fall through to the cookie sessions.
+  }
+  return getLocaleForRequest()
+}
+
+/**
  * Portal-only resolver, for code that already knows it is on a patient
  * surface and should not pay for an `auth()` call that cannot succeed.
  */

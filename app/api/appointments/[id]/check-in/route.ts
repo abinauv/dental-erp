@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST - Check in patient for appointment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -19,13 +22,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     if (!appointment) {
-      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Appointment not found') },
+        { status: 404 }
+      )
     }
 
     // Validate appointment status for check-in
     if (!['SCHEDULED', 'CONFIRMED'].includes(appointment.status)) {
       return NextResponse.json(
-        { error: `Cannot check in appointment with status: ${appointment.status}` },
+        {
+          error: await translateError('Cannot check in appointment with status: {status}', {
+            status: appointment.status,
+          }),
+        },
         { status: 400 }
       )
     }
@@ -72,6 +82,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json(updatedAppointment)
   } catch (error) {
     logger.error({ err: error }, 'Error checking in appointment:')
-    return NextResponse.json({ error: 'Failed to check in' }, { status: 500 })
+    return NextResponse.json({ error: await translateError('Failed to check in') }, { status: 500 })
   }
 }

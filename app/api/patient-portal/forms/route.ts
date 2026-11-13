@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET: List pending/completed forms for the patient
 export async function GET(req: NextRequest) {
@@ -44,7 +45,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ submissions, availableTemplates })
   } catch (err) {
     logger.error({ err }, 'Patient forms error:')
-    return NextResponse.json({ error: 'Failed to load forms' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to load forms') },
+      { status: 500 }
+    )
   }
 }
 
@@ -58,7 +62,10 @@ export async function POST(req: NextRequest) {
     const { templateId, data, signature, appointmentId } = body
 
     if (!templateId) {
-      return NextResponse.json({ error: 'templateId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('templateId is required') },
+        { status: 400 }
+      )
     }
 
     const hospitalId = patient!.hospitalId
@@ -69,7 +76,10 @@ export async function POST(req: NextRequest) {
       where: { id: templateId, hospitalId, isActive: true },
     })
     if (!template) {
-      return NextResponse.json({ error: 'Form template not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Form template not found') },
+        { status: 404 }
+      )
     }
 
     // Get client IP
@@ -94,6 +104,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ submission }, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Patient form submit error:')
-    return NextResponse.json({ error: 'Failed to submit form' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to submit form') },
+      { status: 500 }
+    )
   }
 }

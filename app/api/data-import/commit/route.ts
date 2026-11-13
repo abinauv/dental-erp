@@ -8,22 +8,37 @@ import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function POST(req: NextRequest) {
   const { error, session, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   try {
     const { jobId, mapping, editedRows, skipErrorRows = false } = await req.json()
-    if (!jobId) return NextResponse.json({ error: 'jobId is required' }, { status: 400 })
-    if (!mapping) return NextResponse.json({ error: 'mapping is required' }, { status: 400 })
+    if (!jobId)
+      return NextResponse.json(
+        { error: await translateError('jobId is required') },
+        { status: 400 }
+      )
+    if (!mapping)
+      return NextResponse.json(
+        { error: await translateError('mapping is required') },
+        { status: 400 }
+      )
 
     // Load job
     const job = await prisma.dataImportJob.findFirst({
       where: { id: jobId, hospitalId },
     })
-    if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
+    if (!job)
+      return NextResponse.json(
+        { error: await translateError('Import job not found') },
+        { status: 404 }
+      )
 
     // Mark signoff
     await prisma.dataImportJob.update({
@@ -201,7 +216,10 @@ export async function POST(req: NextRequest) {
     )
   } catch (err: any) {
     logger.error({ err }, 'Data import commit error:')
-    return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Import failed') },
+      { status: 500 }
+    )
   }
 }
 

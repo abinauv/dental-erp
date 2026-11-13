@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get loyalty points for a patient or all transactions
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -48,7 +51,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching loyalty transactions:')
-    return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch transactions') },
+      { status: 500 }
+    )
   }
 }
 
@@ -56,12 +62,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'RECEPTIONIST', 'ACCOUNTANT'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+      return NextResponse.json({ error: await translateError('Not authorized') }, { status: 403 })
     }
 
     const body = await request.json()
@@ -69,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     if (!patientId || points === undefined || !type || !description) {
       return NextResponse.json(
-        { error: 'patientId, points, type, and description are required' },
+        { error: await translateError('patientId, points, type, and description are required') },
         { status: 400 }
       )
     }
@@ -79,7 +87,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // For redemptions, check balance
@@ -91,7 +102,7 @@ export async function POST(request: NextRequest) {
       const balance = result._sum.points || 0
       if (balance + points < 0) {
         return NextResponse.json(
-          { error: `Insufficient points. Balance: ${balance}` },
+          { error: await translateError('Insufficient points. Balance: {balance}', { balance }) },
           { status: 400 }
         )
       }
@@ -111,6 +122,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(transaction, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Error creating loyalty transaction:')
-    return NextResponse.json({ error: 'Failed to process transaction' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to process transaction') },
+      { status: 500 }
+    )
   }
 }

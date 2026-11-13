@@ -4,6 +4,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST /api/ai/claim-analysis
@@ -14,12 +15,15 @@ export async function POST(req: Request) {
   try {
     const { session, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
     if (!hospitalId || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     const { claimId } = await req.json()
     if (!claimId) {
-      return NextResponse.json({ error: 'claimId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('claimId is required') },
+        { status: 400 }
+      )
     }
 
     const claim = await prisma.insuranceClaim.findFirst({
@@ -35,7 +39,7 @@ export async function POST(req: Request) {
     })
 
     if (!claim) {
-      return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Claim not found') }, { status: 404 })
     }
 
     // Gather denial history patterns for this hospital
@@ -156,7 +160,7 @@ Return ONLY valid JSON, no markdown.`,
   } catch (error: any) {
     logger.error({ err: error }, 'Claim analysis error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze claim' },
+      { error: await translateError(error.message || 'Failed to analyze claim') },
       { status: error.message?.includes('Unauthorized') ? 401 : 500 }
     )
   }

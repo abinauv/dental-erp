@@ -14,13 +14,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const RETENTION_DAYS = 90
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
   }
 
   const cutoff = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000)

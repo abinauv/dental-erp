@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { LabOrderStatus, Prisma } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const LAB_ORDER_STATUSES = Object.values(LabOrderStatus) as string[]
 
@@ -18,7 +19,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -27,13 +30,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { notes } = body
 
     if (!body.status) {
-      return NextResponse.json({ error: 'Status is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Status is required') },
+        { status: 400 }
+      )
     }
 
     const status = parseStatus(body.status)
 
     if (!status) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('Invalid status') }, { status: 400 })
     }
 
     const order = await prisma.labOrder.findFirst({
@@ -48,7 +54,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
 
     if (!order) {
-      return NextResponse.json({ error: 'Lab order not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab order not found') },
+        { status: 404 }
+      )
     }
 
     const currentStatus = order.status
@@ -80,7 +89,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating lab order status:')
     return NextResponse.json(
-      { error: 'Failed to update lab order status', details: error.message },
+      { error: await translateError('Failed to update lab order status'), details: error.message },
       { status: 500 }
     )
   }

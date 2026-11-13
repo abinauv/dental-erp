@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, StockAlertType, StockTransactionType } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 function stockStatus(currentStock: number, minimumStock: number, reorderLevel: number) {
   if (currentStock <= 0) return 'out_of_stock'
@@ -15,7 +16,9 @@ function stockStatus(currentStock: number, minimumStock: number, reorderLevel: n
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -30,7 +33,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!item) {
-      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Inventory item not found') },
+        { status: 404 }
+      )
     }
 
     const thirtyDaysAgo = new Date()
@@ -109,7 +115,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching inventory item:')
     return NextResponse.json(
-      { error: 'Failed to fetch inventory item', details: error.message },
+      { error: await translateError('Failed to fetch inventory item'), details: error.message },
       { status: 500 }
     )
   }
@@ -119,7 +125,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -132,7 +140,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Inventory item not found') },
+        { status: 404 }
+      )
     }
 
     if (body.sku && body.sku !== existing.sku) {
@@ -142,7 +153,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       })
 
       if (duplicate) {
-        return NextResponse.json({ error: 'Item code already exists' }, { status: 409 })
+        return NextResponse.json(
+          { error: await translateError('Item code already exists') },
+          { status: 409 }
+        )
       }
     }
 
@@ -200,7 +214,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating inventory item:')
     return NextResponse.json(
-      { error: 'Failed to update inventory item', details: error.message },
+      { error: await translateError('Failed to update inventory item'), details: error.message },
       { status: 500 }
     )
   }
@@ -213,7 +227,9 @@ export async function DELETE(
 ) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -225,7 +241,10 @@ export async function DELETE(
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Inventory item not found') },
+        { status: 404 }
+      )
     }
 
     const transactionCount = await prisma.stockTransaction.count({ where: { itemId: id } })
@@ -247,7 +266,7 @@ export async function DELETE(
   } catch (error: any) {
     logger.error({ err: error }, 'Error deleting inventory item:')
     return NextResponse.json(
-      { error: 'Failed to delete inventory item', details: error.message },
+      { error: await translateError('Failed to delete inventory item'), details: error.message },
       { status: 500 }
     )
   }

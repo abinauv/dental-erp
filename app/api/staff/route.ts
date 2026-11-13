@@ -6,12 +6,15 @@ import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
 import { PasswordPolicyError, assertPasswordAllowed } from '@/lib/password-policy.server'
 import { redactStaff } from '@/lib/staff-privacy'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - List staff members
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -83,7 +86,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching staff:')
-    return NextResponse.json({ error: 'Failed to fetch staff' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch staff') },
+      { status: 500 }
+    )
   }
 }
 
@@ -113,13 +119,15 @@ async function generateEmployeeId(hospitalId: string): Promise<string> {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Only admin can create staff
     if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: await translateError('Forbidden') }, { status: 403 })
     }
 
     // Check staff limit
@@ -127,7 +135,10 @@ export async function POST(request: NextRequest) {
     if (!limitCheck.allowed) {
       return NextResponse.json(
         {
-          error: `Staff limit reached. Your plan allows ${limitCheck.max} staff members. Current: ${limitCheck.current}.`,
+          error: await translateError(
+            'Staff limit reached. Your plan allows {max} staff members. Current: {current}.',
+            { max: limitCheck.max, current: limitCheck.current }
+          ),
         },
         { status: 403 }
       )
@@ -164,7 +175,11 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!firstName || !lastName || !email || !phone || !role || !password) {
       return NextResponse.json(
-        { error: 'Missing required fields: firstName, lastName, email, phone, role, password' },
+        {
+          error: await translateError(
+            'Missing required fields: firstName, lastName, email, phone, role, password'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -175,7 +190,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Email already registered') },
+        { status: 400 }
+      )
     }
 
     // The clinic's password rules (Settings → Security).
@@ -183,7 +201,10 @@ export async function POST(request: NextRequest) {
       await assertPasswordAllowed(hospitalId, password)
     } catch (err) {
       if (err instanceof PasswordPolicyError) {
-        return NextResponse.json({ error: err.message, code: err.code }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError(err.message), code: err.code },
+          { status: 400 }
+        )
       }
       throw err
     }
@@ -261,6 +282,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating staff:')
-    return NextResponse.json({ error: 'Failed to create staff member' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create staff member') },
+      { status: 500 }
+    )
   }
 }

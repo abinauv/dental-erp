@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const { searchParams } = new URL(req.url)
@@ -37,7 +40,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -54,7 +59,10 @@ export async function POST(req: NextRequest) {
     } = body
 
     if (!name?.trim()) {
-      return NextResponse.json({ error: 'Provider name is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Provider name is required') },
+        { status: 400 }
+      )
     }
 
     const provider = await prisma.insuranceProviderMaster.create({
@@ -75,11 +83,14 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     if (err?.code === 'P2002') {
       return NextResponse.json(
-        { error: 'A provider with this name already exists' },
+        { error: await translateError('A provider with this name already exists') },
         { status: 409 }
       )
     }
     logger.error({ err }, 'Create insurance provider error:')
-    return NextResponse.json({ error: 'Failed to create provider' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create provider') },
+      { status: 500 }
+    )
   }
 }

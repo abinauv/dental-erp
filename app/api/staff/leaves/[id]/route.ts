@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single leave request details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -38,13 +41,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!leave) {
-      return NextResponse.json({ error: 'Leave request not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Leave request not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(leave)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching leave:')
-    return NextResponse.json({ error: 'Failed to fetch leave request' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch leave request') },
+      { status: 500 }
+    )
   }
 }
 
@@ -52,7 +61,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -68,14 +79,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
 
     if (!existingLeave) {
-      return NextResponse.json({ error: 'Leave request not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Leave request not found') },
+        { status: 404 }
+      )
     }
 
     // Only admin can approve/reject, staff can only cancel their own
     if (status === 'APPROVED' || status === 'REJECTED') {
       if (session.user.role !== 'ADMIN') {
         return NextResponse.json(
-          { error: 'Only admin can approve or reject leaves' },
+          { error: await translateError('Only admin can approve or reject leaves') },
           { status: 403 }
         )
       }
@@ -145,7 +159,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json(updatedLeave)
   } catch (error) {
     logger.error({ err: error }, 'Error updating leave:')
-    return NextResponse.json({ error: 'Failed to update leave request' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update leave request') },
+      { status: 500 }
+    )
   }
 }
 
@@ -156,7 +173,9 @@ export async function DELETE(
 ) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -170,12 +189,18 @@ export async function DELETE(
     })
 
     if (!leave) {
-      return NextResponse.json({ error: 'Leave request not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Leave request not found') },
+        { status: 404 }
+      )
     }
 
     // Can only delete pending leaves
     if (leave.status !== 'PENDING') {
-      return NextResponse.json({ error: 'Can only delete pending leave requests' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Can only delete pending leave requests') },
+        { status: 400 }
+      )
     }
 
     await prisma.leave.delete({
@@ -185,6 +210,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Leave request deleted successfully' })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting leave:')
-    return NextResponse.json({ error: 'Failed to delete leave request' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete leave request') },
+      { status: 500 }
+    )
   }
 }

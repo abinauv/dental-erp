@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS, coerceValue } from '@/lib/import/schema-definitions'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 interface ValidationError {
   row: number
@@ -17,21 +18,39 @@ interface ValidationError {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   try {
     const { jobId, mapping, editedRows } = await req.json()
-    if (!jobId) return NextResponse.json({ error: 'jobId is required' }, { status: 400 })
-    if (!mapping) return NextResponse.json({ error: 'mapping is required' }, { status: 400 })
+    if (!jobId)
+      return NextResponse.json(
+        { error: await translateError('jobId is required') },
+        { status: 400 }
+      )
+    if (!mapping)
+      return NextResponse.json(
+        { error: await translateError('mapping is required') },
+        { status: 400 }
+      )
 
     // Load job
     const job = await prisma.dataImportJob.findFirst({
       where: { id: jobId, hospitalId },
     })
-    if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
+    if (!job)
+      return NextResponse.json(
+        { error: await translateError('Import job not found') },
+        { status: 404 }
+      )
 
     const schema = ENTITY_SCHEMAS[job.entityType]
-    if (!schema) return NextResponse.json({ error: 'Invalid entity type' }, { status: 400 })
+    if (!schema)
+      return NextResponse.json(
+        { error: await translateError('Invalid entity type') },
+        { status: 400 }
+      )
 
     // Re-parse the full file. toStorageKey accepts the `uploads/...` shape
     // written before the storage refactor as well as the canonical key, so
@@ -122,7 +141,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     logger.error({ err }, 'Validation error:')
-    return NextResponse.json({ error: err.message || 'Validation failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Validation failed') },
+      { status: 500 }
+    )
   }
 }
 

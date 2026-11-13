@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { LabOrderStatus, QualityCheckStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Only orders that have not been sent anywhere yet may be removed.
 const DELETABLE_STATUSES: LabOrderStatus[] = [LabOrderStatus.CREATED, LabOrderStatus.CANCELLED]
@@ -12,7 +13,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -52,7 +55,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!order) {
-      return NextResponse.json({ error: 'Lab order not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab order not found') },
+        { status: 404 }
+      )
     }
 
     const createdByUser = order.createdBy
@@ -94,7 +100,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching lab order:')
     return NextResponse.json(
-      { error: 'Failed to fetch lab order', details: error.message },
+      { error: await translateError('Failed to fetch lab order'), details: error.message },
       { status: 500 }
     )
   }
@@ -105,7 +111,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -118,7 +126,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Lab order not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab order not found') },
+        { status: 404 }
+      )
     }
 
     const currentStatus = existing.status
@@ -146,7 +157,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     } = body
 
     if (!patientId || !labVendorId || !workType || !orderDate || estimatedCost == null) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Missing required fields') },
+        { status: 400 }
+      )
     }
 
     await prisma.$transaction(async (tx) => {
@@ -192,7 +206,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating lab order:')
     return NextResponse.json(
-      { error: 'Failed to update lab order', details: error.message },
+      { error: await translateError('Failed to update lab order'), details: error.message },
       { status: 500 }
     )
   }
@@ -206,7 +220,9 @@ export async function DELETE(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -218,12 +234,19 @@ export async function DELETE(
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Lab order not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab order not found') },
+        { status: 404 }
+      )
     }
 
     if (!DELETABLE_STATUSES.includes(existing.status)) {
       return NextResponse.json(
-        { error: 'Cannot delete lab order that is in progress. Please cancel it first.' },
+        {
+          error: await translateError(
+            'Cannot delete lab order that is in progress. Please cancel it first.'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -237,7 +260,7 @@ export async function DELETE(
   } catch (error: any) {
     logger.error({ err: error }, 'Error deleting lab order:')
     return NextResponse.json(
-      { error: 'Failed to delete lab order', details: error.message },
+      { error: await translateError('Failed to delete lab order'), details: error.message },
       { status: 500 }
     )
   }

@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/appointments/waitlist — List waitlist entries
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -86,7 +89,10 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching waitlist:')
-    return NextResponse.json({ error: 'Failed to fetch waitlist' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch waitlist') },
+      { status: 500 }
+    )
   }
 }
 
@@ -94,19 +100,27 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'RECEPTIONIST', 'DOCTOR'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Insufficient permissions') },
+        { status: 403 }
+      )
     }
 
     const body = await req.json()
     const { patientId, doctorId, preferredDays, preferredTime, procedureId, notes } = body
 
     if (!patientId) {
-      return NextResponse.json({ error: 'Patient is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient is required') },
+        { status: 400 }
+      )
     }
 
     // Verify patient exists
@@ -114,7 +128,10 @@ export async function POST(req: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Check if patient already has active waitlist entry
@@ -126,7 +143,10 @@ export async function POST(req: NextRequest) {
       },
     })
     if (existing) {
-      return NextResponse.json({ error: 'Patient is already on the waitlist' }, { status: 409 })
+      return NextResponse.json(
+        { error: await translateError('Patient is already on the waitlist') },
+        { status: 409 }
+      )
     }
 
     const entry = await prisma.waitlist.create({
@@ -144,7 +164,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(entry, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Error adding to waitlist:')
-    return NextResponse.json({ error: 'Failed to add to waitlist' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to add to waitlist') },
+      { status: 500 }
+    )
   }
 }
 
@@ -152,7 +175,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -160,14 +185,20 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ error: 'Waitlist entry ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Waitlist entry ID is required') },
+        { status: 400 }
+      )
     }
 
     const entry = await prisma.waitlist.findFirst({
       where: { id, hospitalId },
     })
     if (!entry) {
-      return NextResponse.json({ error: 'Waitlist entry not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Waitlist entry not found') },
+        { status: 404 }
+      )
     }
 
     await prisma.waitlist.update({
@@ -178,6 +209,9 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ message: 'Removed from waitlist' })
   } catch (err) {
     logger.error({ err }, 'Error removing from waitlist:')
-    return NextResponse.json({ error: 'Failed to remove from waitlist' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to remove from waitlist') },
+      { status: 500 }
+    )
   }
 }

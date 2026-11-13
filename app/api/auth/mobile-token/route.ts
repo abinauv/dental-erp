@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { SignJWT } from 'jose'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -24,7 +25,10 @@ export async function POST(req: NextRequest) {
     const validated = loginSchema.safeParse(body)
 
     if (!validated.success) {
-      return NextResponse.json({ error: 'Invalid email or password format' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid email or password format') },
+        { status: 400 }
+      )
     }
 
     const { email, password } = validated.data
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest) {
     )
     if (!limit.allowed) {
       return NextResponse.json(
-        { error: 'Too many attempts. Please try again later.' },
+        { error: await translateError('Too many attempts. Please try again later.') },
         { status: 429, headers: { 'Retry-After': String(Math.ceil(limit.retryAfterMs / 1000)) } }
       )
     }
@@ -50,16 +54,25 @@ export async function POST(req: NextRequest) {
     })
 
     if (!user || !user.isActive) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+      return NextResponse.json(
+        { error: await translateError('Invalid credentials') },
+        { status: 401 }
+      )
     }
 
     if (!user.hospital || !user.hospital.isActive) {
-      return NextResponse.json({ error: 'Your clinic account is inactive' }, { status: 401 })
+      return NextResponse.json(
+        { error: await translateError('Your clinic account is inactive') },
+        { status: 401 }
+      )
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password)
     if (!passwordMatch) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+      return NextResponse.json(
+        { error: await translateError('Invalid credentials') },
+        { status: 401 }
+      )
     }
 
     // A password set by an admin or an import has to be replaced first, and
@@ -67,7 +80,7 @@ export async function POST(req: NextRequest) {
     if (user.mustChangePassword) {
       return NextResponse.json(
         {
-          error: 'Sign in on the web app and choose a new password first.',
+          error: await translateError('Sign in on the web app and choose a new password first.'),
           code: 'PASSWORD_CHANGE_REQUIRED',
         },
         { status: 403 }
@@ -105,7 +118,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Mobile auth error:')
-    return NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Authentication failed') },
+      { status: 500 }
+    )
   }
 }
 

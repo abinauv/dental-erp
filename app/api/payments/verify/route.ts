@@ -4,12 +4,15 @@ import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function POST(req: NextRequest) {
   try {
     const { error, user, hospitalId } = await getAuthenticatedHospital()
     if (error || !user || !hospitalId) {
-      return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return (
+        error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+      )
     }
 
     const body = await req.json()
@@ -23,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     if (!invoiceId || !orderId || !paymentId) {
       return NextResponse.json(
-        { error: 'invoiceId, orderId, paymentId are required' },
+        { error: await translateError('invoiceId, orderId, paymentId are required') },
         { status: 400 }
       )
     }
@@ -34,13 +37,19 @@ export async function POST(req: NextRequest) {
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     // Get gateway
     const gatewayResult = await getGateway(hospitalId)
     if (!gatewayResult) {
-      return NextResponse.json({ error: 'Payment gateway is not configured' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Payment gateway is not configured') },
+        { status: 400 }
+      )
     }
 
     const { gateway } = gatewayResult
@@ -55,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (!result.verified) {
       return NextResponse.json(
-        { error: 'Payment verification failed', status: result.status },
+        { error: await translateError('Payment verification failed'), status: result.status },
         { status: 400 }
       )
     }
@@ -87,6 +96,6 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     logger.error({ err }, 'Payment verification error:')
     const message = err instanceof Error ? err.message : 'Payment verification failed'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: await translateError(message) }, { status: 500 })
   }
 }

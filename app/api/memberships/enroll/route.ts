@@ -2,24 +2,33 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST - Enroll patient in membership plan
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'RECEPTIONIST', 'ACCOUNTANT'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Not authorized to enroll patients' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Not authorized to enroll patients') },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
     const { patientId, planId, autoRenew } = body
 
     if (!patientId || !planId) {
-      return NextResponse.json({ error: 'Patient and plan are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient and plan are required') },
+        { status: 400 }
+      )
     }
 
     // Verify patient
@@ -27,7 +36,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Verify plan
@@ -35,7 +47,10 @@ export async function POST(request: NextRequest) {
       where: { id: planId },
     })
     if (!plan || plan.hospitalId !== hospitalId || !plan.isActive) {
-      return NextResponse.json({ error: 'Plan not found or inactive' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Plan not found or inactive') },
+        { status: 404 }
+      )
     }
 
     // Check for existing active membership
@@ -44,7 +59,7 @@ export async function POST(request: NextRequest) {
     })
     if (existing) {
       return NextResponse.json(
-        { error: 'Patient already has an active membership' },
+        { error: await translateError('Patient already has an active membership') },
         { status: 409 }
       )
     }
@@ -71,7 +86,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(membership, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Error enrolling patient:')
-    return NextResponse.json({ error: 'Failed to enroll patient' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to enroll patient') },
+      { status: 500 }
+    )
   }
 }
 
@@ -79,7 +97,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -117,6 +137,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching memberships:')
-    return NextResponse.json({ error: 'Failed to fetch memberships' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch memberships') },
+      { status: 500 }
+    )
   }
 }

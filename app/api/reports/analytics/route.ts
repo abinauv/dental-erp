@@ -19,6 +19,7 @@ import {
   subYears,
   differenceInDays,
 } from 'date-fns'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Helper function to get date range from preset
 function getDateRange(preset: string): { from: Date; to: Date } {
@@ -502,7 +503,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -540,12 +543,18 @@ export async function GET(request: NextRequest) {
         data = await getOperationalAnalytics(dateFrom, dateTo, hospitalId)
         break
       default:
-        return NextResponse.json({ error: 'Invalid analytics type' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Invalid analytics type') },
+          { status: 400 }
+        )
     }
 
     return NextResponse.json(data)
   } catch (error) {
     logger.error({ err: error }, 'Analytics API error:')
-    return NextResponse.json({ error: 'Failed to fetch analytics data' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch analytics data') },
+      { status: 500 }
+    )
   }
 }

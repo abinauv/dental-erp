@@ -57,6 +57,11 @@ before it are not itemized here; see the git history and the
 - Email uses the server's `SMTP_*` settings for any clinic that hasn't set up
   its own in Settings → Communications, with the clinic's name as the sender.
   The sender address can be set with `SMTP_FROM`.
+- Error messages from the server are in the user's language, like the rest of
+  the app: the staff member's or patient's own setting, else their clinic's.
+  They were always English, so a German-speaking clinic saw English errors
+  under German screens. All of them are translated into German. Messages from
+  the mobile app's requests follow the staff member's language too.
 
 ### Security
 

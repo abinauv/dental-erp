@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { deleteRoom } from '@/lib/services/video.service'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/video/consultations/[id]
@@ -60,7 +61,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   })
 
   if (!consultation) {
-    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Consultation not found') },
+      { status: 404 }
+    )
   }
 
   return NextResponse.json(consultation)
@@ -83,7 +87,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   })
 
   if (!consultation) {
-    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Consultation not found') },
+      { status: 404 }
+    )
   }
 
   const data: any = {}
@@ -92,7 +99,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     case 'start': {
       if (consultation.status !== 'SCHEDULED') {
         return NextResponse.json(
-          { error: 'Can only start a SCHEDULED consultation' },
+          { error: await translateError('Can only start a SCHEDULED consultation') },
           { status: 400 }
         )
       }
@@ -111,7 +118,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     case 'end': {
       if (consultation.status !== 'IN_PROGRESS') {
         return NextResponse.json(
-          { error: 'Can only end an IN_PROGRESS consultation' },
+          { error: await translateError('Can only end an IN_PROGRESS consultation') },
           { status: 400 }
         )
       }
@@ -138,7 +145,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     case 'cancel': {
       if (consultation.status === 'COMPLETED') {
         return NextResponse.json(
-          { error: 'Cannot cancel a completed consultation' },
+          { error: await translateError('Cannot cancel a completed consultation') },
           { status: 400 }
         )
       }
@@ -162,7 +169,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     case 'no_show': {
       if (consultation.status !== 'SCHEDULED') {
         return NextResponse.json(
-          { error: 'Can only mark SCHEDULED consultation as no-show' },
+          { error: await translateError('Can only mark SCHEDULED consultation as no-show') },
           { status: 400 }
         )
       }
@@ -183,7 +190,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       break
     }
     default:
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('Invalid action') }, { status: 400 })
   }
 
   const updated = await prisma.videoConsultation.update({

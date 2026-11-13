@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { createRoom, deleteRoom } from '@/lib/services/video.service'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST /api/video/room
@@ -15,7 +16,10 @@ export async function POST(req: Request) {
   const { consultationId } = body
 
   if (!consultationId) {
-    return NextResponse.json({ error: 'consultationId is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('consultationId is required') },
+      { status: 400 }
+    )
   }
 
   const consultation = await prisma.videoConsultation.findFirst({
@@ -23,7 +27,10 @@ export async function POST(req: Request) {
     select: { id: true },
   })
   if (!consultation) {
-    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Consultation not found') },
+      { status: 404 }
+    )
   }
 
   const room = await createRoom(consultation.id)
@@ -42,7 +49,10 @@ export async function DELETE(req: Request) {
   const roomName = searchParams.get('roomName')
 
   if (!roomName) {
-    return NextResponse.json({ error: 'roomName is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('roomName is required') },
+      { status: 400 }
+    )
   }
 
   // Only rooms that belong to one of this hospital's consultations.
@@ -51,7 +61,7 @@ export async function DELETE(req: Request) {
     select: { roomName: true },
   })
   if (!consultation) {
-    return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    return NextResponse.json({ error: await translateError('Room not found') }, { status: 404 })
   }
 
   await deleteRoom(consultation.roomName)

@@ -5,7 +5,7 @@ extraction, the tax-provider abstraction, per-country seed data, and a second
 locale (`de-DE`) end-to-end. The sections below record the design and the
 original India-coupling baseline; where they describe the pre-extraction state
 ("still a literal", "still India-shaped"), read that as the starting point, not
-today's. Server-route API message i18n is the one deferred piece.
+today's. API error messages are translated too (§5).
 
 DentalERP was built for Indian dental clinics, and that assumption is not confined
 to display strings — it reaches into the invoice schema, the tax maths and the seed
@@ -233,9 +233,9 @@ Sequenced so that contributors are not editing the same files simultaneously.
    The per-person override in §2.1 is part of this step: nullable `User.locale`
    and `Patient.locale`, the resolution cascade, and a picker on both surfaces.
    Also invisible by default — a clinic that changes nothing sees no change.
-2. ~~**String extraction.**~~ **Done (client UI).** Literals moved into
-   `messages/en-IN.json` (+ a byte-identical `en-US.json`). Server-route API
-   messages are the remaining deferred piece.
+2. ~~**String extraction.**~~ **Done.** Client UI literals moved into
+   `messages/en-IN.json` (+ a byte-identical `en-US.json`). API error
+   messages followed in 3.1.0; see §5.
 3. ~~**Tax provider abstraction**~~ **Done.** `lib/tax/` providers (India GST,
    EU VAT, US sales tax) + the `Invoice.taxComponents`/`taxAmount` schema
    migration and backfill.
@@ -260,3 +260,42 @@ Sequenced so that contributors are not editing the same files simultaneously.
 - **Clinical free text is not translated.** Patient notes, prescriptions and
   diagnoses are entered by clinicians and stored verbatim; machine-translating
   them would be a safety problem.
+
+## 5. API error messages
+
+API routes answer errors as `{ error: '…' }`, and the UI often shows that text
+as it is (in a toast, under a form). Those messages are translated on the
+server, in the language of whoever made the request:
+
+```ts
+import { translateError } from '@/lib/i18n/api-messages'
+
+return NextResponse.json({ error: await translateError('Patient not found') }, { status: 404 })
+return NextResponse.json(
+  { error: await translateError('Insufficient points. Balance: {balance}', { balance }) },
+  { status: 400 }
+)
+```
+
+- **The English text is the message's identity.** There are no keys: code
+  keeps reading as English, and a message nobody has translated yet is sent in
+  English, as the UI does for its long tail. Values go in `{braces}`, never
+  into the string itself, so the text stays the same for every request.
+- **Translations live in `messages/api/<locale>.json`**, which maps the
+  English text to the translation. English needs no file. These are kept out
+  of `messages/<locale>.json` because that catalogue is sent to the browser
+  with every page, and API messages never need to be.
+- **The language** comes from `getLocaleForApiRequest()`
+  (`lib/i18n/request.ts`), the same cascade as a page: the staff member's or
+  patient's own setting, else their clinic's, else the default. The mobile
+  app's Bearer token counts as the staff member. Anonymous requests get the
+  default, so an error matches the page that shows it.
+- **Errors thrown by services** (`new Error(message)`) are looked up the same
+  way when a route passes them on, as in
+  `translateError(err.message || 'Failed to send SMS')`.
+- **`tests/unit/api-messages.test.ts` keeps the catalogue honest:** every
+  literal passed to `translateError` needs a German entry with the same
+  `{placeholders}`, and an entry whose English text is no longer in the code
+  fails the test. Adding a message therefore means adding its translation.
+- Developer-facing messages (configuration problems, the AI service's raw
+  errors) can stay English: pass them without `translateError`.

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseFile } from '@/lib/import/parsers'
 import { ENTITY_SCHEMAS } from '@/lib/import/schema-definitions'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
 const ALLOWED_EXTENSIONS = ['csv', 'xlsx', 'xls', 'pdf']
@@ -13,7 +14,9 @@ const PREVIEW_ROWS = 100
 export async function POST(req: NextRequest) {
   const { error, session, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   try {
     const formData = await req.formData()
@@ -21,11 +24,15 @@ export async function POST(req: NextRequest) {
     const entityType = formData.get('entityType') as string | null
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('No file provided') }, { status: 400 })
     }
     if (!entityType || !ENTITY_SCHEMAS[entityType]) {
       return NextResponse.json(
-        { error: `Invalid entity type. Must be one of: ${Object.keys(ENTITY_SCHEMAS).join(', ')}` },
+        {
+          error: await translateError('Invalid entity type. Must be one of: {valid}', {
+            valid: Object.keys(ENTITY_SCHEMAS).join(', '),
+          }),
+        },
         { status: 400 }
       )
     }
@@ -34,14 +41,22 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split('.').pop()?.toLowerCase() || ''
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
       return NextResponse.json(
-        { error: `Unsupported file type ".${ext}". Accepted: .csv, .xlsx, .xls, .pdf` },
+        {
+          error: await translateError(
+            'Unsupported file type ".{ext}". Accepted: .csv, .xlsx, .xls, .pdf',
+            { ext }
+          ),
+        },
         { status: 400 }
       )
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File exceeds 20MB limit' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('File exceeds 20MB limit') },
+        { status: 400 }
+      )
     }
 
     // Save the upload. The extension is already whitelisted above, and the
@@ -57,14 +72,20 @@ export async function POST(req: NextRequest) {
     try {
       parsed = await parseFile(buffer, ext)
     } catch (parseErr: any) {
-      return NextResponse.json({ error: parseErr.message }, { status: 400 })
+      return NextResponse.json({ error: await translateError(parseErr.message) }, { status: 400 })
     }
 
     if (parsed.columns.length === 0) {
-      return NextResponse.json({ error: 'No column headers detected in the file' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('No column headers detected in the file') },
+        { status: 400 }
+      )
     }
     if (parsed.totalRows === 0) {
-      return NextResponse.json({ error: 'File contains no data rows' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('File contains no data rows') },
+        { status: 400 }
+      )
     }
 
     // Create import job record. As with document uploads, drop the stored file
@@ -101,6 +122,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     logger.error({ err }, 'Data import upload error:')
-    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Upload failed') },
+      { status: 500 }
+    )
   }
 }

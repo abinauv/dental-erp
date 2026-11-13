@@ -6,12 +6,15 @@ import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
 import { PasswordPolicyError, assertPasswordAllowed } from '@/lib/password-policy.server'
 import { redactStaff } from '@/lib/staff-privacy'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single staff member details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -43,14 +46,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!staff) {
-      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Staff not found') }, { status: 404 })
     }
 
     const canSeeAll = session?.user.role === 'ADMIN' || staff.userId === session?.user.id
     return NextResponse.json(canSeeAll ? staff : redactStaff(staff))
   } catch (error) {
     logger.error({ err: error }, 'Error fetching staff:')
-    return NextResponse.json({ error: 'Failed to fetch staff details' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch staff details') },
+      { status: 500 }
+    )
   }
 }
 
@@ -58,13 +64,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Only admin can update staff
     if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: await translateError('Forbidden') }, { status: 403 })
     }
 
     const { id } = await params
@@ -76,7 +84,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
 
     if (!existingStaff) {
-      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Staff not found') }, { status: 404 })
     }
 
     const {
@@ -111,7 +119,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         await assertPasswordAllowed(hospitalId, newPassword)
       } catch (err) {
         if (err instanceof PasswordPolicyError) {
-          return NextResponse.json({ error: err.message, code: err.code }, { status: 400 })
+          return NextResponse.json(
+            { error: await translateError(err.message), code: err.code },
+            { status: 400 }
+          )
         }
         throw err
       }
@@ -194,7 +205,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json(result)
   } catch (error) {
     logger.error({ err: error }, 'Error updating staff:')
-    return NextResponse.json({ error: 'Failed to update staff member' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update staff member') },
+      { status: 500 }
+    )
   }
 }
 
@@ -205,13 +219,15 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Only admin can delete staff
     if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: await translateError('Forbidden') }, { status: 403 })
     }
 
     const { id } = await params
@@ -222,7 +238,7 @@ export async function DELETE(
     })
 
     if (!staff) {
-      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Staff not found') }, { status: 404 })
     }
 
     // Soft delete - deactivate both user and staff
@@ -241,6 +257,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Staff member deactivated successfully' })
   } catch (error) {
     logger.error({ err: error }, 'Error deactivating staff:')
-    return NextResponse.json({ error: 'Failed to deactivate staff member' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to deactivate staff member') },
+      { status: 500 }
+    )
   }
 }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * Webhook handler for payment gateway callbacks.
@@ -22,7 +23,7 @@ export async function POST(
     try {
       payload = JSON.parse(rawBody)
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
     }
 
     // Determine the gateway order ID from the webhook payload based on provider,

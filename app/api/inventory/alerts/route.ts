@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, StockAlertType } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const ALERT_TYPES = Object.values(StockAlertType) as string[]
 
@@ -18,7 +19,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -88,7 +91,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching stock alerts:')
     return NextResponse.json(
-      { error: 'Failed to fetch stock alerts', details: error.message },
+      { error: await translateError('Failed to fetch stock alerts'), details: error.message },
       { status: 500 }
     )
   }
@@ -99,7 +102,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -108,7 +113,10 @@ export async function POST(request: NextRequest) {
     const { notes } = body
 
     if (!alertId) {
-      return NextResponse.json({ error: 'Alert ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Alert ID is required') },
+        { status: 400 }
+      )
     }
 
     const alert = await prisma.stockAlert.findFirst({
@@ -117,7 +125,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!alert) {
-      return NextResponse.json({ error: 'Alert not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Alert not found') }, { status: 404 })
     }
 
     await prisma.stockAlert.update({
@@ -135,7 +143,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error acknowledging alert:')
     return NextResponse.json(
-      { error: 'Failed to acknowledge alert', details: error.message },
+      { error: await translateError('Failed to acknowledge alert'), details: error.message },
       { status: 500 }
     )
   }

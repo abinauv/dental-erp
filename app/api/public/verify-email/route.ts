@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const verifySchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     const validated = verifySchema.safeParse(body)
 
     if (!validated.success) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('Invalid token') }, { status: 400 })
     }
 
     const { token } = validated.data
@@ -29,7 +30,10 @@ export async function POST(request: Request) {
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Invalid or expired verification token' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid or expired verification token') },
+        { status: 400 }
+      )
     }
 
     // Mark email as verified
@@ -49,7 +53,7 @@ export async function POST(request: Request) {
   } catch (error) {
     logger.error({ err: error }, 'Email verification error:')
     return NextResponse.json(
-      { error: 'An error occurred during verification. Please try again.' },
+      { error: await translateError('An error occurred during verification. Please try again.') },
       { status: 500 }
     )
   }
@@ -62,7 +66,10 @@ export async function GET(request: Request) {
     const token = searchParams.get('token')
 
     if (!token) {
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Token is required') },
+        { status: 400 }
+      )
     }
 
     const hospital = await prisma.hospital.findFirst({
@@ -80,7 +87,10 @@ export async function GET(request: Request) {
     })
 
     if (!hospital) {
-      return NextResponse.json({ valid: false, error: 'Invalid or expired token' }, { status: 400 })
+      return NextResponse.json(
+        { valid: false, error: await translateError('Invalid or expired token') },
+        { status: 400 }
+      )
     }
 
     return NextResponse.json({
@@ -90,6 +100,9 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Token validation error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }

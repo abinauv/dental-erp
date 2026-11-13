@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single payment details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -40,13 +43,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!payment) {
-      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Payment not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(payment)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching payment:')
-    return NextResponse.json({ error: 'Failed to fetch payment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch payment') },
+      { status: 500 }
+    )
   }
 }
 
@@ -54,14 +63,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to update payments" },
+        { error: await translateError("You don't have permission to update payments") },
         { status: 403 }
       )
     }
@@ -78,7 +89,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existingPayment) {
-      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Payment not found') },
+        { status: 404 }
+      )
     }
 
     const { notes, status } = body
@@ -121,20 +135,32 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           }
         } else {
           return NextResponse.json(
-            { error: `Cannot change payment status from ${existingPayment.status} to ${status}` },
+            {
+              error: await translateError('Cannot change payment status from {from} to {to}', {
+                from: existingPayment.status,
+                to: status,
+              }),
+            },
             { status: 400 }
           )
         }
       } else if (existingPayment.status === 'COMPLETED' && status !== 'COMPLETED') {
         return NextResponse.json(
-          { error: 'Cannot change status of a completed payment. Use refund instead.' },
+          {
+            error: await translateError(
+              'Cannot change status of a completed payment. Use refund instead.'
+            ),
+          },
           { status: 400 }
         )
       }
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('No valid fields to update') },
+        { status: 400 }
+      )
     }
 
     const payment = await prisma.payment.update({
@@ -157,7 +183,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(payment)
   } catch (error) {
     logger.error({ err: error }, 'Error updating payment:')
-    return NextResponse.json({ error: 'Failed to update payment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update payment') },
+      { status: 500 }
+    )
   }
 }
 
@@ -168,14 +197,16 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to delete payments" },
+        { error: await translateError("You don't have permission to delete payments") },
         { status: 403 }
       )
     }
@@ -188,13 +219,16 @@ export async function DELETE(
     })
 
     if (!existingPayment) {
-      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Payment not found') },
+        { status: 404 }
+      )
     }
 
     // Only allow deleting pending or failed payments
     if (existingPayment.status === 'COMPLETED') {
       return NextResponse.json(
-        { error: 'Cannot delete a completed payment. Use refund instead.' },
+        { error: await translateError('Cannot delete a completed payment. Use refund instead.') },
         { status: 400 }
       )
     }
@@ -207,6 +241,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Payment deleted successfully' })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting payment:')
-    return NextResponse.json({ error: 'Failed to delete payment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete payment') },
+      { status: 500 }
+    )
   }
 }

@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET — list medications with search, category filter, pagination
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     logger.error({ err }, 'Error fetching medications:')
     return NextResponse.json(
-      { error: err.message || 'Failed to fetch medications' },
+      { error: await translateError(err.message || 'Failed to fetch medications') },
       { status: 500 }
     )
   }
@@ -64,7 +67,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -84,7 +89,10 @@ export async function POST(request: NextRequest) {
     } = body
 
     if (!name) {
-      return NextResponse.json({ error: 'Medication name is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Medication name is required') },
+        { status: 400 }
+      )
     }
 
     const medication = await prisma.medication.create({
@@ -108,7 +116,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     logger.error({ err }, 'Error creating medication:')
     return NextResponse.json(
-      { error: err.message || 'Failed to create medication' },
+      { error: await translateError(err.message || 'Failed to create medication') },
       { status: 500 }
     )
   }

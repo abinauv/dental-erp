@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/communications/automations
@@ -30,7 +31,10 @@ export async function POST(req: Request) {
   const { name, trigger, action, isActive } = body
 
   if (!name || !trigger || !action) {
-    return NextResponse.json({ error: 'Name, trigger, and action are required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('Name, trigger, and action are required') },
+      { status: 400 }
+    )
   }
 
   // Validate trigger structure
@@ -44,7 +48,11 @@ export async function POST(req: Request) {
   ]
   if (!trigger.type || !validTriggers.includes(trigger.type)) {
     return NextResponse.json(
-      { error: `Invalid trigger type. Valid: ${validTriggers.join(', ')}` },
+      {
+        error: await translateError('Invalid trigger type. Valid: {valid}', {
+          valid: validTriggers.join(', '),
+        }),
+      },
       { status: 400 }
     )
   }
@@ -53,7 +61,11 @@ export async function POST(req: Request) {
   const validActions = ['SEND_SMS', 'SEND_EMAIL', 'CREATE_NOTIFICATION', 'ADD_TO_SEGMENT']
   if (!action.type || !validActions.includes(action.type)) {
     return NextResponse.json(
-      { error: `Invalid action type. Valid: ${validActions.join(', ')}` },
+      {
+        error: await translateError('Invalid action type. Valid: {valid}', {
+          valid: validActions.join(', '),
+        }),
+      },
       { status: 400 }
     )
   }
@@ -83,7 +95,10 @@ export async function PUT(req: Request) {
   const { id, name, trigger, action, isActive } = body
 
   if (!id) {
-    return NextResponse.json({ error: 'Automation id is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('Automation id is required') },
+      { status: 400 }
+    )
   }
 
   // Verify ownership
@@ -91,7 +106,10 @@ export async function PUT(req: Request) {
     where: { id, hospitalId: hospitalId! },
   })
   if (!existing) {
-    return NextResponse.json({ error: 'Automation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Automation not found') },
+      { status: 404 }
+    )
   }
 
   const updateData: Record<string, unknown> = {}
@@ -120,7 +138,10 @@ export async function DELETE(req: Request) {
   const { id } = body
 
   if (!id) {
-    return NextResponse.json({ error: 'Automation id is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('Automation id is required') },
+      { status: 400 }
+    )
   }
 
   // Verify ownership
@@ -128,7 +149,10 @@ export async function DELETE(req: Request) {
     where: { id, hospitalId: hospitalId! },
   })
   if (!existing) {
-    return NextResponse.json({ error: 'Automation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Automation not found') },
+      { status: 404 }
+    )
   }
 
   await prisma.marketingAutomation.delete({ where: { id } })
