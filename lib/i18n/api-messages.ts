@@ -47,7 +47,7 @@ export async function translateError(
   values?: Values
 ): Promise<string> {
   // A passed-through error can lack a message.
-  if (!message) return message ?? ''
+  if (!message) return ''
   try {
     const { getLocaleForApiRequest } = await import('./request')
     return translateMessage(message, await getLocaleForApiRequest(), values)
