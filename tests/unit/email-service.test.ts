@@ -94,6 +94,29 @@ describe('EmailService - Communication Preferences', () => {
       })
     ).rejects.toThrow('disabled email')
   })
+
+  // Nothing creates preference records, so this is every patient: they get
+  // the defaults (email on). Treating a missing record as "off" failed every
+  // email sent for a patient, including the automated reminders.
+  it('sends to a patient without a preferences record', async () => {
+    const { emailService } = emailServiceModule
+    vi.mocked(prisma.patientCommunicationPreference.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.emailLog.create).mockResolvedValue({ id: 'email-1' } as any)
+
+    const id = await emailService.sendEmail({
+      hospitalId: 'hosp-1',
+      to: 'test@example.com',
+      subject: 'Reminder',
+      body: 'Hi',
+      patientId: 'pat-1',
+      scheduledFor: new Date(Date.now() + 3600_000),
+    })
+
+    expect(id).toBe('email-1')
+    expect(prisma.emailLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ patientId: 'pat-1' }) })
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------

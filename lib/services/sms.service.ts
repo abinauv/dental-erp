@@ -73,7 +73,8 @@ class SMSService {
       throw new Error('Invalid phone number format')
     }
 
-    // Check DND registry if patient is provided
+    // Check DND registry if patient is provided. A patient without a
+    // preferences record has the defaults: SMS on, not on the DND registry.
     if (payload.patientId) {
       const preference = await prisma.patientCommunicationPreference.findUnique({
         where: { patientId: payload.patientId },
@@ -83,7 +84,7 @@ class SMSService {
         throw new Error('Patient is on DND registry')
       }
 
-      if (!preference?.smsEnabled) {
+      if (preference && !preference.smsEnabled) {
         throw new Error('Patient has disabled SMS communication')
       }
     }

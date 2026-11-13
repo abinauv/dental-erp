@@ -122,13 +122,14 @@ class EmailService {
       throw new Error('Invalid email address')
     }
 
-    // Check patient preferences if patient is provided
+    // Check patient preferences if patient is provided. A patient without a
+    // preferences record has the default: email on.
     if (payload.patientId) {
       const preference = await prisma.patientCommunicationPreference.findUnique({
         where: { patientId: payload.patientId },
       })
 
-      if (!preference?.emailEnabled) {
+      if (preference && !preference.emailEnabled) {
         throw new Error('Patient has disabled email communication')
       }
     }
