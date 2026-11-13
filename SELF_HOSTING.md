@@ -286,6 +286,18 @@ mounted. If the container still exists, rescue them before doing anything else:
 docker cp <container>:/app/uploads ./uploads-backup
 ```
 
+**A scheduled email or SMS was not sent.** The app sends them itself, checking
+every minute; `docker compose logs app | grep outbox` shows each run that did
+something. Check that `OUTBOX_INTERVAL_SECONDS` is not `0`, and that the clinic
+has filled in Settings → Communications: each clinic sends through its own
+SMTP server and SMS gateway. A message that failed or was not sent says why in
+its log entry. The deliberate cases:
+
+- SMS only go out between 9 AM and 9 PM IST, so a due SMS waits for 9 AM.
+- A message more than 24 hours past its time, for example after the app was
+  down for a day, is cancelled rather than sent late.
+- A message is cancelled if the patient has since turned that channel off.
+
 **The image will not pull on a Raspberry Pi or an ARM server.** It should —
 releases publish `linux/amd64` and `linux/arm64`. Check what you actually asked
 for: `docker buildx imagetools inspect ghcr.io/abinauv/dental-erp:<version>`.
@@ -298,10 +310,14 @@ Stated plainly, because finding out later is worse:
 
 - **No built-in log shipping or metrics.** Logs go to the container's stdout;
   collect them with whatever you already run.
-- **No background job queue.** Scheduled work runs through authenticated HTTP
-  endpoints driven by an external scheduler, and email and SMS are sent inline
-  on the request. Phase 5 of the [infrastructure
-  roadmap](docs/INFRASTRUCTURE.md) addresses this — it is not committed yet.
+- **The other scheduled jobs need a scheduler you provide.** Scheduled email
+  and SMS are sent by the app itself. The rest (appointment reminders, recalls,
+  payment reminders, automations, the daily briefing, inventory alerts and
+  cleanup) are authenticated HTTP endpoints under `/api/cron/` that only run
+  when something calls them. This stack does not call them yet.
+- **No job queue in this stack.** Email and SMS are sent inline on the request.
+  The optional Redis queue needs a worker process that is not in the image yet,
+  so leave `REDIS_URL` unset here.
 - **No SSO.** Credentials login only. Phase 6, also not committed.
 - **No automated backup verification.** `backup.sh` checks that the dump is not
   truncated; it does not restore it somewhere to prove it works. That is the

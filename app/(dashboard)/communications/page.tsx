@@ -9,22 +9,36 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { MessageSquare, Mail, FileText, MessageCircle, Send } from 'lucide-react'
+import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
+import { MessageSquare, Mail, FileText, MessageCircle, Send, Clock } from 'lucide-react'
 
 export default function CommunicationsPage() {
   const { toast } = useToast()
   const t = useTranslations('communications.center')
   const tc = useTranslations('communications.common')
+  const { formatDateTime } = useClinicFormatters()
   const [loading, setLoading] = useState(false)
 
   // SMS State
   const [smsPhone, setSmsPhone] = useState('')
   const [smsMessage, setSmsMessage] = useState('')
+  const [smsSendAt, setSmsSendAt] = useState('')
 
   // Email State
   const [emailTo, setEmailTo] = useState('')
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
+  const [emailSendAt, setEmailSendAt] = useState('')
+
+  // The "Send later" field holds a local date and time (datetime-local).
+  // Empty means send now; a time that has passed is refused.
+  const sendTime = (value: string): { at?: Date; past?: boolean } => {
+    if (!value) return {}
+    const at = new Date(value)
+    return at.getTime() > Date.now() ? { at } : { past: true }
+  }
+  const pastTimeToast = () =>
+    toast({ title: tc('error'), description: t('toast.pastTime'), variant: 'destructive' })
 
   const handleSendSMS = async () => {
     if (!smsPhone || !smsMessage) {
@@ -36,6 +50,9 @@ export default function CommunicationsPage() {
       return
     }
 
+    const { at, past } = sendTime(smsSendAt)
+    if (past) return pastTimeToast()
+
     setLoading(true)
     try {
       const response = await fetch('/api/communications/sms', {
@@ -44,6 +61,7 @@ export default function CommunicationsPage() {
         body: JSON.stringify({
           phone: smsPhone,
           message: smsMessage,
+          ...(at && { scheduledFor: at.toISOString() }),
         }),
       })
 
@@ -52,10 +70,13 @@ export default function CommunicationsPage() {
       if (response.ok) {
         toast({
           title: tc('success'),
-          description: t('toast.smsSuccess'),
+          description: at
+            ? t('toast.smsScheduled', { time: formatDateTime(at) })
+            : t('toast.smsSuccess'),
         })
         setSmsPhone('')
         setSmsMessage('')
+        setSmsSendAt('')
       } else {
         throw new Error(data.error || t('toast.smsError'))
       }
@@ -80,6 +101,9 @@ export default function CommunicationsPage() {
       return
     }
 
+    const { at, past } = sendTime(emailSendAt)
+    if (past) return pastTimeToast()
+
     setLoading(true)
     try {
       const response = await fetch('/api/communications/email', {
@@ -89,6 +113,7 @@ export default function CommunicationsPage() {
           to: emailTo,
           subject: emailSubject,
           body: emailBody,
+          ...(at && { scheduledFor: at.toISOString() }),
         }),
       })
 
@@ -97,11 +122,14 @@ export default function CommunicationsPage() {
       if (response.ok) {
         toast({
           title: tc('success'),
-          description: t('toast.emailSuccess'),
+          description: at
+            ? t('toast.emailScheduled', { time: formatDateTime(at) })
+            : t('toast.emailSuccess'),
         })
         setEmailTo('')
         setEmailSubject('')
         setEmailBody('')
+        setEmailSendAt('')
       } else {
         throw new Error(data.error || t('toast.emailError'))
       }
@@ -177,9 +205,27 @@ export default function CommunicationsPage() {
                   </p>
                 </div>
 
+                <div>
+                  <Label htmlFor="sms-send-at">{t('sms.sendLaterLabel')}</Label>
+                  <Input
+                    id="sms-send-at"
+                    type="datetime-local"
+                    value={smsSendAt}
+                    onChange={(e) => setSmsSendAt(e.target.value)}
+                    aria-describedby="sms-send-at-hint"
+                  />
+                  <p id="sms-send-at-hint" className="text-sm text-muted-foreground mt-1">
+                    {t('sms.sendLaterHint')}
+                  </p>
+                </div>
+
                 <Button onClick={handleSendSMS} disabled={loading} className="w-full">
-                  <Send className="w-4 h-4 mr-2" />
-                  {t('sms.send')}
+                  {smsSendAt ? (
+                    <Clock className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  {smsSendAt ? t('sms.schedule') : t('sms.send')}
                 </Button>
               </CardContent>
             </Card>
@@ -238,9 +284,27 @@ export default function CommunicationsPage() {
                   />
                 </div>
 
+                <div>
+                  <Label htmlFor="email-send-at">{t('email.sendLaterLabel')}</Label>
+                  <Input
+                    id="email-send-at"
+                    type="datetime-local"
+                    value={emailSendAt}
+                    onChange={(e) => setEmailSendAt(e.target.value)}
+                    aria-describedby="email-send-at-hint"
+                  />
+                  <p id="email-send-at-hint" className="text-sm text-muted-foreground mt-1">
+                    {t('email.sendLaterHint')}
+                  </p>
+                </div>
+
                 <Button onClick={handleSendEmail} disabled={loading} className="w-full">
-                  <Send className="w-4 h-4 mr-2" />
-                  {t('email.send')}
+                  {emailSendAt ? (
+                    <Clock className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  {emailSendAt ? t('email.schedule') : t('email.send')}
                 </Button>
               </CardContent>
             </Card>

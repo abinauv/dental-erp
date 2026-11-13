@@ -6154,7 +6154,10 @@
         "send": "Send SMS",
         "historyTitle": "SMS History",
         "historyDescription": "Recent SMS communications",
-        "historyPlaceholder": "SMS history will be displayed here"
+        "historyPlaceholder": "SMS history will be displayed here",
+        "sendLaterLabel": "Send later (optional)",
+        "sendLaterHint": "Leave empty to send now. Scheduled SMS can only go out between 9 AM and 9 PM IST.",
+        "schedule": "Schedule SMS"
       },
       "email": {
         "sendTitle": "Send Email",
@@ -6168,7 +6171,10 @@
         "send": "Send Email",
         "historyTitle": "Email History",
         "historyDescription": "Recent email communications",
-        "historyPlaceholder": "Email history will be displayed here"
+        "historyPlaceholder": "Email history will be displayed here",
+        "sendLaterLabel": "Send later (optional)",
+        "sendLaterHint": "Leave empty to send now.",
+        "schedule": "Schedule Email"
       },
       "templates": {
         "title": "Communication Templates",
@@ -6191,7 +6197,10 @@
         "smsSuccess": "SMS sent successfully",
         "smsError": "Failed to send SMS",
         "emailSuccess": "Email sent successfully",
-        "emailError": "Failed to send email"
+        "emailError": "Failed to send email",
+        "pastTime": "Choose a time in the future, or leave the field empty to send now.",
+        "smsScheduled": "SMS scheduled for {time}",
+        "emailScheduled": "Email scheduled for {time}"
       }
     },
     "analytics": {

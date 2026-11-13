@@ -8,10 +8,12 @@ import { logger } from '@/lib/logger'
 export async function POST(req: NextRequest) {
   try {
     // Verify cron secret to prevent unauthorized access
+    // No fallback: without CRON_SECRET nobody gets in (a default value would
+    // be a published password).
     const authHeader = req.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET || 'your-cron-secret-key'
+    const cronSecret = process.env.CRON_SECRET
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

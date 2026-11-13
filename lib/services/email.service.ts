@@ -4,7 +4,7 @@
 import prisma from '@/lib/prisma'
 import nodemailer from 'nodemailer'
 import type { Transporter } from 'nodemailer'
-import { enqueue, isQueueEnabled } from '@/lib/queue'
+import { enqueue } from '@/lib/queue'
 
 export interface EmailConfig {
   host: string
@@ -39,23 +39,28 @@ export interface EmailAttachment {
   contentType?: string
 }
 
-class EmailService {
-  private transporter: Transporter | null = null
-  private config: EmailConfig | null = null
+interface ClinicTransport {
+  // The settings the transporter was built from; a change rebuilds it.
+  key: string
+  transporter: Transporter
+  config: EmailConfig
+}
 
-  async initialize() {
-    // Load email configuration from settings
+class EmailService {
+  // One SMTP transporter per clinic. Settings are stored per clinic, so one
+  // clinic's mail must never go out through another clinic's account.
+  private transports = new Map<string, ClinicTransport>()
+
+  private async loadConfig(hospitalId: string): Promise<EmailConfig> {
     const settings = await prisma.setting.findMany({
-      where: {
-        category: 'email',
-      },
+      where: { hospitalId, category: 'email' },
     })
 
     if (settings.length === 0) {
       throw new Error('Email not configured')
     }
 
-    this.config = {
+    const config: EmailConfig = {
       host: settings.find((s) => s.key === 'email.smtp.host')?.value || '',
       port: parseInt(settings.find((s) => s.key === 'email.smtp.port')?.value || '587'),
       secure: settings.find((s) => s.key === 'email.smtp.secure')?.value === 'true',
@@ -70,27 +75,45 @@ class EmailService {
       replyTo: settings.find((s) => s.key === 'email.replyTo')?.value,
     }
 
-    if (!this.config.host || !this.config.auth.user || !this.config.auth.pass) {
+    if (!config.host || !config.auth.user || !config.auth.pass) {
       throw new Error('Email SMTP configuration incomplete')
     }
+    return config
+  }
 
-    // Create transporter
-    this.transporter = nodemailer.createTransport({
-      host: this.config.host,
-      port: this.config.port,
-      secure: this.config.secure,
+  // The clinic's transporter, built (and its connection verified) the first
+  // time and again whenever the clinic's settings change.
+  private async getTransport(hospitalId: string): Promise<ClinicTransport> {
+    const config = await this.loadConfig(hospitalId)
+    const key = JSON.stringify(config)
+    const cached = this.transports.get(hospitalId)
+    if (cached?.key === key) return cached
+
+    const transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
       auth: {
-        user: this.config.auth.user,
-        pass: this.config.auth.pass,
+        user: config.auth.user,
+        pass: config.auth.pass,
       },
     })
 
-    // Verify connection
     try {
-      await this.transporter.verify()
+      await transporter.verify()
     } catch (error) {
       throw new Error('Failed to connect to SMTP server')
     }
+
+    cached?.transporter.close()
+    const entry = { key, transporter, config }
+    this.transports.set(hospitalId, entry)
+    return entry
+  }
+
+  /** Check that the clinic's SMTP settings are complete and connect. */
+  async initialize(hospitalId: string): Promise<void> {
+    await this.getTransport(hospitalId)
   }
 
   async sendEmail(payload: EmailPayload): Promise<string> {
@@ -108,6 +131,14 @@ class EmailService {
       if (!preference?.emailEnabled) {
         throw new Error('Patient has disabled email communication')
       }
+    }
+
+    const scheduled = !!payload.scheduledFor && payload.scheduledFor > new Date()
+
+    // A scheduled email is sent later from its log row, which keeps only the
+    // attachments' names, not their content.
+    if (scheduled && payload.attachments?.length) {
+      throw new Error('A scheduled email cannot have attachments')
     }
 
     // Create email log entry
@@ -132,16 +163,9 @@ class EmailService {
       },
     })
 
-    // Scheduled for later: the row stays PENDING. With a queue, schedule a
-    // delayed dispatch job; without one nothing is sent now (unchanged).
-    if (payload.scheduledFor && payload.scheduledFor > new Date()) {
-      if (isQueueEnabled()) {
-        await enqueue(
-          'send-email',
-          { emailLogId: emailLog.id, payload },
-          { jobId: `email:${emailLog.id}`, delayMs: payload.scheduledFor.getTime() - Date.now() }
-        )
-      }
+    // Scheduled for later: the row stays PENDING until the outbox sends it
+    // when it's due (lib/services/outbox.service.ts).
+    if (scheduled) {
       return emailLog.id
     }
 
@@ -162,14 +186,12 @@ class EmailService {
   // throws on failure so BullMQ retries and the inline path surfaces the error.
   async dispatchLog(emailLogId: string, payload: EmailPayload): Promise<void> {
     try {
-      if (!this.transporter || !this.config) {
-        await this.initialize()
-      }
+      const { transporter, config } = await this.getTransport(payload.hospitalId)
 
-      const result = await this.transporter!.sendMail({
-        from: `"${this.config!.from.name}" <${this.config!.from.email}>`,
+      const result = await transporter.sendMail({
+        from: `"${config.from.name}" <${config.from.email}>`,
         to: payload.to,
-        replyTo: this.config!.replyTo || this.config!.from.email,
+        replyTo: config.replyTo || config.from.email,
         subject: payload.subject,
         html: payload.body,
         attachments: this.normalizeAttachments(payload.attachments),

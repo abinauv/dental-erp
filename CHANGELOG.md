@@ -30,8 +30,31 @@ before it are not itemized here; see the git history and the
   insurance policy, view it, edit it while it's a draft, and move it through
   submission, review, the insurer's decision and settlement. "New Claim",
   and a claim's "View Details" and "Edit", used to open missing pages.
+- "Send later" on the Communications page: the SMS and email forms take an
+  optional date and time.
+- `GET /api/cron/outbox` sends scheduled messages that are due, for running
+  that from an external scheduler (see `OUTBOX_INTERVAL_SECONDS` below).
+
+### Security
+
+- `POST /api/communications/triggers` accepted a built-in default secret when
+  `CRON_SECRET` was unset. It now refuses every request until `CRON_SECRET` is
+  set. (The Docker Compose setup has always required it.)
 
 ### Fixed
+
+- Scheduled emails and SMS were never sent, unless a Redis queue and its
+  worker were running. The app now sends them itself within a minute of their
+  time. A scheduled SMS still only goes out between 9 AM and 9 PM IST, and a
+  message is cancelled instead if the patient has turned that channel off in
+  the meantime.
+- With more than one clinic, email and SMS could go out through another
+  clinic's SMTP server or SMS gateway. Each clinic now sends with its own
+  settings, and changes to them apply from the next message instead of after
+  a restart.
+- An SMS could not be scheduled at night even for the next day: the 9 AM–9 PM
+  rule was checked against the time of scheduling. It's now checked against the
+  time the SMS will go out.
 
 - Creating a lab order always failed: the form sent work types the database
   rejects.
@@ -47,6 +70,19 @@ before it are not itemized here; see the git history and the
   settling it) always failed with an error.
 - Filtering insurance claims by date failed with an error, and the claims
   list's "Submitted" column was always empty.
+
+### Upgrading
+
+- Scheduled messages start sending after the upgrade. Any that are already
+  more than 24 hours overdue are cancelled rather than sent late, with a note
+  saying why; ones less than 24 hours overdue are sent.
+- `OUTBOX_INTERVAL_SECONDS` (default 60) sets how often the app checks for due
+  messages; `0` turns that off, for when `/api/cron/outbox` is called from
+  your own scheduler instead. Running both is safe: no message is sent twice.
+- A scheduled email can no longer carry attachments (they were never stored,
+  so they couldn't be sent later).
+- Leave `REDIS_URL` unset in the Docker Compose setup: the queue's worker isn't
+  in the image, so with Redis set, email and SMS wait in the queue unsent.
 
 ## [3.0.0] - 2026-11-11
 
