@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { generateFormPdfHtml } from '@/lib/services/pdf-generator'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/forms/[id]/pdf
@@ -23,7 +24,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   })
 
   if (!submission) {
-    return NextResponse.json({ error: 'Form submission not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Form submission not found') },
+      { status: 404 }
+    )
   }
 
   // Get patient info if linked

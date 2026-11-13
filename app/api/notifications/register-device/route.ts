@@ -3,6 +3,7 @@ import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const registerSchema = z.object({
   token: z.string().min(1, 'Push token is required'),
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession()
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     const body = await req.json()
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: validated.error.flatten() },
+        { error: await translateError('Invalid request'), details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -59,7 +60,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     logger.error({ err: error }, 'Device registration error:')
-    return NextResponse.json({ error: 'Failed to register device' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to register device') },
+      { status: 500 }
+    )
   }
 }
 
@@ -68,14 +72,17 @@ export async function DELETE(req: NextRequest) {
   try {
     const session = await getServerSession()
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     const { searchParams } = new URL(req.url)
     const token = searchParams.get('token')
 
     if (!token) {
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Token is required') },
+        { status: 400 }
+      )
     }
 
     await prisma.pushDevice.updateMany({
@@ -91,6 +98,9 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     logger.error({ err: error }, 'Device unregister error:')
-    return NextResponse.json({ error: 'Failed to unregister device' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to unregister device') },
+      { status: 500 }
+    )
   }
 }

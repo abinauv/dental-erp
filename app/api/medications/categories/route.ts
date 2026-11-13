@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET — distinct medication categories for this hospital
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -21,6 +24,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: categories })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: await translateError(err.message) }, { status: 500 })
   }
 }

@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, StockAlertType, StockTransactionType } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const TRANSACTION_TYPES = Object.values(StockTransactionType) as string[]
 
@@ -38,7 +39,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -108,7 +111,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching stock transactions:')
     return NextResponse.json(
-      { error: 'Failed to fetch stock transactions', details: error.message },
+      { error: await translateError('Failed to fetch stock transactions'), details: error.message },
       { status: 500 }
     )
   }
@@ -119,7 +122,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -142,14 +147,18 @@ export async function POST(request: NextRequest) {
 
     if (!type || !itemId || !quantity || !transactionDate) {
       return NextResponse.json(
-        { error: 'Missing required fields: type, itemId, quantity, transactionDate' },
+        {
+          error: await translateError(
+            'Missing required fields: type, itemId, quantity, transactionDate'
+          ),
+        },
         { status: 400 }
       )
     }
 
     if (!Number.isInteger(quantity) || quantity <= 0) {
       return NextResponse.json(
-        { error: 'quantity must be a positive whole number' },
+        { error: await translateError('quantity must be a positive whole number') },
         { status: 400 }
       )
     }
@@ -247,7 +256,10 @@ export async function POST(request: NextRequest) {
     })
 
     if ('error' in result) {
-      return NextResponse.json({ error: result.error }, { status: result.status })
+      return NextResponse.json(
+        { error: await translateError(result.error) },
+        { status: result.status }
+      )
     }
 
     return NextResponse.json(
@@ -261,7 +273,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error creating stock transaction:')
     return NextResponse.json(
-      { error: 'Failed to create stock transaction', details: error.message },
+      { error: await translateError('Failed to create stock transaction'), details: error.message },
       { status: 500 }
     )
   }

@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Fetch all lab vendors
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -62,7 +65,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching lab vendors:')
     return NextResponse.json(
-      { error: 'Failed to fetch lab vendors', details: error.message },
+      { error: await translateError('Failed to fetch lab vendors'), details: error.message },
       { status: 500 }
     )
   }
@@ -73,7 +76,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -92,7 +97,10 @@ export async function POST(request: NextRequest) {
 
     // Validation
     if (!name || !phone) {
-      return NextResponse.json({ error: 'Missing required fields: name, phone' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Missing required fields: name, phone') },
+        { status: 400 }
+      )
     }
 
     // Create lab vendor
@@ -122,7 +130,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error creating lab vendor:')
     return NextResponse.json(
-      { error: 'Failed to create lab vendor', details: error.message },
+      { error: await translateError('Failed to create lab vendor'), details: error.message },
       { status: 500 }
     )
   }

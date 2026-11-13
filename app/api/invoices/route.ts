@@ -4,12 +4,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generateInvoiceNo, calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
 import { DiscountType, InvoiceStatus, Prisma } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - List invoices with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -153,7 +156,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching invoices:')
-    return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch invoices') },
+      { status: 500 }
+    )
   }
 }
 
@@ -161,14 +167,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to create invoices" },
+        { error: await translateError("You don't have permission to create invoices") },
         { status: 403 }
       )
     }
@@ -190,11 +198,17 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!patientId) {
-      return NextResponse.json({ error: 'Patient is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient is required') },
+        { status: 400 }
+      )
     }
 
     if (!items || items.length === 0) {
-      return NextResponse.json({ error: 'At least one item is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('At least one item is required') },
+        { status: 400 }
+      )
     }
 
     // Check if patient exists
@@ -202,7 +216,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Tax provider is driven by the clinic's country; place-of-supply (the
@@ -324,6 +341,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(invoice, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating invoice:')
-    return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create invoice') },
+      { status: 500 }
+    )
   }
 }

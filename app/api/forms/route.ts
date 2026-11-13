@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET: List form submissions for the hospital (staff view)
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -41,7 +44,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ submissions, total, page, totalPages: Math.ceil(total / limit) })
   } catch (err) {
     logger.error({ err }, 'List submissions error:')
-    return NextResponse.json({ error: 'Failed to list submissions' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to list submissions') },
+      { status: 500 }
+    )
   }
 }
 
@@ -49,7 +55,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -57,14 +65,20 @@ export async function POST(req: NextRequest) {
     const { templateId, patientId, appointmentId, data, signature } = body
 
     if (!templateId) {
-      return NextResponse.json({ error: 'templateId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('templateId is required') },
+        { status: 400 }
+      )
     }
 
     const template = await prisma.formTemplate.findFirst({
       where: { id: templateId, hospitalId },
     })
     if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Template not found') },
+        { status: 404 }
+      )
     }
 
     const submission = await prisma.formSubmission.create({
@@ -82,6 +96,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ submission }, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Create submission error:')
-    return NextResponse.json({ error: 'Failed to create submission' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create submission') },
+      { status: 500 }
+    )
   }
 }

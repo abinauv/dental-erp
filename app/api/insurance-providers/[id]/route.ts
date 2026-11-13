@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const { id } = await params
@@ -27,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   })
 
   if (!provider) {
-    return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
+    return NextResponse.json({ error: await translateError('Provider not found') }, { status: 404 })
   }
 
   return NextResponse.json(provider)
@@ -36,7 +39,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const { id } = await params
@@ -73,26 +78,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (provider.count === 0) {
-      return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Provider not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
     if (err?.code === 'P2002') {
       return NextResponse.json(
-        { error: 'A provider with this name already exists' },
+        { error: await translateError('A provider with this name already exists') },
         { status: 409 }
       )
     }
     logger.error({ err }, 'Update insurance provider error:')
-    return NextResponse.json({ error: 'Failed to update provider' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update provider') },
+      { status: 500 }
+    )
   }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const { id } = await params

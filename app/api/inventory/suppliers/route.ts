@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { Prisma, SupplierStatus } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const SUPPLIER_STATUSES = Object.values(SupplierStatus) as string[]
 
@@ -17,7 +18,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -89,7 +92,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching suppliers:')
     return NextResponse.json(
-      { error: 'Failed to fetch suppliers', details: error.message },
+      { error: await translateError('Failed to fetch suppliers'), details: error.message },
       { status: 500 }
     )
   }
@@ -100,7 +103,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -127,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     if (!code || !name || !phone) {
       return NextResponse.json(
-        { error: 'Missing required fields: code, name, phone' },
+        { error: await translateError('Missing required fields: code, name, phone') },
         { status: 400 }
       )
     }
@@ -138,7 +143,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (existing) {
-      return NextResponse.json({ error: 'Supplier code already exists' }, { status: 409 })
+      return NextResponse.json(
+        { error: await translateError('Supplier code already exists') },
+        { status: 409 }
+      )
     }
 
     const supplier = await prisma.supplier.create({
@@ -176,7 +184,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error creating supplier:')
     return NextResponse.json(
-      { error: 'Failed to create supplier', details: error.message },
+      { error: await translateError('Failed to create supplier'), details: error.message },
       { status: 500 }
     )
   }

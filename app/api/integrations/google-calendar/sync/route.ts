@@ -3,12 +3,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { syncAppointments } from '@/lib/services/google-calendar'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST /api/integrations/google-calendar/sync — Trigger sync
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId || !session) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -23,13 +26,16 @@ export async function POST(req: NextRequest) {
 
     if (!integration) {
       return NextResponse.json(
-        { error: 'Google Calendar not connected. Please connect first.' },
+        { error: await translateError('Google Calendar not connected. Please connect first.') },
         { status: 400 }
       )
     }
 
     if (!integration.syncEnabled) {
-      return NextResponse.json({ error: 'Calendar sync is disabled' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Calendar sync is disabled') },
+        { status: 400 }
+      )
     }
 
     const result = await syncAppointments(integration.id, hospitalId, session.user.id)
@@ -40,7 +46,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Calendar sync error:')
-    return NextResponse.json({ error: 'Failed to sync calendar' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to sync calendar') },
+      { status: 500 }
+    )
   }
 }
 
@@ -48,7 +57,9 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { error, session } = await requireAuthAndRole()
   if (error || !session) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -75,6 +86,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching sync status:')
-    return NextResponse.json({ error: 'Failed to fetch sync status' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch sync status') },
+      { status: 500 }
+    )
   }
 }

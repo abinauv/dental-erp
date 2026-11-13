@@ -4,12 +4,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { calculateInvoiceTotals } from '@/lib/billing-utils'
 import { DiscountType, InvoiceStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single invoice with full details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -68,13 +71,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(invoice)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching invoice:')
-    return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch invoice') },
+      { status: 500 }
+    )
   }
 }
 
@@ -82,14 +91,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to update invoices" },
+        { error: await translateError("You don't have permission to update invoices") },
         { status: 403 }
       )
     }
@@ -107,7 +118,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existingInvoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     // Clinic country/region for the tax provider + place-of-supply split.
@@ -118,14 +132,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Don't allow editing paid or refunded invoices
     if (existingInvoice.status === 'PAID' || existingInvoice.status === 'REFUNDED') {
-      return NextResponse.json({ error: 'Cannot edit a paid or refunded invoice' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Cannot edit a paid or refunded invoice') },
+        { status: 400 }
+      )
     }
 
     // Don't allow editing if there are completed payments
     const completedPayments = existingInvoice.payments.filter((p) => p.status === 'COMPLETED')
     if (completedPayments.length > 0 && body.items) {
       return NextResponse.json(
-        { error: 'Cannot edit invoice items after payments have been made' },
+        { error: await translateError('Cannot edit invoice items after payments have been made') },
         { status: 400 }
       )
     }
@@ -224,7 +241,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         updateData.status = status
       } else if (status !== existingInvoice.status) {
         return NextResponse.json(
-          { error: `Cannot transition from ${existingInvoice.status} to ${status}` },
+          {
+            error: await translateError('Cannot transition from {from} to {to}', {
+              from: existingInvoice.status,
+              to: status,
+            }),
+          },
           { status: 400 }
         )
       }
@@ -271,7 +293,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(invoice)
   } catch (error) {
     logger.error({ err: error }, 'Error updating invoice:')
-    return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update invoice') },
+      { status: 500 }
+    )
   }
 }
 
@@ -282,14 +307,16 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to delete invoices" },
+        { error: await translateError("You don't have permission to delete invoices") },
         { status: 403 }
       )
     }
@@ -305,7 +332,10 @@ export async function DELETE(
     })
 
     if (!existingInvoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     // If there are any completed payments, don't delete - just cancel
@@ -341,6 +371,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Invoice deleted successfully' })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting invoice:')
-    return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete invoice') },
+      { status: 500 }
+    )
   }
 }

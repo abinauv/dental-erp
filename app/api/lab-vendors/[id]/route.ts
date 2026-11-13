@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { LabVendorStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const VENDOR_STATUSES = Object.values(LabVendorStatus) as string[]
 
@@ -18,7 +19,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -29,14 +32,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!vendor) {
-      return NextResponse.json({ error: 'Lab vendor not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab vendor not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ success: true, data: vendor })
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching lab vendor:')
     return NextResponse.json(
-      { error: 'Failed to fetch lab vendor', details: error.message },
+      { error: await translateError('Failed to fetch lab vendor'), details: error.message },
       { status: 500 }
     )
   }
@@ -47,7 +53,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -60,7 +68,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Lab vendor not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab vendor not found') },
+        { status: 404 }
+      )
     }
 
     const {
@@ -86,7 +97,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (!code || !name || !phone) {
       return NextResponse.json(
-        { error: 'Missing required fields: code, name, phone' },
+        { error: await translateError('Missing required fields: code, name, phone') },
         { status: 400 }
       )
     }
@@ -97,7 +108,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (duplicate) {
-      return NextResponse.json({ error: 'Vendor code already exists' }, { status: 409 })
+      return NextResponse.json(
+        { error: await translateError('Vendor code already exists') },
+        { status: 409 }
+      )
     }
 
     await prisma.labVendor.update({
@@ -129,7 +143,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating lab vendor:')
     return NextResponse.json(
-      { error: 'Failed to update lab vendor', details: error.message },
+      { error: await translateError('Failed to update lab vendor'), details: error.message },
       { status: 500 }
     )
   }
@@ -143,7 +157,9 @@ export async function DELETE(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -155,7 +171,10 @@ export async function DELETE(
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Lab vendor not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab vendor not found') },
+        { status: 404 }
+      )
     }
 
     const orderCount = await prisma.labOrder.count({
@@ -181,7 +200,7 @@ export async function DELETE(
   } catch (error: any) {
     logger.error({ err: error }, 'Error deleting lab vendor:')
     return NextResponse.json(
-      { error: 'Failed to delete lab vendor', details: error.message },
+      { error: await translateError('Failed to delete lab vendor'), details: error.message },
       { status: 500 }
     )
   }

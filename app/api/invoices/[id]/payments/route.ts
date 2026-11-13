@@ -4,12 +4,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generatePaymentNo } from '@/lib/billing-utils'
 import { PaymentMethod } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get payments for an invoice
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -28,7 +31,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     const payments = await prisma.payment.findMany({
@@ -44,7 +50,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching payments:')
-    return NextResponse.json({ error: 'Failed to fetch payments' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch payments') },
+      { status: 500 }
+    )
   }
 }
 
@@ -52,14 +61,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to record payments" },
+        { error: await translateError("You don't have permission to record payments") },
         { status: 403 }
       )
     }
@@ -81,11 +92,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate required fields
     if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Valid payment amount is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Valid payment amount is required') },
+        { status: 400 }
+      )
     }
 
     if (!paymentMethod) {
-      return NextResponse.json({ error: 'Payment method is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Payment method is required') },
+        { status: 400 }
+      )
     }
 
     // Check if invoice exists
@@ -94,26 +111,37 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     // Check if invoice can accept payments
     if (invoice.status === 'CANCELLED' || invoice.status === 'REFUNDED') {
       return NextResponse.json(
-        { error: 'Cannot add payment to a cancelled or refunded invoice' },
+        { error: await translateError('Cannot add payment to a cancelled or refunded invoice') },
         { status: 400 }
       )
     }
 
     if (invoice.status === 'PAID') {
-      return NextResponse.json({ error: 'Invoice is already fully paid' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invoice is already fully paid') },
+        { status: 400 }
+      )
     }
 
     // Check if payment amount exceeds balance
     const currentBalance = Number(invoice.balanceAmount)
     if (amount > currentBalance) {
       return NextResponse.json(
-        { error: `Payment amount (${amount}) exceeds balance (${currentBalance})` },
+        {
+          error: await translateError('Payment amount ({amount}) exceeds balance ({balance})', {
+            amount,
+            balance: currentBalance,
+          }),
+        },
         { status: 400 }
       )
     }
@@ -197,6 +225,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     )
   } catch (error) {
     logger.error({ err: error }, 'Error recording payment:')
-    return NextResponse.json({ error: 'Failed to record payment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to record payment') },
+      { status: 500 }
+    )
   }
 }

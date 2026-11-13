@@ -3,12 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { InsuranceClaimStatus } from '@/lib/generated/prisma/enums'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single insurance claim details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -54,13 +57,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!claim) {
-      return NextResponse.json({ error: 'Insurance claim not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Insurance claim not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(claim)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching insurance claim:')
-    return NextResponse.json({ error: 'Failed to fetch insurance claim' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch insurance claim') },
+      { status: 500 }
+    )
   }
 }
 
@@ -68,14 +77,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to update insurance claims" },
+        { error: await translateError("You don't have permission to update insurance claims") },
         { status: 403 }
       )
     }
@@ -89,7 +100,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existingClaim) {
-      return NextResponse.json({ error: 'Insurance claim not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Insurance claim not found') },
+        { status: 404 }
+      )
     }
 
     const {
@@ -145,7 +159,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const allowedStatuses = validTransitions[existingClaim.status]
       if (!allowedStatuses.includes(status)) {
         return NextResponse.json(
-          { error: `Cannot transition from ${existingClaim.status} to ${status}` },
+          {
+            error: await translateError('Cannot transition from {from} to {to}', {
+              from: existingClaim.status,
+              to: status,
+            }),
+          },
           { status: 400 }
         )
       }
@@ -170,7 +189,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             updateData.approvedAmount = existingClaim.claimAmount
           } else {
             return NextResponse.json(
-              { error: 'A partial approval needs the approved amount' },
+              { error: await translateError('A partial approval needs the approved amount') },
               { status: 400 }
             )
           }
@@ -203,7 +222,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('No valid fields to update') },
+        { status: 400 }
+      )
     }
 
     const claim = await prisma.insuranceClaim.update({
@@ -233,7 +255,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(claim)
   } catch (error) {
     logger.error({ err: error }, 'Error updating insurance claim:')
-    return NextResponse.json({ error: 'Failed to update insurance claim' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update insurance claim') },
+      { status: 500 }
+    )
   }
 }
 
@@ -244,14 +269,16 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to delete insurance claims" },
+        { error: await translateError("You don't have permission to delete insurance claims") },
         { status: 403 }
       )
     }
@@ -264,12 +291,18 @@ export async function DELETE(
     })
 
     if (!existingClaim) {
-      return NextResponse.json({ error: 'Insurance claim not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Insurance claim not found') },
+        { status: 404 }
+      )
     }
 
     // Only allow deleting drafts
     if (existingClaim.status !== 'DRAFT') {
-      return NextResponse.json({ error: 'Can only delete draft claims' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Can only delete draft claims') },
+        { status: 400 }
+      )
     }
 
     // Unlink invoices first
@@ -286,6 +319,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Insurance claim deleted successfully' })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting insurance claim:')
-    return NextResponse.json({ error: 'Failed to delete insurance claim' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete insurance claim') },
+      { status: 500 }
+    )
   }
 }

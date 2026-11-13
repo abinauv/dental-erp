@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Single plan with enrolled patients
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -29,13 +32,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!plan || plan.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Plan not found') }, { status: 404 })
     }
 
     return NextResponse.json(plan)
   } catch (err) {
     logger.error({ err }, 'Error fetching plan:')
-    return NextResponse.json({ error: 'Failed to fetch plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch plan') },
+      { status: 500 }
+    )
   }
 }
 
@@ -43,12 +49,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only admins can update plans' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Only admins can update plans') },
+        { status: 403 }
+      )
     }
 
     const { id } = await params
@@ -68,14 +79,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (updated.count === 0) {
-      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Plan not found') }, { status: 404 })
     }
 
     const plan = await prisma.membershipPlan.findUnique({ where: { id } })
     return NextResponse.json(plan)
   } catch (err) {
     logger.error({ err }, 'Error updating plan:')
-    return NextResponse.json({ error: 'Failed to update plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update plan') },
+      { status: 500 }
+    )
   }
 }
 
@@ -86,12 +100,17 @@ export async function DELETE(
 ) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Only admins can delete plans' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Only admins can delete plans') },
+        { status: 403 }
+      )
     }
 
     const { id } = await params
@@ -102,7 +121,7 @@ export async function DELETE(
     })
 
     if (!plan || plan.hospitalId !== hospitalId) {
-      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Plan not found') }, { status: 404 })
     }
 
     if (plan._count.memberships > 0) {
@@ -118,6 +137,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Plan deleted' })
   } catch (err) {
     logger.error({ err }, 'Error deleting plan:')
-    return NextResponse.json({ error: 'Failed to delete plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete plan') },
+      { status: 500 }
+    )
   }
 }

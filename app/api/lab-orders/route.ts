@@ -3,13 +3,16 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { LabOrderPriority } from '@/lib/generated/prisma/enums'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Fetch all lab orders with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -139,7 +142,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching lab orders:')
     return NextResponse.json(
-      { error: 'Failed to fetch lab orders', details: error.message },
+      { error: await translateError('Failed to fetch lab orders'), details: error.message },
       { status: 500 }
     )
   }
@@ -150,7 +153,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -185,7 +190,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Verify vendor exists and belongs to this hospital
@@ -194,7 +202,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (!vendor) {
-      return NextResponse.json({ error: 'Lab vendor not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Lab vendor not found') },
+        { status: 404 }
+      )
     }
 
     // Generate order number unique to this hospital
@@ -263,7 +274,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Error creating lab order:')
     return NextResponse.json(
-      { error: 'Failed to create lab order', details: error.message },
+      { error: await translateError('Failed to create lab order'), details: error.message },
       { status: 500 }
     )
   }
