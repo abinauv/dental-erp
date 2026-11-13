@@ -293,3 +293,92 @@ describe('email: a separate log body', () => {
     expect(prisma.emailLog.create).not.toHaveBeenCalled()
   })
 })
+
+describe('email: the server’s SMTP_* settings as a fallback', () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('uses them for a clinic without its own settings, with the clinic’s name', async () => {
+    vi.stubEnv('SMTP_HOST', 'mail.server.test')
+    vi.stubEnv('SMTP_PORT', '465')
+    vi.stubEnv('SMTP_USER', 'relay@server.test')
+    vi.stubEnv('SMTP_PASSWORD', 'pw')
+    settingsByClinic({})
+    ;(prisma as any).hospital = {
+      findUnique: vi.fn().mockResolvedValue({ name: 'Smile Dental' }),
+    }
+    const { emailService } = await import('@/lib/services/email.service')
+
+    await emailService.dispatchLog('e1', {
+      hospitalId: 'h9',
+      to: 'p@example.com',
+      subject: 's',
+      body: 'b',
+    })
+
+    expect(h.createTransport).toHaveBeenCalledWith({
+      host: 'mail.server.test',
+      port: 465,
+      secure: true,
+      auth: { user: 'relay@server.test', pass: 'pw' },
+    })
+    expect(h.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ from: '"Smile Dental" <relay@server.test>' })
+    )
+  })
+
+  it('takes the sender from SMTP_FROM, and needs no login for a local relay', async () => {
+    vi.stubEnv('SMTP_HOST', 'localhost')
+    vi.stubEnv('SMTP_PORT', '1025')
+    vi.stubEnv('SMTP_USER', '')
+    vi.stubEnv('SMTP_FROM', 'DentalERP <noreply@clinic.test>')
+    settingsByClinic({})
+    ;(prisma as any).hospital = { findUnique: vi.fn().mockResolvedValue({ name: 'Smile Dental' }) }
+    const { emailService } = await import('@/lib/services/email.service')
+
+    await emailService.dispatchLog('e1', {
+      hospitalId: 'h9',
+      to: 'p@example.com',
+      subject: 's',
+      body: 'b',
+    })
+
+    expect(h.createTransport).toHaveBeenCalledWith({
+      host: 'localhost',
+      port: 1025,
+      secure: false,
+      auth: undefined,
+    })
+    expect(h.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ from: '"DentalERP" <noreply@clinic.test>' })
+    )
+  })
+
+  it('prefers the clinic’s own complete settings', async () => {
+    vi.stubEnv('SMTP_HOST', 'mail.server.test')
+    settingsByClinic({ h1: emailSettings('h1', 'one') })
+    const { emailService } = await import('@/lib/services/email.service')
+    await emailService.dispatchLog('e1', {
+      hospitalId: 'h1',
+      to: 'p@example.com',
+      subject: 's',
+      body: 'b',
+    })
+    expect(h.createTransport).toHaveBeenCalledWith(
+      expect.objectContaining({ host: 'smtp.h1.test' })
+    )
+  })
+
+  it('still fails when neither is set', async () => {
+    vi.stubEnv('SMTP_HOST', '')
+    settingsByClinic({})
+    const { emailService } = await import('@/lib/services/email.service')
+    await expect(
+      emailService.dispatchLog('e1', {
+        hospitalId: 'h9',
+        to: 'p@example.com',
+        subject: 's',
+        body: 'b',
+      })
+    ).rejects.toThrow('Email not configured')
+  })
+})

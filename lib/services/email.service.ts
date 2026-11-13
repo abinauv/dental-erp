@@ -55,15 +55,48 @@ class EmailService {
   // clinic's mail must never go out through another clinic's account.
   private transports = new Map<string, ClinicTransport>()
 
+  // The clinic's own SMTP settings (Settings → Communications) when they're
+  // complete; otherwise the server's SMTP_* environment variables, if set.
   private async loadConfig(hospitalId: string): Promise<EmailConfig> {
     const settings = await prisma.setting.findMany({
       where: { hospitalId, category: 'email' },
     })
+    const clinic = settings.length ? this.clinicConfig(settings) : null
+    if (clinic && clinic.host && clinic.auth.user && clinic.auth.pass) return clinic
 
-    if (settings.length === 0) {
-      throw new Error('Email not configured')
+    const server = await this.serverConfig(hospitalId)
+    if (server) return server
+
+    throw new Error(clinic ? 'Email SMTP configuration incomplete' : 'Email not configured')
+  }
+
+  // The server-wide fallback from the environment. Authentication is optional
+  // here (a local relay or Mailpit needs none). The sender name is the clinic's.
+  private async serverConfig(hospitalId: string): Promise<EmailConfig | null> {
+    const host = process.env.SMTP_HOST?.trim()
+    if (!host) return null
+    const port = parseInt(process.env.SMTP_PORT || '587')
+    const user = process.env.SMTP_USER || ''
+    const fromEnv = (process.env.SMTP_FROM || '').trim()
+    const named = fromEnv.match(/^(.*)<([^>]+)>$/)
+    const fromEmail = named ? named[2].trim() : fromEnv || (user.includes('@') ? user : '')
+    const hospital = await prisma.hospital.findUnique({
+      where: { id: hospitalId },
+      select: { name: true },
+    })
+    return {
+      host,
+      port,
+      secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : port === 465,
+      auth: { user, pass: process.env.SMTP_PASSWORD || '' },
+      from: {
+        name: (named && named[1].trim().replace(/^"|"$/g, '')) || hospital?.name || 'DentalERP',
+        email: fromEmail || `noreply@${host}`,
+      },
     }
+  }
 
+  private clinicConfig(settings: { key: string; value: string }[]): EmailConfig {
     const config: EmailConfig = {
       host: settings.find((s) => s.key === 'email.smtp.host')?.value || '',
       port: parseInt(settings.find((s) => s.key === 'email.smtp.port')?.value || '587'),
@@ -77,10 +110,6 @@ class EmailService {
         email: settings.find((s) => s.key === 'email.from.email')?.value || '',
       },
       replyTo: settings.find((s) => s.key === 'email.replyTo')?.value,
-    }
-
-    if (!config.host || !config.auth.user || !config.auth.pass) {
-      throw new Error('Email SMTP configuration incomplete')
     }
     return config
   }
@@ -97,10 +126,7 @@ class EmailService {
       host: config.host,
       port: config.port,
       secure: config.secure,
-      auth: {
-        user: config.auth.user,
-        pass: config.auth.pass,
-      },
+      auth: config.auth.user ? { user: config.auth.user, pass: config.auth.pass } : undefined,
     })
 
     try {
