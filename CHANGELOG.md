@@ -55,6 +55,12 @@ before it are not itemized here; see the git history and the
 - An SMS could not be scheduled at night even for the next day: the 9 AM–9 PM
   rule was checked against the time of scheduling. It's now checked against the
   time the SMS will go out.
+- Every email or SMS sent for a particular patient failed with "Patient has
+  disabled email/SMS communication". This covered the automated appointment
+  reminders, birthday wishes, payment reminders, lab-ready notices and review
+  requests, and bulk SMS to patients. A patient without saved communication
+  preferences, which is every patient since nothing saves them, counted as
+  having turned both off. Such patients now get the defaults: email and SMS on.
 
 - Creating a lab order always failed: the form sent work types the database
   rejects.
@@ -81,6 +87,11 @@ before it are not itemized here; see the git history and the
   your own scheduler instead. Running both is safe: no message is sent twice.
 - A scheduled email can no longer carry attachments (they were never stored,
   so they couldn't be sent later).
+- Automated patient messages (appointment reminders, birthday wishes, payment
+  reminders, lab-ready notices, review requests) can now reach patients
+  whenever `POST /api/communications/triggers` runs. If you call it from a
+  scheduler, check your templates and trigger settings first. There is no
+  screen yet to record a patient who asks not to be contacted.
 - Leave `REDIS_URL` unset in the Docker Compose setup: the queue's worker isn't
   in the image, so with Redis set, email and SMS wait in the queue unsent.
 

@@ -128,6 +128,31 @@ describe('SMSService - Communication Preferences', () => {
       })
     ).rejects.toThrow('disabled SMS')
   })
+
+  // Nothing creates preference records, so this is every patient: they get
+  // the defaults (SMS on, not DND). Treating a missing record as "off" failed
+  // every SMS sent for a patient, including the automated reminders.
+  it('sends to a patient without a preferences record', async () => {
+    const { smsService } = smsServiceModule
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-19T06:30:00Z')) // 12 PM IST
+    vi.mocked(prisma.patientCommunicationPreference.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.sMSLog.create).mockResolvedValue({ id: 'sms-1' } as any)
+
+    const id = await smsService.sendSMS({
+      hospitalId: 'hosp-1',
+      phone: '9876543210',
+      message: 'Reminder',
+      patientId: 'patient-1',
+      scheduledFor: new Date('2026-02-19T08:30:00Z'),
+    })
+
+    expect(id).toBe('sms-1')
+    expect(prisma.sMSLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ patientId: 'patient-1' }) })
+    )
+    vi.useRealTimers()
+  })
 })
 
 // ---------------------------------------------------------------------------
