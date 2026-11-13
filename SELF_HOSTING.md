@@ -111,6 +111,14 @@ user. There is no seeded account in a production deployment, on purpose: a
 default login that ships with the software is a default login that ends up in
 production.
 
+### Email
+
+Password resets, staff invitations and reminders need a mail server. Each
+clinic can set its own in Settings → Communications; the `SMTP_*` values in
+`.env` are the fallback for any clinic that hasn't. With neither, nothing is
+emailed. A staff member who forgets their password then needs an admin to set
+a temporary one on the Staff page, and chooses their own at their next sign-in.
+
 ## 4. HTTPS
 
 Point your domain's A record (and AAAA, if you have IPv6) at the host **first**

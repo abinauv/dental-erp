@@ -4,6 +4,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import { PasswordPolicyError, assertPasswordAllowed } from '@/lib/password-policy.server'
 import { redactStaff } from '@/lib/staff-privacy'
 
 // GET - Get single staff member details
@@ -104,6 +105,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       newPassword,
     } = body
 
+    if (newPassword) {
+      // The clinic's password rules (Settings → Security).
+      try {
+        await assertPasswordAllowed(hospitalId, newPassword)
+      } catch (err) {
+        if (err instanceof PasswordPolicyError) {
+          return NextResponse.json({ error: err.message, code: err.code }, { status: 400 })
+        }
+        throw err
+      }
+    }
+
     // Update in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Update user if role or password changed
@@ -114,6 +127,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         if (isActive !== undefined) userUpdateData.isActive = isActive
         if (newPassword) {
           userUpdateData.password = await bcrypt.hash(newPassword, 10)
+          // A password an admin sets for someone else only gets them in once:
+          // they're asked for their own at their next sign-in.
+          userUpdateData.mustChangePassword = existingStaff.userId !== session.user.id
         }
         if (firstName || lastName) {
           userUpdateData.name = `${firstName || existingStaff.firstName} ${lastName || existingStaff.lastName}`

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, UserPlus, XCircle, CheckCircle2 } from 'lucide-react'
@@ -14,6 +14,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import { PasswordRules } from '@/components/auth/password-rules'
+import {
+  DEFAULT_PASSWORD_POLICY,
+  passwordProblems,
+  type PasswordPolicy,
+} from '@/lib/password-policy'
 
 type AcceptInviteFormData = {
   password: string
@@ -32,12 +38,15 @@ type InviteData = {
 function AcceptInviteContent() {
   const t = useTranslations('auth.invite')
   const tRole = useTranslations('staff.role')
+  const tRules = useTranslations('auth.passwordRules')
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'success'>('loading')
   const [inviteData, setInviteData] = useState<InviteData | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // The clinic's password rules, from the invite lookup.
+  const [policy, setPolicy] = useState<PasswordPolicy>(DEFAULT_PASSWORD_POLICY)
 
   const token = searchParams.get('token')
 
@@ -45,7 +54,9 @@ function AcceptInviteContent() {
     () =>
       z
         .object({
-          password: z.string().min(8, t('vPassword')),
+          password: z
+            .string()
+            .refine((p) => passwordProblems(p, policy).length === 0, tRules('notAllowed')),
           confirmPassword: z.string(),
           phone: z.string().min(10, t('vPhone')),
         })
@@ -53,16 +64,18 @@ function AcceptInviteContent() {
           message: t('vPasswordMatch'),
           path: ['confirmPassword'],
         }),
-    [t]
+    [t, tRules, policy]
   )
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<AcceptInviteFormData>({
     resolver: zodResolver(acceptInviteSchema),
   })
+  const password = useWatch({ control, name: 'password' })
 
   useEffect(() => {
     if (token) {
@@ -81,6 +94,7 @@ function AcceptInviteContent() {
       if (response.ok && result.valid) {
         setStatus('valid')
         setInviteData(result.invite)
+        if (result.passwordPolicy) setPolicy(result.passwordPolicy)
       } else {
         setStatus('invalid')
         setErrorMessage(result.error || t('invalidLink'))
@@ -245,6 +259,8 @@ function AcceptInviteContent() {
               id="password"
               type="password"
               placeholder={t('passwordPlaceholder')}
+              autoComplete="new-password"
+              aria-describedby="invite-password-rules"
               {...register('password')}
               disabled={isSubmitting}
             />
@@ -252,6 +268,8 @@ function AcceptInviteContent() {
               <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
+
+          <PasswordRules id="invite-password-rules" policy={policy} password={password ?? ''} />
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>

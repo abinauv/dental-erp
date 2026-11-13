@@ -37,7 +37,8 @@
       "demoCredentials": "Demo credentials:",
       "loginFailed": "Login failed",
       "invalidCredentials": "Invalid email or password. Please try again.",
-      "errorTitle": "Error"
+      "errorTitle": "Error",
+      "forgotPassword": "Forgot password?"
     },
     "verifyEmail": {
       "loading": "Loading...",
@@ -120,6 +121,71 @@
       "confirmPlaceholder": "Confirm your password",
       "createAccount": "Create Account",
       "terms": "By creating an account, you agree to our Terms of Service and Privacy Policy."
+    },
+    "passwordRules": {
+      "title": "Your password must:",
+      "minLength": "Be at least {count} characters",
+      "maxLength": "Be at most {count} characters",
+      "uppercase": "Include an uppercase letter",
+      "lowercase": "Include a lowercase letter",
+      "number": "Include a number",
+      "special": "Include a symbol",
+      "met": "done",
+      "notMet": "not yet",
+      "notAllowed": "The password doesn't meet the rules listed.",
+      "mismatch": "The passwords don't match."
+    },
+    "forgot": {
+      "heading": "Forgot your password?",
+      "subheading": "Enter the email you sign in with and we'll send you a link to choose a new password.",
+      "email": "Email",
+      "emailPlaceholder": "you@clinic.com",
+      "vEmail": "Enter a valid email address.",
+      "submit": "Send Reset Link",
+      "sending": "Sending…",
+      "sentTitle": "Check your email",
+      "sentBody": "If {email} has an account, we've sent it a link to choose a new password. The link works once and expires in 1 hour.",
+      "noEmailHint": "Nothing arrived? Check your spam folder. If your clinic hasn't set up email, ask an administrator to set a new password for you on the Staff page.",
+      "backToLogin": "Back to Sign In",
+      "tooMany": "Too many requests. Wait a minute and try again.",
+      "failed": "Couldn't send the link. Try again."
+    },
+    "reset": {
+      "heading": "Choose a new password",
+      "subheading": "You'll sign in with it from now on.",
+      "loading": "Checking your link…",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Set New Password",
+      "saving": "Saving…",
+      "invalidTitle": "This link doesn't work",
+      "invalidBody": "It has expired or was already used. Request a new one.",
+      "requestNew": "Request a New Link",
+      "doneTitle": "Password changed",
+      "doneBody": "Sign in with your new password. You've been signed out everywhere else.",
+      "signIn": "Sign In",
+      "failed": "Couldn't change the password. Try again.",
+      "tooMany": "Too many attempts. Wait a minute and try again."
+    },
+    "changePassword": {
+      "heading": "Change your password",
+      "subheading": "You'll stay signed in here and be signed out on your other devices.",
+      "requiredHeading": "Choose your own password",
+      "requiredBody": "Your password was set by an administrator. Choose one that only you know to continue.",
+      "loading": "Loading…",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Change Password",
+      "saving": "Saving…",
+      "wrongCurrent": "Your current password is incorrect.",
+      "unchanged": "Choose a password different from your current one.",
+      "done": "Password changed",
+      "doneBody": "You've been signed out on your other devices.",
+      "failed": "Couldn't change the password. Try again.",
+      "tooMany": "Too many attempts. Wait a minute and try again.",
+      "signOut": "Sign out instead",
+      "back": "Back"
     }
   },
   "billing": {
@@ -2547,7 +2613,9 @@
     },
     "profile": {
       "title": "My Profile",
-      "subtitle": "Preferences that apply to your account only — {name} ({email})"
+      "subtitle": "Preferences that apply to your account only — {name} ({email})",
+      "passwordTitle": "Password",
+      "passwordDescription": "Change the password you sign in with."
     },
     "billing": {
       "title": "Billing Settings",
@@ -4454,7 +4522,9 @@
       "validationError": "Validation Error",
       "requiredFields": "Please fill in all required fields",
       "updateSuccess": "Staff member updated successfully",
-      "updateFailed": "Failed to update staff member"
+      "updateFailed": "Failed to update staff member",
+      "newPasswordHint": "If this is someone else's account, they'll be asked to choose their own password the next time they sign in.",
+      "passwordRules": "The password doesn't meet your clinic's password rules."
     },
     "performance": {
       "notFoundToast": "Not Found",
@@ -4609,7 +4679,9 @@
       "success": "Success",
       "createdDesc": "Staff member {name} created successfully",
       "error": "Error",
-      "createFailed": "Failed to create staff member"
+      "createFailed": "Failed to create staff member",
+      "passwordHint": "They'll choose their own password the first time they sign in.",
+      "passwordRules": "The password doesn't meet your clinic's password rules."
     }
   },
   "lab": {

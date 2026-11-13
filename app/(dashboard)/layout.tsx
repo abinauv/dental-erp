@@ -11,6 +11,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login')
   }
 
+  // A password set by an admin or an import must be replaced before anything
+  // else. Read from the database: the session caches the user for minutes.
+  const account = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { mustChangePassword: true },
+  })
+  if (account?.mustChangePassword) {
+    redirect('/change-password')
+  }
+
   const hospitalId = (session.user as { hospitalId?: string }).hospitalId
 
   // Fetch hospital info

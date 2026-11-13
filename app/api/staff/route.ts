@@ -4,6 +4,7 @@ import { requireAuthAndRole, checkStaffLimit } from '@/lib/api-helpers'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import { PasswordPolicyError, assertPasswordAllowed } from '@/lib/password-policy.server'
 import { redactStaff } from '@/lib/staff-privacy'
 
 // GET - List staff members
@@ -177,6 +178,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 })
     }
 
+    // The clinic's password rules (Settings → Security).
+    try {
+      await assertPasswordAllowed(hospitalId, password)
+    } catch (err) {
+      if (err instanceof PasswordPolicyError) {
+        return NextResponse.json({ error: err.message, code: err.code }, { status: 400 })
+      }
+      throw err
+    }
+
     // Generate employee ID
     const employeeId = await generateEmployeeId(hospitalId)
 
@@ -190,6 +201,9 @@ export async function POST(request: NextRequest) {
         data: {
           email,
           password: hashedPassword,
+          // The admin chose this password, so it only gets them in once:
+          // they're asked for their own at their first sign-in.
+          mustChangePassword: true,
           name: `${firstName} ${lastName}`,
           phone,
           role,

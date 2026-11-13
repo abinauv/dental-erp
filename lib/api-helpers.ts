@@ -5,9 +5,20 @@ import { jwtVerify } from 'jose'
 import { auth } from './auth'
 import { prisma } from './prisma'
 
+// Someone whose password was set by an admin or an import must choose their
+// own before using the app. The web app sends them to /change-password; the
+// API answers this until they have.
+export const PASSWORD_CHANGE_REQUIRED = 'PASSWORD_CHANGE_REQUIRED'
+function passwordChangeRequired() {
+  return NextResponse.json(
+    { error: 'Choose a new password before continuing.', code: PASSWORD_CHANGE_REQUIRED },
+    { status: 403 }
+  )
+}
+
 /**
  * Verify a mobile Bearer token (JWT signed with NEXTAUTH_SECRET via jose).
- * Returns the decoded user payload or null.
+ * Returns the decoded user payload, PASSWORD_CHANGE_REQUIRED, or null.
  */
 async function verifyMobileToken(): Promise<any | null> {
   try {
@@ -24,9 +35,14 @@ async function verifyMobileToken(): Promise<any | null> {
     // straight away instead of when the token expires.
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { isActive: true, hospital: { select: { isActive: true } } },
+      select: {
+        isActive: true,
+        mustChangePassword: true,
+        hospital: { select: { isActive: true } },
+      },
     })
     if (!user?.isActive || !user.hospital?.isActive) return null
+    if (user.mustChangePassword) return PASSWORD_CHANGE_REQUIRED
 
     return {
       id: payload.sub,
@@ -57,6 +73,15 @@ export async function getAuthenticatedHospital() {
       hospitalId: string
       isHospitalAdmin: boolean
     }
+    // Read from the database, not the session: the session cookie caches the
+    // user for minutes, and this changes when they set their password.
+    const flags = await prisma.user.findUnique({
+      where: { id: u.id },
+      select: { mustChangePassword: true },
+    })
+    if (flags?.mustChangePassword) {
+      return { error: passwordChangeRequired(), user: null, hospitalId: null }
+    }
     return {
       error: null,
       // Keep the exact shape the rest of the app and the mobile path produce.
@@ -75,6 +100,9 @@ export async function getAuthenticatedHospital() {
 
   // Fallback: try mobile Bearer token
   const mobileUser = await verifyMobileToken()
+  if (mobileUser === PASSWORD_CHANGE_REQUIRED) {
+    return { error: passwordChangeRequired(), user: null, hospitalId: null }
+  }
   if (mobileUser) {
     return {
       error: null,

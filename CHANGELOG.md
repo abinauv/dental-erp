@@ -34,6 +34,29 @@ before it are not itemized here; see the git history and the
   optional date and time.
 - `GET /api/cron/outbox` sends scheduled messages that are due, for running
   that from an external scheduler (see `OUTBOX_INTERVAL_SECONDS` below).
+- Forgot password: "Forgot password?" on the sign-in page emails a link to
+  choose a new password. It works once and expires in an hour, and resetting
+  signs the account out everywhere.
+- Changing your password, in Settings → Profile. It signs you out on your
+  other devices.
+- Choosing your own password when someone else set it. Staff created by an
+  admin, staff whose password an admin sets on the Staff page, and staff
+  brought in by a data import must choose their own password at their next
+  sign-in. Until they do, the app shows only that page, the API answers 403
+  (`PASSWORD_CHANGE_REQUIRED`), and the mobile app can't sign them in.
+
+### Changed
+
+- New passwords follow the clinic's password rules from Settings → Security
+  (length, upper and lower case, numbers, symbols). This applies when changing
+  or resetting a password, when an admin sets one, and when accepting an
+  invitation, and the rules are ticked off as you type. The rules were saved
+  before but never applied. Clinic signup still needs 8 characters. Password
+  expiry and the page's other settings (session timeout, login attempts,
+  two-factor, IP lists) aren't applied yet.
+- Email uses the server's `SMTP_*` settings for any clinic that hasn't set up
+  its own in Settings → Communications, with the clinic's name as the sender.
+  The sender address can be set with `SMTP_FROM`.
 
 ### Security
 
@@ -52,6 +75,10 @@ before it are not itemized here; see the git history and the
 
 ### Fixed
 
+- The `SMTP_*` settings in `.env` were documented (password resets "silently
+  do nothing" without them) but nothing read them. They're now the email
+  fallback described above. The `SMS_API_KEY` and `SMS_SENDER_ID` variables,
+  also never read, are gone from the examples: SMS gateways are set per clinic.
 - Scheduled emails and SMS were never sent, unless a Redis queue and its
   worker were running. The app now sends them itself within a minute of their
   time. A scheduled SMS still only goes out between 9 AM and 9 PM IST, and a
@@ -88,6 +115,16 @@ before it are not itemized here; see the git history and the
 
 ### Upgrading
 
+- New passwords must meet the rules on Settings → Security. A clinic that has
+  never saved them gets the defaults shown there: at least 8 characters, with
+  upper and lower case, a number and a symbol. Existing passwords keep
+  working.
+- Imported staff who never changed their temporary password are asked to
+  choose their own at their next sign-in, and can't use the mobile app until
+  they have.
+- For "Forgot password?" to work, give each clinic email settings or set
+  `SMTP_*` in `.env`. Without email, an admin can still set a temporary
+  password on the Staff page.
 - One migration, `20261113120000_redact_tokens_in_email_log`. It only rewrites
   logged email bodies, replacing invitation and verification tokens with
   `[removed]`. The emails already sent still work. Take a backup first as

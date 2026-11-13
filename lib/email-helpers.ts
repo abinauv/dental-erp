@@ -142,3 +142,44 @@ export async function sendVerificationEmail(params: {
     return false
   }
 }
+
+/**
+ * Send a password-reset link (Better Auth's /request-password-reset).
+ * Non-blocking — logs errors but does not throw.
+ */
+export async function sendPasswordResetEmail(params: {
+  hospitalId: string
+  to: string
+  userName: string
+  url: string
+  token: string
+}): Promise<boolean> {
+  const { hospitalId, to, userName, url, token } = params
+
+  const html = wrapHTML(`
+    <div class="logo">${APP_NAME}</div>
+    <h1>Reset your password</h1>
+    <p>Hi ${userName},</p>
+    <p>Someone asked to reset the password for your ${APP_NAME} account. If it was you, choose a new password here:</p>
+    <p style="text-align:center; margin: 28px 0;">
+      <a href="${url}" class="btn">Choose a New Password</a>
+    </p>
+    <hr class="divider">
+    <p class="muted">This link works once and expires in 1 hour. If you didn't ask for it, ignore this email: your password stays the same.</p>
+    <p class="muted">Or copy this link: ${url}</p>
+  `)
+
+  try {
+    await emailService.sendEmail({
+      hospitalId,
+      to,
+      subject: `Reset your ${APP_NAME} password`,
+      body: html,
+      logBody: redactLink(html, url, token),
+    })
+    return true
+  } catch (err) {
+    logger.error({ err }, `[email-helpers] Failed to send password reset email to ${to}:`)
+    return false
+  }
+}

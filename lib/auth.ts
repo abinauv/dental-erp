@@ -2,10 +2,17 @@ import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { genericOAuth, customSession } from 'better-auth/plugins'
-import { APIError } from 'better-auth/api'
+import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import { mirrorCredentialPassword } from './auth-credentials'
+import {
+  afterPasswordReset,
+  checkNewPassword,
+  sendResetLink,
+  userIdForResetToken,
+} from './auth-passwords'
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from './password-policy'
 import { trustedProxies } from './trusted-proxies'
 
 // Better Auth replaces next-auth as the staff/web session layer. The two
@@ -78,6 +85,15 @@ export const auth = betterAuth({
     // Preserve existing bcrypt hashes (and keep hashing new passwords with
     // bcrypt) so the migration needs no password resets.
     password: { hash: hashPassword, verify: verifyPassword },
+    // The clinic's own rules (Settings → Security) are checked in the
+    // before-hook below; these are only the outer bounds.
+    minPasswordLength: MIN_PASSWORD_LENGTH,
+    maxPasswordLength: MAX_PASSWORD_LENGTH,
+    // Forgot password: a one-time link, valid for an hour, by email.
+    sendResetPassword: sendResetLink,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    onPasswordReset: afterPasswordReset,
   },
 
   user: {
@@ -118,7 +134,32 @@ export const auth = betterAuth({
     customRules: {
       '/sign-in/email': { window: 60, max: 5 },
       '/sign-in/oauth2': { window: 60, max: 10 },
+      // Each request sends an email.
+      '/request-password-reset': { window: 60, max: 3 },
+      '/reset-password': { window: 60, max: 10 },
+      '/change-password': { window: 60, max: 5 },
     },
+  },
+
+  // A new password (change or reset) must follow the clinic's rules.
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== '/change-password' && ctx.path !== '/reset-password') return
+      const body = (ctx.body ?? {}) as Record<string, unknown>
+      let userId: string | null = null
+      if (ctx.path === '/change-password') {
+        userId = (await getSessionFromCtx(ctx))?.user.id ?? null
+      } else {
+        const token = body.token ?? (ctx.query as Record<string, unknown> | undefined)?.token
+        if (typeof token === 'string') userId = await userIdForResetToken(token)
+      }
+      await checkNewPassword({
+        path: ctx.path,
+        userId,
+        newPassword: body.newPassword,
+        currentPassword: body.currentPassword,
+      })
+    }),
   },
   // Which X-Forwarded-For entry is the client: see lib/trusted-proxies.ts.
   advanced: {

@@ -49,9 +49,13 @@ export async function syncCredentialAccount(
 }
 
 // Copy a credential hash Better Auth wrote (e.g. via its /change-password
-// endpoint) back onto User.password. It runs after the account write has
-// committed, so a failure is logged rather than thrown: the new password is
-// already in effect for web sign-in.
+// endpoint) back onto User.password. Better Auth only writes a password the
+// person chose themselves, so this also clears mustChangePassword. It runs
+// after the account write has committed, so a failure is logged rather than
+// thrown: the new password is already in effect for web sign-in.
+//
+// A reset (/reset-password) updates the account in a way that doesn't pass
+// the row here; lib/auth-passwords handles that one.
 export async function mirrorCredentialPassword(account: {
   providerId?: unknown
   userId?: unknown
@@ -62,7 +66,7 @@ export async function mirrorCredentialPassword(account: {
   try {
     await prisma.user.update({
       where: { id: account.userId },
-      data: { password: account.password },
+      data: { password: account.password, mustChangePassword: false },
     })
   } catch (err) {
     logger.error(

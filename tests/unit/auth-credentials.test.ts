@@ -62,7 +62,7 @@ describe('syncCredentialAccount', () => {
 })
 
 describe('mirrorCredentialPassword (Better Auth account hook)', () => {
-  it('copies a credential hash onto User.password', async () => {
+  it('copies a credential hash onto User.password and clears a required change', async () => {
     ;(prisma.user.update as any).mockResolvedValue({})
 
     await mirrorCredentialPassword({
@@ -73,7 +73,9 @@ describe('mirrorCredentialPassword (Better Auth account hook)', () => {
 
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
-      data: { password: '$2b$10$changed' },
+      // The person chose this password themselves (Better Auth's
+      // /change-password), so they no longer have to change it.
+      data: { password: '$2b$10$changed', mustChangePassword: false },
     })
   })
 

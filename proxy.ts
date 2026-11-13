@@ -23,6 +23,7 @@ const roleRoutes: Record<string, string[]> = {
 const publicRoutes = [
   '/login',
   '/forgot-password',
+  '/reset-password',
   '/signup',
   '/verify-email',
   '/invite/accept',

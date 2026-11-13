@@ -98,6 +98,18 @@ vi.mock('next/link', () => ({
   ),
 }))
 
+// The clinic's password rules: the defaults, without a request.
+vi.mock('@/hooks/use-password-policy', async () => {
+  const { DEFAULT_PASSWORD_POLICY } = await import('@/lib/password-policy')
+  return {
+    usePasswordPolicy: () => ({
+      status: 'ready',
+      policy: DEFAULT_PASSWORD_POLICY,
+      mustChangePassword: false,
+    }),
+  }
+})
+
 import NewStaffPage from '@/app/(dashboard)/staff/new/page'
 
 // ---------------------------------------------------------------------------
@@ -301,7 +313,7 @@ describe('NewStaffPage', () => {
         expect(mockToast).toHaveBeenCalledWith(
           expect.objectContaining({
             variant: 'destructive',
-            description: 'Password must be at least 6 characters',
+            description: "The password doesn't meet your clinic's password rules.",
           })
         )
       })
@@ -337,7 +349,7 @@ describe('NewStaffPage', () => {
       fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
         target: { value: 'john@test.com' },
       })
-      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'Password123!' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
       fireEvent.change(phoneInputs[0], { target: { value: '9876543210' } })
@@ -384,7 +396,7 @@ describe('NewStaffPage', () => {
       fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
         target: { value: 'john@test.com' },
       })
-      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'Password123!' } })
       fireEvent.click(screen.getByTestId('select-item-ADMIN'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
       fireEvent.change(phoneInputs[0], { target: { value: '9876543210' } })
@@ -423,7 +435,7 @@ describe('NewStaffPage', () => {
       fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
         target: { value: 'john@test.com' },
       })
-      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'Password123!' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
       fireEvent.change(phoneInputs[0], { target: { value: '9876543210' } })
@@ -453,7 +465,7 @@ describe('NewStaffPage', () => {
       fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
         target: { value: 'john@test.com' },
       })
-      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'Password123!' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
       fireEvent.change(phoneInputs[0], { target: { value: '9876543210' } })
@@ -485,7 +497,7 @@ describe('NewStaffPage', () => {
       fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
         target: { value: 'john@test.com' },
       })
-      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'Password123!' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
       fireEvent.change(phoneInputs[0], { target: { value: '9876543210' } })
@@ -513,7 +525,7 @@ describe('NewStaffPage', () => {
       fireEvent.change(screen.getByPlaceholderText('staff@yourclinic.com'), {
         target: { value: 'john@test.com' },
       })
-      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'password123' } })
+      fireEvent.change(screen.getByLabelText('Password *'), { target: { value: 'Password123!' } })
       fireEvent.click(screen.getByTestId('select-item-DOCTOR'))
       const phoneInputs = screen.getAllByPlaceholderText('+91 98765 43210')
       fireEvent.change(phoneInputs[0], { target: { value: '9876543210' } })
