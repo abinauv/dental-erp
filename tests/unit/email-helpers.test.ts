@@ -147,3 +147,47 @@ describe('sendVerificationEmail', () => {
     expect(html).toContain('24 hours') // expiry note
   })
 })
+
+// ═════════════════════════════════════════════════════════════════════════════
+// The email log never holds a link that grants access
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('tokens are kept out of the email log', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('logs the invite email with its token removed, and sends it with the token', async () => {
+    mockSendEmail.mockResolvedValue(undefined)
+    await sendInviteEmail({
+      hospitalId: 'h1',
+      to: 'new.admin@example.com',
+      inviteeName: 'New Admin',
+      hospitalName: 'Smile Dental',
+      role: 'ADMIN',
+      inviterName: 'Owner',
+      token: 'InviteTok3n0123456789abcdefABCDEF',
+    })
+
+    const { body, logBody } = mockSendEmail.mock.calls[0][0]
+    expect(body).toContain('/invite/accept?token=InviteTok3n0123456789abcdefABCDEF')
+    expect(logBody).not.toContain('InviteTok3n')
+    expect(logBody).toContain('/invite/accept?token=[removed]')
+    // Everything else is the same email.
+    expect(logBody.replaceAll('[removed]', 'InviteTok3n0123456789abcdefABCDEF')).toBe(body)
+  })
+
+  it('logs the verification email with its token removed', async () => {
+    mockSendEmail.mockResolvedValue(undefined)
+    await sendVerificationEmail({
+      hospitalId: 'h1',
+      to: 'owner@example.com',
+      userName: 'Owner',
+      hospitalName: 'Smile Dental',
+      token: 'VerifyTok3n0123456789abcdefABCDEF',
+    })
+
+    const { body, logBody } = mockSendEmail.mock.calls[0][0]
+    expect(body).toContain('/verify-email?token=VerifyTok3n0123456789abcdefABCDEF')
+    expect(logBody).not.toContain('VerifyTok3n')
+    expect(logBody).toContain('/verify-email?token=[removed]')
+  })
+})

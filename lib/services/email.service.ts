@@ -30,6 +30,10 @@ export interface EmailPayload {
   templateId?: string
   attachments?: EmailAttachment[]
   scheduledFor?: Date
+  // Recorded in EmailLog instead of `body`, e.g. with a sign-in or invite link
+  // removed: staff can read the email log. The email itself still sends
+  // `body`.
+  logBody?: string
 }
 
 export interface EmailAttachment {
@@ -141,6 +145,10 @@ class EmailService {
     if (scheduled && payload.attachments?.length) {
       throw new Error('A scheduled email cannot have attachments')
     }
+    // Nor can it hold back part of its body from the log.
+    if (scheduled && payload.logBody !== undefined && payload.logBody !== payload.body) {
+      throw new Error('A scheduled email cannot have a separate log body')
+    }
 
     // Create email log entry
     const emailLog = await prisma.emailLog.create({
@@ -149,7 +157,7 @@ class EmailService {
         patientId: payload.patientId || null,
         email: payload.to,
         subject: payload.subject,
-        body: payload.body,
+        body: payload.logBody ?? payload.body,
         templateId: payload.templateId || null,
         scheduledFor: payload.scheduledFor,
         status: payload.scheduledFor ? 'PENDING' : 'QUEUED',

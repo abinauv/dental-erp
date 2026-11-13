@@ -37,6 +37,15 @@ before it are not itemized here; see the git history and the
 
 ### Security
 
+- Staff invitation and signup verification emails were stored in the email
+  log with their links, and any signed-in staff member can read that log.
+  Someone could open a pending invitation meant for a colleague (for example a
+  new admin) and create that account with their own password. Emails are now
+  logged with the token removed, and a migration removes the tokens already
+  logged.
+- Invitation and email-verification tokens were generated with
+  `Math.random()`, which is predictable. They now come from the system's
+  cryptographic random number generator.
 - `POST /api/communications/triggers` accepted a built-in default secret when
   `CRON_SECRET` was unset. It now refuses every request until `CRON_SECRET` is
   set. (The Docker Compose setup has always required it.)
@@ -79,6 +88,10 @@ before it are not itemized here; see the git history and the
 
 ### Upgrading
 
+- One migration, `20261113120000_redact_tokens_in_email_log`. It only rewrites
+  logged email bodies, replacing invitation and verification tokens with
+  `[removed]`. The emails already sent still work. Take a backup first as
+  usual.
 - Scheduled messages start sending after the upgrade. Any that are already
   more than 24 hours overdue are cancelled rather than sent late, with a note
   saying why; ones less than 24 hours overdue are sent.

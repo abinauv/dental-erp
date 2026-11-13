@@ -13,6 +13,14 @@ function baseUrl(): string {
   return process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 }
 
+// The email log keeps a copy of every email, and staff can read it, so a
+// link that grants access (an invite, a verification or a password reset) is
+// logged with its token removed.
+export const REDACTED_TOKEN = '[removed]'
+function redactLink(html: string, link: string, token: string): string {
+  return html.split(link).join(link.replace(token, REDACTED_TOKEN))
+}
+
 function wrapHTML(content: string): string {
   return `
 <!DOCTYPE html>
@@ -84,6 +92,7 @@ export async function sendInviteEmail(params: {
       to,
       subject: `You're invited to join ${hospitalName} on ${APP_NAME}`,
       body: html,
+      logBody: redactLink(html, link, token),
     })
     return true
   } catch (err) {
@@ -125,6 +134,7 @@ export async function sendVerificationEmail(params: {
       to,
       subject: `Verify your email — ${APP_NAME}`,
       body: html,
+      logBody: redactLink(html, link, token),
     })
     return true
   } catch (err) {
