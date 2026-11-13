@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { ceilToUTCDay } from '@/lib/date-column'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/cron/recall
@@ -14,7 +15,7 @@ import { ceilToUTCDay } from '@/lib/date-column'
 export async function GET(req: Request) {
   const secret = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!secret || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
   }
 
   const now = new Date()

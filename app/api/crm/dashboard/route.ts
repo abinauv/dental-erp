@@ -3,12 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
 import { ceilToUTCDay } from '@/lib/date-column'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - CRM dashboard stats
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -84,6 +87,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching CRM dashboard:')
-    return NextResponse.json({ error: 'Failed to fetch dashboard' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch dashboard') },
+      { status: 500 }
+    )
   }
 }

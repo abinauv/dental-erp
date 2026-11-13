@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { smsService } from '@/lib/services/sms.service'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const sendSMSSchema = z.object({
   phone: z.string().min(10),
@@ -26,7 +27,9 @@ const historySchema = z.object({
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -49,7 +52,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'SMS send error:')
-    return NextResponse.json({ error: error.message || 'Failed to send SMS' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to send SMS') },
+      { status: 500 }
+    )
   }
 }
 
@@ -57,7 +63,9 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -72,7 +80,7 @@ export async function GET(req: NextRequest) {
     })
     if (!query.success) {
       return NextResponse.json(
-        { error: 'Invalid filters', details: query.error.flatten() },
+        { error: await translateError('Invalid filters'), details: query.error.flatten() },
         { status: 400 }
       )
     }
@@ -87,7 +95,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Get SMS history error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to get SMS history' },
+      { error: await translateError(error.message || 'Failed to get SMS history') },
       { status: 500 }
     )
   }

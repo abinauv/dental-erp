@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * Whitelisted query specs — maps "model" names to safe Prisma query builders.
@@ -114,17 +115,20 @@ User query: "${naturalQuery}"`
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   let body: { query: string }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   const { query } = body
-  if (!query?.trim()) return NextResponse.json({ error: 'query is required' }, { status: 400 })
+  if (!query?.trim())
+    return NextResponse.json({ error: await translateError('query is required') }, { status: 400 })
 
   // Step 1: translate to spec
   let spec: { model: string; filters: Record<string, any>; limit?: number; summary?: string }
@@ -140,7 +144,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `AI service error: ${msg}` }, { status: 502 })
     }
     return NextResponse.json(
-      { error: 'Could not parse your query. Try rephrasing.' },
+      { error: await translateError('Could not parse your query. Try rephrasing.') },
       { status: 400 }
     )
   }
@@ -158,7 +162,7 @@ export async function POST(req: Request) {
     rows = await builder(hospitalId, spec.filters || {}, limit)
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Query execution error' },
+      { error: await translateError(err instanceof Error ? err.message : 'Query execution error') },
       { status: 500 }
     )
   }

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { complete } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { extractJSON } from '@/lib/ai/openrouter'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/ai/insights – fetch recent, non-dismissed insights
@@ -15,7 +16,9 @@ import { extractJSON } from '@/lib/ai/openrouter'
 export async function GET(req: NextRequest) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   const category = req.nextUrl.searchParams.get('category')
   const where: any = { hospitalId, dismissed: false }
@@ -36,7 +39,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   // Gather clinic data for the analysis window (last 30 days)
   const thirtyDaysAgo = new Date()
@@ -111,7 +116,10 @@ Respond ONLY with a JSON array of insight objects:
     insights = JSON.parse(extractJSON(content))
     if (!Array.isArray(insights)) insights = []
   } catch {
-    return NextResponse.json({ error: 'Insight generation failed' }, { status: 502 })
+    return NextResponse.json(
+      { error: await translateError('Insight generation failed') },
+      { status: 502 }
+    )
   }
 
   // Persist
@@ -138,17 +146,20 @@ Respond ONLY with a JSON array of insight objects:
 export async function PUT(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   let body: { id: string; dismissed?: boolean; actionTaken?: boolean }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   const { id, dismissed, actionTaken } = body
-  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+  if (!id)
+    return NextResponse.json({ error: await translateError('id is required') }, { status: 400 })
 
   const updated = await prisma.aIInsight.updateMany({
     where: { id, hospitalId },
@@ -158,7 +169,8 @@ export async function PUT(req: Request) {
     },
   })
 
-  if (updated.count === 0) return NextResponse.json({ error: 'Insight not found' }, { status: 404 })
+  if (updated.count === 0)
+    return NextResponse.json({ error: await translateError('Insight not found') }, { status: 404 })
 
   return NextResponse.json({ updated: true })
 }

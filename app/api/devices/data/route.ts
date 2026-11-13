@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST /api/devices/data — Receive sensor data from a device
@@ -13,7 +14,10 @@ export async function POST(request: NextRequest) {
     const { deviceId, data, eventType } = body
 
     if (!deviceId || !data) {
-      return NextResponse.json({ error: 'deviceId and data are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('deviceId and data are required') },
+        { status: 400 }
+      )
     }
 
     // Verify device exists
@@ -21,7 +25,7 @@ export async function POST(request: NextRequest) {
       where: { id: deviceId },
     })
     if (!device) {
-      return NextResponse.json({ error: 'Device not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Device not found') }, { status: 404 })
     }
 
     // Record data log
@@ -45,7 +49,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id: log.id, recorded: true }, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Device data ingestion error:')
-    return NextResponse.json({ error: 'Failed to record device data' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to record device data') },
+      { status: 500 }
+    )
   }
 }
 
@@ -63,7 +70,10 @@ export async function GET(request: NextRequest) {
     const eventType = searchParams.get('eventType')
 
     if (!deviceId) {
-      return NextResponse.json({ error: 'deviceId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('deviceId is required') },
+        { status: 400 }
+      )
     }
 
     // Verify device belongs to this hospital
@@ -71,7 +81,7 @@ export async function GET(request: NextRequest) {
       where: { id: deviceId, hospitalId: hospitalId! },
     })
     if (!device) {
-      return NextResponse.json({ error: 'Device not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Device not found') }, { status: 404 })
     }
 
     const where: Record<string, unknown> = { deviceId }
@@ -86,6 +96,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ logs, total: logs.length })
   } catch (err) {
     logger.error({ err }, 'Device data fetch error:')
-    return NextResponse.json({ error: 'Failed to fetch device data' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch device data') },
+      { status: 500 }
+    )
   }
 }

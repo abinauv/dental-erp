@@ -3,13 +3,16 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { handleCancellationWaitlist } from '@/lib/services/smart-scheduler'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single appointment
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -42,13 +45,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!appointment) {
-      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Appointment not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(appointment)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching appointment:')
-    return NextResponse.json({ error: 'Failed to fetch appointment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch appointment') },
+      { status: 500 }
+    )
   }
 }
 
@@ -57,7 +66,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -82,7 +93,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existingAppointment) {
-      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Appointment not found') },
+        { status: 404 }
+      )
     }
 
     // Build update data
@@ -126,7 +140,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
       if (conflictingAppointment) {
         return NextResponse.json(
-          { error: 'Doctor already has an appointment at this time' },
+          { error: await translateError('Doctor already has an appointment at this time') },
           { status: 409 }
         )
       }
@@ -197,7 +211,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(appointment)
   } catch (error) {
     logger.error({ err: error }, 'Error updating appointment:')
-    return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update appointment') },
+      { status: 500 }
+    )
   }
 }
 
@@ -209,7 +226,9 @@ export async function DELETE(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -222,13 +241,20 @@ export async function DELETE(
     })
 
     if (!appointment) {
-      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Appointment not found') },
+        { status: 404 }
+      )
     }
 
     // Don't allow deletion if treatments are linked
     if (appointment.treatments.length > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete appointment with linked treatments. Cancel it instead.' },
+        {
+          error: await translateError(
+            'Cannot delete appointment with linked treatments. Cancel it instead.'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -241,6 +267,9 @@ export async function DELETE(
     return NextResponse.json({ message: 'Appointment deleted successfully' })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting appointment:')
-    return NextResponse.json({ error: 'Failed to delete appointment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete appointment') },
+      { status: 500 }
+    )
   }
 }

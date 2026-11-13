@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { complete } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/ai/briefing
@@ -11,7 +12,9 @@ import { getModelByTier } from '@/lib/ai/models'
 export async function GET() {
   const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
@@ -145,7 +148,11 @@ Keep it under 300 words. Use clear formatting.`
     return NextResponse.json({ briefing: content, generatedAt: new Date().toISOString() })
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Briefing generation failed' },
+      {
+        error: await translateError(
+          err instanceof Error ? err.message : 'Briefing generation failed'
+        ),
+      },
       { status: 502 }
     )
   }

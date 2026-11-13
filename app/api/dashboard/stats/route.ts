@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns'
 import { logger } from '@/lib/logger'
 import { ceilToUTCDay } from '@/lib/date-column'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Helper function to convert BigInt to Number in query results
 function convertBigIntToNumber(obj: any): any {
@@ -26,7 +27,9 @@ export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -398,7 +401,7 @@ export async function GET(req: NextRequest) {
     )
     return NextResponse.json(
       {
-        error: 'Failed to fetch dashboard statistics',
+        error: await translateError('Failed to fetch dashboard statistics'),
         details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       },
       { status: 500 }

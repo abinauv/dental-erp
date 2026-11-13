@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST /api/devices/register — Register a new IoT device
@@ -15,7 +16,10 @@ export async function POST(request: NextRequest) {
     const { name, type, serialNumber, location, ipAddress, firmwareVersion, metadata } = body
 
     if (!name || !type) {
-      return NextResponse.json({ error: 'Name and type are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Name and type are required') },
+        { status: 400 }
+      )
     }
 
     const validTypes = [
@@ -30,7 +34,11 @@ export async function POST(request: NextRequest) {
     ]
     if (!validTypes.includes(type)) {
       return NextResponse.json(
-        { error: `Invalid device type. Must be one of: ${validTypes.join(', ')}` },
+        {
+          error: await translateError('Invalid device type. Must be one of: {valid}', {
+            valid: validTypes.join(', '),
+          }),
+        },
         { status: 400 }
       )
     }
@@ -42,7 +50,7 @@ export async function POST(request: NextRequest) {
       })
       if (existing) {
         return NextResponse.json(
-          { error: 'A device with this serial number already exists' },
+          { error: await translateError('A device with this serial number already exists') },
           { status: 409 }
         )
       }
@@ -65,6 +73,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(device, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Device registration error:')
-    return NextResponse.json({ error: 'Failed to register device' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to register device') },
+      { status: 500 }
+    )
   }
 }

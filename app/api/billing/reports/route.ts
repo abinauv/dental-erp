@@ -3,19 +3,22 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { getDateRangeFromPreset } from '@/lib/billing-utils'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Generate billing reports
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to view reports" },
+        { error: await translateError("You don't have permission to view reports") },
         { status: 403 }
       )
     }
@@ -56,13 +59,16 @@ export async function GET(request: NextRequest) {
       case 'daily_collection':
         return await getDailyCollectionReport(startDate, endDate, hospitalId)
       default:
-        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Invalid report type') },
+          { status: 400 }
+        )
     }
   } catch (error) {
     logger.error({ err: error }, 'Error generating report:')
     return NextResponse.json(
       {
-        error: 'Failed to generate report',
+        error: await translateError('Failed to generate report'),
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

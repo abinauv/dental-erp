@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST /api/ai/analyze
@@ -16,29 +17,38 @@ import { getModelByTier } from '@/lib/ai/models'
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR', 'RECEPTIONIST'])
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   let body: { type: string; patientId?: string; data?: string }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   const { type, patientId, data } = body
 
   if (type === 'risk_score') {
     if (!patientId)
-      return NextResponse.json({ error: 'patientId is required for risk_score' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('patientId is required for risk_score') },
+        { status: 400 }
+      )
 
     const patient = await prisma.patient.findUnique({
       where: { id: patientId, hospitalId },
       include: { medicalHistory: true },
     })
-    if (!patient) return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+    if (!patient)
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     if (!patient.medicalHistory) {
       return NextResponse.json(
-        { error: 'No medical history on file for this patient' },
+        { error: await translateError('No medical history on file for this patient') },
         { status: 400 }
       )
     }
@@ -122,7 +132,7 @@ Respond ONLY with JSON:
       })
     } catch (err) {
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : 'Analysis failed' },
+        { error: await translateError(err instanceof Error ? err.message : 'Analysis failed') },
         { status: 502 }
       )
     }
@@ -132,7 +142,11 @@ Respond ONLY with JSON:
 
   // Generic data analysis
   if (type === 'data') {
-    if (!data) return NextResponse.json({ error: 'data field is required' }, { status: 400 })
+    if (!data)
+      return NextResponse.json(
+        { error: await translateError('data field is required') },
+        { status: 400 }
+      )
 
     try {
       const { content } = await complete(
@@ -149,7 +163,7 @@ Respond ONLY with JSON:
       return NextResponse.json({ analysis: content })
     } catch (err) {
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : 'Analysis error' },
+        { error: await translateError(err instanceof Error ? err.message : 'Analysis error') },
         { status: 502 }
       )
     }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { createRoom } from '@/lib/services/video.service'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Generate unique appointment number for the hospital
 async function generateAppointmentNo(hospitalId: string): Promise<string> {
@@ -34,7 +35,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -160,7 +163,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching appointments:')
-    return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch appointments') },
+      { status: 500 }
+    )
   }
 }
 
@@ -169,7 +175,9 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -191,7 +199,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!patientId || !doctorId || !scheduledDate || !scheduledTime) {
       return NextResponse.json(
-        { error: 'Patient, doctor, date, and time are required' },
+        { error: await translateError('Patient, doctor, date, and time are required') },
         { status: 400 }
       )
     }
@@ -200,7 +208,7 @@ export async function POST(request: NextRequest) {
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/
     if (!timeRegex.test(scheduledTime)) {
       return NextResponse.json(
-        { error: 'Invalid time format. Use HH:MM (24-hour format)' },
+        { error: await translateError('Invalid time format. Use HH:MM (24-hour format)') },
         { status: 400 }
       )
     }
@@ -208,7 +216,7 @@ export async function POST(request: NextRequest) {
     // Validate duration (between 5 and 480 minutes / 8 hours max)
     if (duration < 5 || duration > 480) {
       return NextResponse.json(
-        { error: 'Duration must be between 5 and 480 minutes' },
+        { error: await translateError('Duration must be between 5 and 480 minutes') },
         { status: 400 }
       )
     }
@@ -219,7 +227,7 @@ export async function POST(request: NextRequest) {
     today.setHours(0, 0, 0, 0)
     if (scheduledDateObj < today) {
       return NextResponse.json(
-        { error: 'Cannot schedule appointments in the past' },
+        { error: await translateError('Cannot schedule appointments in the past') },
         { status: 400 }
       )
     }
@@ -229,7 +237,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Check if doctor exists and belongs to this hospital
@@ -237,7 +248,7 @@ export async function POST(request: NextRequest) {
       where: { id: doctorId, hospitalId },
     })
     if (!doctor) {
-      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
     }
 
     // Check for conflicting appointments (same doctor, same time, same hospital)
@@ -256,7 +267,7 @@ export async function POST(request: NextRequest) {
 
     if (existingAppointment) {
       return NextResponse.json(
-        { error: 'Doctor already has an appointment at this time' },
+        { error: await translateError('Doctor already has an appointment at this time') },
         { status: 409 }
       )
     }
@@ -338,6 +349,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(appointment, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating appointment:')
-    return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create appointment') },
+      { status: 500 }
+    )
   }
 }

@@ -5,24 +5,39 @@ import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { AI_MODELS } from '@/lib/ai/models'
 import { ENTITY_SCHEMAS } from '@/lib/import/schema-definitions'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   try {
     const { jobId } = await req.json()
-    if (!jobId) return NextResponse.json({ error: 'jobId is required' }, { status: 400 })
+    if (!jobId)
+      return NextResponse.json(
+        { error: await translateError('jobId is required') },
+        { status: 400 }
+      )
 
     // Load the import job
     const job = await prisma.dataImportJob.findFirst({
       where: { id: jobId, hospitalId },
     })
-    if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
+    if (!job)
+      return NextResponse.json(
+        { error: await translateError('Import job not found') },
+        { status: 404 }
+      )
 
     const schema = ENTITY_SCHEMAS[job.entityType]
-    if (!schema) return NextResponse.json({ error: 'Invalid entity type' }, { status: 400 })
+    if (!schema)
+      return NextResponse.json(
+        { error: await translateError('Invalid entity type') },
+        { status: 400 }
+      )
 
     const sourceColumns = job.sourceColumns as string[]
     const sampleData = (job.previewData as Record<string, string>[])?.slice(0, 3) || []
@@ -166,6 +181,9 @@ Map each source column to the most appropriate target field.`
     })
   } catch (err: any) {
     logger.error({ err }, 'AI mapping route error:')
-    return NextResponse.json({ error: err.message || 'Mapping failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Mapping failed') },
+      { status: 500 }
+    )
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { complete } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/cron/briefing
@@ -12,7 +13,7 @@ import { getModelByTier } from '@/lib/ai/models'
 export async function GET(req: Request) {
   const secret = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!secret || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
   }
 
   const hospitals = await prisma.hospital.findMany({

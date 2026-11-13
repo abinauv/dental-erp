@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get single dental chart entry
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -29,13 +32,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!entry) {
-      return NextResponse.json({ error: 'Dental chart entry not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Dental chart entry not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json(entry)
   } catch (error) {
     logger.error({ err: error }, 'Error fetching dental chart entry:')
-    return NextResponse.json({ error: 'Failed to fetch dental chart entry' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch dental chart entry') },
+      { status: 500 }
+    )
   }
 }
 
@@ -44,14 +53,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
       return NextResponse.json(
-        { error: "You don't have permission to update dental charts" },
+        { error: await translateError("You don't have permission to update dental charts") },
         { status: 403 }
       )
     }
@@ -65,7 +76,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!existingEntry) {
-      return NextResponse.json({ error: 'Dental chart entry not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Dental chart entry not found') },
+        { status: 404 }
+      )
     }
 
     const updateData: any = {}
@@ -99,7 +113,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(entry)
   } catch (error) {
     logger.error({ err: error }, 'Error updating dental chart entry:')
-    return NextResponse.json({ error: 'Failed to update dental chart entry' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update dental chart entry') },
+      { status: 500 }
+    )
   }
 }
 
@@ -111,14 +128,16 @@ export async function DELETE(
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
       return NextResponse.json(
-        { error: "You don't have permission to delete dental chart entries" },
+        { error: await translateError("You don't have permission to delete dental chart entries") },
         { status: 403 }
       )
     }
@@ -131,7 +150,10 @@ export async function DELETE(
     })
 
     if (!entry) {
-      return NextResponse.json({ error: 'Dental chart entry not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Dental chart entry not found') },
+        { status: 404 }
+      )
     }
 
     // Hard delete the entry
@@ -144,6 +166,9 @@ export async function DELETE(
     })
   } catch (error) {
     logger.error({ err: error }, 'Error deleting dental chart entry:')
-    return NextResponse.json({ error: 'Failed to delete dental chart entry' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete dental chart entry') },
+      { status: 500 }
+    )
   }
 }

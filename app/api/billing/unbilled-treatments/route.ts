@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get unbilled treatments for a patient
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -15,7 +18,10 @@ export async function GET(request: NextRequest) {
     const patientId = searchParams.get('patientId')
 
     if (!patientId) {
-      return NextResponse.json({ error: 'Patient ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient ID is required') },
+        { status: 400 }
+      )
     }
 
     // Check if patient exists
@@ -30,7 +36,10 @@ export async function GET(request: NextRequest) {
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Find treatments that are not linked to any invoice item
@@ -97,6 +106,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching unbilled treatments:')
-    return NextResponse.json({ error: 'Failed to fetch unbilled treatments' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch unbilled treatments') },
+      { status: 500 }
+    )
   }
 }

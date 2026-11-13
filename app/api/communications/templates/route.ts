@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { templateService } from '@/lib/services/template.service'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const createTemplateSchema = z.object({
   name: z.string().min(1),
@@ -27,7 +28,9 @@ const createTemplateSchema = z.object({
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: 'Template validation failed',
+          error: await translateError('Template validation failed'),
           validationErrors: validation.errors,
           unknownVariables: validation.unknownVariables,
         },
@@ -57,7 +60,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Create template error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to create template' },
+      { error: await translateError(error.message || 'Failed to create template') },
       { status: 500 }
     )
   }
@@ -67,7 +70,9 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -100,6 +105,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get templates error:')
-    return NextResponse.json({ error: error.message || 'Failed to get templates' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get templates') },
+      { status: 500 }
+    )
   }
 }

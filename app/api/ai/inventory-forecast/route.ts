@@ -4,6 +4,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/ai/inventory-forecast
@@ -13,7 +14,10 @@ export async function GET(req: Request) {
   try {
     const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'RECEPTIONIST'])
     if (error || !hospitalId) {
-      return error || NextResponse.json({ error: 'Hospital not found' }, { status: 401 })
+      return (
+        error ||
+        NextResponse.json({ error: await translateError('Hospital not found') }, { status: 401 })
+      )
     }
 
     // Current stock levels
@@ -171,7 +175,7 @@ suggestedOrderQty covers 60 days. Return ONLY valid JSON, no markdown.`,
   } catch (error: any) {
     logger.error({ err: error }, 'Inventory forecast error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to generate forecast' },
+      { error: await translateError(error.message || 'Failed to generate forecast') },
       { status: error.message?.includes('Unauthorized') ? 401 : 500 }
     )
   }

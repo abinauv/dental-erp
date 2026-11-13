@@ -8,6 +8,7 @@ import { executeIntent } from '@/lib/ai/command-executors'
 import type { ChatMessage } from '@/lib/ai/openrouter'
 import { logger } from '@/lib/logger'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // ---------------------------------------------------------------------------
 // Intent detection prompt — analyses full conversation to detect actions
@@ -86,7 +87,9 @@ Respond ONLY with JSON:
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   let body: {
     messages: ChatMessage[]
@@ -99,7 +102,7 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   const {
@@ -112,7 +115,10 @@ export async function POST(req: Request) {
   } = body
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json({ error: 'messages array is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('messages array is required') },
+      { status: 400 }
+    )
   }
 
   try {
@@ -120,7 +126,7 @@ export async function POST(req: Request) {
     const aiLimit = await checkRateLimit(`ai-chat:${hospitalId}:${user.id}`, 100, 60_000)
     if (!aiLimit.allowed) {
       return NextResponse.json(
-        { error: 'Rate limit exceeded. Try again shortly.' },
+        { error: await translateError('Rate limit exceeded. Try again shortly.') },
         {
           status: 429,
           headers: { 'Retry-After': String(Math.ceil(aiLimit.retryAfterMs / 1000)) },
@@ -158,7 +164,7 @@ export async function POST(req: Request) {
       }
       if (!skill.allowedRoles.includes(user.role)) {
         return NextResponse.json(
-          { error: 'You do not have permission to use this skill' },
+          { error: await translateError('You do not have permission to use this skill') },
           { status: 403 }
         )
       }
@@ -303,12 +309,15 @@ IMPORTANT: The above action was ACTUALLY executed in the database. Report the re
     } catch (err) {
       logger.error({ err }, 'AI response error:')
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : 'AI service error' },
+        { error: await translateError(err instanceof Error ? err.message : 'AI service error') },
         { status: 502 }
       )
     }
   } catch (err: any) {
     logger.error({ err }, 'AI chat route error:')
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Internal server error') },
+      { status: 500 }
+    )
   }
 }

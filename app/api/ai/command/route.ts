@@ -5,6 +5,7 @@ import { buildContext, serializeContext } from '@/lib/ai/context-builder'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { executeIntent } from '@/lib/ai/command-executors'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // ---------------------------------------------------------------------------
 // Intent definitions — the AI outputs one of these intents
@@ -113,18 +114,23 @@ async function execGeneral(command: string, contextStr: string, hospitalName: st
 export async function POST(req: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole()
   if (error || !user || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   let body: { command: string; patientId?: string; page?: string }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   const { command, patientId, page } = body
   if (!command?.trim()) {
-    return NextResponse.json({ error: 'command is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('command is required') },
+      { status: 400 }
+    )
   }
 
   const hospital = await prisma.hospital.findUnique({

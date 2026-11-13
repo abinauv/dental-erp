@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   const { id } = await params
 
@@ -14,7 +17,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     include: { user: { select: { name: true, email: true } } },
   })
 
-  if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
+  if (!job)
+    return NextResponse.json(
+      { error: await translateError('Import job not found') },
+      { status: 404 }
+    )
 
   return NextResponse.json({ job })
 }
@@ -22,7 +29,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId)
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
 
   const { id } = await params
 
@@ -30,7 +39,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     where: { id, hospitalId },
   })
 
-  if (!job) return NextResponse.json({ error: 'Import job not found' }, { status: 404 })
+  if (!job)
+    return NextResponse.json(
+      { error: await translateError('Import job not found') },
+      { status: 404 }
+    )
 
   await prisma.dataImportJob.update({
     where: { id },

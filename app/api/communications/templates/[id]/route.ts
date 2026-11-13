@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { templateService } from '@/lib/services/template.service'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const updateTemplateSchema = z.object({
   name: z.string().optional(),
@@ -18,7 +19,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -27,7 +30,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const template = await templateService.getTemplate(id, hospitalId)
 
     if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Template not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({
@@ -36,7 +42,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get template error:')
-    return NextResponse.json({ error: error.message || 'Failed to get template' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get template') },
+      { status: 500 }
+    )
   }
 }
 
@@ -45,14 +54,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
 
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     const body = await req.json()
@@ -65,7 +76,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (!validation.isValid) {
         return NextResponse.json(
           {
-            error: 'Template validation failed',
+            error: await translateError('Template validation failed'),
             validationErrors: validation.errors,
             unknownVariables: validation.unknownVariables,
           },
@@ -83,7 +94,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     logger.error({ err: error }, 'Update template error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update template' },
+      { error: await translateError(error.message || 'Failed to update template') },
       { status: 500 }
     )
   }
@@ -94,14 +105,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
 
     if (session?.user?.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     }
 
     await templateService.deleteTemplate(id, hospitalId)
@@ -113,7 +126,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   } catch (error: any) {
     logger.error({ err: error }, 'Delete template error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to delete template' },
+      { error: await translateError(error.message || 'Failed to delete template') },
       { status: 500 }
     )
   }

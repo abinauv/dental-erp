@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/devices/status — Get all devices and their statuses
@@ -64,7 +65,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ devices, summary })
   } catch (err) {
     logger.error({ err }, 'Device status error:')
-    return NextResponse.json({ error: 'Failed to fetch device statuses' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch device statuses') },
+      { status: 500 }
+    )
   }
 }
 
@@ -81,14 +85,17 @@ export async function PUT(request: NextRequest) {
       body
 
     if (!id) {
-      return NextResponse.json({ error: 'Device id is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Device id is required') },
+        { status: 400 }
+      )
     }
 
     const device = await prisma.device.findFirst({
       where: { id, hospitalId: hospitalId! },
     })
     if (!device) {
-      return NextResponse.json({ error: 'Device not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Device not found') }, { status: 404 })
     }
 
     const updateData: Record<string, unknown> = {}
@@ -109,7 +116,10 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(updated)
   } catch (err) {
     logger.error({ err }, 'Device update error:')
-    return NextResponse.json({ error: 'Failed to update device' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update device') },
+      { status: 500 }
+    )
   }
 }
 
@@ -125,14 +135,17 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ error: 'Device id is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Device id is required') },
+        { status: 400 }
+      )
     }
 
     const device = await prisma.device.findFirst({
       where: { id, hospitalId: hospitalId! },
     })
     if (!device) {
-      return NextResponse.json({ error: 'Device not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Device not found') }, { status: 404 })
     }
 
     await prisma.device.delete({ where: { id } })
@@ -140,6 +153,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ deleted: true })
   } catch (err) {
     logger.error({ err }, 'Device delete error:')
-    return NextResponse.json({ error: 'Failed to delete device' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to delete device') },
+      { status: 500 }
+    )
   }
 }

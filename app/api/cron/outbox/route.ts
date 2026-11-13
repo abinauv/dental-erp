@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { drainOutbox } from '@/lib/services/outbox.service'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/cron/outbox
@@ -16,7 +17,7 @@ import { logger } from '@/lib/logger'
 export async function GET(req: Request) {
   const secret = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!secret || !process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
   }
 
   try {
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ ...result, processedAt: new Date().toISOString() })
   } catch (err) {
     logger.error({ err }, '[outbox] cron run failed')
-    return NextResponse.json({ error: 'Outbox run failed' }, { status: 500 })
+    return NextResponse.json({ error: await translateError('Outbox run failed') }, { status: 500 })
   }
 }
 
