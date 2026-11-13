@@ -5,6 +5,7 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildStorageKey, getStorage } from '@/lib/storage'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const ALLOWED_TYPES = [
   'image/jpeg',
@@ -25,13 +26,18 @@ async function verifyStaff(id: string, hospitalId: string) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
     if (!(await verifyStaff(id, hospitalId))) {
-      return NextResponse.json({ error: 'Staff member not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Staff member not found') },
+        { status: 404 }
+      )
     }
 
     const documents = await prisma.staffDocument.findMany({
@@ -42,7 +48,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ success: true, documents })
   } catch (err: any) {
     logger.error({ err }, 'Error fetching staff documents:')
-    return NextResponse.json({ error: err.message || 'Failed to fetch documents' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Failed to fetch documents') },
+      { status: 500 }
+    )
   }
 }
 
@@ -51,13 +60,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Staff records are HR data; restrict uploads to admins.
   const { error, hospitalId, user } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     const { id } = await params
     if (!(await verifyStaff(id, hospitalId))) {
-      return NextResponse.json({ error: 'Staff member not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Staff member not found') },
+        { status: 404 }
+      )
     }
 
     const formData = await req.formData()
@@ -66,16 +80,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const description = (formData.get('description') as string | null) || null
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('No file provided') }, { status: 400 })
     }
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'File type not allowed. Allowed types: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX' },
+        {
+          error: await translateError(
+            'File type not allowed. Allowed types: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX'
+          ),
+        },
         { status: 400 }
       )
     }
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('File size exceeds 10MB limit') },
+        { status: 400 }
+      )
     }
 
     // Stored name is a UUID so nothing attacker-controlled reaches the key; the
@@ -118,6 +139,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ success: true, document })
   } catch (err: any) {
     logger.error({ err }, 'Error uploading staff document:')
-    return NextResponse.json({ error: err.message || 'Failed to upload document' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Failed to upload document') },
+      { status: 500 }
+    )
   }
 }

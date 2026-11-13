@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/payment-plans — List payment plans
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -82,7 +85,10 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching payment plans:')
-    return NextResponse.json({ error: 'Failed to fetch payment plans' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch payment plans') },
+      { status: 500 }
+    )
   }
 }
 
@@ -90,12 +96,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Insufficient permissions') },
+        { status: 403 }
+      )
     }
 
     const body = await req.json()
@@ -111,13 +122,16 @@ export async function POST(req: NextRequest) {
 
     if (!invoiceId || !installments || !startDate) {
       return NextResponse.json(
-        { error: 'Invoice, installments count, and start date are required' },
+        { error: await translateError('Invoice, installments count, and start date are required') },
         { status: 400 }
       )
     }
 
     if (installments < 2 || installments > 60) {
-      return NextResponse.json({ error: 'Installments must be between 2 and 60' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Installments must be between 2 and 60') },
+        { status: 400 }
+      )
     }
 
     // Fetch the invoice
@@ -125,12 +139,17 @@ export async function POST(req: NextRequest) {
       where: { id: invoiceId, hospitalId },
     })
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
       return NextResponse.json(
-        { error: 'Cannot create payment plan for a paid or cancelled invoice' },
+        {
+          error: await translateError('Cannot create payment plan for a paid or cancelled invoice'),
+        },
         { status: 400 }
       )
     }
@@ -141,7 +160,7 @@ export async function POST(req: NextRequest) {
     })
     if (existingPlan) {
       return NextResponse.json(
-        { error: 'This invoice already has an active payment plan' },
+        { error: await translateError('This invoice already has an active payment plan') },
         { status: 409 }
       )
     }
@@ -233,6 +252,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(plan, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Error creating payment plan:')
-    return NextResponse.json({ error: 'Failed to create payment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create payment plan') },
+      { status: 500 }
+    )
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET: Public endpoint — list active doctors for a hospital by slug.
@@ -15,11 +16,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Clinic not found') }, { status: 404 })
     }
 
     if (!hospital.patientPortalEnabled) {
-      return NextResponse.json({ error: 'Online booking is not enabled' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Online booking is not enabled') },
+        { status: 403 }
+      )
     }
 
     const doctors = await prisma.staff.findMany({
@@ -40,6 +44,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     return NextResponse.json({ doctors, hospitalName: hospital.name })
   } catch (err: unknown) {
     logger.error({ err }, 'Public doctors error:')
-    return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch doctors') },
+      { status: 500 }
+    )
   }
 }

@@ -5,6 +5,7 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildStorageKey, getStorage } from '@/lib/storage'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST /api/patient-portal/upload-photo
@@ -22,21 +23,24 @@ export async function POST(req: NextRequest) {
     const category = formData.get('category') as string | null // e.g. "pain", "swelling", "bleeding", "other"
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('No file provided') }, { status: 400 })
     }
 
     // Validate image type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Only JPEG, PNG, and WebP images are accepted' },
+        { error: await translateError('Only JPEG, PNG, and WebP images are accepted') },
         { status: 400 }
       )
     }
 
     // Max 10MB
     if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be under 10MB' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('File size must be under 10MB') },
+        { status: 400 }
+      )
     }
 
     // Save file. This route already wrote a tenant-prefixed relative path, so
@@ -124,6 +128,9 @@ export async function POST(req: NextRequest) {
     )
   } catch (err: any) {
     logger.error({ err }, 'Photo upload error:')
-    return NextResponse.json({ error: err.message || 'Failed to upload photo' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Failed to upload photo') },
+      { status: 500 }
+    )
   }
 }

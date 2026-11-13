@@ -4,6 +4,7 @@ import { getGateway } from '@/lib/payment-gateways'
 import { settlePayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST: Verify payment from public pay page (no auth — uses token).
@@ -20,7 +21,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!token || !orderId || !paymentId) {
-      return NextResponse.json({ error: 'token, orderId, paymentId are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('token, orderId, paymentId are required') },
+        { status: 400 }
+      )
     }
 
     // Unauthenticated endpoint: throttle per IP and per link token.
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
     ])
     if (!byIp.allowed || !byToken.allowed) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
+        { error: await translateError('Too many requests. Please try again later.') },
         { status: 429 }
       )
     }
@@ -45,7 +49,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (!link) {
-      return NextResponse.json({ error: 'Invalid payment link' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invalid payment link') },
+        { status: 404 }
+      )
     }
 
     const hospitalId = link.hospitalId
@@ -53,7 +60,10 @@ export async function POST(req: NextRequest) {
     // Get gateway
     const gatewayResult = await getGateway(hospitalId)
     if (!gatewayResult) {
-      return NextResponse.json({ error: 'Payment gateway not configured' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Payment gateway not configured') },
+        { status: 400 }
+      )
     }
 
     const { gateway } = gatewayResult
@@ -67,7 +77,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (!result.verified) {
-      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Payment verification failed') },
+        { status: 400 }
+      )
     }
 
     // Settle the (pre-reserved) payment and apply it to the invoice. Idempotent:
@@ -101,6 +114,6 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     logger.error({ err }, 'Public verify error:')
     const message = err instanceof Error ? err.message : 'Verification failed'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: await translateError(message) }, { status: 500 })
   }
 }

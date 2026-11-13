@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { isSupportedLocale } from '@/lib/i18n/config'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const optionalString = z.preprocess(
   (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
@@ -67,7 +68,9 @@ const clinicInfoSchema = z.object({
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -118,7 +121,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Get clinic info error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to get clinic information' },
+      { error: await translateError(error.message || 'Failed to get clinic information') },
       { status: 500 }
     )
   }
@@ -128,7 +131,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -148,7 +153,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Update clinic info error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update clinic information' },
+      { error: await translateError(error.message || 'Failed to update clinic information') },
       { status: 500 }
     )
   }

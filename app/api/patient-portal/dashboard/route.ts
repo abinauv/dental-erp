@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET: Patient dashboard data — upcoming appointments, recent treatments, outstanding balance.
@@ -95,6 +96,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (err: unknown) {
     logger.error({ err }, 'Patient dashboard error:')
-    return NextResponse.json({ error: 'Failed to load dashboard' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to load dashboard') },
+      { status: 500 }
+    )
   }
 }

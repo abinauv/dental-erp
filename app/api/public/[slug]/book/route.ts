@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST: Public booking endpoint.
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
     if (!phone || !doctorId || !date || !time) {
       return NextResponse.json(
-        { error: 'Phone, doctor, date, and time are required' },
+        { error: await translateError('Phone, doctor, date, and time are required') },
         { status: 400 }
       )
     }
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     ])
     if (!byIp.allowed || !byPhone.allowed) {
       return NextResponse.json(
-        { error: 'Too many booking attempts. Please try again later.' },
+        { error: await translateError('Too many booking attempts. Please try again later.') },
         { status: 429 }
       )
     }
@@ -47,11 +48,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     })
 
     if (!hospital) {
-      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Clinic not found') }, { status: 404 })
     }
 
     if (!hospital.patientPortalEnabled) {
-      return NextResponse.json({ error: 'Online booking is not enabled' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Online booking is not enabled') },
+        { status: 403 }
+      )
     }
 
     // Find patient by phone
@@ -62,7 +66,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
     if (!patient) {
       return NextResponse.json(
-        { error: 'No patient account found with this phone number. Please contact the clinic.' },
+        {
+          error: await translateError(
+            'No patient account found with this phone number. Please contact the clinic.'
+          ),
+        },
         { status: 404 }
       )
     }
@@ -74,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     })
 
     if (!doctor) {
-      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
     }
 
     // Check for duplicate booking
@@ -92,7 +100,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
     if (existing) {
       return NextResponse.json(
-        { error: 'You already have a booking at this time' },
+        { error: await translateError('You already have a booking at this time') },
         { status: 409 }
       )
     }
@@ -134,6 +142,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     )
   } catch (err: unknown) {
     logger.error({ err }, 'Public booking error:')
-    return NextResponse.json({ error: 'Failed to book appointment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to book appointment') },
+      { status: 500 }
+    )
   }
 }

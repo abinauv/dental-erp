@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Retrieve SMS and email settings
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -55,7 +58,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching communication settings:')
-    return NextResponse.json({ error: 'Failed to fetch communication settings' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch communication settings') },
+      { status: 500 }
+    )
   }
 }
 
@@ -63,7 +69,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -71,12 +79,15 @@ export async function POST(request: NextRequest) {
     const { type, settings } = body
 
     if (!type || !settings) {
-      return NextResponse.json({ error: 'Type and settings are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Type and settings are required') },
+        { status: 400 }
+      )
     }
 
     if (type !== 'sms' && type !== 'email' && type !== 'reviews') {
       return NextResponse.json(
-        { error: "Type must be 'sms', 'email', or 'reviews'" },
+        { error: await translateError("Type must be 'sms', 'email', or 'reviews'") },
         { status: 400 }
       )
     }
@@ -169,6 +180,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error saving communication settings:')
-    return NextResponse.json({ error: 'Failed to save communication settings' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to save communication settings') },
+      { status: 500 }
+    )
   }
 }

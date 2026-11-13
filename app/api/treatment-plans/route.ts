@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Generate unique plan number for a hospital
 async function generatePlanNumber(hospitalId: string): Promise<string> {
@@ -33,7 +34,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -126,7 +129,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching treatment plans:')
-    return NextResponse.json({ error: 'Failed to fetch treatment plans' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch treatment plans') },
+      { status: 500 }
+    )
   }
 }
 
@@ -135,14 +141,16 @@ export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session?.user?.role || '')) {
       return NextResponse.json(
-        { error: "You don't have permission to create treatment plans" },
+        { error: await translateError("You don't have permission to create treatment plans") },
         { status: 403 }
       )
     }
@@ -152,7 +160,10 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!patientId || !title) {
-      return NextResponse.json({ error: 'Patient and title are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Patient and title are required') },
+        { status: 400 }
+      )
     }
 
     // Check if patient exists and belongs to this hospital
@@ -160,7 +171,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Validate procedures exist and belong to this hospital
@@ -174,7 +188,10 @@ export async function POST(request: NextRequest) {
       })
 
       if (procedures.length !== procedureIds.length) {
-        return NextResponse.json({ error: 'One or more procedures not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: await translateError('One or more procedures not found') },
+          { status: 404 }
+        )
       }
     }
 
@@ -260,6 +277,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(treatmentPlan, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating treatment plan:')
-    return NextResponse.json({ error: 'Failed to create treatment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create treatment plan') },
+      { status: 500 }
+    )
   }
 }

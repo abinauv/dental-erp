@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET: Get a specific form template with fields (for patient to fill)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!template) {
-      return NextResponse.json({ error: 'Form not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Form not found') }, { status: 404 })
     }
 
     // Check if patient already submitted this form
@@ -36,6 +37,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (err) {
     logger.error({ err }, 'Patient form detail error:')
-    return NextResponse.json({ error: 'Failed to load form' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to load form') },
+      { status: 500 }
+    )
   }
 }

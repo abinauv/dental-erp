@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { getStorage, StorageNotFoundError, toStorageKey } from '@/lib/storage'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/patients/[id]/documents/[documentId] - Get/download a specific document
 export async function GET(
@@ -12,7 +13,9 @@ export async function GET(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -27,7 +30,10 @@ export async function GET(
     })
 
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Document not found') },
+        { status: 404 }
+      )
     }
 
     const { searchParams } = new URL(req.url)
@@ -53,7 +59,10 @@ export async function GET(
       object = await getStorage().get(toStorageKey(document.filePath))
     } catch (err) {
       if (err instanceof StorageNotFoundError) {
-        return NextResponse.json({ error: 'File not found in storage' }, { status: 404 })
+        return NextResponse.json(
+          { error: await translateError('File not found in storage') },
+          { status: 404 }
+        )
       }
       throw err
     }
@@ -70,7 +79,7 @@ export async function GET(
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching document:')
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch document' },
+      { error: await translateError(error.message || 'Failed to fetch document') },
       { status: 500 }
     )
   }
@@ -84,7 +93,9 @@ export async function PATCH(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -99,7 +110,10 @@ export async function PATCH(
     })
 
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Document not found') },
+        { status: 404 }
+      )
     }
 
     const body = await req.json()
@@ -131,7 +145,7 @@ export async function PATCH(
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating document:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update document' },
+      { error: await translateError(error.message || 'Failed to update document') },
       { status: 500 }
     )
   }
@@ -145,7 +159,9 @@ export async function DELETE(
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -160,7 +176,10 @@ export async function DELETE(
     })
 
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Document not found') },
+        { status: 404 }
+      )
     }
 
     const { searchParams } = new URL(req.url)
@@ -198,7 +217,7 @@ export async function DELETE(
   } catch (error: any) {
     logger.error({ err: error }, 'Error deleting document:')
     return NextResponse.json(
-      { error: error.message || 'Failed to delete document' },
+      { error: await translateError(error.message || 'Failed to delete document') },
       { status: 500 }
     )
   }

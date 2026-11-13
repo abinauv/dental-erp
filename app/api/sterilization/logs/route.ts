@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/sterilization/logs
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
 
   if (!instrumentId || !method || !startedAt) {
     return NextResponse.json(
-      { error: 'instrumentId, method, and startedAt are required' },
+      { error: await translateError('instrumentId, method, and startedAt are required') },
       { status: 400 }
     )
   }
@@ -75,7 +76,10 @@ export async function POST(req: Request) {
     where: { id: instrumentId, hospitalId: hospitalId! },
   })
   if (!instrument) {
-    return NextResponse.json({ error: 'Instrument not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Instrument not found') },
+      { status: 404 }
+    )
   }
 
   const cycleNumber = instrument.sterilizationCycleCount + 1

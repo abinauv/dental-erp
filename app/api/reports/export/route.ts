@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { logger } from '@/lib/logger'
 import { escapeHtml } from '@/lib/html'
 import { GET as getAnalytics } from '@/app/api/reports/analytics/route'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const REPORT_TYPES = ['patient', 'clinical', 'financial', 'operational']
 
@@ -366,7 +367,9 @@ export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -386,7 +389,10 @@ export async function GET(request: NextRequest) {
     const dateToParam = searchParams.get('dateTo')
 
     if (!REPORT_TYPES.includes(type)) {
-      return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid report type') },
+        { status: 400 }
+      )
     }
 
     // Call the analytics handler in-process (same session, same hospital).
@@ -432,9 +438,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ error: 'Invalid format' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid format') }, { status: 400 })
   } catch (error) {
     logger.error({ err: error }, 'Export API error:')
-    return NextResponse.json({ error: 'Failed to export report' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to export report') },
+      { status: 500 }
+    )
   }
 }

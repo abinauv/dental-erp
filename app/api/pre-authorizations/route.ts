@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   const { searchParams } = new URL(req.url)
@@ -61,7 +64,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'ACCOUNTANT'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -70,7 +75,11 @@ export async function POST(req: NextRequest) {
 
     if (!patientId || !insurancePolicyId || !procedures || !estimatedCost) {
       return NextResponse.json(
-        { error: 'Patient, insurance policy, procedures, and estimated cost are required' },
+        {
+          error: await translateError(
+            'Patient, insurance policy, procedures, and estimated cost are required'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -81,7 +90,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (!policy) {
-      return NextResponse.json({ error: 'Insurance policy not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Insurance policy not found') },
+        { status: 404 }
+      )
     }
 
     const preAuth = await prisma.preAuthorization.create({
@@ -108,6 +120,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(preAuth, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Create pre-authorization error:')
-    return NextResponse.json({ error: 'Failed to create pre-authorization' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create pre-authorization') },
+      { status: 500 }
+    )
   }
 }

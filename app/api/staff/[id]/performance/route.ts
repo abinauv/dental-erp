@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET - Get staff member's performance statistics
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -37,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!staff) {
-      return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Staff not found') }, { status: 404 })
     }
 
     // Get appointments stats
@@ -197,6 +200,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching performance:')
-    return NextResponse.json({ error: 'Failed to fetch performance statistics' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch performance statistics') },
+      { status: 500 }
+    )
   }
 }

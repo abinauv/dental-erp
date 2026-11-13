@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getPasswordPolicy } from '@/lib/password-policy.server'
 import { userIdForResetToken } from '@/lib/auth-passwords'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/password-policy
@@ -21,13 +22,17 @@ export async function GET(req: NextRequest) {
     userId = await userIdForResetToken(resetToken)
     if (!userId) {
       return NextResponse.json(
-        { error: 'This link has expired or was already used.', code: 'INVALID_TOKEN' },
+        {
+          error: await translateError('This link has expired or was already used.'),
+          code: 'INVALID_TOKEN',
+        },
         { status: 404 }
       )
     }
   } else {
     const session = await auth.api.getSession({ headers: req.headers })
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session?.user)
+      return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
     userId = session.user.id
   }
 
@@ -35,7 +40,8 @@ export async function GET(req: NextRequest) {
     where: { id: userId },
     select: { hospitalId: true, mustChangePassword: true },
   })
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user)
+    return NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
 
   return NextResponse.json({
     passwordPolicy: await getPasswordPolicy(user.hospitalId),

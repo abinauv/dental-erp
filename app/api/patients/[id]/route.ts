@@ -3,13 +3,16 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { Prisma } from '@/lib/generated/prisma/client'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/patients/[id] - Get a specific patient with all details
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -74,7 +77,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({
@@ -83,7 +89,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching patient:')
-    return NextResponse.json({ error: error.message || 'Failed to fetch patient' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to fetch patient') },
+      { status: 500 }
+    )
   }
 }
 
@@ -92,7 +101,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -105,7 +116,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!existingPatient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     const {
@@ -159,7 +173,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     logger.error({ err: error }, 'Error updating patient:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update patient' },
+      { error: await translateError(error.message || 'Failed to update patient') },
       { status: 500 }
     )
   }
@@ -170,7 +184,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -181,7 +197,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Cancel any pending/scheduled appointments for this patient
@@ -210,7 +229,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   } catch (error: any) {
     logger.error({ err: error }, 'Error deleting patient:')
     return NextResponse.json(
-      { error: error.message || 'Failed to delete patient' },
+      { error: await translateError(error.message || 'Failed to delete patient') },
       { status: 500 }
     )
   }

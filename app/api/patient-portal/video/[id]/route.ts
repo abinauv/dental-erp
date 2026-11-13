@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { getRoomToken, getVideoProvider } from '@/lib/services/video.service'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/patient-portal/video/[id]
@@ -33,7 +34,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   })
 
   if (!consultation) {
-    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Consultation not found') },
+      { status: 404 }
+    )
   }
 
   const provider = getVideoProvider()

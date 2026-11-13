@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/payment-plans/[id] — Get payment plan details
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -43,7 +46,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!plan) {
-      return NextResponse.json({ error: 'Payment plan not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Payment plan not found') },
+        { status: 404 }
+      )
     }
 
     // Get related payments for this plan's installments
@@ -98,7 +104,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching payment plan:')
-    return NextResponse.json({ error: 'Failed to fetch payment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch payment plan') },
+      { status: 500 }
+    )
   }
 }
 
@@ -106,12 +115,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      return NextResponse.json(
+        { error: await translateError('Insufficient permissions') },
+        { status: 403 }
+      )
     }
 
     const { id } = await params
@@ -124,12 +138,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!plan) {
-      return NextResponse.json({ error: 'Payment plan not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Payment plan not found') },
+        { status: 404 }
+      )
     }
 
     if (action === 'cancel') {
       if (plan.status !== 'ACTIVE') {
-        return NextResponse.json({ error: 'Only active plans can be cancelled' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Only active plans can be cancelled') },
+          { status: 400 }
+        )
       }
 
       await prisma.$transaction([
@@ -154,17 +174,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       // Waive a specific installment
       const { scheduleId } = body
       if (!scheduleId) {
-        return NextResponse.json({ error: 'Schedule ID required' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Schedule ID required') },
+          { status: 400 }
+        )
       }
 
       const schedule = await prisma.paymentPlanSchedule.findFirst({
         where: { id: scheduleId, planId: id },
       })
       if (!schedule) {
-        return NextResponse.json({ error: 'Installment not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: await translateError('Installment not found') },
+          { status: 404 }
+        )
       }
       if (schedule.status === 'PAID') {
-        return NextResponse.json({ error: 'Cannot waive a paid installment' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Cannot waive a paid installment') },
+          { status: 400 }
+        )
       }
 
       await prisma.paymentPlanSchedule.update({
@@ -190,9 +219,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ message: 'Installment waived' })
     }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid action') }, { status: 400 })
   } catch (err) {
     logger.error({ err }, 'Error updating payment plan:')
-    return NextResponse.json({ error: 'Failed to update payment plan' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update payment plan') },
+      { status: 500 }
+    )
   }
 }

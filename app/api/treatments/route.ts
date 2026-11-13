@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // Generate unique treatment number
 async function generateTreatmentNo(hospitalId: string): Promise<string> {
@@ -32,7 +33,9 @@ async function generateTreatmentNo(hospitalId: string): Promise<string> {
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -153,7 +156,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Error fetching treatments:')
-    return NextResponse.json({ error: 'Failed to fetch treatments' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch treatments') },
+      { status: 500 }
+    )
   }
 }
 
@@ -161,14 +167,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to create treatments" },
+        { error: await translateError("You don't have permission to create treatments") },
         { status: 403 }
       )
     }
@@ -194,7 +202,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!patientId || !procedureId || !doctorId) {
       return NextResponse.json(
-        { error: 'Patient, procedure, and doctor are required' },
+        { error: await translateError('Patient, procedure, and doctor are required') },
         { status: 400 }
       )
     }
@@ -204,7 +212,10 @@ export async function POST(request: NextRequest) {
       where: { id: patientId, hospitalId },
     })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Check if doctor exists
@@ -212,7 +223,7 @@ export async function POST(request: NextRequest) {
       where: { id: doctorId, hospitalId },
     })
     if (!doctor) {
-      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
     }
 
     // Check if procedure exists
@@ -220,7 +231,10 @@ export async function POST(request: NextRequest) {
       where: { id: procedureId, hospitalId },
     })
     if (!procedure) {
-      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Procedure not found') },
+        { status: 404 }
+      )
     }
 
     // Check if appointment exists (if provided)
@@ -229,7 +243,10 @@ export async function POST(request: NextRequest) {
         where: { id: appointmentId, hospitalId },
       })
       if (!appointment) {
-        return NextResponse.json({ error: 'Appointment not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: await translateError('Appointment not found') },
+          { status: 404 }
+        )
       }
     }
 
@@ -287,6 +304,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(treatment, { status: 201 })
   } catch (error) {
     logger.error({ err: error }, 'Error creating treatment:')
-    return NextResponse.json({ error: 'Failed to create treatment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create treatment') },
+      { status: 500 }
+    )
   }
 }

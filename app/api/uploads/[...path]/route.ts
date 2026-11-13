@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthAndRole } from '@/lib/api-helpers';
 import { getStorage, keyBelongsToHospital, StorageNotFoundError, toStorageKey } from '@/lib/storage';
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/uploads/[...path] - Serve uploaded files
 export async function GET(
@@ -11,7 +12,7 @@ export async function GET(
   const { error, hospitalId } = await requireAuthAndRole();
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 });
   }
 
   try {
@@ -31,7 +32,7 @@ export async function GET(
     // key, so those land here as 403 rather than reaching the driver.
     if (!keyBelongsToHospital(requested, hospitalId)) {
       return NextResponse.json(
-        { error: 'Access denied' },
+        { error: await translateError('Access denied') },
         { status: 403 }
       );
     }
@@ -48,13 +49,13 @@ export async function GET(
   } catch (error: any) {
     if (error instanceof StorageNotFoundError) {
       return NextResponse.json(
-        { error: 'File not found' },
+        { error: await translateError('File not found') },
         { status: 404 }
       );
     }
     logger.error({ err: error }, 'Error serving file:');
     return NextResponse.json(
-      { error: error.message || 'Failed to serve file' },
+      { error: await translateError(error.message || 'Failed to serve file') },
       { status: 500 }
     );
   }

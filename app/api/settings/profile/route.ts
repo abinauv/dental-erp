@@ -5,6 +5,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { isSupportedLocale, locales, resolveLocaleCascade, type Locale } from '@/lib/i18n/config'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * The signed-in staff member's own profile preferences.
@@ -29,7 +30,9 @@ const profileUpdateSchema = z.object({
 export async function GET() {
   const { error, user } = await requireAuthAndRole()
   if (error || !user) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -44,7 +47,7 @@ export async function GET() {
     })
 
     if (!record) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('User not found') }, { status: 404 })
     }
 
     return NextResponse.json({
@@ -62,14 +65,19 @@ export async function GET() {
     })
   } catch (err) {
     logger.error({ err }, 'Get profile error:')
-    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to load profile') },
+      { status: 500 }
+    )
   }
 }
 
 export async function PATCH(req: NextRequest) {
   const { error, user } = await requireAuthAndRole()
   if (error || !user) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   let locale: Locale | null
@@ -77,9 +85,15 @@ export async function PATCH(req: NextRequest) {
     ;({ locale } = profileUpdateSchema.parse(await req.json()))
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid locale', details: err.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invalid locale'), details: err.issues },
+        { status: 400 }
+      )
     }
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('Invalid request body') },
+      { status: 400 }
+    )
   }
 
   try {
@@ -99,6 +113,9 @@ export async function PATCH(req: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Update profile error:')
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to update profile') },
+      { status: 500 }
+    )
   }
 }

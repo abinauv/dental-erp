@@ -5,6 +5,7 @@ import { requireAuthAndRole, checkStaffLimit, generateToken } from '@/lib/api-he
 import { Role, StaffInviteStatus } from '@/lib/generated/prisma/enums'
 import { sendInviteEmail } from '@/lib/email-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const inviteSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -17,7 +18,9 @@ export async function POST(request: Request) {
   const { error, user, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -26,7 +29,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validated.error.flatten() },
+        { error: await translateError('Validation failed'), details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -38,7 +41,7 @@ export async function POST(request: Request) {
     if (!staffLimit.allowed) {
       return NextResponse.json(
         {
-          error: 'Staff limit reached',
+          error: await translateError('Staff limit reached'),
           message: `Your plan allows up to ${staffLimit.max} staff members. Please upgrade to add more.`,
           current: staffLimit.current,
           max: staffLimit.max,
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'A user with this email already exists in your hospital' },
+        { error: await translateError('A user with this email already exists in your hospital') },
         { status: 409 }
       )
     }
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
 
     if (existingInvite) {
       return NextResponse.json(
-        { error: 'An invite has already been sent to this email' },
+        { error: await translateError('An invite has already been sent to this email') },
         { status: 409 }
       )
     }
@@ -132,7 +135,10 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     logger.error({ err: error }, 'Create invite error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }
 
@@ -141,7 +147,9 @@ export async function GET() {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -164,6 +172,9 @@ export async function GET() {
     return NextResponse.json({ invites })
   } catch (error) {
     logger.error({ err: error }, 'List invites error:')
-    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('An error occurred. Please try again.') },
+      { status: 500 }
+    )
   }
 }

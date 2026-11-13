@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 interface TimelineEvent {
   id: string
@@ -18,7 +19,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -31,7 +34,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     const { searchParams } = new URL(req.url)
@@ -263,7 +269,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching patient timeline:')
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch timeline' },
+      { error: await translateError(error.message || 'Failed to fetch timeline') },
       { status: 500 }
     )
   }

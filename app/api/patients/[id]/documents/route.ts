@@ -5,13 +5,16 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { buildStorageKey, getStorage } from '@/lib/storage'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/patients/[id]/documents - Get all documents for a patient
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -23,7 +26,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     const { searchParams } = new URL(req.url)
@@ -71,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     logger.error({ err: error }, 'Error fetching documents:')
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch documents' },
+      { error: await translateError(error.message || 'Failed to fetch documents') },
       { status: 500 }
     )
   }
@@ -82,7 +88,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { error, hospitalId, user } = await requireAuthAndRole()
 
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -94,7 +102,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     const formData = await req.formData()
@@ -104,11 +115,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const treatmentId = formData.get('treatmentId') as string | null
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('No file provided') }, { status: 400 })
     }
 
     if (!documentType) {
-      return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Document type is required') },
+        { status: 400 }
+      )
     }
 
     // Validate file type
@@ -124,7 +138,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'File type not allowed. Allowed types: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX' },
+        {
+          error: await translateError(
+            'File type not allowed. Allowed types: JPEG, PNG, GIF, WebP, PDF, DOC, DOCX'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -132,7 +150,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('File size exceeds 10MB limit') },
+        { status: 400 }
+      )
     }
 
     // Stored name is a UUID, so nothing attacker-controlled reaches the key.
@@ -187,7 +208,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (error: any) {
     logger.error({ err: error }, 'Error uploading document:')
     return NextResponse.json(
-      { error: error.message || 'Failed to upload document' },
+      { error: await translateError(error.message || 'Failed to upload document') },
       { status: 500 }
     )
   }

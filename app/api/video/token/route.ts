@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { getRoomToken, getVideoProvider } from '@/lib/services/video.service'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/video/token?consultationId=xxx
@@ -16,7 +17,10 @@ export async function GET(req: Request) {
   const consultationId = searchParams.get('consultationId')
 
   if (!consultationId) {
-    return NextResponse.json({ error: 'consultationId is required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('consultationId is required') },
+      { status: 400 }
+    )
   }
 
   const consultation = await prisma.videoConsultation.findFirst({
@@ -28,7 +32,10 @@ export async function GET(req: Request) {
   })
 
   if (!consultation) {
-    return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
+    return NextResponse.json(
+      { error: await translateError('Consultation not found') },
+      { status: 404 }
+    )
   }
 
   const isDoctor = consultation.doctor.userId === user!.id

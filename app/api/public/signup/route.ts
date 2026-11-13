@@ -7,6 +7,7 @@ import { Plan, Role } from '@/lib/generated/prisma/enums'
 import { sendVerificationEmail } from '@/lib/email-helpers'
 import { logger } from '@/lib/logger'
 import { syncCredentialAccount } from '@/lib/auth-credentials'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const signupSchema = z.object({
   hospitalName: z.string().min(2, 'Hospital name must be at least 2 characters'),
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
 
     if (!validated.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validated.error.flatten() },
+        { error: await translateError('Validation failed'), details: validated.error.flatten() },
         { status: 400 }
       )
     }
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'An account with this email already exists' },
+        { error: await translateError('An account with this email already exists') },
         { status: 409 }
       )
     }
@@ -122,7 +123,7 @@ export async function POST(request: Request) {
   } catch (error) {
     logger.error({ err: error }, 'Signup error:')
     return NextResponse.json(
-      { error: 'An error occurred during signup. Please try again.' },
+      { error: await translateError('An error occurred during signup. Please try again.') },
       { status: 500 }
     )
   }

@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { buildStorageKey, getStorage } from '@/lib/storage'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 const MAX_SIZE = 2 * 1024 * 1024 // 2 MB
@@ -42,7 +43,9 @@ async function clearStoredLogos(hospitalId: string): Promise<void> {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -50,18 +53,21 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File | null
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: await translateError('No file provided') }, { status: 400 })
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Only JPEG, PNG, WebP, GIF and SVG images are allowed' },
+        { error: await translateError('Only JPEG, PNG, WebP, GIF and SVG images are allowed') },
         { status: 400 }
       )
     }
 
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 2 MB limit' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('File size exceeds 2 MB limit') },
+        { status: 400 }
+      )
     }
 
     // Remove any previous logo before writing the new one, so switching from
@@ -85,7 +91,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, logo: logoPath })
   } catch (err: any) {
     logger.error({ err }, 'Logo upload error:')
-    return NextResponse.json({ error: err.message || 'Failed to upload logo' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Failed to upload logo') },
+      { status: 500 }
+    )
   }
 }
 
@@ -93,7 +102,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE() {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -108,6 +119,9 @@ export async function DELETE() {
     return NextResponse.json({ success: true })
   } catch (err: any) {
     logger.error({ err }, 'Logo delete error:')
-    return NextResponse.json({ error: err.message || 'Failed to delete logo' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Failed to delete logo') },
+      { status: 500 }
+    )
   }
 }

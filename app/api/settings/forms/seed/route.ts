@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const DEFAULT_TEMPLATES = [
   {
@@ -355,7 +356,9 @@ const DEFAULT_TEMPLATES = [
 export async function POST() {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -396,6 +399,9 @@ export async function POST() {
     )
   } catch (err) {
     logger.error({ err }, 'Seed templates error:')
-    return NextResponse.json({ error: 'Failed to seed templates' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to seed templates') },
+      { status: 500 }
+    )
   }
 }

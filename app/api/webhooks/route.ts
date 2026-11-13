@@ -26,6 +26,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { dispatchEvent, type EventType } from '@/lib/ai/event-dispatcher'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const VALID_EVENTS: EventType[] = [
   'treatment.completed',
@@ -44,12 +45,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: await translateError('Invalid JSON') }, { status: 400 })
   }
 
   if (!body.type || !VALID_EVENTS.includes(body.type as EventType)) {
     return NextResponse.json(
-      { error: 'Invalid event type', validEvents: VALID_EVENTS },
+      { error: await translateError('Invalid event type'), validEvents: VALID_EVENTS },
       { status: 400 }
     )
   }

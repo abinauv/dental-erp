@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET: Patient's prescriptions list.
@@ -34,6 +35,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ prescriptions })
   } catch (err: unknown) {
     logger.error({ err }, 'Patient prescriptions error:')
-    return NextResponse.json({ error: 'Failed to load prescriptions' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to load prescriptions') },
+      { status: 500 }
+    )
   }
 }

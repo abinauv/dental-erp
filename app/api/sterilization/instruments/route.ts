@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET /api/sterilization/instruments
@@ -59,7 +60,10 @@ export async function POST(req: Request) {
   } = body
 
   if (!name || !category) {
-    return NextResponse.json({ error: 'Name and category are required' }, { status: 400 })
+    return NextResponse.json(
+      { error: await translateError('Name and category are required') },
+      { status: 400 }
+    )
   }
 
   const instrument = await prisma.instrument.create({

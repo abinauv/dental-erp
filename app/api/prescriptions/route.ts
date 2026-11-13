@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET — list prescriptions
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -73,7 +76,7 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     logger.error({ err }, 'Error fetching prescriptions:')
     return NextResponse.json(
-      { error: err.message || 'Failed to fetch prescriptions' },
+      { error: await translateError(err.message || 'Failed to fetch prescriptions') },
       { status: 500 }
     )
   }
@@ -83,7 +86,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -92,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     if (!patientId || !medications || medications.length === 0) {
       return NextResponse.json(
-        { error: 'Patient and at least one medication are required' },
+        { error: await translateError('Patient and at least one medication are required') },
         { status: 400 }
       )
     }
@@ -100,7 +105,10 @@ export async function POST(request: NextRequest) {
     // Verify patient
     const patient = await prisma.patient.findFirst({ where: { id: patientId, hospitalId } })
     if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Patient not found') },
+        { status: 404 }
+      )
     }
 
     // Generate prescription number
@@ -119,7 +127,10 @@ export async function POST(request: NextRequest) {
     // Get doctor's staff record
     const staff = await prisma.staff.findFirst({ where: { userId: session!.user!.id, hospitalId } })
     if (!staff) {
-      return NextResponse.json({ error: 'Doctor staff record not found' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Doctor staff record not found') },
+        { status: 400 }
+      )
     }
 
     const prescription = await prisma.prescription.create({
@@ -156,7 +167,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     logger.error({ err }, 'Error creating prescription:')
     return NextResponse.json(
-      { error: err.message || 'Failed to create prescription' },
+      { error: await translateError(err.message || 'Failed to create prescription') },
       { status: 500 }
     )
   }

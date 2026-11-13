@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const updateSettingSchema = z.object({
   key: z.string(),
@@ -15,7 +16,9 @@ const updateSettingSchema = z.object({
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -49,7 +52,10 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get settings error:')
-    return NextResponse.json({ error: error.message || 'Failed to get settings' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get settings') },
+      { status: 500 }
+    )
   }
 }
 
@@ -57,7 +63,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -88,7 +96,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Update setting error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update setting' },
+      { error: await translateError(error.message || 'Failed to update setting') },
       { status: 500 }
     )
   }
@@ -98,7 +106,9 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -106,7 +116,10 @@ export async function PUT(req: NextRequest) {
     const { settings } = body
 
     if (!Array.isArray(settings)) {
-      return NextResponse.json({ error: 'Settings must be an array' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Settings must be an array') },
+        { status: 400 }
+      )
     }
 
     // Bulk upsert
@@ -138,7 +151,7 @@ export async function PUT(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Bulk update settings error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update settings' },
+      { error: await translateError(error.message || 'Failed to update settings') },
       { status: 500 }
     )
   }

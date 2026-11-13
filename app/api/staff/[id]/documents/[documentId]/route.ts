@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { getStorage, toStorageKey } from '@/lib/storage'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // DELETE /api/staff/[id]/documents/[documentId] — remove a staff document
 export async function DELETE(
@@ -11,7 +12,9 @@ export async function DELETE(
 ) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -23,7 +26,10 @@ export async function DELETE(
       where: { id: documentId, staffId: id, hospitalId },
     })
     if (!document) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Document not found') },
+        { status: 404 }
+      )
     }
 
     // Remove the stored bytes first (idempotent), then the row. A failed storage
@@ -36,6 +42,9 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (err: any) {
     logger.error({ err }, 'Error deleting staff document:')
-    return NextResponse.json({ error: err.message || 'Failed to delete document' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(err.message || 'Failed to delete document') },
+      { status: 500 }
+    )
   }
 }

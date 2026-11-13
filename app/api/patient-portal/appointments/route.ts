@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET: List patient's appointments (past + upcoming).
@@ -60,7 +61,10 @@ export async function GET(req: NextRequest) {
     })
   } catch (err: unknown) {
     logger.error({ err }, 'Patient appointments error:')
-    return NextResponse.json({ error: 'Failed to load appointments' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to load appointments') },
+      { status: 500 }
+    )
   }
 }
 
@@ -83,7 +87,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!doctorId || !date || !time) {
-      return NextResponse.json({ error: 'Doctor, date, and time are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Doctor, date, and time are required') },
+        { status: 400 }
+      )
     }
 
     // Verify doctor belongs to hospital
@@ -92,7 +99,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!doctor) {
-      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
     }
 
     // Generate appointment number
@@ -126,6 +133,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, appointment }, { status: 201 })
   } catch (err: unknown) {
     logger.error({ err }, 'Patient book appointment error:')
-    return NextResponse.json({ error: 'Failed to book appointment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to book appointment') },
+      { status: 500 }
+    )
   }
 }

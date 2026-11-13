@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requirePatientAuth } from '@/lib/patient-auth'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * GET: Available slots for the patient's hospital.
@@ -18,7 +19,10 @@ export async function GET(req: NextRequest) {
     const duration = parseInt(searchParams.get('duration') || '30')
 
     if (!doctorId || !date) {
-      return NextResponse.json({ error: 'doctorId and date are required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('doctorId and date are required') },
+        { status: 400 }
+      )
     }
 
     const hospitalId = patient!.hospitalId
@@ -56,7 +60,7 @@ export async function GET(req: NextRequest) {
       where: { id: doctorId, hospitalId },
     })
     if (!doctor) {
-      return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
+      return NextResponse.json({ error: await translateError('Doctor not found') }, { status: 404 })
     }
 
     const dayOfWeek = dateObj.getDay()
@@ -125,6 +129,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ available: true, date, doctorId, slots })
   } catch (err: unknown) {
     logger.error({ err }, 'Portal slots error:')
-    return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch slots') },
+      { status: 500 }
+    )
   }
 }

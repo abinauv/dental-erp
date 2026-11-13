@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST - Complete treatment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'DOCTOR'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to complete treatments" },
+        { error: await translateError("You don't have permission to complete treatments") },
         { status: 403 }
       )
     }
@@ -28,13 +31,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     if (!treatment) {
-      return NextResponse.json({ error: 'Treatment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Treatment not found') },
+        { status: 404 }
+      )
     }
 
     // Check if treatment can be completed
     if (treatment.status !== 'IN_PROGRESS' && treatment.status !== 'PLANNED') {
       return NextResponse.json(
-        { error: `Cannot complete treatment with status: ${treatment.status}` },
+        {
+          error: await translateError('Cannot complete treatment with status: {status}', {
+            status: treatment.status,
+          }),
+        },
         { status: 400 }
       )
     }
@@ -91,6 +101,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json(updatedTreatment)
   } catch (error) {
     logger.error({ err: error }, 'Error completing treatment:')
-    return NextResponse.json({ error: 'Failed to complete treatment' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to complete treatment') },
+      { status: 500 }
+    )
   }
 }

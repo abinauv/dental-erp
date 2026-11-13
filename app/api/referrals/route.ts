@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -16,7 +17,9 @@ function generateReferralCode(): string {
 export async function GET(request: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -79,7 +82,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     logger.error({ err }, 'Error fetching referrals:')
-    return NextResponse.json({ error: 'Failed to fetch referrals' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to fetch referrals') },
+      { status: 500 }
+    )
   }
 }
 
@@ -87,12 +93,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     if (!['ADMIN', 'RECEPTIONIST'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+      return NextResponse.json({ error: await translateError('Not authorized') }, { status: 403 })
     }
 
     const body = await request.json()
@@ -100,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (!referrerPatientId || !referredName?.trim() || !referredPhone?.trim()) {
       return NextResponse.json(
-        { error: 'Referrer patient, referred name, and phone are required' },
+        { error: await translateError('Referrer patient, referred name, and phone are required') },
         { status: 400 }
       )
     }
@@ -110,7 +118,10 @@ export async function POST(request: NextRequest) {
       where: { id: referrerPatientId, hospitalId },
     })
     if (!referrer) {
-      return NextResponse.json({ error: 'Referrer patient not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Referrer patient not found') },
+        { status: 404 }
+      )
     }
 
     // Generate unique code
@@ -138,6 +149,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(referral, { status: 201 })
   } catch (err) {
     logger.error({ err }, 'Error creating referral:')
-    return NextResponse.json({ error: 'Failed to create referral' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create referral') },
+      { status: 500 }
+    )
   }
 }

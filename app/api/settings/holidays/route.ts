@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const createHolidaySchema = z.object({
   name: z.string().min(1),
@@ -14,7 +15,9 @@ const createHolidaySchema = z.object({
 export async function GET(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -45,7 +48,10 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get holidays error:')
-    return NextResponse.json({ error: error.message || 'Failed to get holidays' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get holidays') },
+      { status: 500 }
+    )
   }
 }
 
@@ -53,7 +59,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -77,7 +85,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Create holiday error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to create holiday' },
+      { error: await translateError(error.message || 'Failed to create holiday') },
       { status: 500 }
     )
   }
@@ -87,7 +95,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -95,7 +105,10 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ error: 'Holiday ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Holiday ID is required') },
+        { status: 400 }
+      )
     }
 
     await prisma.holiday.delete({
@@ -109,7 +122,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Delete holiday error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to delete holiday' },
+      { error: await translateError(error.message || 'Failed to delete holiday') },
       { status: 500 }
     )
   }

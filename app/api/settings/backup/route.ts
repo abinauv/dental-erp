@@ -3,12 +3,15 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { format } from 'date-fns'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // GET /api/settings/backup - Export database data
 export async function GET(req: NextRequest) {
   const { error, hospitalId, user } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -118,7 +121,10 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Backup export error:')
-    return NextResponse.json({ error: error.message || 'Failed to export backup' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to export backup') },
+      { status: 500 }
+    )
   }
 }
 
@@ -126,7 +132,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -150,7 +158,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     logger.error({ err: error }, 'Backup stats error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to get backup statistics' },
+      { error: await translateError(error.message || 'Failed to get backup statistics') },
       { status: 500 }
     )
   }

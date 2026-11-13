@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getAuthenticatedHospital } from '@/lib/api-helpers'
 import { randomBytes } from 'crypto'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST: Generate a short-lived payment link for an invoice.
@@ -12,14 +13,19 @@ export async function POST(req: NextRequest) {
   try {
     const { error, user, hospitalId } = await getAuthenticatedHospital()
     if (error || !user || !hospitalId) {
-      return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return (
+        error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+      )
     }
 
     const body = await req.json()
     const { invoiceId } = body as { invoiceId: string }
 
     if (!invoiceId) {
-      return NextResponse.json({ error: 'invoiceId is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('invoiceId is required') },
+        { status: 400 }
+      )
     }
 
     // Validate invoice
@@ -34,12 +40,18 @@ export async function POST(req: NextRequest) {
     })
 
     if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invoice not found') },
+        { status: 404 }
+      )
     }
 
     const balance = Number(invoice.balanceAmount)
     if (balance <= 0) {
-      return NextResponse.json({ error: 'Invoice is already fully paid' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invoice is already fully paid') },
+        { status: 400 }
+      )
     }
 
     // Check if gateway is configured
@@ -50,7 +62,11 @@ export async function POST(req: NextRequest) {
 
     if (!gatewayConfig?.isEnabled) {
       return NextResponse.json(
-        { error: 'Payment gateway is not enabled. Configure it in Settings > Billing.' },
+        {
+          error: await translateError(
+            'Payment gateway is not enabled. Configure it in Settings > Billing.'
+          ),
+        },
         { status: 400 }
       )
     }
@@ -86,6 +102,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: unknown) {
     logger.error({ err }, 'Payment link creation error:')
-    return NextResponse.json({ error: 'Failed to create payment link' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to create payment link') },
+      { status: 500 }
+    )
   }
 }

@@ -3,6 +3,7 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 const procedureUpdateSchema = z.object({
   code: z.string().min(1).toUpperCase().optional(),
@@ -35,7 +36,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -44,7 +47,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!procedure) {
-      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Procedure not found') },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({
@@ -53,7 +59,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
   } catch (error: any) {
     logger.error({ err: error }, 'Get procedure error:')
-    return NextResponse.json({ error: error.message || 'Failed to get procedure' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError(error.message || 'Failed to get procedure') },
+      { status: 500 }
+    )
   }
 }
 
@@ -62,7 +71,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -75,7 +86,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Procedure not found') },
+        { status: 404 }
+      )
     }
 
     // If code is being updated, check if it's unique within this hospital
@@ -85,7 +99,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       })
 
       if (codeExists) {
-        return NextResponse.json({ error: 'Procedure code already exists' }, { status: 400 })
+        return NextResponse.json(
+          { error: await translateError('Procedure code already exists') },
+          { status: 400 }
+        )
       }
     }
 
@@ -102,7 +119,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error: any) {
     logger.error({ err: error }, 'Update procedure error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to update procedure' },
+      { error: await translateError(error.message || 'Failed to update procedure') },
       { status: 500 }
     )
   }
@@ -113,7 +130,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params
   const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
@@ -123,7 +142,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
 
     if (!existing) {
-      return NextResponse.json({ error: 'Procedure not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Procedure not found') },
+        { status: 404 }
+      )
     }
 
     // Soft delete by setting isActive to false
@@ -140,7 +162,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   } catch (error: any) {
     logger.error({ err: error }, 'Delete procedure error:')
     return NextResponse.json(
-      { error: error.message || 'Failed to delete procedure' },
+      { error: await translateError(error.message || 'Failed to delete procedure') },
       { status: 500 }
     )
   }

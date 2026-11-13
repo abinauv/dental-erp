@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import { translateError } from '@/lib/i18n/api-messages'
 
 // POST - Process refund for a payment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error, hospitalId, session } = await requireAuthAndRole()
   if (error || !hospitalId) {
-    return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return (
+      error || NextResponse.json({ error: await translateError('Unauthorized') }, { status: 401 })
+    )
   }
 
   try {
     // Check if user has permission
     if (!['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(
-        { error: "You don't have permission to process refunds" },
+        { error: await translateError("You don't have permission to process refunds") },
         { status: 403 }
       )
     }
@@ -26,7 +29,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate refund amount
     if (!refundAmount || refundAmount <= 0) {
-      return NextResponse.json({ error: 'Valid refund amount is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Valid refund amount is required') },
+        { status: 400 }
+      )
     }
 
     // Check if payment exists
@@ -38,24 +44,36 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     if (!existingPayment) {
-      return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Payment not found') },
+        { status: 404 }
+      )
     }
 
     // Only allow refund on completed payments
     if (existingPayment.status !== 'COMPLETED') {
-      return NextResponse.json({ error: 'Can only refund completed payments' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Can only refund completed payments') },
+        { status: 400 }
+      )
     }
 
     // Check if already refunded
     if (existingPayment.refundAmount && Number(existingPayment.refundAmount) > 0) {
-      return NextResponse.json({ error: 'Payment has already been refunded' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Payment has already been refunded') },
+        { status: 400 }
+      )
     }
 
     // Check if refund amount exceeds payment amount
     if (refundAmount > Number(existingPayment.amount)) {
       return NextResponse.json(
         {
-          error: `Refund amount (${refundAmount}) exceeds payment amount (${existingPayment.amount})`,
+          error: await translateError(
+            'Refund amount ({refund}) exceeds payment amount ({amount})',
+            { refund: refundAmount, amount: String(existingPayment.amount) }
+          ),
         },
         { status: 400 }
       )
@@ -124,6 +142,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
   } catch (error) {
     logger.error({ err: error }, 'Error processing refund:')
-    return NextResponse.json({ error: 'Failed to process refund' }, { status: 500 })
+    return NextResponse.json(
+      { error: await translateError('Failed to process refund') },
+      { status: 500 }
+    )
   }
 }

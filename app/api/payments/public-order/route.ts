@@ -4,6 +4,7 @@ import { getGateway } from '@/lib/payment-gateways'
 import { reservePendingPayment } from '@/lib/payment-gateways/settle'
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { translateError } from '@/lib/i18n/api-messages'
 
 /**
  * POST: Create a payment order using a payment link token (no auth required).
@@ -15,7 +16,10 @@ export async function POST(req: NextRequest) {
     const { token, amount } = body as { token: string; amount: number }
 
     if (!token) {
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Token is required') },
+        { status: 400 }
+      )
     }
 
     // Unauthenticated endpoint: throttle per IP and per link token.
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest) {
     ])
     if (!byIp.allowed || !byToken.allowed) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
+        { error: await translateError('Too many requests. Please try again later.') },
         { status: 429 }
       )
     }
@@ -47,23 +51,32 @@ export async function POST(req: NextRequest) {
     })
 
     if (!link) {
-      return NextResponse.json({ error: 'Invalid payment link' }, { status: 404 })
+      return NextResponse.json(
+        { error: await translateError('Invalid payment link') },
+        { status: 404 }
+      )
     }
 
     // Validate link
     if (link.usedAt) {
       return NextResponse.json(
-        { error: 'This payment link has already been used' },
+        { error: await translateError('This payment link has already been used') },
         { status: 400 }
       )
     }
     if (new Date() > new Date(link.expiresAt)) {
-      return NextResponse.json({ error: 'This payment link has expired' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('This payment link has expired') },
+        { status: 400 }
+      )
     }
 
     const balance = Number(link.invoice.balanceAmount)
     if (balance <= 0) {
-      return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Invoice is already paid') },
+        { status: 400 }
+      )
     }
 
     const payAmount = Math.min(amount || balance, balance)
@@ -71,7 +84,10 @@ export async function POST(req: NextRequest) {
     // Get gateway for this hospital
     const gatewayResult = await getGateway(link.hospitalId)
     if (!gatewayResult) {
-      return NextResponse.json({ error: 'Payment gateway is not configured' }, { status: 400 })
+      return NextResponse.json(
+        { error: await translateError('Payment gateway is not configured') },
+        { status: 400 }
+      )
     }
 
     const { gateway, credentials } = gatewayResult
@@ -117,6 +133,6 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     logger.error({ err }, 'Public order error:')
     const message = err instanceof Error ? err.message : 'Failed to create order'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: await translateError(message) }, { status: 500 })
   }
 }
