@@ -6154,7 +6154,10 @@
         "send": "Send SMS",
         "historyTitle": "SMS History",
         "historyDescription": "Recent SMS communications",
-        "historyPlaceholder": "SMS history will be displayed here"
+        "historyPlaceholder": "SMS history will be displayed here",
+        "sendLaterLabel": "Später senden (optional)",
+        "sendLaterHint": "Leer lassen, um sofort zu senden. Geplante SMS können nur zwischen 9 und 21 Uhr IST versendet werden.",
+        "schedule": "SMS planen"
       },
       "email": {
         "sendTitle": "Send Email",
@@ -6168,7 +6171,10 @@
         "send": "Send Email",
         "historyTitle": "Email History",
         "historyDescription": "Recent email communications",
-        "historyPlaceholder": "Email history will be displayed here"
+        "historyPlaceholder": "Email history will be displayed here",
+        "sendLaterLabel": "Später senden (optional)",
+        "sendLaterHint": "Leer lassen, um sofort zu senden.",
+        "schedule": "E-Mail planen"
       },
       "templates": {
         "title": "Communication Templates",
@@ -6191,7 +6197,10 @@
         "smsSuccess": "SMS sent successfully",
         "smsError": "Failed to send SMS",
         "emailSuccess": "Email sent successfully",
-        "emailError": "Failed to send email"
+        "emailError": "Failed to send email",
+        "pastTime": "Wählen Sie einen Zeitpunkt in der Zukunft oder lassen Sie das Feld leer, um sofort zu senden.",
+        "smsScheduled": "SMS geplant für {time}",
+        "emailScheduled": "E-Mail geplant für {time}"
       }
     },
     "analytics": {

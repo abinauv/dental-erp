@@ -2,7 +2,7 @@
 // Supports: MSG91, TextLocal, Fast2SMS, Twilio India
 
 import prisma from '@/lib/prisma'
-import { enqueue, isQueueEnabled } from '@/lib/queue'
+import { enqueue } from '@/lib/queue'
 
 export interface SMSConfig {
   gateway: 'MSG91' | 'TEXTLOCAL' | 'FAST2SMS' | 'TWILIO'
@@ -28,22 +28,27 @@ export interface SMSPayload {
   logMessage?: string
 }
 
-class SMSService {
-  private config: SMSConfig | null = null
+// Promotional SMS may only go out from 9 AM to 9 PM IST (TRAI).
+export function isWithinSmsHours(at: Date = new Date()): boolean {
+  const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
+  const hours = new Date(at.getTime() + istOffset).getUTCHours()
+  return hours >= 9 && hours < 21
+}
 
-  async initialize() {
-    // Load SMS configuration from settings
+class SMSService {
+  // The clinic's own gateway settings. Settings are stored per clinic, so
+  // they're loaded for each send rather than kept on this shared instance:
+  // one clinic's messages must never go out through another clinic's account.
+  private async loadConfig(hospitalId: string): Promise<SMSConfig> {
     const settings = await prisma.setting.findMany({
-      where: {
-        category: 'sms',
-      },
+      where: { hospitalId, category: 'sms' },
     })
 
     if (settings.length === 0) {
       throw new Error('SMS gateway not configured')
     }
 
-    this.config = {
+    const config: SMSConfig = {
       gateway: (settings.find((s) => s.key === 'sms.gateway')?.value || 'MSG91') as any,
       apiKey: settings.find((s) => s.key === 'sms.apiKey')?.value || '',
       senderId: settings.find((s) => s.key === 'sms.senderId')?.value || '',
@@ -51,9 +56,15 @@ class SMSService {
       authKey: settings.find((s) => s.key === 'sms.authKey')?.value,
     }
 
-    if (!this.config.apiKey) {
+    if (!config.apiKey) {
       throw new Error('SMS API key not configured')
     }
+    return config
+  }
+
+  /** Check that the clinic has a usable SMS gateway configured. */
+  async initialize(hospitalId: string): Promise<void> {
+    await this.loadConfig(hospitalId)
   }
 
   async sendSMS(payload: SMSPayload): Promise<string> {
@@ -77,9 +88,23 @@ class SMSService {
       }
     }
 
-    // Check time restrictions (9 AM to 9 PM IST) — promotional only.
-    if (!payload.transactional && !this.isWithinAllowedTime()) {
-      throw new Error('SMS cannot be sent outside 9 AM - 9 PM IST')
+    const scheduled = !!payload.scheduledFor && payload.scheduledFor > new Date()
+
+    // Time restrictions (9 AM to 9 PM IST), promotional only: at the time the
+    // message will actually go out.
+    if (!payload.transactional) {
+      if (scheduled && !isWithinSmsHours(payload.scheduledFor)) {
+        throw new Error('SMS can only be scheduled between 9 AM and 9 PM IST')
+      }
+      if (!scheduled && !isWithinSmsHours()) {
+        throw new Error('SMS cannot be sent outside 9 AM - 9 PM IST')
+      }
+    }
+
+    // A scheduled SMS is sent later from its log row, so the log has to hold
+    // the real text.
+    if (scheduled && payload.logMessage !== undefined && payload.logMessage !== payload.message) {
+      throw new Error('A scheduled SMS cannot have a separate log message')
     }
 
     // Create SMS log entry
@@ -92,20 +117,12 @@ class SMSService {
         templateId: payload.templateId || null,
         scheduledFor: payload.scheduledFor,
         status: payload.scheduledFor ? 'PENDING' : 'QUEUED',
-        gateway: this.config?.gateway,
       },
     })
 
-    // Scheduled for later: the row stays PENDING. With a queue, schedule a
-    // delayed dispatch job; without one nothing is sent now (unchanged).
-    if (payload.scheduledFor && payload.scheduledFor > new Date()) {
-      if (isQueueEnabled()) {
-        await enqueue(
-          'send-sms',
-          { smsLogId: smsLog.id, payload },
-          { jobId: `sms:${smsLog.id}`, delayMs: payload.scheduledFor.getTime() - Date.now() }
-        )
-      }
+    // Scheduled for later: the row stays PENDING until the outbox sends it
+    // when it's due (lib/services/outbox.service.ts).
+    if (scheduled) {
       return smsLog.id
     }
 
@@ -130,14 +147,17 @@ class SMSService {
   // worker); it throws on failure so BullMQ retries and the inline path
   // surfaces the error.
   async dispatchLog(smsLogId: string, payload: SMSPayload): Promise<void> {
+    let gateway: string | undefined
     try {
-      await this.initialize()
-      const result = await this.sendViaGateway(payload)
+      const config = await this.loadConfig(payload.hospitalId)
+      gateway = config.gateway
+      const result = await this.sendViaGateway(payload, config)
 
       await prisma.sMSLog.update({
         where: { id: smsLogId },
         data: {
           status: 'SENT',
+          gateway,
           sentAt: new Date(),
           messageId: result.messageId,
           cost: result.cost,
@@ -148,6 +168,7 @@ class SMSService {
         where: { id: smsLogId },
         data: {
           status: 'FAILED',
+          gateway,
           failedAt: new Date(),
           errorMessage: error.message,
         },
@@ -163,37 +184,39 @@ class SMSService {
     return results.map((result, index) => (result.status === 'fulfilled' ? result.value : ''))
   }
 
-  private async sendViaGateway(payload: SMSPayload): Promise<{ messageId: string; cost?: number }> {
-    if (!this.config) {
-      await this.initialize()
-    }
-
-    switch (this.config?.gateway) {
+  private async sendViaGateway(
+    payload: SMSPayload,
+    config: SMSConfig
+  ): Promise<{ messageId: string; cost?: number }> {
+    switch (config.gateway) {
       case 'MSG91':
-        return this.sendViaMSG91(payload)
+        return this.sendViaMSG91(payload, config)
       case 'TEXTLOCAL':
-        return this.sendViaTextLocal(payload)
+        return this.sendViaTextLocal(payload, config)
       case 'FAST2SMS':
-        return this.sendViaFast2SMS(payload)
+        return this.sendViaFast2SMS(payload, config)
       case 'TWILIO':
-        return this.sendViaTwilio(payload)
+        return this.sendViaTwilio(payload, config)
       default:
         throw new Error('Unsupported SMS gateway')
     }
   }
 
-  private async sendViaMSG91(payload: SMSPayload): Promise<{ messageId: string; cost?: number }> {
+  private async sendViaMSG91(
+    payload: SMSPayload,
+    config: SMSConfig
+  ): Promise<{ messageId: string; cost?: number }> {
     const url = 'https://api.msg91.com/api/v5/flow/'
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authkey: this.config?.apiKey || '',
+        authkey: config.apiKey || '',
       },
       body: JSON.stringify({
-        sender: this.config?.senderId,
-        route: this.config?.route || '4',
+        sender: config.senderId,
+        route: config.route || '4',
         country: '91',
         sms: [
           {
@@ -217,14 +240,15 @@ class SMSService {
   }
 
   private async sendViaTextLocal(
-    payload: SMSPayload
+    payload: SMSPayload,
+    config: SMSConfig
   ): Promise<{ messageId: string; cost?: number }> {
     const url = 'https://api.textlocal.in/send/'
 
     const params = new URLSearchParams({
-      apikey: this.config?.apiKey || '',
+      apikey: config.apiKey || '',
       numbers: this.normalizePhoneNumber(payload.phone),
-      sender: this.config?.senderId || '',
+      sender: config.senderId || '',
       message: payload.message,
     })
 
@@ -249,7 +273,8 @@ class SMSService {
   }
 
   private async sendViaFast2SMS(
-    payload: SMSPayload
+    payload: SMSPayload,
+    config: SMSConfig
   ): Promise<{ messageId: string; cost?: number }> {
     const url = 'https://www.fast2sms.com/dev/bulkV2'
 
@@ -257,12 +282,12 @@ class SMSService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: this.config?.apiKey || '',
+        authorization: config.apiKey || '',
       },
       body: JSON.stringify({
-        sender_id: this.config?.senderId,
+        sender_id: config.senderId,
         message: payload.message,
-        route: this.config?.route || 'v3',
+        route: config.route || 'v3',
         numbers: this.normalizePhoneNumber(payload.phone),
       }),
     })
@@ -278,15 +303,18 @@ class SMSService {
     }
   }
 
-  private async sendViaTwilio(payload: SMSPayload): Promise<{ messageId: string; cost?: number }> {
+  private async sendViaTwilio(
+    payload: SMSPayload,
+    config: SMSConfig
+  ): Promise<{ messageId: string; cost?: number }> {
     // Twilio implementation
-    const accountSid = this.config?.authKey
-    const authToken = this.config?.apiKey
+    const accountSid = config.authKey
+    const authToken = config.apiKey
     const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
 
     const params = new URLSearchParams({
       To: '+91' + this.normalizePhoneNumber(payload.phone),
-      From: this.config?.senderId || '',
+      From: config.senderId || '',
       Body: payload.message,
     })
 
@@ -321,16 +349,6 @@ class SMSService {
   private normalizePhoneNumber(phone: string): string {
     // Remove all non-digit characters and return 10-digit number
     return phone.replace(/\D/g, '').slice(-10)
-  }
-
-  private isWithinAllowedTime(): boolean {
-    const now = new Date()
-    const istOffset = 5.5 * 60 * 60 * 1000 // IST is UTC+5:30
-    const istTime = new Date(now.getTime() + istOffset)
-    const hours = istTime.getUTCHours()
-
-    // Allow SMS between 9 AM and 9 PM IST
-    return hours >= 9 && hours < 21
   }
 
   async processTemplate(templateId: string, variables: Record<string, string>): Promise<string> {

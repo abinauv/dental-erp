@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Initialize SMS service with current settings
-        await smsService.initialize()
+        await smsService.initialize(hospitalId)
 
         // Send test SMS
         const testMessage =
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Initialize email service with current settings
-        await emailService.initialize()
+        await emailService.initialize(hospitalId)
 
         // Send test email
         const testSubject = testData.subject || 'Test Email from DentalERP'
