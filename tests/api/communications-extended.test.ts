@@ -415,9 +415,24 @@ describe('POST /api/communications/triggers', () => {
     expect(res.status).toBe(401)
   })
 
+  it('refuses the old built-in secret when CRON_SECRET is unset', async () => {
+    vi.stubEnv('CRON_SECRET', '')
+    try {
+      const res = await triggersPOST(
+        makeReq('/api/communications/triggers', 'POST', null, {
+          authorization: 'Bearer your-cron-secret-key',
+        })
+      )
+      expect(res.status).toBe(401)
+      expect(mockTriggersService.runAllTriggers).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
   it('runs triggers with valid cron secret', async () => {
     mockTriggersService.runAllTriggers.mockResolvedValue(undefined)
-    const cronSecret = process.env.CRON_SECRET || 'your-cron-secret-key'
+    const cronSecret = process.env.CRON_SECRET
 
     const res = await triggersPOST(
       makeReq('/api/communications/triggers', 'POST', null, {
