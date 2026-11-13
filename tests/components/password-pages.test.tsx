@@ -1,7 +1,7 @@
 // @ts-nocheck
 // Forgot password, reset password, change password, and the login link.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
 const h = vi.hoisted(() => ({
