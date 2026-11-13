@@ -253,3 +253,43 @@ describe('SMS: scheduling', () => {
     expect(isWithinSmsHours(new Date('2026-02-19T15:30:00Z'))).toBe(false) // 21:00 IST
   })
 })
+
+describe('email: a separate log body', () => {
+  it('logs logBody but sends body', async () => {
+    settingsByClinic({ h1: emailSettings('h1', 'one') })
+    vi.mocked(prisma.emailLog.create).mockResolvedValue({ id: 'e1' } as any)
+    const { emailService } = await import('@/lib/services/email.service')
+
+    await emailService.sendEmail({
+      hospitalId: 'h1',
+      to: 'p@example.com',
+      subject: 'Invite',
+      body: '<a href="/invite/accept?token=SECRET">Accept</a>',
+      logBody: '<a href="/invite/accept?token=[removed]">Accept</a>',
+    })
+
+    expect(prisma.emailLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        body: '<a href="/invite/accept?token=[removed]">Accept</a>',
+      }),
+    })
+    expect(h.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ html: '<a href="/invite/accept?token=SECRET">Accept</a>' })
+    )
+  })
+
+  it('refuses a scheduled email whose log would hold different text', async () => {
+    const { emailService } = await import('@/lib/services/email.service')
+    await expect(
+      emailService.sendEmail({
+        hospitalId: 'h1',
+        to: 'p@example.com',
+        subject: 's',
+        body: 'link SECRET',
+        logBody: 'link [removed]',
+        scheduledFor: new Date(Date.now() + 3600_000),
+      })
+    ).rejects.toThrow('separate log body')
+    expect(prisma.emailLog.create).not.toHaveBeenCalled()
+  })
+})

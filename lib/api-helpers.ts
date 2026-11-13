@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto'
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { jwtVerify } from 'jose'
@@ -249,13 +250,15 @@ export async function generateUniqueSlug(name: string): Promise<string> {
 }
 
 /**
- * Generate a random token for email verification or password reset
+ * Generate a random token for email verification or staff invites.
+ * Uses the CSPRNG: Math.random() is predictable, and these tokens grant
+ * access.
  */
 export function generateToken(length = 32): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let token = ''
   for (let i = 0; i < length; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
+    token += chars.charAt(randomInt(chars.length))
   }
   return token
 }
