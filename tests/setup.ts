@@ -55,12 +55,29 @@ vi.mock('next-intl', async () => {
       .split('.')
       .reduce<unknown>((o, k) => (o && typeof o === 'object' ? (o as any)[k] : undefined), messages)
   }
+  // ICU plurals as next-intl formats them, for the forms the catalogue uses:
+  // {count, plural, =0 {…} one {# item} other {# items}}.
+  const plural = (msg: string, values: Record<string, unknown>) =>
+    msg.replace(
+      /\{(\w+), plural,((?:\s*(?:=\d+|zero|one|two|few|many|other)\s*\{[^{}]*\})+)\s*\}/g,
+      (whole, name: string, body: string) => {
+        if (!(name in values)) return whole
+        const n = Number(values[name])
+        const forms = Object.fromEntries(
+          [...body.matchAll(/(=\d+|\w+)\s*\{([^{}]*)\}/g)].map((m) => [m[1], m[2]])
+        )
+        const form = forms[`=${n}`] ?? (n === 1 ? forms.one : undefined) ?? forms.other ?? ''
+        return form.replace(/#/g, String(values[name]))
+      }
+    )
   const makeT = (namespace?: string) => {
     const t = (key: string, values?: Record<string, unknown>) => {
       const msg = resolve(namespace, key)
       if (typeof msg !== 'string') return namespace ? `${namespace}.${key}` : key
       return values
-        ? msg.replace(/\{(\w+)\}/g, (_, k) => (k in values ? String(values[k]) : `{${k}}`))
+        ? plural(msg, values).replace(/\{(\w+)\}/g, (_, k) =>
+            k in values ? String(values[k]) : `{${k}}`
+          )
         : msg
     }
     ;(t as any).rich = (key: string) => resolve(namespace, key)

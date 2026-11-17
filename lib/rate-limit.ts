@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server'
-import { BlockList, isIP } from 'node:net'
 import { getRedisConnection } from '@/lib/queue/connection'
-import { trustedProxies } from '@/lib/trusted-proxies'
+import { clientAddress, ipFamily, trustedProxies } from '@/lib/trusted-proxies'
 
 // Shared rate limiter.
 //
@@ -83,27 +82,6 @@ export async function checkRateLimit(
   }
 }
 
-function ipFamily(ip: string): 'ipv4' | 'ipv6' | null {
-  const family = isIP(ip)
-  return family === 4 ? 'ipv4' : family === 6 ? 'ipv6' : null
-}
-
-function toBlockList(entries: string[]): BlockList {
-  const list = new BlockList()
-  for (const entry of entries) {
-    const [address, prefix] = entry.split('/')
-    const family = ipFamily(address)
-    if (!family) continue
-    try {
-      if (prefix === undefined) list.addAddress(address, family)
-      else list.addSubnet(address, Number(prefix), family)
-    } catch {
-      // A malformed range is ignored rather than failing every request.
-    }
-  }
-  return list
-}
-
 // IPv4-mapped IPv6 (::ffff:1.2.3.4) is an IPv4 client. Other IPv6 addresses
 // are keyed by their /64, as Better Auth does: one host usually holds a whole
 // /64, so per-address keys would let it rotate past the limit.
@@ -125,33 +103,14 @@ function rateLimitKeyFor(ip: string): string {
 }
 
 /**
- * The client's IP, for keying anonymous rate limits. Follows the same rules as
- * Better Auth's sign-in limiter. The leftmost X-Forwarded-For entry is whatever
- * the client sent, so:
- * - with TRUSTED_PROXIES set, the chain is read from the right, skipping
- *   trusted proxies, and the first untrusted address is the client;
- * - without it, only a single-entry header is believed. That is what a proxy
- *   that overwrites the header sends (the bundled Caddy config does), and what
- *   Next.js sets from the socket when no proxy sent one.
- * Anything else shares one 'unknown' bucket rather than a key the client chose.
+ * The client's IP, for keying anonymous rate limits: clientAddress (see
+ * lib/trusted-proxies for which X-Forwarded-For entry is believed), with IPv6
+ * reduced to its /64. Anything unbelievable shares one 'unknown' bucket rather
+ * than a key the client chose.
  */
 export function getClientIp(req: NextRequest, trusted = trustedProxies()): string {
-  const chain = (req.headers.get('x-forwarded-for') ?? '')
-    .split(',')
-    .map((ip) => ip.trim())
-    .filter(Boolean)
-
-  if (trusted.length > 0) {
-    const list = toBlockList(trusted)
-    for (let i = chain.length - 1; i >= 0; i--) {
-      const family = ipFamily(chain[i])
-      if (!family) return 'unknown'
-      if (!list.check(chain[i], family)) return rateLimitKeyFor(chain[i])
-    }
-    return 'unknown'
-  }
-
-  return chain.length === 1 && ipFamily(chain[0]) ? rateLimitKeyFor(chain[0]) : 'unknown'
+  const ip = clientAddress(req.headers, trusted)
+  return ip ? rateLimitKeyFor(ip) : 'unknown'
 }
 
 /** Drop expired in-memory buckets so the map doesn't grow without bound. */

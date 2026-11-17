@@ -1,6 +1,7 @@
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import { PrismaClient } from './generated/prisma/client'
 import { mariadbPoolConfig } from './database-url'
+import { withAuditLog } from './audit-log'
 
 type Adapter = NonNullable<ConstructorParameters<typeof PrismaClient>[0]['adapter']>
 
@@ -25,12 +26,15 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+// Every write to a clinic table goes into the audit log (lib/audit-log.ts).
 export const prisma =
   globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter: createAdapter(),
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  })
+  withAuditLog(
+    new PrismaClient({
+      adapter: createAdapter(),
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    })
+  )
 
 // One client per process, in production too: Next.js bundles this module into
 // several server chunks (route handlers, pages, proxy.ts), and each copy would

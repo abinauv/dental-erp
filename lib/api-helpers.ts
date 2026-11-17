@@ -5,6 +5,8 @@ import { jwtVerify } from 'jose'
 import { auth } from './auth'
 import { prisma } from './prisma'
 import { translateError } from './i18n/api-messages'
+import { auditUserAgent, beginAuditActor } from './audit-context'
+import { clientAddress } from './trusted-proxies'
 
 // Someone whose password was set by an admin or an import must choose their
 // own before using the app. The web app sends them to /change-password; the
@@ -67,8 +69,15 @@ async function verifyMobileToken(): Promise<any | null> {
  * Supports both NextAuth session cookies (web) and Bearer tokens (mobile).
  */
 export async function getAuthenticatedHospital() {
+  // Changes this request makes are logged as this user's (lib/audit-log). It
+  // must start before the first await to reach the calling route.
+  const actor = beginAuditActor()
+  const requestHeaders = await headers()
+  actor.ipAddress = clientAddress(requestHeaders) ?? undefined
+  actor.userAgent = auditUserAgent(requestHeaders.get('user-agent'))
+
   // Try the Better Auth web session first (cookie).
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await auth.api.getSession({ headers: requestHeaders })
 
   if (session?.user) {
     const u = session.user as typeof session.user & {
@@ -86,6 +95,7 @@ export async function getAuthenticatedHospital() {
     if (flags?.mustChangePassword) {
       return { error: await passwordChangeRequired(), user: null, hospitalId: null }
     }
+    Object.assign(actor, { userId: u.id, hospitalId: u.hospitalId, source: 'web' })
     return {
       error: null,
       // Keep the exact shape the rest of the app and the mobile path produce.
@@ -108,6 +118,11 @@ export async function getAuthenticatedHospital() {
     return { error: await passwordChangeRequired(), user: null, hospitalId: null }
   }
   if (mobileUser) {
+    Object.assign(actor, {
+      userId: mobileUser.id,
+      hospitalId: mobileUser.hospitalId,
+      source: 'mobile',
+    })
     return {
       error: null,
       user: mobileUser,

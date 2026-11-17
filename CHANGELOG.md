@@ -11,6 +11,38 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+### Added
+
+- The audit log (Reports → Audit Log) records every change to clinic records:
+  who made it and when, from where (the web app, the mobile app or the patient
+  portal), which record, and each changed field's old and new value. Until now
+  it held only AI actions, data imports and automations. Changes undone by a
+  failed save aren't logged. Passwords, keys and tokens show only that they
+  changed, and Aadhaar, PAN and bank account numbers only their last four
+  digits.
+- Sign-ins are logged too: staff on the web and in the mobile app, and patients
+  in the portal.
+- The Audit Log page lists each entry's changes (old → new) and the record's
+  name, searches them, filters by more kinds of record, and is translated into
+  German.
+
+### Changed
+
+- The end-to-end test suite runs on every pull request, not only nightly.
+
+### Fixed
+
+- The dashboard's "Today's appointments" card counted every booking from
+  tomorrow on as pending. It now counts today's appointments not yet seen.
+
+### Upgrading
+
+- One migration, `20261118120000_audit_log_record_changes`. It adds two columns
+  and an index to the audit log table, and takes moments.
+- The audit log now grows by one row per change, about 1 KB with its indexes.
+  A clinic making 300 changes a day adds about 120 MB a year. Nothing prunes
+  it.
+
 ## [3.1.0] - 2026-11-17
 
 Closes the gaps left after 3.0.0: every dead button now leads somewhere,

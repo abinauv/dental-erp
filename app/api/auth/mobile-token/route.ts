@@ -6,6 +6,8 @@ import { SignJWT } from 'jose'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 import { translateError } from '@/lib/i18n/api-messages'
+import { recordSignIn } from '@/lib/audit-log'
+import { clientAddress } from '@/lib/trusted-proxies'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -102,6 +104,17 @@ export async function POST(req: NextRequest) {
       .setIssuedAt()
       .setExpirationTime('8h')
       .sign(secret)
+
+    await recordSignIn(prisma, {
+      hospitalId: user.hospitalId,
+      userId: user.id,
+      entityType: 'User',
+      entityId: user.id,
+      label: user.name,
+      source: 'mobile',
+      ipAddress: clientAddress(req.headers),
+      userAgent: req.headers.get('user-agent'),
+    })
 
     return NextResponse.json({
       token,
