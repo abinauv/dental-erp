@@ -84,7 +84,8 @@ export async function GET(req: NextRequest) {
           },
         }),
 
-        // Pending appointments (upcoming)
+        // Upcoming appointments: still booked, from tomorrow on. (Kept for API
+        // callers; the dashboard's "pending" is pendingAppointmentsToday.)
         prisma.appointment.count({
           where: {
             hospitalId,
@@ -100,6 +101,19 @@ export async function GET(req: NextRequest) {
           where: {
             hospitalId,
             status: 'COMPLETED',
+            scheduledDate: {
+              gte: todayStart,
+              lte: todayEnd,
+            },
+          },
+        }),
+
+        // Today's appointments not seen yet: booked, checked in or in the chair.
+        // With the completed count, this is the subtitle under today's total.
+        prisma.appointment.count({
+          where: {
+            hospitalId,
+            status: { in: ['SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'] },
             scheduledDate: {
               gte: todayStart,
               lte: todayEnd,
@@ -276,6 +290,7 @@ export async function GET(req: NextRequest) {
       thisMonthAppointments,
       pendingAppointments,
       completedAppointmentsToday,
+      pendingAppointmentsToday,
       thisMonthRevenue,
       todayRevenue,
       pendingPayments,
@@ -358,6 +373,7 @@ export async function GET(req: NextRequest) {
         appointmentGrowth: parseFloat(appointmentGrowth.toFixed(1)),
         pendingAppointments,
         completedAppointmentsToday,
+        pendingAppointmentsToday,
         thisMonthRevenue: Number(thisMonthRevenue._sum.amount || 0),
         todayRevenue: Number(todayRevenue._sum.amount || 0),
         revenueGrowth: parseFloat(revenueGrowth.toFixed(1)),

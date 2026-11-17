@@ -23,6 +23,7 @@ describe('3.1 Page Load Performance Patterns', () => {
           appointmentGrowth: 5.2,
           pendingAppointments: 5,
           completedAppointmentsToday: 10,
+          pendingAppointmentsToday: 5,
           thisMonthRevenue: 450000,
           todayRevenue: 25000,
           revenueGrowth: 12.3,

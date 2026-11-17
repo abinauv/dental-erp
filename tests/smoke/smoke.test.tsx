@@ -171,6 +171,7 @@ const responseLookup: Record<string, any> = {
       appointmentGrowth: 5,
       pendingAppointments: 3,
       completedAppointmentsToday: 4,
+      pendingAppointmentsToday: 2,
       thisMonthRevenue: 50000,
       todayRevenue: 8000,
       revenueGrowth: 12,
