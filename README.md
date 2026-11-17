@@ -118,8 +118,9 @@ patient chat
 - **Single sign-on** with any OpenID Connect provider (optional)
 - **Password policy** per clinic, self-service password reset, and enforced
   password changes for accounts an admin set up
-- **Audit log** of AI actions, data imports and automations, and encrypted
-  payment-gateway credentials
+- **Audit log** of who changed what: every change to clinic records with its
+  old and new values, plus sign-ins, AI actions and data imports
+- **Encrypted** payment-gateway credentials
 - **Data import** from CSV, Excel or PDF, and backup export
 
 ## Screenshots
@@ -236,9 +237,9 @@ added; see [docs/LOCALIZATION.md](docs/LOCALIZATION.md).
 **Where is patient data stored, and is it secure?**
 On your own server, in your own MySQL database: DentalERP is self-hosted, so no
 patient data goes to a third party unless you turn on an integration such as an
-AI provider. Access is role-based, AI actions are audit-logged, payment-gateway
-credentials are encrypted, and every change to the code is scanned with
-CodeQL. Report vulnerabilities privately through [SECURITY.md](SECURITY.md).
+AI provider. Access is role-based, every change to clinic records and every
+sign-in is audit-logged, payment-gateway credentials are encrypted, and every
+change to the code is scanned with CodeQL. Report vulnerabilities privately through [SECURITY.md](SECURITY.md).
 
 **What do I need to run it?**
 A server with Docker: a 2–4 GB VPS is enough for a single clinic, and the image

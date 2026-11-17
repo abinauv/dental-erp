@@ -32,12 +32,19 @@ import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 import { TablePageSkeleton } from '@/components/ui/page-skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
 
+type Value = string | number | boolean | null
+type Values = Record<string, Value>
+
 interface AuditEntry {
   id: string
   action: string
   entityType: string
   entityId: string | null
+  entityLabel: string | null
+  oldValues: Values | null
+  newValues: Values | null
   details: string | null
+  source: string | null
   ipAddress: string | null
   createdAt: string
   user: { name: string; email: string; role: string } | null
@@ -54,16 +61,70 @@ const ACTION_COLORS: Record<string, string> = {
 
 const ENTITY_ICONS: Record<string, typeof Activity> = {
   User: UserCog,
+  Staff: UserCog,
   Patient: FileText,
   Appointment: Calendar,
   Invoice: CreditCard,
+  Payment: CreditCard,
   default: Activity,
+}
+
+const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'AI_INTERACTION', 'DATA_IMPORT']
+// The records people look for most; search finds the rest.
+const ENTITIES = [
+  'Patient',
+  'MedicalHistory',
+  'Appointment',
+  'Treatment',
+  'TreatmentPlan',
+  'Prescription',
+  'Invoice',
+  'Payment',
+  'InsuranceClaim',
+  'InventoryItem',
+  'LabOrder',
+  'Document',
+  'Staff',
+  'User',
+  'Setting',
+  'Hospital',
+]
+
+/** In a bulk change's values: how many records it touched (lib/audit-log COUNT_KEY). */
+const COUNT_KEY = '$count'
+const SHOWN_FIELDS = 3
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+
+/** "scheduledTime" → "Scheduled time". */
+function fieldName(field: string): string {
+  const words = field.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+interface Change {
+  field: string
+  from?: Value
+  to?: Value
+}
+
+/** The fields an entry changed: old and new for an update, else one side. */
+function changedFields(log: AuditEntry): Change[] {
+  const from = log.oldValues ?? {}
+  const to = log.newValues ?? {}
+  const fields = [...new Set([...Object.keys(from), ...Object.keys(to)])].filter(
+    (field) => field !== COUNT_KEY
+  )
+  return fields.map((field) => ({
+    field,
+    ...(field in from ? { from: from[field] } : {}),
+    ...(field in to ? { to: to[field] } : {}),
+  }))
 }
 
 export default function AuditLogPage() {
   const t = useTranslations('auditLog')
   const tRole = useTranslations('staff.role')
-  const { formatDateTime, formatNumber } = useClinicFormatters()
+  const { formatDate, formatDateTime, formatNumber } = useClinicFormatters()
   const [logs, setLogs] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -72,6 +133,7 @@ export default function AuditLogPage() {
   const [search, setSearch] = useState('')
   const [actionFilter, setActionFilter] = useState<string>('all')
   const [entityFilter, setEntityFilter] = useState<string>('all')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
   const fetchLogs = useCallback(async () => {
@@ -98,18 +160,65 @@ export default function AuditLogPage() {
     fetchLogs()
   }, [fetchLogs])
 
+  const actionName = (action: string) =>
+    t.has(`action.${action}`) ? t(`action.${action}`) : action
+  const entityName = (entity: string) =>
+    t.has(`entity.${entity}`) ? t(`entity.${entity}`) : fieldName(entity)
+  const actorName = (log: AuditEntry) =>
+    log.user?.name || (log.source === 'patient-portal' ? t('patientPortal') : t('systemUser'))
+
+  const showValue = (value: Value | undefined): string => {
+    if (value === null || value === undefined || value === '') return t('empty')
+    if (typeof value === 'boolean') return value ? t('yes') : t('no')
+    if (value === '[hidden]') return t('hidden')
+    if (value === '[changed]') return t('changedValue')
+    if (value === '[file]') return t('file')
+    if (typeof value === 'string' && ISO_DATE.test(value)) {
+      // A date column is stored as that day's midnight UTC.
+      return value.endsWith('T00:00:00.000Z')
+        ? formatDate(value, { timeZone: 'UTC' })
+        : formatDateTime(value)
+    }
+    return String(value)
+  }
+
+  const describeChange = (change: Change) => {
+    const name = fieldName(change.field)
+    if ('from' in change && 'to' in change) {
+      return `${name}: ${showValue(change.from)} → ${showValue(change.to)}`
+    }
+    return `${name}: ${showValue('to' in change ? change.to : change.from)}`
+  }
+
+  const toggle = (id: string) =>
+    setExpanded((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
   const exportLogs = () => {
     downloadCSV(
-      logs.map((l) => ({
-        [t('expDate')]: format(new Date(l.createdAt), 'yyyy-MM-dd HH:mm:ss'),
-        [t('expUser')]: l.user?.name || t('systemUser'),
-        [t('expRole')]: l.user?.role || '-',
-        [t('expAction')]: l.action,
-        [t('expEntity')]: l.entityType,
-        [t('expEntityId')]: l.entityId || '-',
-        [t('expDetails')]: l.details || '-',
-        [t('expIp')]: l.ipAddress || '-',
-      })),
+      logs.map((l) => {
+        const count = l.newValues?.[COUNT_KEY]
+        const changes = [
+          ...(typeof count === 'number' ? [t('records', { count })] : []),
+          ...changedFields(l).map(describeChange),
+        ]
+        return {
+          [t('expDate')]: format(new Date(l.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+          [t('expUser')]: actorName(l),
+          [t('expRole')]: l.user?.role || '-',
+          [t('expAction')]: l.action,
+          [t('expEntity')]: l.entityType,
+          [t('expRecord')]: l.entityLabel || '-',
+          [t('expEntityId')]: l.entityId || '-',
+          [t('expDetails')]: l.details || changes.join('; ') || '-',
+          [t('expSource')]: l.source || '-',
+          [t('expIp')]: l.ipAddress || '-',
+        }
+      }),
       `audit-log-${format(new Date(), 'yyyy-MM-dd')}`
     )
   }
@@ -153,15 +262,16 @@ export default function AuditLogPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[160px]">
             <SelectValue placeholder={t('actionPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('allActions')}</SelectItem>
-            <SelectItem value="CREATE">{t('action.CREATE')}</SelectItem>
-            <SelectItem value="UPDATE">{t('action.UPDATE')}</SelectItem>
-            <SelectItem value="DELETE">{t('action.DELETE')}</SelectItem>
-            <SelectItem value="LOGIN">{t('action.LOGIN')}</SelectItem>
+            {ACTIONS.map((action) => (
+              <SelectItem key={action} value={action}>
+                {actionName(action)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select
@@ -171,16 +281,16 @@ export default function AuditLogPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[180px]">
             <SelectValue placeholder={t('entityPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('allEntities')}</SelectItem>
-            <SelectItem value="Patient">{t('entity.Patient')}</SelectItem>
-            <SelectItem value="Appointment">{t('entity.Appointment')}</SelectItem>
-            <SelectItem value="Invoice">{t('entity.Invoice')}</SelectItem>
-            <SelectItem value="User">{t('entity.User')}</SelectItem>
-            <SelectItem value="Treatment">{t('entity.Treatment')}</SelectItem>
+            {ENTITIES.map((entity) => (
+              <SelectItem key={entity} value={entity}>
+                {entityName(entity)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -194,6 +304,10 @@ export default function AuditLogPage() {
             <div className="divide-y">
               {logs.map((log) => {
                 const Icon = ENTITY_ICONS[log.entityType] || ENTITY_ICONS.default
+                const changes = changedFields(log)
+                const isOpen = expanded.has(log.id)
+                const shown = isOpen ? changes : changes.slice(0, SHOWN_FIELDS)
+                const count = log.newValues?.[COUNT_KEY]
                 return (
                   <div
                     key={log.id}
@@ -204,31 +318,57 @@ export default function AuditLogPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">
-                          {log.user?.name || t('systemUser')}
-                        </span>
+                        <span className="font-medium text-sm">{actorName(log)}</span>
                         <Badge
                           variant="outline"
                           className={ACTION_COLORS[log.action] || 'bg-muted text-muted-foreground'}
                         >
-                          {t.has(`action.${log.action}`) ? t(`action.${log.action}`) : log.action}
+                          {actionName(log.action)}
                         </Badge>
-                        <Badge variant="outline">
-                          {t.has(`entity.${log.entityType}`)
-                            ? t(`entity.${log.entityType}`)
-                            : log.entityType}
-                        </Badge>
+                        {/* A staff sign-in is about the person named first. */}
+                        {!(log.action === 'LOGIN' && log.entityType === 'User' && log.user) && (
+                          <>
+                            <Badge variant="outline">{entityName(log.entityType)}</Badge>
+                            {log.entityLabel && (
+                              <span className="text-sm truncate">{log.entityLabel}</span>
+                            )}
+                          </>
+                        )}
+                        {typeof count === 'number' && (
+                          <span className="text-sm text-muted-foreground">
+                            {t('records', { count })}
+                          </span>
+                        )}
                       </div>
                       {log.details && (
                         <p className="text-sm text-muted-foreground mt-1 truncate">{log.details}</p>
                       )}
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                      {shown.length > 0 && (
+                        <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                          {shown.map((change) => (
+                            <li key={change.field} className="break-words">
+                              {describeChange(change)}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {changes.length > SHOWN_FIELDS && (
+                        <button
+                          type="button"
+                          className="mt-1 text-xs font-medium text-primary hover:underline"
+                          onClick={() => toggle(log.id)}
+                        >
+                          {isOpen ? t('showLess') : t('showAll', { count: changes.length })}
+                        </button>
+                      )}
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                         <span>{formatDateTime(log.createdAt, { second: '2-digit' })}</span>
                         {log.user?.role && (
                           <span>
                             {tRole.has(log.user.role) ? tRole(log.user.role) : log.user.role}
                           </span>
                         )}
+                        {log.source === 'mobile' && <span>{t('sourceMobile')}</span>}
                         {log.ipAddress && <span>{log.ipAddress}</span>}
                       </div>
                     </div>
