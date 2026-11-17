@@ -56,7 +56,7 @@ import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
 interface Invoice {
   id: string
   invoiceNo: string
-  invoiceDate: string
+  createdAt: string
   dueDate: string | null
   subtotal: string | number
   discountAmount: string | number
@@ -312,7 +312,7 @@ export default function InvoicesPage() {
                       <TableCell>
                         <div className="font-medium">{invoice.invoiceNo}</div>
                         <div className="text-sm text-muted-foreground">
-                          {formatDate(invoice.invoiceDate)}
+                          {formatDate(invoice.createdAt)}
                         </div>
                       </TableCell>
                       <TableCell>

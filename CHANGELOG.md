@@ -80,6 +80,14 @@ before it are not itemized here; see the git history and the
 
 ### Fixed
 
+- Invoices showed no date: the invoice list, the invoice page ("Created on -")
+  and the billing report's outstanding invoices read a field invoices don't
+  have. They now show the date the invoice was created.
+- The dashboard's upcoming appointments all showed 05:30 am (midnight UTC)
+  instead of their booked time, listed same-day appointments in no particular
+  order, and named the doctor without "Dr." as the rest of the app does.
+- The demo data's doctor was named "Dr. Priya", which showed as "Dr. Dr.
+  Priya Kumar". New installs seed "Priya Kumar".
 - The `SMTP_*` settings in `.env` were documented (password resets "silently
   do nothing" without them) but nothing read them. They're now the email
   fallback described above. The `SMS_API_KEY` and `SMS_SENDER_ID` variables,

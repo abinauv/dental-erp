@@ -110,10 +110,11 @@ describe('GET /api/dashboard/stats', () => {
       {
         id: 'a1',
         scheduledDate: new Date(),
+        scheduledTime: '14:30',
         appointmentType: 'CHECKUP',
         status: 'SCHEDULED',
         patient: { firstName: 'John', lastName: 'Doe' },
-        doctor: { firstName: 'Dr', lastName: 'Smith' },
+        doctor: { firstName: 'Anita', lastName: 'Smith' },
       },
     ] as any)
 
@@ -129,6 +130,17 @@ describe('GET /api/dashboard/stats', () => {
     expect(body.data.recentActivity).toBeDefined()
     expect(body.data.recentActivity.upcomingAppointments).toHaveLength(1)
     expect(body.data.recentActivity.upcomingAppointments[0].patientName).toBe('John Doe')
+    // The booked time travels separately from the date column, which holds
+    // only the day; the doctor is named as everywhere else.
+    expect(body.data.recentActivity.upcomingAppointments[0]).toMatchObject({
+      time: '14:30',
+      doctorName: 'Dr. Anita Smith',
+    })
+    expect(prisma.appointment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ scheduledDate: 'asc' }, { scheduledTime: 'asc' }],
+      })
+    )
   })
 
   it('handles zero previous month values for growth', async () => {

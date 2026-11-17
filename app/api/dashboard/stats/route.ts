@@ -239,9 +239,7 @@ export async function GET(req: NextRequest) {
               },
             },
           },
-          orderBy: {
-            scheduledDate: 'asc',
-          },
+          orderBy: [{ scheduledDate: 'asc' }, { scheduledTime: 'asc' }],
           take: 5,
         }),
 
@@ -380,9 +378,11 @@ export async function GET(req: NextRequest) {
           id: apt.id,
           patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
           doctorName: apt.doctor
-            ? `${apt.doctor.firstName} ${apt.doctor.lastName}`
+            ? `Dr. ${apt.doctor.firstName} ${apt.doctor.lastName}`
             : 'Not assigned',
+          // The date column holds only the day; the booked time is separate.
           date: apt.scheduledDate,
+          time: apt.scheduledTime,
           type: apt.appointmentType,
           status: apt.status,
         })),

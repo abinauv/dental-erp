@@ -107,7 +107,7 @@ async function main() {
     update: {},
     create: {
       email: 'doctor@demo-dental.com',
-      name: 'Dr. Priya',
+      name: 'Priya Kumar',
       password: doctorPassword,
       role: Role.DOCTOR,
       phone: '9876543211',
@@ -116,7 +116,7 @@ async function main() {
       staff: {
         create: {
           employeeId: 'EMP002',
-          firstName: 'Dr. Priya',
+          firstName: 'Priya',
           lastName: 'Kumar',
           phone: '9876543211',
           email: 'doctor@demo-dental.com',

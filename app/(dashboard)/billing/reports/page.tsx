@@ -39,7 +39,7 @@ import { useToast } from '@/hooks/use-toast'
 interface OutstandingInvoice {
   id: string
   invoiceNo: string
-  invoiceDate: string
+  createdAt: string
   dueDate: string | null
   totalAmount: string | number
   balanceAmount: string | number
@@ -177,7 +177,7 @@ export default function FinancialReportsPage() {
         Patient: `${i.patient.firstName} ${i.patient.lastName}`,
         'Patient ID': i.patient.patientId,
         Phone: i.patient.phone,
-        'Invoice Date': i.invoiceDate ? formatDate(i.invoiceDate) : '',
+        'Invoice Date': i.createdAt ? formatDate(i.createdAt) : '',
         'Due Date': i.dueDate ? formatDate(i.dueDate) : '',
         Total: Number(i.totalAmount),
         Balance: Number(i.balanceAmount),
@@ -455,7 +455,7 @@ export default function FinancialReportsPage() {
                         <TableCell>
                           {invoice.patient.firstName} {invoice.patient.lastName}
                         </TableCell>
-                        <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
+                        <TableCell>{formatDate(invoice.createdAt)}</TableCell>
                         <TableCell>{invoice.dueDate ? formatDate(invoice.dueDate) : '-'}</TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(invoice.totalAmount)}

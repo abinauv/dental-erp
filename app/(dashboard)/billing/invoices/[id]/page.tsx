@@ -67,7 +67,7 @@ import { PaymentCheckout } from '@/components/billing/payment-checkout'
 interface Invoice {
   id: string
   invoiceNo: string
-  invoiceDate: string
+  createdAt: string
   dueDate: string | null
   subtotal: string | number
   discountType: string
@@ -344,7 +344,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               {getStatusBadge(invoice.status)}
             </div>
             <p className="text-muted-foreground">
-              {t('createdOn', { date: formatDate(invoice.invoiceDate) })}
+              {t('createdOn', { date: formatDate(invoice.createdAt) })}
             </p>
           </div>
         </div>
@@ -631,7 +631,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">{t('invoiceDate')}</span>
-                <span>{formatDate(invoice.invoiceDate)}</span>
+                <span>{formatDate(invoice.createdAt)}</span>
               </div>
               {invoice.dueDate && (
                 <div className="flex items-center justify-between">
