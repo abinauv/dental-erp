@@ -11,6 +11,13 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-11-17
+
+Closes the gaps left after 3.0.0: every dead button now leads somewhere,
+scheduled messages are sent, staff can reset and change their passwords, and
+errors from the server come in the user's language. Also two security fixes.
+One database migration; read "Upgrading" below before you upgrade.
+
 ### Added
 
 - An inventory item page (stock levels and status, prices, supplier, recent
