@@ -1,7 +1,7 @@
 {
   "name": "dental-erp",
   "version": "3.0.0",
-  "description": "Open-source dental hospital management system for Indian dental clinics — AI-powered, GST billing, patient portal, tele-dentistry",
+  "description": "Free, open-source dental clinic and hospital management system for India and beyond — AI-powered, GST billing, patient portal, tele-dentistry, self-hosted with Docker",
   "private": true,
   "engines": {
     "node": "^22.22.2 || >=24.15.0"
@@ -20,7 +20,11 @@
     "open-source",
     "ai-powered",
     "tele-dentistry",
-    "dental-practice-management"
+    "dental-practice-management",
+    "dental-clinic-management",
+    "patient-portal",
+    "self-hosted",
+    "docker"
   ],
   "author": "Abinauv Selvaraj",
   "license": "MIT",
