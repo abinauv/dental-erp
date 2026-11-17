@@ -1,12 +1,19 @@
 name: E2E Tests
 
-# The full Playwright suite, nightly and on demand. It is not a push gate: a
-# run takes several minutes on top of CI.
+# The full Playwright suite on every pull request, nightly, and on demand. A run
+# takes about six minutes, in parallel with CI.
 #
-# Every test is its own client to the app's per-IP rate limits (see
-# tests/e2e/fixtures/auth.ts): from Nov 2026 the sign-in limit made almost
-# every spec fail at login while they all came from one address.
+# It runs on pull requests because the nightly run alone let a break sit for
+# twelve days: the sign-in rate limit made almost every spec fail at login from
+# 2026-11-05, and nothing on the PR that added it showed that. Every test is now
+# its own client to the app's per-IP rate limits (tests/e2e/fixtures/auth.ts).
+#
+# Like ci.yml, deliberately unfiltered by branch or path, so that it can be made
+# a required check: a required check that is skipped never reports.
 on:
+  pull_request:
+  # Nightly on main as well, for what changes without a pull request: the
+  # Playwright browser, the MySQL service image, the time of day.
   schedule:
     # 02:00 UTC daily
     - cron: '0 2 * * *'
