@@ -33,6 +33,7 @@ import {
 import { InsightsPanel } from '@/components/ai/insights-panel'
 import { CHART_COLORS } from '@/lib/chart-theme'
 import { useClinicFormatters } from '@/components/i18n/clinic-locale-provider'
+import { formatTime } from '@/lib/appointment-utils'
 
 interface DashboardStats {
   overview: {
@@ -62,6 +63,7 @@ interface DashboardStats {
       patientName: string
       doctorName: string
       date: string
+      time: string
       type: string
       status: string
     }>
@@ -82,7 +84,6 @@ export default function DashboardPage() {
     formatCurrency: fmtCurrency,
     formatNumber,
     formatDate,
-    formatDateTime,
     currencySymbol,
   } = useClinicFormatters()
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -319,7 +320,7 @@ export default function DashboardPage() {
                     <div className="flex-1 space-y-1">
                       <p className="font-medium">{apt.patientName}</p>
                       <p className="text-muted-foreground text-xs">
-                        {formatDateTime(apt.date)} • {apt.doctorName}
+                        {formatDate(apt.date)}, {formatTime(apt.time)} • {apt.doctorName}
                       </p>
                     </div>
                   </div>
