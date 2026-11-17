@@ -47,6 +47,9 @@ before it are not itemized here; see the git history and the
 
 ### Changed
 
+- The README is rewritten, with screenshots, a feature overview and an FAQ. The
+  developer setup moved to `docs/DEVELOPMENT.md`; `SELF_HOSTING.md` now also
+  covers health checks and running the image without Compose.
 - New passwords follow the clinic's password rules from Settings → Security
   (length, upper and lower case, numbers, symbols). This applies when changing
   or resetting a password, when an admin sets one, and when accepting an

@@ -232,6 +232,51 @@ database. A migration that dropped or rewrote a column cannot be undone by
 running older code against it; that is what the backup you took first is for.
 Release notes call out migrations that are not backward compatible.
 
+## 7. Health checks
+
+Two endpoints, and the difference matters:
+
+| Endpoint      | Purpose   | Checks the database | Use for                             |
+| ------------- | --------- | ------------------- | ----------------------------------- |
+| `/api/health` | Liveness  | No                  | "Is this process alive?"            |
+| `/api/ready`  | Readiness | Yes                 | "Should this instance get traffic?" |
+
+Point liveness probes at `/api/health` and readiness probes at `/api/ready`.
+Pointing a liveness probe at `/api/ready` means a brief database outage makes
+your orchestrator kill and restart otherwise healthy containers, turning a short
+blip into a restart loop. `/api/ready` returns `503` when the database is
+unreachable; it never throws.
+
+The image has a `HEALTHCHECK` against `/api/health`, so `docker ps` reports
+container health with no extra configuration.
+
+## Running the image without Compose
+
+```bash
+docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads   ghcr.io/abinauv/dental-erp:3.1.0
+```
+
+**Mount a volume at `/app/uploads`.** On the default `STORAGE_DRIVER=local`,
+uploaded files (patient documents, scans, signed consent forms) are written to
+the container filesystem. Without a volume they are destroyed the moment the
+container is replaced, which is every redeploy. Already running without one?
+Copy the files out before you next redeploy:
+
+```bash
+docker cp <container>:/app/uploads ./uploads-backup
+```
+
+then recreate the container with the volume mounted and copy them back.
+`STORAGE_DRIVER=s3` removes this whole class of problem; see
+[docs/STORAGE.md](docs/STORAGE.md).
+
+Running the image this way does not migrate the database. The image carries the
+Prisma CLI to do it:
+
+```bash
+docker run --rm --env-file .env ghcr.io/abinauv/dental-erp:3.1.0   node node_modules/prisma/build/index.js migrate deploy
+```
+
 ---
 
 ## Sizing and scaling
