@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/auth'
 
 // Test helper to create authenticated session
 // In a real scenario, you would set up test database fixtures

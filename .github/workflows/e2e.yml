@@ -1,10 +1,11 @@
 name: E2E Tests
 
-# The Playwright suite is not a push gate yet: a large share of its specs assert
-# on UI affordances the app never had (ambiguous `.or()` locators that trip
-# Playwright strict mode, headings by the wrong name), so it has never been
-# green. It runs nightly and on demand while those specs are repaired — see the
-# E2E tracking issue. Once the suite is green, fold this job back into ci.yml.
+# The full Playwright suite, nightly and on demand. It is not a push gate: a
+# run takes several minutes on top of CI.
+#
+# Every test is its own client to the app's per-IP rate limits (see
+# tests/e2e/fixtures/auth.ts): from Nov 2026 the sign-in limit made almost
+# every spec fail at login while they all came from one address.
 on:
   schedule:
     # 02:00 UTC daily
@@ -57,8 +58,10 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Push schema to test DB
-        run: npx prisma db push --accept-data-loss
+      # The migrations, as a real install runs them, rather than `db push`:
+      # this also checks that they build the current schema from nothing.
+      - name: Migrate test DB
+        run: npx prisma migrate deploy
         env:
           DATABASE_URL: 'mysql://test:test@localhost:3306/dental_test'
 

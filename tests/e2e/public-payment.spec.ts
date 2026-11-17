@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/auth'
 
 // Seeded by prisma/seed.ts against invoice INV-E2E-0001 (₹1,180 outstanding).
 // Keep the two in sync — app/pay/[token] calls notFound() for an unknown

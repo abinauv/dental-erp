@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/auth'
 
 test.describe('Public Booking', () => {
   test.describe('Public Booking Page', () => {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/auth'
 
 test.describe('Patient Portal — Medical Records', () => {
   test.describe('Records Page (Auth Guard)', () => {
