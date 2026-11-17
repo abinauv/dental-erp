@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { SignJWT, jwtVerify } from 'jose'
 import { createHmac, randomInt, timingSafeEqual } from 'crypto'
 import { prisma } from './prisma'
+import { auditUserAgent, beginAuditActor } from './audit-context'
+import { clientAddress } from './trusted-proxies'
 
 const COOKIE_NAME = 'patient-portal-token'
 
@@ -85,6 +87,9 @@ async function verifyPatientToken(token: string): Promise<PatientTokenPayload | 
  * Returns patient context or null.
  */
 export async function getAuthenticatedPatient(req?: NextRequest) {
+  // Changes this request makes are logged as made through the patient portal
+  // (lib/audit-log). It must start before the first await to reach the route.
+  const actor = beginAuditActor()
   let token: string | undefined
 
   if (req) {
@@ -119,6 +124,13 @@ export async function getAuthenticatedPatient(req?: NextRequest) {
 
   if (!patient) return null
 
+  const requestHeaders = req?.headers ?? (await headers())
+  Object.assign(actor, {
+    hospitalId: patient.hospitalId,
+    source: 'patient-portal',
+    ipAddress: clientAddress(requestHeaders) ?? undefined,
+    userAgent: auditUserAgent(requestHeaders.get('user-agent')),
+  })
   return patient
 }
 

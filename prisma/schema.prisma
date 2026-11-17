@@ -2025,10 +2025,18 @@ model AuditLog {
   action     String
   entityType String
   entityId   String
+  // What the record is called (a patient's name, an invoice number), so the
+  // entry still reads after the record is gone.
+  entityLabel String? @db.VarChar(191)
 
+  // Record changes (lib/audit-log): for an update, the changed fields' old and
+  // new values; a creation has only new values, a deletion only old ones.
   oldValues String? @db.Text
   newValues String? @db.Text
 
+  // How the change came in: web, mobile or patient-portal. Null for the system
+  // (scheduled jobs, webhooks) and for entries written before 3.2.0.
+  source    String? @db.VarChar(32)
   ipAddress String?
   userAgent String?
 
@@ -2038,6 +2046,7 @@ model AuditLog {
   user     User?    @relation(fields: [userId], references: [id])
 
   @@index([hospitalId])
+  @@index([hospitalId, createdAt])
   @@index([entityType, entityId])
   @@index([userId])
   @@index([createdAt])

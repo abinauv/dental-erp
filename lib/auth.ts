@@ -14,6 +14,8 @@ import {
 } from './auth-passwords'
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from './password-policy'
 import { trustedProxies } from './trusted-proxies'
+import { currentAuditActor } from './audit-context'
+import { recordSignIn } from './audit-log'
 
 // Better Auth replaces next-auth as the staff/web session layer. The two
 // independent token paths are unchanged and intentionally NOT routed through
@@ -153,6 +155,9 @@ export const auth = betterAuth({
         const token = body.token ?? (ctx.query as Record<string, unknown> | undefined)?.token
         if (typeof token === 'string') userId = await userIdForResetToken(token)
       }
+      // The audit log shows the new password as set by the user themselves.
+      const actor = currentAuditActor()
+      if (actor && userId) actor.userId = userId
       await checkNewPassword({
         path: ctx.path,
         userId,
@@ -180,6 +185,23 @@ export const auth = betterAuth({
             throw new APIError('UNAUTHORIZED', { message: 'Account or clinic is inactive' })
           }
           return { data: session }
+        },
+        after: async (session) => {
+          const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { hospitalId: true, name: true },
+          })
+          if (!user?.hospitalId) return
+          await recordSignIn(prisma, {
+            hospitalId: user.hospitalId,
+            userId: session.userId,
+            entityType: 'User',
+            entityId: session.userId,
+            label: user.name,
+            source: 'web',
+            ipAddress: session.ipAddress,
+            userAgent: session.userAgent,
+          })
         },
       },
     },

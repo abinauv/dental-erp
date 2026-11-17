@@ -4,6 +4,8 @@ import { createPatientToken, setPatientCookie, otpMatches } from '@/lib/patient-
 import { logger } from '@/lib/logger'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { translateError } from '@/lib/i18n/api-messages'
+import { recordSignIn } from '@/lib/audit-log'
+import { clientAddress } from '@/lib/trusted-proxies'
 
 /**
  * POST: Verify OTP and return JWT in httpOnly cookie.
@@ -118,6 +120,17 @@ export async function POST(req: NextRequest) {
       patientId: patient.id,
       hospitalId: patient.hospitalId,
       phone: patient.phone,
+    })
+
+    await recordSignIn(prisma, {
+      hospitalId: patient.hospitalId,
+      userId: null,
+      entityType: 'Patient',
+      entityId: patient.id,
+      label: `${patient.firstName} ${patient.lastName} (${patient.patientId})`,
+      source: 'patient-portal',
+      ipAddress: clientAddress(req.headers),
+      userAgent: req.headers.get('user-agent'),
     })
 
     const response = NextResponse.json({
