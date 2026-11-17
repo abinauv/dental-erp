@@ -39,7 +39,7 @@ The development Docker Compose stack is a convenience for contributors. It is ne
 | Observability         | `console.error`                                                                 |
 | Container             | Published multi-arch image on GHCR (`linux/amd64`, `linux/arm64`), non-root     |
 | Health probes         | `/api/health` (liveness) and `/api/ready` (readiness)                           |
-| CI                    | Lint, type check, unit tests and build on every PR; Playwright E2E nightly      |
+| CI                    | Lint, type check, unit tests, build and Playwright E2E on every PR; E2E nightly |
 
 Two known infrastructure defects were listed here when this document was first published. Both are now fixed, and are kept below as the record:
 
