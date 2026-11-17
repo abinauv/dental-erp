@@ -86,8 +86,9 @@ describe('GET /api/dashboard/stats', () => {
     vi.mocked(prisma.appointment.count)
       .mockResolvedValueOnce(8) // today
       .mockResolvedValueOnce(120) // this month
-      .mockResolvedValueOnce(15) // pending
+      .mockResolvedValueOnce(15) // upcoming, from tomorrow
       .mockResolvedValueOnce(5) // completed today
+      .mockResolvedValueOnce(3) // still to be seen today
       .mockResolvedValueOnce(100) // prev month appointments
     vi.mocked(prisma.payment.aggregate)
       .mockResolvedValueOnce({ _sum: { amount: 45000 } } as any) // this month rev
@@ -125,6 +126,24 @@ describe('GET /api/dashboard/stats', () => {
     expect(body.success).toBe(true)
     expect(body.data.overview).toBeDefined()
     expect(body.data.overview.totalPatients).toBe(250)
+    expect(body.data.overview).toMatchObject({
+      todayAppointments: 8,
+      completedAppointmentsToday: 5,
+      pendingAppointmentsToday: 3,
+      pendingAppointments: 15,
+    })
+    // Today's pending: today's date only, and everyone not yet seen, including
+    // patients checked in or in the chair.
+    const todayPending = vi
+      .mocked(prisma.appointment.count)
+      .mock.calls.map(([args]) => args?.where as any)
+      .find((where) => where?.status?.in?.includes('CHECKED_IN'))
+    expect(todayPending.status.in).toEqual(['SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'])
+    expect(todayPending.scheduledDate.gte).toBeInstanceOf(Date)
+    expect(todayPending.scheduledDate.lte).toBeInstanceOf(Date)
+    expect(
+      todayPending.scheduledDate.lte.getTime() - todayPending.scheduledDate.gte.getTime()
+    ).toBeLessThan(24 * 60 * 60 * 1000)
     expect(body.data.charts).toBeDefined()
     expect(body.data.charts.appointmentsByStatus).toHaveLength(2)
     expect(body.data.recentActivity).toBeDefined()

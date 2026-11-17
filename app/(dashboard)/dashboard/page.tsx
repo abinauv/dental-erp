@@ -44,6 +44,7 @@ interface DashboardStats {
     thisMonthAppointments: number
     appointmentGrowth: number
     pendingAppointments: number
+    pendingAppointmentsToday: number
     completedAppointmentsToday: number
     thisMonthRevenue: number
     todayRevenue: number
@@ -216,7 +217,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">
               {t('completedPending', {
                 completed: stats.overview.completedAppointmentsToday,
-                pending: stats.overview.pendingAppointments,
+                pending: stats.overview.pendingAppointmentsToday,
               })}
             </p>
           </CardContent>
