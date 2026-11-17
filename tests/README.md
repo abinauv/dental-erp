@@ -116,14 +116,14 @@ Reports are generated in `coverage/` in text, JSON, and HTML formats.
 
 ## CI/CD Integration
 
-Tests run automatically via GitHub Actions (`.github/workflows/ci.yml`):
+Tests run automatically via GitHub Actions (`.github/workflows/ci.yml` and `e2e.yml`):
 
-| Job                   | Trigger       | What runs                               |
-| --------------------- | ------------- | --------------------------------------- |
-| `lint-and-type-check` | PR            | `next lint` + `tsc --noEmit`            |
-| `unit-tests`          | PR            | `vitest run` with coverage upload       |
-| `e2e-tests`           | merge to main | Playwright with MySQL service container |
-| `build`               | PR            | `next build` verification               |
+| Job                   | Trigger                | What runs                                                 |
+| --------------------- | ---------------------- | --------------------------------------------------------- |
+| `lint-and-type-check` | PR, push to main       | `tsc --noEmit`, `eslint .`, `prettier --check .`          |
+| `unit-tests`          | PR, push to main       | `vitest run` with coverage upload                         |
+| `build`               | PR, push to main       | `next build` verification                                 |
+| `e2e-tests`           | PR, nightly, on demand | Playwright against a production build and a MySQL service |
 
 ### Git Hooks (Husky)
 
