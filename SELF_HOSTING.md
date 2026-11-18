@@ -73,11 +73,11 @@ Two that are easy to get wrong:
 
 Then pin your version. `latest` means the next `docker compose pull` changes
 what you are running without asking. Image tags are the version number
-without a leading `v` (`3.1.0`, or `3.1` / `3` to follow patch or minor
+without a leading `v` (`3.2.0`, or `3.2` / `3` to follow patch or minor
 releases):
 
 ```bash
-DENTAL_ERP_VERSION="3.1.0"
+DENTAL_ERP_VERSION="3.2.0"
 ```
 
 ## 3. Start it
@@ -214,7 +214,7 @@ lifecycle policy there. The database backup still covers everything else.
 
 ```bash
 ./backup.sh                          # first, always
-# edit .env: DENTAL_ERP_VERSION="3.1.1"
+# edit .env: DENTAL_ERP_VERSION="3.2.1"
 docker compose pull
 docker compose up -d
 ```
@@ -253,7 +253,7 @@ container health with no extra configuration.
 ## Running the image without Compose
 
 ```bash
-docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads   ghcr.io/abinauv/dental-erp:3.1.0
+docker run -p 3000:3000 --env-file .env -v dental-uploads:/app/uploads   ghcr.io/abinauv/dental-erp:3.2.0
 ```
 
 **Mount a volume at `/app/uploads`.** On the default `STORAGE_DRIVER=local`,
@@ -274,7 +274,7 @@ Running the image this way does not migrate the database. The image carries the
 Prisma CLI to do it:
 
 ```bash
-docker run --rm --env-file .env ghcr.io/abinauv/dental-erp:3.1.0   node node_modules/prisma/build/index.js migrate deploy
+docker run --rm --env-file .env ghcr.io/abinauv/dental-erp:3.2.0   node node_modules/prisma/build/index.js migrate deploy
 ```
 
 ---
