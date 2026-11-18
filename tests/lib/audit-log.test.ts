@@ -236,6 +236,60 @@ describe('auditEntries', () => {
       expect(parse(bulk.newValues)).toEqual({ [COUNT_KEY]: 1, value: HIDDEN })
     })
 
+    it('hides secrets inside JSON, such as the saved SMTP and SMS settings', () => {
+      // Settings → Communications also saves the whole form as one JSON setting.
+      const form = {
+        smtp_host: 'smtp.example.com',
+        smtp_port: '587',
+        smtp_user: 'clinic@example.com',
+        smtp_password: 'pa55-in-json',
+        nested: { authToken: 'tok-in-json', apiKey: 'key-in-json', retries: 3, enabled: true },
+      }
+      const [entry] = entries({
+        model: 'Setting',
+        operation: 'create',
+        args: { data: {} },
+        result: {
+          id: 's9',
+          hospitalId: 'h1',
+          key: 'email_settings',
+          value: JSON.stringify(form),
+          type: 'json',
+        },
+      })
+      expect(entry.newValues).not.toMatch(/pa55|tok-in|key-in/)
+      const value = JSON.parse(parse(entry.newValues).value)
+      expect(value).toMatchObject({
+        smtp_host: 'smtp.example.com',
+        smtp_user: 'clinic@example.com',
+        smtp_password: HIDDEN,
+        nested: { authToken: HIDDEN, apiKey: HIDDEN, retries: 3, enabled: true },
+      })
+
+      // A JSON column, and a bulk update's values.
+      const [device] = entries({
+        model: 'Device',
+        operation: 'update',
+        args: { where: { id: 'd1' }, data: { metadata: { password: 'admin123', model: 'X' } } },
+        before: { id: 'd1', hospitalId: 'h1', name: 'Sensor', metadata: { model: 'X' } },
+        result: {
+          id: 'd1',
+          hospitalId: 'h1',
+          name: 'Sensor',
+          metadata: { password: 'admin123', model: 'X' },
+        },
+      })
+      expect(device.newValues).not.toContain('admin123')
+      const [bulk] = entries({
+        model: 'Device',
+        operation: 'updateMany',
+        args: { where: {}, data: { metadata: { secret: 'shh' } } },
+        before: undefined,
+        result: { count: 2 },
+      })
+      expect(bulk.newValues).not.toContain('shh')
+    })
+
     it('keeps file contents out', () => {
       const [entry] = entries({
         model: 'FormSubmission',
