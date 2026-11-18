@@ -63,6 +63,13 @@ const IGNORED_BY_TABLE: Readonly<Record<string, readonly string[]>> = {
 /** Field names that hold secrets, and Setting keys whose value is one. */
 const SECRET_FIELD = /(password|secret|token|apikey|saltkey|merchantkey|privatekey)$/i
 const SECRET_SETTING = /(password|secret|token|api_?key|salt|merchantkey|privatekey)/i
+/**
+ * Keys inside a JSON value that hold secrets. Settings → Communications saves
+ * its whole form as one JSON setting (email_settings, sms_settings), with the
+ * SMTP password and the SMS API key in it.
+ */
+const SECRET_KEY =
+  /(password|passwd|secret|token|api_?key|auth_?key|salt|merchant_?key|private_?key|credential)/i
 const MASKED_FIELDS = new Set(['aadharNumber', 'panNumber', 'bankAccountNo'])
 export const HIDDEN = '[hidden]'
 /** A change Prisma computed in the database (e.g. an increment) and didn't return. */
@@ -180,13 +187,37 @@ function same(a: unknown, b: unknown): boolean {
   return key(a) === key(b)
 }
 
+/** A JSON value with what its secret-named keys hold replaced by HIDDEN. */
+function withoutSecrets(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(withoutSecrets)
+  if (!isObject(value)) return value
+  const out: Row = {}
+  for (const [key, item] of Object.entries(value)) {
+    const plain =
+      item === null || item === '' || typeof item === 'boolean' || typeof item === 'number'
+    out[key] = SECRET_KEY.test(key) && !plain ? HIDDEN : withoutSecrets(item)
+  }
+  return out
+}
+
 function present(model: string, field: string, value: unknown, row: Row): Shown {
   if (value === CHANGED) return CHANGED
   // A flag (mustChangePassword) gives nothing away.
   if (typeof value !== 'boolean' && isSecret(model, field, row)) {
     return value === null || value === undefined ? null : HIDDEN
   }
-  const shown = show(value)
+  let safe = value
+  if (typeof value === 'string' && /^\s*[[{]/.test(value)) {
+    // Text that holds JSON, such as a setting saved as a whole form.
+    try {
+      safe = JSON.stringify(withoutSecrets(JSON.parse(value)))
+    } catch {
+      // Not JSON after all.
+    }
+  } else if (Array.isArray(value) || isObject(value)) {
+    safe = withoutSecrets(value)
+  }
+  const shown = show(safe)
   if (MASKED_FIELDS.has(field) && typeof shown === 'string' && shown.length > 0) {
     return `****${shown.slice(-4)}`
   }
