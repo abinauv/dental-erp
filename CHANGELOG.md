@@ -11,6 +11,13 @@ before it are not itemized here; see the git history and the
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-18
+
+Adds a full audit trail: every change to clinic records and every sign-in is
+logged, with who made it and what changed. Also fixes the dashboard's pending
+count, and runs the end-to-end tests on every pull request. One database
+migration; read "Upgrading" below before you upgrade.
+
 ### Added
 
 - The audit log (Reports → Audit Log) records every change to clinic records:
